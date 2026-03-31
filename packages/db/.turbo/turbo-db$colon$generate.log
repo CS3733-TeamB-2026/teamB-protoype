@@ -1,0 +1,10 @@
+
+> db@ db:generate C:\Users\lukem\Documents\WPI\D26\Soft Eng\softeng-app\packages\db
+> prisma generate
+
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma\schema.prisma.
+
+✔ Generated Prisma Client (7.6.0) to .\generated\prisma in 22ms
+

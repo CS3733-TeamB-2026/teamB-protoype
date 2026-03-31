@@ -1,0 +1,14 @@
+{
+    "name": "db",
+    "private": true,
+    "scripts": {
+        "db:generate": "prisma generate",
+        "db:push": "prisma db push"
+    },
+    "dependencies": {
+        "@prisma/client": "^7.6.0"
+    },
+    "devDependencies": {
+        "prisma": "^7.6.0"
+    }
+}
