@@ -1,4 +1,5 @@
 import './App.css'
+import Home from './components/Home'
 import {BrowserRouter, Routes, Route, Link} from 'react-router-dom';
 
 function App() {
@@ -17,11 +18,6 @@ function App() {
             </Routes>
         </BrowserRouter>
     )
-}
-
-//example pages to show how it works
-function Home() {
-    return <h1>Home Page</h1>;
 }
 
 function About() {
