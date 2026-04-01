@@ -58,7 +58,7 @@ function App() {
                                             <Link to="/underwriter">Underwriter</Link>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem asChild className="text-md">
-                                            <Link to="/businessanalyst">BusinessAnalyst</Link>
+                                            <Link to="/businessanalyst">Business Analyst</Link>
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
