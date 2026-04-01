@@ -1,5 +1,7 @@
 import './App.css'
 import Home from './components/Home'
+import ManagementForm from './components/manageform'
+
 import {BrowserRouter, Routes, Route} from 'react-router-dom';
 import {
     NavigationMenu,
@@ -38,6 +40,12 @@ function App() {
                                 className="hover:text-muted-foreground transition-colors text-xl"
                             >Contact</NavigationMenuLink>
                         </NavigationMenuItem>
+                        <NavigationMenuItem>
+                            <NavigationMenuLink
+                                href="/manageform"
+                                className="hover:text-muted-foreground transition-colors text-xl"
+                            >Manage Form</NavigationMenuLink>
+                        </NavigationMenuItem>
                     </NavigationMenuList>
                 </NavigationMenu>
                 </nav>
@@ -47,6 +55,7 @@ function App() {
                         <Route path="/" element={<Home/>}/>
                         <Route path="/about" element={<About/>}/>
                         <Route path="/contact" element={<Contact/>}/>
+                        <Route path="/manageform" element={<ManagementForm/>}/>
                     </Routes>
                 </main>
 
