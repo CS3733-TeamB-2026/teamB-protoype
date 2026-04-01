@@ -6,11 +6,15 @@ app.use(cors())
 app.use(express.json())
 
 app.get('/employee', (req, res) => {
-    res.json(fetchEmployee())
+    console.log(res.json(fetchEmployee(12345)))
 })
 
 app.get("/servicereqs", (req, res) => {
-    res.json(fetchServiceRequest())
+    console.log(res.json(fetchServiceRequest()))
+})
+
+app.get("/assigned", (req, res) => {
+    console.log(res.json(fetchAssignment()))
 })
 
 /*
@@ -33,7 +37,10 @@ function fetchEmployee(employeeId : number){
 
 function fetchServiceRequest(){
     return {"Service Requests": {"name": "Fix Something", "owner": "12345", "deadline": "12/34/56",
-            "createdDate": "1/2/34", "type": "Review Insurance Claim", }}
+            "createdDate": "1/2/34", "type": "Review Insurance Claim"}}
 }
 
-function fetch
+function fetchAssignment(){
+    return {"Service Requests": {"name": "Fix Something", "owner": "12345", "deadline": "12/34/56",
+            "createdDate": "1/2/34", "type": "Review Insurance Claim"}}
+}
