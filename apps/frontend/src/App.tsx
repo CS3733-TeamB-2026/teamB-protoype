@@ -2,6 +2,8 @@ import './App.css'
 import Home from './components/Home'
 import ManagementForm from './components/manageform'
 import EmployeeForm from './components/EmployeeForm'
+import BusinessAnalyst from './components/BusinessAnalyst'
+import Underwriter from './components/Underwriter'
 import {BrowserRouter, Routes, Route, Link} from 'react-router-dom';
 import {
     NavigationMenu,
@@ -53,10 +55,10 @@ function App() {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent className="w-48 bg-primary text-primary-foreground border-none shadow-lg ">
                                         <DropdownMenuItem asChild className="text-md">
-                                            <Link to="/manageform">Manage Form</Link>
+                                            <Link to="/underwriter">Underwriter</Link>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem asChild className="text-md">
-                                            <Link to="/manageform">Manage Form</Link>
+                                            <Link to="/businessanalyst">BusinessAnalyst</Link>
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
@@ -75,6 +77,8 @@ function App() {
                         <Route path="/" element={<Home/>}/>
                         <Route path="/empoyeeform" element={<EmployeeForm/>}/>
                         <Route path="/manageform" element={<ManagementForm/>}/>
+                        <Route path="/underwriter" element={<Underwriter/>}/>
+                        <Route path="/businessanalyst" element={<BusinessAnalyst/>}/>
                     </Routes>
                 </main>
 
