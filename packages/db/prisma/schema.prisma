@@ -11,3 +11,9 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model TestFile {
+  id Int @id @default(autoincrement())
+  name String @unique
+  type String?
+}
