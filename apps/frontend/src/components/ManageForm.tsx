@@ -28,8 +28,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 
-
-
 function ManagementForm() {
     const [jobPosition, setJobPosition] = useState("Select job position")
     const [date, setDate] = React.useState<Date>()
@@ -38,11 +36,8 @@ function ManagementForm() {
     const [docType, setDocType] = useState("Select Document Type")
     const [docStatus, setDocStatus] = useState("Select Document Status")
 
-
-
-
     return (
-        <>
+        <div className="mx-80">
             <div className="bg-secondary py-4 text-center">
                 <h1 className="text-primary text-2xl font-semibold">File Management Form</h1>
             </div>
@@ -210,7 +205,7 @@ function ManagementForm() {
                     Submit
                 </Button>
             </div>
-        </>
+        </div>
     )
 }
 
