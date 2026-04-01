@@ -14,12 +14,14 @@ import {
 function Home() {
     return (
         <>
+            {/*Hero*/}
             <div className="flex flex-col items-center justify-center py-20 px-8 bg-secondary-foreground text-primary-foreground">
                 <h1 className="text-4xl font-bold mb-4">Hanover Insurance - Content Management Service</h1>
                 <p className="text-lg mb-8 text-primary-foreground/80">CS3733 Team B D26</p>
                 <Button variant="secondary" size="lg">Get Started</Button>
             </div>
 
+            {/*Main Paragraph*/}
             <Card className="shadow-lg max-w-5xl mx-auto mt-8 text-center">
                 <CardHeader>
                     <CardTitle className="text-xl">Welcome to Our App.</CardTitle>
@@ -34,11 +36,12 @@ function Home() {
                 </CardContent>
             </Card>
 
+            {/*Team Avatars*/}
             <section className="mt-12 max-w-4xl mx-auto mb-12">
                 <h1 className="text-2xl font-bold text-primary text-center mb-8">Meet Our Team</h1>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
-                    <Card className="text-center p-6">
+                    <Card className="shadow-lg text-center p-6">
                         <CardContent className="flex flex-col items-center justify-center gap-4">
                             <Avatar className="w-20 h-20">
                                 <AvatarFallback className="text-xl bg-primary text-primary-foreground">DZ</AvatarFallback>
@@ -50,7 +53,7 @@ function Home() {
                         </CardContent>
                     </Card>
 
-                    <Card className="text-center p-6">
+                    <Card className="shadow-lg text-center p-6">
                         <CardContent className="flex flex-col items-center justify-center gap-4">
                             <Avatar className="w-20 h-20">
                                 <AvatarFallback className="text-xl bg-primary text-primary-foreground">OS</AvatarFallback>
@@ -62,7 +65,7 @@ function Home() {
                         </CardContent>
                     </Card>
 
-                    <Card className="text-center p-6">
+                    <Card className="shadow-lg text-center p-6">
                         <CardContent className="flex flex-col items-center justify-center gap-4">
                             <Avatar className="w-20 h-20">
                                 <AvatarFallback className="text-xl bg-primary text-primary-foreground">HS</AvatarFallback>
