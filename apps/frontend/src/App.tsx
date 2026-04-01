@@ -1,16 +1,20 @@
 import './App.css'
 import Home from './components/Home'
 import ManagementForm from './components/manageform'
-
-import {BrowserRouter, Routes, Route} from 'react-router-dom';
+import EmployeeForm from './components/EmployeeForm'
+import {BrowserRouter, Routes, Route, Link} from 'react-router-dom';
 import {
     NavigationMenu,
-    //NavigationMenuContent,
     NavigationMenuItem,
     NavigationMenuLink,
     NavigationMenuList,
-    //NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu"
+import {
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+    DropdownMenuItem,
+} from "@/components/ui/dropdown-menu"
 
 function App() {
     // Your application must be wrapped with the BrowserRouter component to enable routing
@@ -19,46 +23,62 @@ function App() {
 
             <div className="min-h-screen flex flex-col">
 
+                {/*Navigation Menu*/}
                 <nav className="bg-primary text-primary-foreground p-4 w-full shrink-0">
-                <NavigationMenu className="max-w-full">
-                    <NavigationMenuList className="gap-4">
-                        <NavigationMenuItem>
-                            <NavigationMenuLink
-                                href="/"
-                                className="hover:text-muted-foreground transition-colors text-xl"
-                            >Home</NavigationMenuLink>
-                        </NavigationMenuItem>
-                        <NavigationMenuItem>
-                            <NavigationMenuLink
-                                href="/about"
-                                className="hover:text-muted-foreground transition-colors text-xl"
-                            >About</NavigationMenuLink>
-                        </NavigationMenuItem>
-                        <NavigationMenuItem>
-                            <NavigationMenuLink
-                                href="/contact"
-                                className="hover:text-muted-foreground transition-colors text-xl"
-                            >Contact</NavigationMenuLink>
-                        </NavigationMenuItem>
-                        <NavigationMenuItem>
-                            <NavigationMenuLink
-                                href="/manageform"
-                                className="hover:text-muted-foreground transition-colors text-xl"
-                            >Manage Form</NavigationMenuLink>
-                        </NavigationMenuItem>
-                    </NavigationMenuList>
-                </NavigationMenu>
+                    <NavigationMenu className="max-w-full">
+                        <NavigationMenuList className="gap-4">
+                            <NavigationMenuItem>
+                                <NavigationMenuLink
+                                    href="/"
+                                    className="hover:text-muted-foreground transition-colors text-xl"
+                                >Home</NavigationMenuLink>
+                            </NavigationMenuItem>
+                            <NavigationMenuItem>
+                                <NavigationMenuLink
+                                    href="/employeeform"
+                                    className="hover:text-muted-foreground transition-colors text-xl"
+                                >Employee Form</NavigationMenuLink>
+                            </NavigationMenuItem>
+                            <NavigationMenuItem>
+                                <NavigationMenuLink
+                                    href="/manageform"
+                                    className="hover:text-muted-foreground transition-colors text-xl"
+                                >Manage Form</NavigationMenuLink>
+                            </NavigationMenuItem>
+                            <NavigationMenuItem className="relative">
+
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger className="hover:text-muted-foreground transition-colors text-xl">
+                                        Personas
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent className="w-48 bg-primary text-primary-foreground border-none shadow-lg ">
+                                        <DropdownMenuItem asChild className="text-md">
+                                            <Link to="/manageform">Manage Form</Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem asChild className="text-md">
+                                            <Link to="/manageform">Manage Form</Link>
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+
+                            </NavigationMenuItem>
+                        </NavigationMenuList>
+                    </NavigationMenu>
+
+
+
                 </nav>
 
                 <main className="flex-1 bg-secondary">
+                    {/*Routing*/}
                     <Routes>
                         <Route path="/" element={<Home/>}/>
-                        <Route path="/about" element={<About/>}/>
-                        <Route path="/contact" element={<Contact/>}/>
+                        <Route path="/empoyeeform" element={<EmployeeForm/>}/>
                         <Route path="/manageform" element={<ManagementForm/>}/>
                     </Routes>
                 </main>
 
+                {/*Footer (Appears on all pages)*/}
                 <footer className="shrink-0 bg-primary text-primary-foreground mt-auto py-8 px-6">
                     <div className="w-full mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
                         <div className="text-center md:text-left">
@@ -80,14 +100,6 @@ function App() {
 
         </BrowserRouter>
     )
-}
-
-function About() {
-    return <h1>About Page</h1>;
-}
-
-function Contact() {
-    return <h1>Contact Page</h1>;
 }
 
 export default App
