@@ -1,19 +1,21 @@
 import { prisma } from "./lib/prisma";
 
 async function main() {
-    const file = await prisma.TestFile.create({
+    /*
+    const employee = await prisma.employee.create({
         data: {
-            name: "myReport",
-            type: "pdf",
+            id: 1001,
+            firstName: "John",
+            lastName: "Doe",
         }
     })
 
-    console.log("Created file:", file);
+    console.log("Created employee:", employee);
+     */
 
-    // Fetch all users with their posts
-    const allFiles = await prisma.TestFile.findMany({
+    const allEmployees = await prisma.employee.findMany({
     });
-    console.log("All files:", JSON.stringify(allFiles, null, 2));
+    console.log("All employees:", JSON.stringify(allEmployees, null, 2));
 }
 
 main()
