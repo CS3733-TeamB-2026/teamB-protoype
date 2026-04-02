@@ -39,7 +39,7 @@ function Navbar() {
                             <NavigationMenuLink
                                 href="/manageform"
                                 className="hover:text-muted-foreground transition-colors text-xl"
-                            >Manage Form</NavigationMenuLink>
+                            >Management Form</NavigationMenuLink>
                         </NavigationMenuItem>
                         <NavigationMenuItem className="relative">
 
