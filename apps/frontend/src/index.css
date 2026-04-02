@@ -118,6 +118,16 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/*removes the wierd random ticker in the id input fields */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

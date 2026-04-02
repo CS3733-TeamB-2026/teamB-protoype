@@ -87,7 +87,7 @@ function ManagementForm() {
             {/*//Only allows ints*/}
             <Field className="bg-secondary">
                 <FieldLabel className="text-primary" htmlFor="input-employee-id">Owner Employee ID</FieldLabel>
-                <Input id="input-employee-id" type="number" placeholder="000000" />
+                <Input id="input-employee-id" type="number"  placeholder="000000" />
                 <FieldDescription>
 
                     {/* Enter the employee ID of the content owner*/}
