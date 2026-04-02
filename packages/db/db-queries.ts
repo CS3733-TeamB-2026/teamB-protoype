@@ -15,6 +15,12 @@ export function queryServiceReqs(): Promise<p.ServiceRequest[]> {
     return prisma.serviceRequest.findMany({})
 }
 
+export function queryAssignedServiceReqs(): Promise<p.ServiceRequest[]> {
+    return prisma.serviceRequest.findMany({
+        where: {asigneeID: { not: null }}
+    })
+}
+
 export function queryServiceByAssigned(id: number): Promise<p.ServiceRequest[]> {
     return prisma.serviceRequest.findMany({
         where: {asigneeID: id}
@@ -49,6 +55,10 @@ queryEmployeeById(1001).then(
 
 queryServiceReqs().then(
     (serviceReqs) => {console.log("All requests:", serviceReqs)}
+)
+
+queryAssignedServiceReqs().then(
+    (serviceReqs) => {console.log("Assigned requests:", serviceReqs)}
 )
 
 queryServiceByAssigned(1001).then(
