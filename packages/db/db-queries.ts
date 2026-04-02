@@ -11,11 +11,17 @@ export function queryEmployeeById(id: number): Promise<p.Employee | null> {
     })
 }
 
-export function queryServiceReqs(): Promise<p.ServiceRequest[]> {
+export function queryAllServiceReqs(): Promise<p.ServiceRequest[]> {
     return prisma.serviceRequest.findMany({})
 }
 
-export function queryServiceByAssigned(id: number): Promise<p.ServiceRequest[]> {
+export function queryAssignedServiceReqs(): Promise<p.ServiceRequest[]> {
+    return prisma.serviceRequest.findMany({
+        where: {assigneeID: { not: null }}
+    })
+}
+
+export function queryServiceReqByAssigned(id: number): Promise<p.ServiceRequest[]> {
     return prisma.serviceRequest.findMany({
         where: {assigneeID: id}
     })
@@ -45,4 +51,30 @@ function employeePersonaHelper(_persona: string | null): p.Persona | null {
     if (_persona == "underwriter") { return p.Persona.underwriter }
     else if (_persona == "businessAnalyst") { return p.Persona.businessAnalyst }
     else { return null }
+}
+
+//call this function to test the queries, do not call otherwise
+function testQueries() {
+    queryAllEmployees().then(
+        (employees) => {console.log("All employees:", employees)})
+
+    queryEmployeeById(1001).then(
+        (employee) => {console.log("Employee 1001:", employee)}
+    )
+
+    queryAllServiceReqs().then(
+        (serviceReqs) => {console.log("All requests:", serviceReqs)}
+    )
+
+    queryAssignedServiceReqs().then(
+        (serviceReqs) => {console.log("Assigned requests:", serviceReqs)}
+    )
+
+    queryServiceReqByAssigned(1001).then(
+        (serviceReqs) => {console.log("1001's requests:", serviceReqs)}
+    )
+
+    //createEmployee(27, "John", "NoRole").then(
+    //    () => queryAllEmployees().then(
+    //        (employees) => {console.log(employees)}))
 }

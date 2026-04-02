@@ -4,3 +4,4 @@ apps/backend/.env
 .turbo/
 .idea/
 packages/db/generated/
+apps/backend/src/generated/
