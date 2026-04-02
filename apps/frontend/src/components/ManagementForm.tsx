@@ -36,7 +36,7 @@ function ManagementForm() {
     const [open2, setOpen2] = React.useState(false)
     const [date2, setDate2] = React.useState<Date | undefined>(undefined)
     const [lastModifiedTime, setLastModifiedTime] = React.useState(
-        () => new Date().toTimeString().slice(0, 8)
+        () => new Date().toTimeString().substring(0, 8)
     )
 
 
@@ -252,7 +252,7 @@ function ManagementForm() {
                         <DropdownMenuGroup>
                             <DropdownMenuLabel>Document Status</DropdownMenuLabel>
                             <DropdownMenuRadioGroup value={docStatus} onValueChange={setDocStatus}>
-                                <DropdownMenuRadioItem value="To do">New</DropdownMenuRadioItem>
+                                <DropdownMenuRadioItem value="New">New</DropdownMenuRadioItem>
                                 <DropdownMenuRadioItem value="In Progress">In Progress</DropdownMenuRadioItem>
                                 <DropdownMenuRadioItem value="Done">Complete</DropdownMenuRadioItem>
 
