@@ -57,12 +57,13 @@ function Home() {
             </Card>
 
             {/*Team Avatars*/}
-            <section className="mt-12 max-w-7xl mx-auto mb-12" >
+            <section className="mt-12 max-w-7xl mx-auto mb-12">
                 <h1 className="text-2xl font-bold text-primary text-center mb-8">Meet Our Team</h1>
                 <div className="flex flex-wrap md:grid-cols-5 gap-6 justify-center">
 
                     {members.map((member: TeamMember) => (
-                        <Card className="shadow-lg text-center p-6 w-60">
+                        <Card className="shadow-lg text-center p-6 w-60
+                        hover:scale-105 ease-linear duration-100">
                             <CardContent className="flex flex-col items-center justify-center gap-4">
                                 <Avatar className="w-20 h-20">
                                     <AvatarFallback className="text-xl bg-primary text-primary-foreground">{member.initials}</AvatarFallback>
