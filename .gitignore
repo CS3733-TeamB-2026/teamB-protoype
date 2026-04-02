@@ -3,3 +3,4 @@ node_modules/
 .turbo/
 .idea/
 packages/db/generated/
+apps/backend/src/generated/
