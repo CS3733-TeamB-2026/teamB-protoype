@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Employee {
+  id Int @id
+  firstName String
+  lastName String
+  persona Persona?
+
+  ownedContent Content[]
+  ownedRequests ServiceRequest[] @relation("OwnedBy")
+  assignedRequests ServiceRequest[] @relation("AssignedTo")
+}
+
+model Content {
+  id Int @id @default(autoincrement())
+  name String
+  linkURL String?
+
+  owner Employee? @relation(fields: [ownerID], references: [id])
+  ownerID Int?
+
+  lastModified DateTime @default(now())
+  expiration DateTime?
+
+  isWorkflow ContentType
+  status Status?
+}
+
+model ServiceRequest {
+  owner Employee @relation("OwnedBy", fields: [ownerID], references: [id])
+  ownerID Int
+
+  assignee Employee? @relation("AssignedTo", fields: [asigneeID], references: [id])
+  asigneeID Int?
+
+  created DateTime @default(now())
+  deadline DateTime?
+  type RequestType
+
+  @@id([ownerID, created])
+}
+
+enum Persona {
+  underwriter
+  businessAnalyst
+}
+
+enum Status {
+  todo
+  inProgress
+  done
+}
+
+enum ContentType {
+  reference
+  workflow
+}
+
+enum RequestType {
+  reviewClaim
+  requestAdjuster
+  checkClaim
+}
