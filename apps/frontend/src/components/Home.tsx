@@ -37,35 +37,83 @@ function Home() {
             </Card>
 
             {/*Team Avatars*/}
-            <section className="mt-12 max-w-4xl mx-auto mb-12">
+            <section className="mt-12 max-w-7xl mx-auto mb-12" >
                 <h1 className="text-2xl font-bold text-primary text-center mb-8">Meet Our Team</h1>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="flex flex-wrap md:grid-cols-5 gap-6 justify-center">
 
-                    <Card className="shadow-lg text-center p-6">
+                    <Card className="shadow-lg text-center p-6 w-60">
                         <CardContent className="flex flex-col items-center justify-center gap-4">
                             <Avatar className="w-20 h-20">
                                 <AvatarFallback className="text-xl bg-primary text-primary-foreground">DZ</AvatarFallback>
                             </Avatar>
                             <div>
                                 <h2 className="font-semibold text-lg">Dylan Zickus</h2>
-                                <p className="text-muted-foreground">Development Lead</p>
+                                <p className="text-muted-foreground">Lead Software Engineer</p>
                             </div>
                         </CardContent>
                     </Card>
 
-                    <Card className="shadow-lg text-center p-6">
+                    <Card className="shadow-lg text-center p-6 w-60">
                         <CardContent className="flex flex-col items-center justify-center gap-4">
                             <Avatar className="w-20 h-20">
                                 <AvatarFallback className="text-xl bg-primary text-primary-foreground">OS</AvatarFallback>
                             </Avatar>
                             <div>
                                 <h2 className="font-semibold text-lg">Oscar Stomberg</h2>
-                                <p className="text-muted-foreground">Assistant Lead</p>
+                                <p className="text-muted-foreground">Assistant Lead Software Engineer</p>
                             </div>
                         </CardContent>
                     </Card>
 
-                    <Card className="shadow-lg text-center p-6">
+                    <Card className="shadow-lg text-center p-6 w-60">
+                        <CardContent className="flex flex-col items-center justify-center gap-4">
+                            <Avatar className="w-20 h-20">
+                                <AvatarFallback className="text-xl bg-primary text-primary-foreground">JS</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <h2 className="font-semibold text-lg">Jake Swanson</h2>
+                                <p className="text-muted-foreground">Assistant Lead Software Engineer</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="shadow-lg text-center p-6 w-60">
+                        <CardContent className="flex flex-col items-center justify-center gap-4">
+                            <Avatar className="w-20 h-20">
+                                <AvatarFallback className="text-xl bg-primary text-primary-foreground">LC</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <h2 className="font-semibold text-lg">Luke Ciarletta</h2>
+                                <p className="text-muted-foreground">Full Time Software Engineer</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="shadow-lg text-center p-6 w-60">
+                        <CardContent className="flex flex-col items-center justify-center gap-4">
+                            <Avatar className="w-20 h-20">
+                                <AvatarFallback className="text-xl bg-primary text-primary-foreground">NH</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <h2 className="font-semibold text-lg">Nick Houghton</h2>
+                                <p className="text-muted-foreground">Full Time Software Engineer</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="shadow-lg text-center p-6 w-60">
+                        <CardContent className="flex flex-col items-center justify-center gap-4">
+                            <Avatar className="w-20 h-20">
+                                <AvatarFallback className="text-xl bg-primary text-primary-foreground">CP</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <h2 className="font-semibold text-lg">Cameron Pietraski</h2>
+                                <p className="text-muted-foreground">Full Time Software Engineer</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="shadow-lg text-center p-6 w-60">
                         <CardContent className="flex flex-col items-center justify-center gap-4">
                             <Avatar className="w-20 h-20">
                                 <AvatarFallback className="text-xl bg-primary text-primary-foreground">HS</AvatarFallback>
@@ -73,6 +121,42 @@ function Home() {
                             <div>
                                 <h2 className="font-semibold text-lg">Hayden Schultz</h2>
                                 <p className="text-muted-foreground">FT Engineer & Scrum Master</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="shadow-lg text-center p-6 w-60">
+                        <CardContent className="flex flex-col items-center justify-center gap-4">
+                            <Avatar className="w-20 h-20">
+                                <AvatarFallback className="text-xl bg-primary text-primary-foreground">PO</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <h2 className="font-semibold text-lg">Philip Ostrowski</h2>
+                                <p className="text-muted-foreground">PT Engineer & Project Manager</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="shadow-lg text-center p-6 w-60">
+                        <CardContent className="flex flex-col items-center justify-center gap-4">
+                            <Avatar className="w-20 h-20">
+                                <AvatarFallback className="text-xl bg-primary text-primary-foreground">JH</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <h2 className="font-semibold text-lg">Joseph Hemmerle</h2>
+                                <p className="text-muted-foreground">PT Engineer & Product Owner</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="shadow-lg text-center p-6 w-60">
+                        <CardContent className="flex flex-col items-center justify-center gap-4">
+                            <Avatar className="w-20 h-20">
+                                <AvatarFallback className="text-xl bg-primary text-primary-foreground">RG</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <h2 className="font-semibold text-lg">Ricardo Guzman Volpe</h2>
+                                <p className="text-muted-foreground">PT Engineer & Documentation Analyst</p>
                             </div>
                         </CardContent>
                     </Card>
