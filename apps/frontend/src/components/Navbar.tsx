@@ -13,7 +13,7 @@ import {
 import {Link, Route, Routes} from "react-router-dom";
 import Home from "@/components/Home.tsx";
 import EmployeeForm from "@/components/EmployeeForm.tsx";
-import ManagementForm from "@/components/manageform.tsx";
+import ManagementForm from "@/components/ManagementForm.tsx";
 import Underwriter from "@/components/Underwriter.tsx";
 import BusinessAnalyst from "@/components/BusinessAnalyst.tsx";
 
