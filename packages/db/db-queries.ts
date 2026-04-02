@@ -1,13 +1,13 @@
 import { prisma } from "./lib/prisma"
 import { Persona } from "./generated/prisma/client"
 
-async function queryAllEmployees() {
+export async function queryAllEmployees() {
     const employees = await prisma.employee.findMany({})
     //return JSON.stringify(employees, null, 2)
     return employees
 }
 
-async function createEmployee(_id: number, _firstName: string, _lastName: string, _persona: string | null) {
+export async function createEmployee(_id: number, _firstName: string, _lastName: string, _persona: string | null) {
     const personaTyped = employeePersonaHelper(_persona)
     const employee = await prisma.employee.create({
         data: {
