@@ -1,17 +1,6 @@
 import { prisma } from "./lib/prisma";
 
 async function main() {
-    /*
-    const employee = await prisma.serviceRequest.create({
-        data: {
-            id: 1001,
-            firstName: "John",
-            lastName: "Doe",
-        }
-    })
-
-    console.log("Created employee:", employee);
-     */
 
     const allEmployees = await prisma.employee.findMany({
     });
