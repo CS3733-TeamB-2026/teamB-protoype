@@ -27,18 +27,17 @@ import {
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 
-
-
 function ManagementForm() {
     const [jobPosition, setJobPosition] = useState("Select job position")
-    const [thirdDate, setThirdDate] = React.useState<Date | undefined>(undefined)
     const [docType, setDocType] = useState("Select Document Type")
     const [docStatus, setDocStatus] = useState("Select Document Status")
     const [open, setOpen] = React.useState(false)
-    const [date, setDate] = React.useState<Date | undefined>(undefined)
+    const [date, setDate] = React.useState<Date | undefined>(new Date())
     const [open2, setOpen2] = React.useState(false)
     const [date2, setDate2] = React.useState<Date | undefined>(undefined)
-    const [open3, setOpen3] = React.useState(false)
+    const [lastModifiedTime, setLastModifiedTime] = React.useState(
+        () => new Date().toTimeString().slice(0, 8)
+    )
 
 
 
@@ -162,7 +161,8 @@ function ManagementForm() {
                         type="time"
                         id="time-picker-lastmodified"
                         step="1"
-                        defaultValue="10:30:00"
+                        value={lastModifiedTime}
+                        onChange={(e) => setLastModifiedTime(e.target.value)}
                         className="appearance-none bg-secondary [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
                     />
                 </Field>
@@ -211,49 +211,10 @@ function ManagementForm() {
 
                 {/* //Creation Date Section*/}
 
-                <Separator className = "bg-primary" orientation="vertical" />
 
                 {/* Creation date selection*/}
 
-                <Field className="bg-secondary flex-1">
-                    <FieldLabel className="text-primary" htmlFor="date-picker-creationdate">Creation Date</FieldLabel>
-                    <Popover open={open3} onOpenChange={setOpen3}>
-                        <PopoverTrigger asChild>
-                            <Button
-                                variant="outline"
-                                id="date-picker-creationdate"
-                                className="justify-start font-normal"
-                            >
-                                {thirdDate ? thirdDate.toLocaleDateString() : "Select date"}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-                            <Calendar
-                                mode="single"
-                                selected={thirdDate}
-                                defaultMonth={thirdDate}
-                                captionLayout="dropdown"
-                                onSelect={(date) => {
-                                    setThirdDate(date)
-                                    setOpen3(false)
-                                }}
-                            />
-                        </PopoverContent>
-                    </Popover>
-                </Field>
 
-                {/* //Tieme picker creation date*/}
-
-                <Field className="w-32">
-                    <FieldLabel className="text-primary" htmlFor="time-picker-creationdate">Time</FieldLabel>
-                    <Input
-                        type="time"
-                        id="time-picker-creationdate"
-                        step="1"
-                        defaultValue="10:30:00"
-                        className="appearance-none bg-secondary [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-                    />
-                </Field>
             </div>
             <div className="bg-secondary py-2">
                 <Separator className="bg-primary" />
@@ -291,10 +252,9 @@ function ManagementForm() {
                         <DropdownMenuGroup>
                             <DropdownMenuLabel>Document Status</DropdownMenuLabel>
                             <DropdownMenuRadioGroup value={docStatus} onValueChange={setDocStatus}>
-                                <DropdownMenuRadioItem value="New">New</DropdownMenuRadioItem>
-                                <DropdownMenuRadioItem value="Waiting">Waiting</DropdownMenuRadioItem>
+                                <DropdownMenuRadioItem value="To do">New</DropdownMenuRadioItem>
                                 <DropdownMenuRadioItem value="In Progress">In Progress</DropdownMenuRadioItem>
-                                <DropdownMenuRadioItem value="Complete">Complete</DropdownMenuRadioItem>
+                                <DropdownMenuRadioItem value="Done">Complete</DropdownMenuRadioItem>
 
                             </DropdownMenuRadioGroup>
                         </DropdownMenuGroup>
