@@ -43,7 +43,7 @@ app.get("/servicereqs", async (req, res) => {
 app.get("/assigned", async (req, res) => {
     try{
         const id = parseInt(req.query.id as string)
-        const assigned = await q.queryServiceReqsByAssigned(id)
+        const assigned = await q.queryAssignedServiceReqs()
         res.status(200).json(assigned)
     } catch(error){
         console.error(error)
