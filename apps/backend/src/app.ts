@@ -20,6 +20,16 @@ app.get('/employee', async (req, res) => {
     }
 })
 
+app.get('/content', async (req, res) => {
+    try{
+        const employees = await q.queryAllContent()
+        res.status(200).json(employees)
+    } catch(error){
+        console.error(error)
+        res.status(500).end()
+    }
+})
+
 app.get("/servicereqs", async (req, res) => {
     try{
         const servicereqs = await q.queryAllServiceReqs()
