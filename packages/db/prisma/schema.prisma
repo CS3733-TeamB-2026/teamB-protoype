@@ -42,7 +42,6 @@ model Content {
   @@schema("public")
 }
 
-//NEED TO FIX SPELLING OF asigneeID
 model ServiceRequest {
   owner   Employee @relation("OwnedBy", fields: [ownerID], references: [id])
   ownerID Int
