@@ -10,7 +10,7 @@ queryAllEmployees().then(
     (employees) => {console.log(employees)}
 )
 
-async function queryEmployeeById(id: number) {
+export async function queryEmployeeById(id: number) {
     const employees = await prisma.employee.findUnique({
         where: {id: id}
     })
@@ -18,13 +18,13 @@ async function queryEmployeeById(id: number) {
     return employees
 }
 
-async function queryServiceReqs() {
+export async function queryServiceReqs() {
     const serviceReqs = await prisma.serviceRequest.findMany({})
     //return JSON.stringify(employees, null, 2)
     return serviceReqs
 }
 
-async function queryServiceByAssigned(id: number) {
+export async function queryServiceByAssigned(id: number) {
     const serviceReqs = await prisma.serviceRequest.findMany({
         where: {asigneeID: id}
     })

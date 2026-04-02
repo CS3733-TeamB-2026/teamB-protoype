@@ -1,7 +1,8 @@
 import express from 'express'
 import cors from 'cors'
 import { queryAllEmployees } from "db/db-queries";
-import {prisma} from "db/lib/prisma";
+import { queryServiceReqs } from "db/db-queries";
+import { queryServiceByAssigned } from "db/db-queries";
 
 const app = express()
 app.use(cors())
@@ -15,15 +16,26 @@ app.get('/employee', async (req, res) => {
         console.error(error)
         res.status(500).end()
     }
-    console.log(res.json(fetchEmployee(12345)))
 })
 
-app.get("/servicereqs", (req, res) => {
-    console.log(res.json(fetchServiceRequest()))
+app.get("/servicereqs", async (req, res) => {
+    try{
+        const servicereqs = await queryServiceReqs()
+        res.status(200).json(servicereqs)
+    } catch(error){
+        console.error(error)
+        res.status(500).end()
+    }
 })
 
-app.get("/assigned", (req, res) => {
-    console.log(res.json(fetchAssignment()))
+app.get("/assigned", async (req, res) => {
+    try{
+        const assigned = await queryServiceByAssigned(req.params.id)
+        res.status(200).json(assigned)
+    } catch(error){
+        console.error(error)
+        res.status(500).end()
+    }
 })
 
 /*
