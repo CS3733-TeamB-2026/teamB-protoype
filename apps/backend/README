@@ -3,3 +3,5 @@ Please place you .env file here with:
 SUPABASE_URL=https://<replace>.supabase.co
 SUPABASE_SECRET_KEY=sb_secret_<replace>
 DATABASE_URL=<replace>
+
+TODO: Move environment file to top level and configure with pnpm
