@@ -15,7 +15,7 @@ export async function queryAllContent(): Promise<p.Content[]> {
     return prisma.content.findMany({})
 }
 
-export async function queryServiceReqs(): Promise<p.ServiceRequest[]> {
+export async function queryAllServiceReqs(): Promise<p.ServiceRequest[]> {
     return prisma.serviceRequest.findMany({})
 }
 
@@ -25,7 +25,7 @@ export async function queryAssignedServiceReqs(): Promise<p.ServiceRequest[]> {
     })
 }
 
-export async function queryServiceByAssigned(id: number): Promise<p.ServiceRequest[]> {
+export async function queryServiceReqsByAssigned(id: number): Promise<p.ServiceRequest[]> {
     return prisma.serviceRequest.findMany({
         where: {assigneeID: id}
     })
