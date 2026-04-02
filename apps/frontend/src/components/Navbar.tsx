@@ -44,7 +44,7 @@ function Navbar() {
                         <NavigationMenuItem className="relative">
 
                             <DropdownMenu>
-                                <DropdownMenuTrigger className="hover:text-muted-foreground transition-colors text-xl">
+                                <DropdownMenuTrigger className="hover:text-muted-foreground hover:bg-secondary rounded-lg px-4 py-2 transition-colors text-xl">
                                     Personas
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent
