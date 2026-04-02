@@ -6,10 +6,6 @@ export async function queryAllEmployees() {
     return employees
 }
 
-queryAllEmployees().then(
-    (employees) => {console.log(employees)}
-)
-
 export async function queryEmployeeById(id: number) {
     const employees = await prisma.employee.findUnique({
         where: {id: id}
@@ -31,7 +27,10 @@ export async function queryServiceByAssigned(id: number) {
     //return JSON.stringify(employees, null, 2)
     return serviceReqs
 }
-
+/*
+queryAllEmployees().then(
+    (employees) => {console.log(employees)}
+)
 
 queryEmployeeById(1001).then(
     (employee) => {console.log(employee)}
@@ -44,3 +43,4 @@ queryServiceReqs().then(
 queryServiceByAssigned(1001).then(
     (serviceReqs) => {console.log(serviceReqs)}
 )
+*/
