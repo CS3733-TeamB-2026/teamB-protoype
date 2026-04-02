@@ -4,21 +4,23 @@
     "type": "module",
     "scripts": {
         "dev": "nodemon",
-        "start": "ts-node ./src/app.ts"
+        "start": "tsx src/app.ts"
     },
     "dependencies": {
-        "@supabase/supabase-js": "^2.101.1",
-        "db": "workspace:*",
+        "@softeng-app/db": "workspace:*",
+        "cors": "^2.8.6",
         "dotenv": "^17.3.1",
         "express": "^5.2.1",
         "morgan": "^1.10.1",
-        "ts-node": "^10.9.2",
+        "tsx": "^4.21.0",
         "typescript": "~5.9.3"
     },
     "devDependencies": {
+        "@types/cors": "^2.8.19",
         "@types/express": "^5.0.6",
         "@types/morgan": "^1.9.10",
         "@types/node": "^24.12.0",
+        "cors": "^2.8.6",
         "nodemon": "^3.1.14"
     }
 }
