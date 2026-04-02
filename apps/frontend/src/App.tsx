@@ -75,7 +75,7 @@ function App() {
                     {/*Routing*/}
                     <Routes>
                         <Route path="/" element={<Home/>}/>
-                        <Route path="/empoyeeform" element={<EmployeeForm/>}/>
+                        <Route path="/employeeform" element={<EmployeeForm/>}/>
                         <Route path="/manageform" element={<ManagementForm/>}/>
                         <Route path="/underwriter" element={<Underwriter/>}/>
                         <Route path="/businessanalyst" element={<BusinessAnalyst/>}/>

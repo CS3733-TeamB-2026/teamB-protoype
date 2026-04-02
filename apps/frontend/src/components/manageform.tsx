@@ -28,8 +28,6 @@ import {
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 
-
-
 function ManagementForm() {
     const [jobPosition, setJobPosition] = useState("Select job position")
     const [date, setDate] = React.useState<Date>()
