@@ -1,27 +1,37 @@
 import { prisma } from "./lib/prisma"
 import * as p from "./generated/prisma/client";
 
-export function queryAllEmployees(): Promise<p.Employee[]> {
+export async function queryAllEmployees(): Promise<p.Employee[]> {
     return prisma.employee.findMany({})
 }
 
-export function queryEmployeeById(id: number): Promise<p.Employee | null> {
+export async function queryEmployeeById(id: number): Promise<p.Employee | null> {
     return prisma.employee.findUnique({
         where: {id: id}
     })
 }
 
-export function queryServiceReqs(): Promise<p.ServiceRequest[]> {
+export async function queryAllContent(): Promise<p.Content[]> {
+    return prisma.content.findMany({})
+}
+
+export async function queryServiceReqs(): Promise<p.ServiceRequest[]> {
     return prisma.serviceRequest.findMany({})
 }
 
-export function queryServiceByAssigned(id: number): Promise<p.ServiceRequest[]> {
+export async function queryAssignedServiceReqs(): Promise<p.ServiceRequest[]> {
+    return prisma.serviceRequest.findMany({
+        where: {assigneeID: {not: null}}
+    })
+}
+
+export async function queryServiceByAssigned(id: number): Promise<p.ServiceRequest[]> {
     return prisma.serviceRequest.findMany({
         where: {assigneeID: id}
     })
 }
 
-export function queryObjectsByBucket(name: string): Promise<p.objects[]> {
+export async function queryObjectsByBucket(name: string): Promise<p.objects[]> {
     return prisma.objects.findMany({
         where: {
             bucket_id: name
