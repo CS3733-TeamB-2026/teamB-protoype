@@ -66,7 +66,7 @@ function Navbar() {
                 <Routes>
                     {/*This is where Home gets loaded automatically when it detected we are on "/" page*/}
                     <Route path="/" element={<Home/>}/>
-                    <Route path="/empoyeeform" element={<EmployeeForm/>}/>
+                    <Route path="/employeeform" element={<EmployeeForm/>}/>
                     <Route path="/manageform" element={<ManagementForm/>}/>
                     <Route path="/underwriter" element={<Underwriter/>}/>
                     <Route path="/businessanalyst" element={<BusinessAnalyst/>}/>
