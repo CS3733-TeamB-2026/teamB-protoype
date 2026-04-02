@@ -1,23 +1,67 @@
-import express from 'express';
+import 'dotenv/config'
+import express from 'express'
 import morgan from 'morgan';
+import cors from 'cors'
 
-const app = express();
+import {
+    queryAllEmployees,
+    queryServiceReqs,
+    queryServiceByAssigned,
+    queryObjectsByBucket,
+} from "@softeng-app/db";
 
-// You can change this later to process.env.VARIABLE
-const port = 3001;
-
-// Middleware
-app.use(express.json());
+const app = express()
+app.use(cors())
 app.use(morgan('dev'));
+app.use(express.json())
 
-// Send HTTP 200 at root
-app.get('/', (req, res) => {
-    res.sendStatus(200);
-});
+app.get('/employee', async (req, res) => {
+    try{
+        const employees = await queryAllEmployees()
+        res.status(200).json(employees)
+    } catch(error){
+        console.error(error)
+        res.status(500).end()
+    }
+})
 
-// Start server
-app.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
-});
+app.get("/servicereqs", async (req, res) => {
+    try{
+        const servicereqs = await queryServiceReqs()
+        res.status(200).json(servicereqs)
+    } catch(error){
+        console.error(error)
+        res.status(500).end()
+    }
+})
 
-export default app;
+app.get("/assigned", async (req, res) => {
+    try{
+        const id = parseInt(req.query.id as string)
+        const assigned = await queryServiceByAssigned(id)
+        res.status(200).json(assigned)
+    } catch(error){
+        console.error(error)
+        res.status(500).end()
+    }
+})
+
+app.get("/files", async (req, res) => {
+    try{
+        const assigned = await queryObjectsByBucket("test")
+        res.status(200).json(assigned)
+    } catch(error){
+        console.error(error)
+        res.status(500).end()
+    }
+})
+
+/*
+app.post("/form", (req, res) => {
+    addToDB(res)
+})
+*/
+
+app.listen(3000, () => {
+    console.log(`Server is listening on port 3000`);
+})

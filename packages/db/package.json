@@ -1,8 +1,10 @@
 {
-  "name": "db",
+  "name": "@softeng-app/db",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "exports": {
+    ".": "./index.ts"
+  },
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -21,6 +23,7 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.6.0",
     "@prisma/client": "^7.6.0",
+    "@supabase/supabase-js": "^2.101.1",
     "dotenv": "^17.3.1",
     "pg": "^8.20.0"
   }

@@ -1,0 +1,48 @@
+import { prisma } from "./lib/prisma"
+import * as p from "./generated/prisma/client";
+
+export function queryAllEmployees(): Promise<p.Employee[]> {
+    return prisma.employee.findMany({})
+}
+
+export function queryEmployeeById(id: number): Promise<p.Employee | null> {
+    return prisma.employee.findUnique({
+        where: {id: id}
+    })
+}
+
+export function queryServiceReqs(): Promise<p.ServiceRequest[]> {
+    return prisma.serviceRequest.findMany({})
+}
+
+export function queryServiceByAssigned(id: number): Promise<p.ServiceRequest[]> {
+    return prisma.serviceRequest.findMany({
+        where: {assigneeID: id}
+    })
+}
+
+export function queryObjectsByBucket(name: string): Promise<p.objects[]> {
+    return prisma.objects.findMany({
+        where: {
+            bucket_id: name
+        },
+    })
+}
+
+export async function createEmployee(_id: number, _firstName: string, _lastName: string, _persona: string | null): Promise<void> {
+    const personaTyped: p.Persona | null = employeePersonaHelper(_persona)
+    await prisma.employee.create({
+        data: {
+            id: _id,
+            firstName: _firstName,
+            lastName: _lastName,
+            persona: personaTyped
+        }
+    })
+}
+
+function employeePersonaHelper(_persona: string | null): p.Persona | null {
+    if (_persona == "underwriter") { return p.Persona.underwriter }
+    else if (_persona == "businessAnalyst") { return p.Persona.businessAnalyst }
+    else { return null }
+}
