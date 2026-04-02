@@ -2,7 +2,7 @@ import { prisma } from "./lib/prisma";
 
 async function main() {
     /*
-    const employee = await prisma.employee.create({
+    const employee = await prisma.serviceRequest.create({
         data: {
             id: 1001,
             firstName: "John",
