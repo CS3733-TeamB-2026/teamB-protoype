@@ -40,20 +40,20 @@ function employeePersonaHelper(_persona: string | null): p.Persona | null {
 }
 
 //TESTING
-queryAllEmployees().then(
-(employees) => {console.log("All employees:", employees)})
+//queryAllEmployees().then(
+//(employees) => {console.log("All employees:", employees)})
 
-queryEmployeeById(1001).then(
-    (employee) => {console.log("Employee 1001:", employee)}
-)
+//queryEmployeeById(1001).then(
+//    (employee) => {console.log("Employee 1001:", employee)}
+//)
 
-queryServiceReqs().then(
-    (serviceReqs) => {console.log("All requests:", serviceReqs)}
-)
+//queryServiceReqs().then(
+//    (serviceReqs) => {console.log("All requests:", serviceReqs)}
+//)
 
-queryServiceByAssigned(1001).then(
-    (serviceReqs) => {console.log("1001's requests:", serviceReqs)}
-)
+//queryServiceByAssigned(1001).then(
+//    (serviceReqs) => {console.log("1001's requests:", serviceReqs)}
+//)
 
 //createEmployee(27, "John", "NoRole").then(
 //    () => queryAllEmployees().then(
