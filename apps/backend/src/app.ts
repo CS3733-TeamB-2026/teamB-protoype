@@ -20,7 +20,7 @@ app.get('/api/employee', async (req, res) => {
     }
 })
 
-app.get('/content', async (req, res) => {
+app.get('/api/content', async (req, res) => {
     try{
         const employees = await q.queryAllContent()
         res.status(200).json(employees)
