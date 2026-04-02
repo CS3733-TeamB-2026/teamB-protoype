@@ -6,7 +6,8 @@ import cors from 'cors'
 import {
     queryAllEmployees,
     queryServiceReqs,
-    queryServiceByAssigned
+    queryServiceByAssigned,
+    queryObjectsByBucket,
 } from "@softeng-app/db";
 
 const app = express()
@@ -38,6 +39,16 @@ app.get("/assigned", async (req, res) => {
     try{
         const id = parseInt(req.query.id as string)
         const assigned = await queryServiceByAssigned(id)
+        res.status(200).json(assigned)
+    } catch(error){
+        console.error(error)
+        res.status(500).end()
+    }
+})
+
+app.get("/files", async (req, res) => {
+    try{
+        const assigned = await queryObjectsByBucket("test")
         res.status(200).json(assigned)
     } catch(error){
         console.error(error)
