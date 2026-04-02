@@ -1,6 +1,6 @@
 import { prisma } from "./lib/prisma"
 
-async function queryAllEmployees() {
+export async function queryAllEmployees() {
     const employees = await prisma.employee.findMany({})
     //return JSON.stringify(employees, null, 2)
     return employees
