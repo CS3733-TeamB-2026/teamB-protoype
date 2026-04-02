@@ -18,70 +18,70 @@ function Underwriter() {
                 {/*Links*/}
                 <div className="flex flex-wrap justify-center gap-3 mx-auto max-w-5xl my-4">
                     <a href="#">
-                        <Card className="shadow-lg hover:bg-primary transition-all cursor-pointer active:scale-[0.98] text-blue-500 hover:text-primary-foreground">
+                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
                             <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
                                 Desktop Management Tool
                             </CardContent>
                         </Card>
                     </a>
                     <a href="#">
-                        <Card className="shadow-lg hover:bg-primary transition-all cursor-pointer active:scale-[0.98] text-blue-500 hover:text-primary-foreground">
+                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
                             <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
                                 States on Hold
                             </CardContent>
                         </Card>
                     </a>
                     <a href="#">
-                        <Card className="shadow-lg hover:bg-primary transition-all cursor-pointer active:scale-[0.98] text-blue-500 hover:text-primary-foreground">
+                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
                             <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
                                 RiskMeter Online
                             </CardContent>
                         </Card>
                     </a>
                     <a href="#">
-                        <Card className="shadow-lg hover:bg-primary transition-all cursor-pointer active:scale-[0.98] text-blue-500 hover:text-primary-foreground">
+                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
                             <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
                                 ISOnet Website
                             </CardContent>
                         </Card>
                     </a>
                     <a href="#">
-                        <Card className="shadow-lg hover:bg-primary transition-all cursor-pointer active:scale-[0.98] text-blue-500 hover:text-primary-foreground">
+                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
                             <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
                                 Forms Knowledge Base
                             </CardContent>
                         </Card>
                     </a>
                     <a href="#">
-                        <Card className="shadow-lg hover:bg-primary transition-all cursor-pointer active:scale-[0.98] text-blue-500 hover:text-primary-foreground">
+                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
                             <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
                                 Experience & Schedule Rating Plans
                             </CardContent>
                         </Card>
                     </a>
                     <a href="#">
-                        <Card className="shadow-lg hover:bg-primary transition-all cursor-pointer active:scale-[0.98] text-blue-500 hover:text-primary-foreground">
+                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
                             <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
                                 Property View
                             </CardContent>
                         </Card>
                     </a>
                     <a href="#">
-                        <Card className="shadow-lg hover:bg-primary transition-all cursor-pointer active:scale-[0.98] text-blue-500 hover:text-primary-foreground">
+                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
                             <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
                                 Coastal Guidelines
                             </CardContent>
                         </Card>
                     </a>
                     <a href="#">
-                        <Card className="shadow-lg hover:bg-primary transition-all cursor-pointer active:scale-[0.98] text-blue-500 hover:text-primary-foreground">
+                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
                             <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
                                 IPS (Image & Processing System)
                             </CardContent>
                         </Card>
                     </a>
                     <a href="#">
-                        <Card className="shadow-lg hover:bg-primary transition-all cursor-pointer active:scale-[0.98] text-blue-500 hover:text-primary-foreground">
+                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
                             <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
                                 Underwriting Workstation
                             </CardContent>
