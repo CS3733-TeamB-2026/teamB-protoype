@@ -1,11 +1,20 @@
 import express from 'express'
 import cors from 'cors'
-const app = express()
+import { queryAllEmployees } from "db/db-queries";
+import {prisma} from "db/lib/prisma";
 
+const app = express()
 app.use(cors())
 app.use(express.json())
 
-app.get('/employee', (req, res) => {
+app.get('/employee', async (req, res) => {
+    try{
+        const employees = await queryAllEmployees()
+        res.status(200).json(employees)
+    } catch(error){
+        console.error(error)
+        res.status(500).end()
+    }
     console.log(res.json(fetchEmployee(12345)))
 })
 
