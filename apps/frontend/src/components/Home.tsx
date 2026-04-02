@@ -16,7 +16,7 @@ function Home() {
         <>
             {/*Hero*/}
             <div className="flex flex-col items-center justify-center py-20 px-8 bg-secondary-foreground text-primary-foreground">
-                <h1 className="text-4xl font-bold mb-4">Hanover Insurance - Content Management Service</h1>
+                <h1 className="text-4xl font-bold mb-4">Hanover Insurance - Content Management Application</h1>
                 <p className="text-lg mb-8 text-primary-foreground/80">CS3733 Team B D26</p>
                 <Button variant="secondary" size="lg">Get Started</Button>
             </div>
