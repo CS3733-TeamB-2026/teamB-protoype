@@ -7,6 +7,28 @@ export async function queryAllEmployees() {
     return employees
 }
 
+export async function queryEmployeeById(id: number) {
+    const employees = await prisma.employee.findUnique({
+        where: {id: id}
+    })
+    //return JSON.stringify(employees, null, 2)
+    return employees
+}
+
+export async function queryServiceReqs() {
+    const serviceReqs = await prisma.serviceRequest.findMany({})
+    //return JSON.stringify(employees, null, 2)
+    return serviceReqs
+}
+
+export async function queryServiceByAssigned(id: number) {
+    const serviceReqs = await prisma.serviceRequest.findMany({
+        where: {asigneeID: id}
+    })
+    //return JSON.stringify(employees, null, 2)
+    return serviceReqs
+}
+
 export async function createEmployee(_id: number, _firstName: string, _lastName: string, _persona: string | null) {
     const personaTyped = employeePersonaHelper(_persona)
     const employee = await prisma.employee.create({
@@ -25,8 +47,21 @@ function employeePersonaHelper(_persona: string | null) {
     else { return null }
 }
 
-//queryAllEmployees().then(
-    //(employees) => {console.log(employees)})
+//TESTING
+queryAllEmployees().then(
+(employees) => {console.log(employees)})
+
+queryEmployeeById(1001).then(
+    (employee) => {console.log(employee)}
+)
+
+queryServiceReqs().then(
+    (serviceReqs) => {console.log(serviceReqs)}
+)
+
+queryServiceByAssigned(1001).then(
+    (serviceReqs) => {console.log(serviceReqs)}
+)
 
 //createEmployee(27, "John", "NoRole").then(
 //    () => queryAllEmployees().then(

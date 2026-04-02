@@ -1,20 +1,41 @@
 import express from 'express'
 import cors from 'cors'
-const app = express()
+import { queryAllEmployees } from "db/db-queries";
+import { queryServiceReqs } from "db/db-queries";
+import { queryServiceByAssigned } from "db/db-queries";
 
+const app = express()
 app.use(cors())
 app.use(express.json())
 
-app.get('/employee', (req, res) => {
-    console.log(res.json(fetchEmployee(12345)))
+app.get('/employee', async (req, res) => {
+    try{
+        const employees = await queryAllEmployees()
+        res.status(200).json(employees)
+    } catch(error){
+        console.error(error)
+        res.status(500).end()
+    }
 })
 
-app.get("/servicereqs", (req, res) => {
-    console.log(res.json(fetchServiceRequest()))
+app.get("/servicereqs", async (req, res) => {
+    try{
+        const servicereqs = await queryServiceReqs()
+        res.status(200).json(servicereqs)
+    } catch(error){
+        console.error(error)
+        res.status(500).end()
+    }
 })
 
-app.get("/assigned", (req, res) => {
-    console.log(res.json(fetchAssignment()))
+app.get("/assigned", async (req, res) => {
+    try{
+        const assigned = await queryServiceByAssigned(req.params.id)
+        res.status(200).json(assigned)
+    } catch(error){
+        console.error(error)
+        res.status(500).end()
+    }
 })
 
 /*
