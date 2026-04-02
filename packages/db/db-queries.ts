@@ -1,37 +1,29 @@
 import { prisma } from "./lib/prisma"
-import { Persona } from "./generated/prisma/client"
+import * as p from "./generated/prisma/client";
 
-export async function queryAllEmployees() {
-    const employees = await prisma.employee.findMany({})
-    //return JSON.stringify(employees, null, 2)
-    return employees
+export function queryAllEmployees(): Promise<p.Employee[]> {
+    return prisma.employee.findMany({})
 }
 
-export async function queryEmployeeById(id: number) {
-    const employees = await prisma.employee.findUnique({
+export function queryEmployeeById(id: number): Promise<p.Employee | null> {
+    return prisma.employee.findUnique({
         where: {id: id}
     })
-    //return JSON.stringify(employees, null, 2)
-    return employees
 }
 
-export async function queryServiceReqs() {
-    const serviceReqs = await prisma.serviceRequest.findMany({})
-    //return JSON.stringify(employees, null, 2)
-    return serviceReqs
+export function queryServiceReqs(): Promise<p.ServiceRequest[]> {
+    return prisma.serviceRequest.findMany({})
 }
 
-export async function queryServiceByAssigned(id: number) {
-    const serviceReqs = await prisma.serviceRequest.findMany({
+export function queryServiceByAssigned(id: number): Promise<p.ServiceRequest[]> {
+    return prisma.serviceRequest.findMany({
         where: {asigneeID: id}
     })
-    //return JSON.stringify(employees, null, 2)
-    return serviceReqs
 }
 
-export async function createEmployee(_id: number, _firstName: string, _lastName: string, _persona: string | null) {
-    const personaTyped = employeePersonaHelper(_persona)
-    const employee = await prisma.employee.create({
+export async function createEmployee(_id: number, _firstName: string, _lastName: string, _persona: string | null): Promise<void> {
+    const personaTyped: p.Persona | null = employeePersonaHelper(_persona)
+    const employee: p.Employee = await prisma.employee.create({
         data: {
             id: _id,
             firstName: _firstName,
@@ -41,9 +33,9 @@ export async function createEmployee(_id: number, _firstName: string, _lastName:
     })
 }
 
-function employeePersonaHelper(_persona: string | null) {
-    if (_persona == "underwriter") { return Persona.underwriter }
-    else if (_persona == "businessAnalyst") { return Persona.businessAnalyst }
+function employeePersonaHelper(_persona: string | null): p.Persona | null {
+    if (_persona == "underwriter") { return p.Persona.underwriter }
+    else if (_persona == "businessAnalyst") { return p.Persona.businessAnalyst }
     else { return null }
 }
 
