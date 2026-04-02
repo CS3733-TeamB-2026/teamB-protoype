@@ -15,7 +15,7 @@ app.use(cors())
 app.use(morgan('dev'));
 app.use(express.json())
 
-app.get('/employee', async (req, res) => {
+app.get('/api/employee', async (req, res) => {
     try{
         const employees = await queryAllEmployees()
         res.status(200).json(employees)
@@ -25,7 +25,7 @@ app.get('/employee', async (req, res) => {
     }
 })
 
-app.get("/servicereqs", async (req, res) => {
+app.get("/api/servicereqs", async (req, res) => {
     try{
         const servicereqs = await queryServiceReqs()
         res.status(200).json(servicereqs)
@@ -35,7 +35,7 @@ app.get("/servicereqs", async (req, res) => {
     }
 })
 
-app.get("/assigned", async (req, res) => {
+app.get("/api/assigned", async (req, res) => {
     try{
         const id = parseInt(req.query.id as string)
         const assigned = await queryServiceByAssigned(id)
@@ -46,7 +46,7 @@ app.get("/assigned", async (req, res) => {
     }
 })
 
-app.get("/files", async (req, res) => {
+app.get("/api/files", async (req, res) => {
     try{
         const assigned = await queryObjectsByBucket("test")
         res.status(200).json(assigned)
