@@ -3,4 +3,3 @@ node_modules/
 .env
 .turbo/
 .idea/
-packages/db/generated/
