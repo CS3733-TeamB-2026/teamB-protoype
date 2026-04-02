@@ -13,21 +13,17 @@ export async function createBucket() {
     }
 }
 
-export async function deleteBucket() {
-    const {data, error} = await supabase.storage.createBucket(bucket, {
-        public: true, // default: false
-    })
+export async function listBuckets() {
+    const {data, error} = await supabase.storage.listBuckets()
     if (error) {
         console.error("Error:", error.message);
     } else {
-        console.log("Bucket created:", data);
+        console.log("Bucket:", data);
     }
 }
 
-export async function readBucket() {
-    const {data, error} = await supabase.storage.createBucket(bucket, {
-        public: true, // default: false
-    })
+export async function getBucket() {
+    const {data, error} = await supabase.storage.getBucket("test");
     if (error) {
         console.error("Error:", error.message);
     } else {

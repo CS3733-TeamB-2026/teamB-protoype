@@ -46,28 +46,3 @@ function employeePersonaHelper(_persona: string | null): p.Persona | null {
     else if (_persona == "businessAnalyst") { return p.Persona.businessAnalyst }
     else { return null }
 }
-
-//TESTING
-queryAllEmployees().then(
-    (employees) => {console.log("All employees:", employees)}
-)
-
-// queryEmployeeById(1001).then(
-//     (employee) => {console.log("Employee 1001:", employee)}
-// )
-//
-// queryServiceReqs().then(
-//     (serviceReqs) => {console.log("All requests:", serviceReqs)}
-// )
-//
-// queryServiceByAssigned(1001).then(
-//     (serviceReqs) => {console.log("1001's requests:", serviceReqs)}
-// )
-
-queryObjectsByBucket("test").then(
-    (objects) => {console.log("All requests:", objects)}
-)
-
-//createEmployee(27, "John", "NoRole").then(
-//    () => queryAllEmployees().then(
-//        (employees) => {console.log(employees)}))

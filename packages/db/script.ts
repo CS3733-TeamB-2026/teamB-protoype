@@ -1,18 +1,20 @@
-import { prisma } from "./lib/prisma";
+import {queryAllEmployees, queryObjectsByBucket} from "./db-queries";
+import {getBucket, listBuckets} from "./buckets";
 
 async function main() {
 
-    const allEmployees = await prisma.employee.findMany({
-    });
-    console.log("All employees:", JSON.stringify(allEmployees, null, 2));
+    queryAllEmployees().then(
+        (employees) => {console.log("All employees:", employees)}
+    )
+
+    queryObjectsByBucket("test").then(
+        (objects) => {console.log("All requests:", objects)}
+    )
+
+    await listBuckets();
+
+    await getBucket();
+
 }
 
-main()
-    .then(async () => {
-        await prisma.$disconnect();
-    })
-    .catch(async (e) => {
-        console.error(e);
-        await prisma.$disconnect();
-        process.exit(1);
-    });
+main().then(() => {}).catch(console.error);
