@@ -49,18 +49,18 @@ function employeePersonaHelper(_persona: string | null) {
 
 //TESTING
 queryAllEmployees().then(
-(employees) => {console.log(employees)})
+(employees) => {console.log("All employees:", employees)})
 
 queryEmployeeById(1001).then(
-    (employee) => {console.log(employee)}
+    (employee) => {console.log("Employee 1001:", employee)}
 )
 
 queryServiceReqs().then(
-    (serviceReqs) => {console.log(serviceReqs)}
+    (serviceReqs) => {console.log("All requests:", serviceReqs)}
 )
 
 queryServiceByAssigned(1001).then(
-    (serviceReqs) => {console.log(serviceReqs)}
+    (serviceReqs) => {console.log("1001's requests:", serviceReqs)}
 )
 
 //createEmployee(27, "John", "NoRole").then(
