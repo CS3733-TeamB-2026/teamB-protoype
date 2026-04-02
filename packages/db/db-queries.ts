@@ -17,7 +17,7 @@ export function queryServiceReqs(): Promise<p.ServiceRequest[]> {
 
 export function queryServiceByAssigned(id: number): Promise<p.ServiceRequest[]> {
     return prisma.serviceRequest.findMany({
-        where: {asigneeID: id}
+        where: {assigneeID: id}
     })
 }
 

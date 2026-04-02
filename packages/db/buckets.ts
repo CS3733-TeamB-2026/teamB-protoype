@@ -1,9 +1,8 @@
-import supabase from './lib/supabase.js'
-import {readFileSync} from "fs";
+import { supabase } from './lib/supabase'
 
 const bucket = "test";
 
-async function createBucket() {
+export async function createBucket() {
     const {data, error} = await supabase.storage.createBucket(bucket, {
         public: true, // default: false
     })
@@ -14,7 +13,7 @@ async function createBucket() {
     }
 }
 
-async function deleteBucket() {
+export async function deleteBucket() {
     const {data, error} = await supabase.storage.createBucket(bucket, {
         public: true, // default: false
     })
@@ -25,7 +24,7 @@ async function deleteBucket() {
     }
 }
 
-async function readBucket() {
+export async function readBucket() {
     const {data, error} = await supabase.storage.createBucket(bucket, {
         public: true, // default: false
     })
@@ -36,7 +35,7 @@ async function readBucket() {
     }
 }
 
-async function uploadFile(file: Buffer, path: string) {
+export async function uploadFile(file: Buffer, path: string) {
     const { data, error } = await supabase.storage.from(bucket).upload(path, file)
     if (error) {
         console.log("Error:", error);
@@ -44,12 +43,3 @@ async function uploadFile(file: Buffer, path: string) {
         console.log("File uploaded:", data);
     }
 }
-
-// curl -v https://mvenfqykopvrbrqzwbiy.supabase.co/storage/v1/object/public/test/public/test.txt
-
-async function main() {
-    const file = readFileSync("./test.txt");
-    await uploadFile(file, "public/test.txt")
-}
-
-main();

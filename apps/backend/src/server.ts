@@ -1,8 +1,10 @@
 import express from 'express'
 import cors from 'cors'
-import { queryAllEmployees } from "db/db-queries";
-import { queryServiceReqs } from "db/db-queries";
-import { queryServiceByAssigned } from "db/db-queries";
+import {
+    queryAllEmployees,
+    queryServiceReqs,
+    queryServiceByAssigned
+} from "packages/db/db-queries";
 
 const app = express()
 app.use(cors())
@@ -48,7 +50,7 @@ app.listen(3000, () => {
     console.log(`Server is listening on port 3000`);
 })
 
-function addToDB(res) {
+function addToDB() {
     //TODO Implement with DB
 }
 

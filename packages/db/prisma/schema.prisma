@@ -47,8 +47,8 @@ model ServiceRequest {
   owner   Employee @relation("OwnedBy", fields: [ownerID], references: [id])
   ownerID Int
 
-  assignee  Employee? @relation("AssignedTo", fields: [asigneeID], references: [id])
-  asigneeID Int?
+  assignee   Employee? @relation("AssignedTo", fields: [assigneeID], references: [id])
+  assigneeID Int?
 
   created  DateTime    @default(now())
   deadline DateTime?
