@@ -21,6 +21,14 @@ export function queryServiceByAssigned(id: number): Promise<p.ServiceRequest[]> 
     })
 }
 
+export function queryObjectsByBucket(name: string): Promise<p.objects[]> {
+    return prisma.objects.findMany({
+        where: {
+            bucket_id: name
+        },
+    })
+}
+
 export async function createEmployee(_id: number, _firstName: string, _lastName: string, _persona: string | null): Promise<void> {
     const personaTyped: p.Persona | null = employeePersonaHelper(_persona)
     const employee: p.Employee = await prisma.employee.create({
@@ -41,18 +49,23 @@ function employeePersonaHelper(_persona: string | null): p.Persona | null {
 
 //TESTING
 queryAllEmployees().then(
-(employees) => {console.log("All employees:", employees)})
-
-queryEmployeeById(1001).then(
-    (employee) => {console.log("Employee 1001:", employee)}
+    (employees) => {console.log("All employees:", employees)}
 )
 
-queryServiceReqs().then(
-    (serviceReqs) => {console.log("All requests:", serviceReqs)}
-)
+// queryEmployeeById(1001).then(
+//     (employee) => {console.log("Employee 1001:", employee)}
+// )
+//
+// queryServiceReqs().then(
+//     (serviceReqs) => {console.log("All requests:", serviceReqs)}
+// )
+//
+// queryServiceByAssigned(1001).then(
+//     (serviceReqs) => {console.log("1001's requests:", serviceReqs)}
+// )
 
-queryServiceByAssigned(1001).then(
-    (serviceReqs) => {console.log("1001's requests:", serviceReqs)}
+queryObjectsByBucket("test").then(
+    (objects) => {console.log("All requests:", objects)}
 )
 
 //createEmployee(27, "John", "NoRole").then(
