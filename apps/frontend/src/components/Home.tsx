@@ -32,7 +32,7 @@ function Home() {
     const [employees, setEmployees] = useState<Employee[]>([]);
 
     useEffect(() => {
-        fetch("/employee")
+        fetch("/api/employee")
             .then(res => res.json())
             .then(data => setEmployees(data))
     }, [])

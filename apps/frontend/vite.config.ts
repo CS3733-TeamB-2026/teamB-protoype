@@ -8,7 +8,7 @@ import path from 'path'
 export default defineConfig({
   server: {
     proxy: {
-      "/employee": "http://localhost:3000/",
+      "/api": "http://localhost:3000/",
     }
   },
   resolve: {
