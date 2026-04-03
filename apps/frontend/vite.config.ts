@@ -6,6 +6,11 @@ import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    proxy: {
+      "/employee": "http://localhost:3000/",
+    }
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
