@@ -1,4 +1,5 @@
 import { Home, FormInput, User, ChevronDown } from "lucide-react"
+import React from "react"
 import {Link} from "react-router-dom";
 import {
     Sidebar,
@@ -22,6 +23,7 @@ type NavItem = {
 }
 
 //Add pages here, icons imported from lucide react
+//For dropdowns, add more items in children array, leave array empty for single item
 const navItems = [
     { title: "Home", icon: Home, href: "/", children: [] },
     { title: "Management Form", icon: FormInput, href: "/manageform", children: [] },
@@ -36,10 +38,12 @@ function AppSidebar() {
     return (
         <Sidebar className="bg-sidebar border-r-2!">
 
-            <SidebarHeader className="p-4 border-b-2">
-                <h1 className="text-lg font-semibold tracking-tight">Hanover CMS</h1>
+            <SidebarHeader className="p-4">
+                <h1 className="text-lg font-semibold tracking-tight">Hanover CMA</h1>
                 <p className="text-sm text-muted-foreground">Team B - D26</p>
             </SidebarHeader>
+
+            <hr className="w-[calc(100%-2rem)] mx-auto h-px bg-primary border-none" />
 
             <SidebarContent className="p-2">
 
@@ -92,6 +96,8 @@ function AppSidebar() {
                 </SidebarMenu>
 
             </SidebarContent>
+
+            <hr className="w-[calc(100%-2rem)] mx-auto h-px bg-primary border-none" />
 
             <SidebarFooter className="p-4 border-t-2">
                 <p className="text-xs text-muted-foreground">CS3733 D26</p>

@@ -25,6 +25,7 @@ function Navbar() {
 
     return (
         <>
+
             <nav className="flex items-center bg-primary text-primary-foreground p-4 w-full shrink-0">
 
                 <div className="flex items-center gap-2 min-w-fit z-10">
