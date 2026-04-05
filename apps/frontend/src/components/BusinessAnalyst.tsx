@@ -34,7 +34,7 @@ function BusinessAnalyst() {
 
                     {links.map((link : PersonaLink) => (
                         <a href={link.url}>
-                            <Card className="border border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
+                            <Card className="bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
                                 <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
                                     {link.name}
                                 </CardContent>

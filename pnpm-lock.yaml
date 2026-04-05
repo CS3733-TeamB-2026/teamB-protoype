@@ -67,6 +67,9 @@ importers:
       '@fontsource-variable/merriweather':
         specifier: ^5.2.6
         version: 5.2.6
+      '@fontsource-variable/roboto':
+        specifier: ^5.2.10
+        version: 5.2.10
       '@fontsource-variable/roboto-slab':
         specifier: ^5.2.8
         version: 5.2.8
@@ -88,6 +91,9 @@ importers:
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
+      lucide-react:
+        specifier: ^1.7.0
+        version: 1.7.0(react@19.2.4)
       radix-ui:
         specifier: ^1.4.3
         version: 1.4.3(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -577,6 +583,9 @@ packages:
 
   '@fontsource-variable/roboto-slab@5.2.8':
     resolution: {integrity: sha512-cdvOSwocP50xS01gXqnGxw7uFcCZQgn1IDlqiAmNuZP4uEVScYAKMDC+aWsbP1grn9QdMJ2frhcuVBNXniBVGA==}
+
+  '@fontsource-variable/roboto@5.2.10':
+    resolution: {integrity: sha512-LJ0iLg6aHbLzN515gyHzmdTqJzd9NlI95cCg1DW0F5G7KkFqRLBBKBbqEJx4nSu4aby3IKmw3ZH6Fe928IfaSQ==}
 
   '@hono/node-server@1.19.11':
     resolution: {integrity: sha512-dr8/3zEaB+p0D2n/IUrlPF1HZm586qgJNXK1a9fhg/PzdtkK7Ksd5l312tJX2yBuALqDYBlG20QEbayqPyxn+g==}
@@ -2944,6 +2953,11 @@ packages:
     resolution: {integrity: sha512-DqC6n3QQ77zdFpCMASA1a3Jlb64Hv2N2DciFGkO/4L9+q/IpIAuRlKOvCXabtRW6cQf8usbmM6BE/TOPysCdIA==}
     engines: {bun: '>=1.0.0', deno: '>=1.30.0', node: '>=8.0.0'}
 
+  lucide-react@1.7.0:
+    resolution: {integrity: sha512-yI7BeItCLZJTXikmK4KNUGCKoGzSvbKlfCvw44bU4fXAL6v3gYS4uHD1jzsLkfwODYwI6Drw5Tu9Z5ulDe0TSg==}
+    peerDependencies:
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
@@ -4328,6 +4342,8 @@ snapshots:
   '@fontsource-variable/merriweather@5.2.6': {}
 
   '@fontsource-variable/roboto-slab@5.2.8': {}
+
+  '@fontsource-variable/roboto@5.2.10': {}
 
   '@hono/node-server@1.19.11(hono@4.12.9)':
     dependencies:
@@ -6673,6 +6689,10 @@ snapshots:
       yallist: 3.1.1
 
   lru.min@1.1.4: {}
+
+  lucide-react@1.7.0(react@19.2.4):
+    dependencies:
+      react: 19.2.4
 
   magic-string@0.30.21:
     dependencies:

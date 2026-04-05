@@ -26,7 +26,7 @@ function EmployeeForm() {
 
     return (
         /*This gives space between the border and content*/
-        <div className = "bg-secondary px-4">
+        <div className = "px-4">
             {/*This does the border around the screen*/}
             <div className="mx-auto mt-6 mb-3 max-w-6xl rounded-2xl border-2 border-primary bg-secondary p-4 shadow-lg">
 
