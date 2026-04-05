@@ -1,4 +1,4 @@
-import {
+/*import {
     NavigationMenu,
     NavigationMenuItem,
     NavigationMenuLink,
@@ -10,17 +10,43 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu.tsx";
-import {Link, Route, Routes} from "react-router-dom";
-import Home from "@/components/Home.tsx";
-import EmployeeForm from "@/components/EmployeeForm.tsx";
-import ManagementForm from "@/components/ManagementForm.tsx";
-import Underwriter from "@/components/Underwriter.tsx";
-import BusinessAnalyst from "@/components/BusinessAnalyst.tsx";
+import {Link} from "react-router-dom";
+ */
+
+import { useSidebar } from "@/components/ui/sidebar";
+import { Menu } from "lucide-react";
+import logo from "../assets/hanover_logo.svg"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+
 
 function Navbar() {
+
+    const { toggleSidebar } = useSidebar();
+
     return (
         <>
-            <nav className="bg-primary text-primary-foreground p-4 w-full shrink-0">
+            <nav className="flex items-center bg-primary text-primary-foreground p-4 w-full shrink-0">
+
+                <div className="flex items-center gap-2 min-w-fit z-10">
+                    {/* Sidebar Trigger */}
+                    <button onClick={toggleSidebar} className="cursor-pointer active:scale-[0.96] shrink-0 hover:text-muted-foreground hover:bg-secondary rounded-lg px-2 py-2 transition-colors text-xl flex items-center gap-3">
+                        <Menu size={28} />
+                        <span className="text-xl font-semibold">Menu</span>
+                    </button>
+
+                    <hr className="h-8 w-px bg-primary-foreground border-none ml-1" />
+
+                    <img src={logo} alt="logo" className="shrink-0 h-10 w-auto brightness-0 invert mx-3" />
+                </div>
+
+                <div className="flex-1" />
+
+                <Avatar className="cursor-pointer w-10 h-10 hover:scale-[1.03] active:scale-[0.96]">
+                    <AvatarFallback className="bg-secondary text-primary">USR</AvatarFallback>
+                </Avatar>
+
+                {/* Testing having sidebar only, leaving navbar code for potential future use
+
                 <NavigationMenu className="max-w-full">
                     <NavigationMenuList className="gap-4">
                         <NavigationMenuItem>
@@ -60,18 +86,10 @@ function Navbar() {
                         </NavigationMenuItem>
                     </NavigationMenuList>
                 </NavigationMenu>
+
+                */}
             </nav>
-            <main className="flex-1 bg-secondary">
-                {/*Routing*/}
-                <Routes>
-                    {/*This is where Home gets loaded automatically when it detected we are on "/" page*/}
-                    <Route path="/" element={<Home/>}/>
-                    <Route path="/employeeform" element={<EmployeeForm/>}/>
-                    <Route path="/manageform" element={<ManagementForm/>}/>
-                    <Route path="/underwriter" element={<Underwriter/>}/>
-                    <Route path="/businessanalyst" element={<BusinessAnalyst/>}/>
-                </Routes>
-            </main>
+
         </>
     )
 }

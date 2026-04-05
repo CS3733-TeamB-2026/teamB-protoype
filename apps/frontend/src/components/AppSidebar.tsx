@@ -1,0 +1,104 @@
+import { Home, FormInput, User, ChevronDown } from "lucide-react"
+import {Link} from "react-router-dom";
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarMenu,
+    SidebarMenuItem,
+    SidebarMenuButton,
+    SidebarHeader, SidebarFooter,
+} from "@/components/ui/sidebar"
+import {
+    Collapsible,
+    CollapsibleTrigger,
+    CollapsibleContent,
+} from "@/components/ui/collapsible"
+
+type NavItem = {
+    title: string;
+    icon: React.ComponentType;
+    href: string;
+    children: NavItem[];
+}
+
+//Add pages here, icons imported from lucide react
+const navItems = [
+    { title: "Home", icon: Home, href: "/", children: [] },
+    { title: "Management Form", icon: FormInput, href: "/manageform", children: [] },
+    { title: "Employee Form", icon: FormInput, href: "/employeeform", children: [] },
+    { title: "Personas", icon: User, href: "/", children: [
+            {title: "Underwriter", icon: User, href: "/underwriter", children: []},
+            {title: "Business Analyst", icon: User, href: "/businessanalyst", children: []},
+        ] },
+]
+
+function AppSidebar() {
+    return (
+        <Sidebar className="bg-sidebar border-r-2!">
+
+            <SidebarHeader className="p-4 border-b-2">
+                <h1 className="text-lg font-semibold tracking-tight">Hanover CMS</h1>
+                <p className="text-sm text-muted-foreground">Team B - D26</p>
+            </SidebarHeader>
+
+            <SidebarContent className="p-2">
+
+                <SidebarMenu>
+                    {navItems.map((item: NavItem) => (
+
+                        item.children.length > 0 ? (
+                            //Collapsible
+                            <Collapsible>
+                                <SidebarMenuItem>
+                                    <CollapsibleTrigger asChild>
+                                        <SidebarMenuButton className="active:scale-[0.98] shrink-0 hover:bg-accent hover:text-primary-foreground rounded-lg px-2 py-4 my-1 transition-colors text-md">
+                                            <item.icon />
+                                            <span>Personas</span>
+                                            <ChevronDown className="transition-transform duration-200 [[data-state=open]>&]:rotate-180"/>
+                                        </SidebarMenuButton>
+                                    </CollapsibleTrigger>
+                                    <CollapsibleContent>
+                                        <SidebarMenu className="pl-6">
+
+                                            {item.children.map( (childItem: NavItem) => (
+                                                //Collapsible Children
+                                                <SidebarMenuItem key={childItem.title}>
+                                                    <SidebarMenuButton className="active:scale-[0.98] shrink-0 hover:bg-accent hover:text-primary-foreground rounded-lg px-2 py-4 my-1 transition-colors text-md" asChild>
+                                                        <Link to={childItem.href}>
+                                                            <item.icon />
+                                                            <span>{childItem.title}</span>
+                                                        </Link>
+                                                    </SidebarMenuButton>
+                                                </SidebarMenuItem>
+                                            ))}
+
+                                        </SidebarMenu>
+                                    </CollapsibleContent>
+                                </SidebarMenuItem>
+                            </Collapsible>
+                        ) : (
+                            //Single item
+                            <SidebarMenuItem key={item.title}>
+                                <SidebarMenuButton className="active:scale-[0.98] shrink-0 hover:bg-accent hover:text-primary-foreground rounded-lg px-2 py-4 my-1 transition-colors text-md" asChild>
+                                    <Link to={item.href}>
+                                        <item.icon />
+                                        <span>{item.title}</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        )
+
+                    ))}
+                </SidebarMenu>
+
+            </SidebarContent>
+
+            <SidebarFooter className="p-4 border-t-2">
+                <p className="text-xs text-muted-foreground">CS3733 D26</p>
+            </SidebarFooter>
+
+        </Sidebar>
+    )
+}
+
+export default AppSidebar;
