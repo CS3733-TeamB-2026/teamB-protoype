@@ -12,6 +12,16 @@ datasource db {
   schemas  = ["public", "storage"]
 }
 
+model Login {
+  userName String
+  password String
+
+  employee Employee @relation(fields: [loginID], references: [id])
+  loginID  Int      @id
+
+  @@schema("public")
+}
+
 model Employee {
   id        Int      @id
   firstName String
@@ -21,6 +31,7 @@ model Employee {
   ownedContent     Content[]
   ownedRequests    ServiceRequest[] @relation("OwnedBy")
   assignedRequests ServiceRequest[] @relation("AssignedTo")
+  logins           Login[]
 
   @@schema("public")
 }
@@ -36,8 +47,8 @@ model Content {
   lastModified DateTime  @default(now())
   expiration   DateTime?
 
-  isWorkflow ContentType
-  status     Status?
+  contentType ContentType
+  status      Status?
 
   @@schema("public")
 }
