@@ -9,7 +9,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["public", "storage"]
+  schemas  = ["public"]
 }
 
 model Login {
@@ -44,11 +44,12 @@ model Content {
   owner   Employee? @relation(fields: [ownerID], references: [id])
   ownerID Int?
 
-  lastModified DateTime  @default(now())
+  lastModified DateTime
   expiration   DateTime?
 
   contentType ContentType
-  status      Status?
+  targetPersona Persona
+  status Status?
 
   @@schema("public")
 }
@@ -68,33 +69,18 @@ model ServiceRequest {
   @@schema("public")
 }
 
-model objects {
-  id               String   @id
-  bucket_id        String
-  name             String
-  created_at       DateTime
-  updated_at       DateTime
-  last_accessed_at DateTime
-  metadata         Json
-  path_tokens      String[]
-  version          String
-  owner_id         String
-  user_metadata    String
-
-  @@schema("storage")
-}
-
 enum Persona {
   underwriter
   businessAnalyst
+  admin
 
   @@schema("public")
 }
 
 enum Status {
-  todo
+  new
   inProgress
-  done
+  complete
 
   @@schema("public")
 }
