@@ -30,9 +30,9 @@ function Navbar() {
 
                 <div className="flex items-center gap-2 min-w-fit z-10">
                     {/* Sidebar Trigger */}
-                    <button onClick={toggleSidebar} className="cursor-pointer active:scale-[0.96] shrink-0 hover:text-muted-foreground hover:bg-secondary rounded-lg px-2 py-2 transition-colors text-xl flex items-center gap-3">
+                    <button onClick={toggleSidebar} className="cursor-pointer active:scale-[0.96] shrink-0 px-2 py-2 text-xl flex items-center gap-3 transition-all duration-200 hover:opacity-80">
                         <Menu size={28} />
-                        <span className="text-xl font-semibold">Menu</span>
+                        <span className="text-xl font-semibold hover:underline underline-offset-4">Menu</span>
                     </button>
 
                     <hr className="h-8 w-px bg-primary-foreground border-none ml-1" />
