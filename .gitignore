@@ -3,3 +3,4 @@ node_modules/
 .env
 .turbo/
 .idea/
+pnpm-lock.yaml

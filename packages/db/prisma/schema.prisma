@@ -57,6 +57,7 @@ model ServiceRequest {
   @@schema("public")
 }
 
+// TODO: Figure out how to make this one "read-only"
 model objects {
   id               String   @id
   bucket_id        String
