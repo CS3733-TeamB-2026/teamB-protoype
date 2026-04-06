@@ -4,24 +4,27 @@
     NavigationMenuLink,
     NavigationMenuList
 } from "@/components/ui/navigation-menu.tsx";
+import {Link} from "react-router-dom";
+ */
+
+import React from "react";
+import { useSidebar } from "@/components/ui/sidebar";
+import { Menu } from "lucide-react";
+import logo from "../assets/hanover_logo.svg"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu.tsx";
-import {Link} from "react-router-dom";
- */
-
-import { useSidebar } from "@/components/ui/sidebar";
-import { Menu } from "lucide-react";
-import logo from "../assets/hanover_logo.svg"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import LoginDialog from "@/components/LoginDialog"
 
 
 function Navbar() {
 
     const { toggleSidebar } = useSidebar();
+    const [loginOpen, setLoginOpen] = React.useState(false);
 
     return (
         <>
@@ -42,9 +45,29 @@ function Navbar() {
 
                 <div className="flex-1" />
 
-                <Avatar className="cursor-pointer w-10 h-10 hover:scale-[1.03] active:scale-[0.96]">
-                    <AvatarFallback className="bg-secondary text-primary">USR</AvatarFallback>
-                </Avatar>
+                {/* User Avatar/Dropdown */}
+
+                <DropdownMenu modal={false}>
+                    <DropdownMenuTrigger asChild>
+                        <button className="rounded-full">
+                            <Avatar className="cursor-pointer w-10 h-10 hover:scale-[1.03] active:scale-[0.96]">
+                                <AvatarFallback className="bg-secondary text-primary">USR</AvatarFallback>
+                            </Avatar>
+                        </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem onSelect={(e) => {
+                            e.preventDefault();
+                            setTimeout(() => setLoginOpen(true), 50);
+                        }}>
+                            Log In
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Login Dialog*/}
+
+                <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} />
 
                 {/* Testing having sidebar only, leaving navbar code for potential future use
 
