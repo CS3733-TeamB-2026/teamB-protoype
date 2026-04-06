@@ -52,12 +52,12 @@ function AppSidebar() {
 
                         item.children.length > 0 ? (
                             //Collapsible
-                            <Collapsible>
+                            <Collapsible key={item.title}>
                                 <SidebarMenuItem>
                                     <CollapsibleTrigger asChild>
                                         <SidebarMenuButton className="active:scale-[0.98] shrink-0 hover:bg-accent hover:text-primary-foreground rounded-lg px-2 py-4 my-1 transition-colors text-md">
                                             <item.icon />
-                                            <span>Personas</span>
+                                            <span>{item.title}</span>
                                             <ChevronDown className="transition-transform duration-200 [[data-state=open]>&]:rotate-180"/>
                                         </SidebarMenuButton>
                                     </CollapsibleTrigger>
