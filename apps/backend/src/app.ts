@@ -88,6 +88,7 @@ app.post("/api/content", (req, res) => {
             payload.status,
             payload.lastModified,
             payload.expiration,
+            payload.jobPosition
         );
     } catch(error){
         console.error(error)

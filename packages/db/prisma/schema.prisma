@@ -38,6 +38,7 @@ model Content {
 
   isWorkflow ContentType
   status     Status?
+  //TODO: Add a recipient personaType field
 
   @@schema("public")
 }
