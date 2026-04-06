@@ -56,3 +56,27 @@ function employeePersonaHelper(_persona: string | null): p.Persona | null {
     else if (_persona == "businessAnalyst") { return p.Persona.businessAnalyst }
     else { return null }
 }
+
+export async function createContent(
+    _name: string,
+    _linkURL: string | null,
+    _ownerID: number | null,
+    _contentType: p.ContentType,
+    _status: p.Status | null,
+    _lastModified: Date,
+    _expiration: Date | null,
+    _jobPosition: string,
+): Promise<p.Content> {
+    return prisma.content.create({
+        data: {
+            name: _name,
+            linkURL: _linkURL,
+            ownerID: _ownerID,
+            contentType: _contentType,
+            status: _status,
+            lastModified: _lastModified,
+            expiration: _expiration,
+            jobPosition: _jobPosition
+        }
+    })
+}
