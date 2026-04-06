@@ -9,7 +9,17 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["public", "storage"]
+  schemas  = ["public"]
+}
+
+model Login {
+  userName String
+  password String
+
+  employee Employee @relation(fields: [loginID], references: [id])
+  loginID  Int      @id
+
+  @@schema("public")
 }
 
 model Employee {
@@ -21,6 +31,7 @@ model Employee {
   ownedContent     Content[]
   ownedRequests    ServiceRequest[] @relation("OwnedBy")
   assignedRequests ServiceRequest[] @relation("AssignedTo")
+  logins           Login[]
 
   @@schema("public")
 }
@@ -33,12 +44,12 @@ model Content {
   owner   Employee? @relation(fields: [ownerID], references: [id])
   ownerID Int?
 
-  lastModified DateTime  @default(now())
+  lastModified DateTime
   expiration   DateTime?
 
-  isWorkflow ContentType
-  status     Status?
-  //TODO: Add a recipient personaType field
+  contentType ContentType
+  targetPersona Persona
+  status Status?
 
   @@schema("public")
 }
@@ -58,34 +69,18 @@ model ServiceRequest {
   @@schema("public")
 }
 
-// TODO: Figure out how to make this one "read-only"
-model objects {
-  id               String   @id
-  bucket_id        String
-  name             String
-  created_at       DateTime
-  updated_at       DateTime
-  last_accessed_at DateTime
-  metadata         Json
-  path_tokens      String[]
-  version          String
-  owner_id         String
-  user_metadata    String
-
-  @@schema("storage")
-}
-
 enum Persona {
   underwriter
   businessAnalyst
+  admin
 
   @@schema("public")
 }
 
 enum Status {
-  todo
+  new
   inProgress
-  done
+  complete
 
   @@schema("public")
 }
