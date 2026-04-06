@@ -7,11 +7,35 @@ import {
     CardContent
 } from "@/components/ui/card"
 import {
+    Table,
+    TableHeader,
+    TableBody,
+    TableRow,
+    TableHead,
+    TableCell,
+} from "@/components/ui/table"
+import {
     Avatar,
     AvatarFallback,
 } from "@/components/ui/avatar"
+import {useEffect, useState} from "react";
 
 function Home() {
+
+    type Employee = {
+        firstName: string;
+        lastName: string;
+        id: number;
+        persona: string;
+    }
+
+    const [employees, setEmployees] = useState<Employee[]>([]);
+
+    useEffect(() => {
+        fetch("/api/employee")
+            .then(res => res.json())
+            .then(data => setEmployees(data))
+    }, [])
 
     type TeamMember = {
         name: string;
@@ -53,16 +77,47 @@ function Home() {
                         Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo. Quisque sit amet est et sapien ullamcorper pharetra. Vestibulum erat wisi, condimentum sed, commodo vitae, ornare sit amet, wisi. Aenean fermentum, elit eget tincidunt condimentum, eros ipsum rutrum orci, sagittis tempus lacus enim ac dui.
                         Cras mattis consectetur purus sit amet fermentum. Donec sed odio dui. Maecenas faucibus mollis interdum. Nullam quis risus eget urna mollis ornare vel eu leo. Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Vivamus sagittis lacus vel augue laoreet rutrum faucibus dolor auctor. Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Integer posuere erat a ante venenatis dapibus posuere velit aliquet. Etiam porta sem malesuada magna mollis euismod. Cras justo odio, dapibus ut facilisis et, egestas nunc sed. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Sed posuere consectetur est at lobortis.
                     </p>
+
+                    <br />
+
+                    <h1 className="text-lg">
+                        Employees (From Database):
+                    </h1>
+
+                    <div className="max-w-3xl mx-auto">
+                        <Table className="my-4">
+                            <TableHeader>
+                                <TableRow className="text-lg">
+                                    <TableHead className="text-center font-light">ID</TableHead>
+                                    <TableHead className="text-center font-light">First Name</TableHead>
+                                    <TableHead className="text-center font-light">Last Name</TableHead>
+                                    <TableHead className="text-center font-light">Persona</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {employees.map((employee: Employee) => (
+                                    <TableRow>
+                                        <TableCell>{employee.id}</TableCell>
+                                        <TableCell>{employee.firstName}</TableCell>
+                                        <TableCell>{employee.lastName}</TableCell>
+                                        <TableCell>{employee.persona}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+
                 </CardContent>
             </Card>
 
             {/*Team Avatars*/}
-            <section className="mt-12 max-w-7xl mx-auto mb-12" >
+            <section className="mt-12 max-w-7xl mx-auto mb-12">
                 <h1 className="text-2xl font-bold text-primary text-center mb-8">Meet Our Team</h1>
                 <div className="flex flex-wrap md:grid-cols-5 gap-6 justify-center">
 
                     {members.map((member: TeamMember) => (
-                        <Card className="shadow-lg text-center p-6 w-60">
+                        <Card className="shadow-lg text-center p-6 w-60
+                        hover:scale-105 ease-linear duration-100">
                             <CardContent className="flex flex-col items-center justify-center gap-4">
                                 <Avatar className="w-20 h-20">
                                     <AvatarFallback className="text-xl bg-primary text-primary-foreground">{member.initials}</AvatarFallback>

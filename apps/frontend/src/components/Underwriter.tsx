@@ -6,6 +6,25 @@ import {
 } from "@/components/ui/card"
 
 function Underwriter() {
+
+    type PersonaLink = {
+        name: string;
+        url: string;
+    }
+
+    const links : PersonaLink[] = [
+        { name: "Desktop Management Tool", url: "#" },
+        { name: "States on Hold", url: "#" },
+        { name: "RiskMeter Online", url: "#" },
+        { name: "ISOnet Website", url: "#" },
+        { name: "Forms Knowledge Base", url: "#" },
+        { name: "Experience & Schedule Rating Plans", url: "#" },
+        { name: "Property View", url: "#" },
+        { name: "Coastal Guidelines", url: "#" },
+        { name: "IPS (Image & Processing System)", url: "#" },
+        { name: "Underwriting Workstation", url: "#" }
+    ];
+
     return (
         <>
             {/*Header/Hero Section (includes links)*/}
@@ -17,76 +36,16 @@ function Underwriter() {
 
                 {/*Links*/}
                 <div className="flex flex-wrap justify-center gap-3 mx-auto max-w-5xl my-4">
-                    <a href="#">
-                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
-                            <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
-                                Desktop Management Tool
-                            </CardContent>
-                        </Card>
-                    </a>
-                    <a href="#">
-                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
-                            <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
-                                States on Hold
-                            </CardContent>
-                        </Card>
-                    </a>
-                    <a href="#">
-                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
-                            <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
-                                RiskMeter Online
-                            </CardContent>
-                        </Card>
-                    </a>
-                    <a href="#">
-                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
-                            <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
-                                ISOnet Website
-                            </CardContent>
-                        </Card>
-                    </a>
-                    <a href="#">
-                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
-                            <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
-                                Forms Knowledge Base
-                            </CardContent>
-                        </Card>
-                    </a>
-                    <a href="#">
-                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
-                            <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
-                                Experience & Schedule Rating Plans
-                            </CardContent>
-                        </Card>
-                    </a>
-                    <a href="#">
-                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
-                            <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
-                                Property View
-                            </CardContent>
-                        </Card>
-                    </a>
-                    <a href="#">
-                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
-                            <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
-                                Coastal Guidelines
-                            </CardContent>
-                        </Card>
-                    </a>
-                    <a href="#">
-                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
-                            <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
-                                IPS (Image & Processing System)
-                            </CardContent>
-                        </Card>
-                    </a>
-                    <a href="#">
-                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
-                            <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
-                                Underwriting Workstation
-                            </CardContent>
-                        </Card>
-                    </a>
+                    {links.map((link : PersonaLink) => (
+                        <a href={link.url}>
+                            <Card className="bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
+                                <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
+                                    {link.name}
+                                </CardContent>
+                            </Card>
+                        </a>
+                    ))}
+
                 </div>
             </div>
 

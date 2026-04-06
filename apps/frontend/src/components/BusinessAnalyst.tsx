@@ -1,6 +1,25 @@
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 
 function BusinessAnalyst() {
+
+    type PersonaLink = {
+        name: string;
+        url: string;
+    }
+
+    const links : PersonaLink[] = [
+        { name: "States on Hold", url: "#" },
+        { name: "Forms Knowledge Base", url: "#" },
+        { name: "IPS (Image & Processing System)", url: "#" },
+        { name: "Underwriting Workstation", url: "#" },
+        { name: "CPP Rater Resource Site", url: "#" },
+        { name: "PMS URG", url: "#" },
+        { name: "Kentucky Tax and Tax Exemption Job Aid", url: "#" },
+        { name: "Experience & Schedule Rating Plans", url: "#" },
+        { name: "Error Lookup Tool", url: "#" },
+        { name: "Workaround Tool", url: "#" }
+    ];
+
     return (
         <>
             {/*Header/Hero Section (includes links)*/}
@@ -12,76 +31,17 @@ function BusinessAnalyst() {
 
                 {/*Links*/}
                 <div className="flex flex-wrap justify-center gap-3 mx-auto max-w-5xl my-4">
-                    <a href="#">
-                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
-                            <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
-                                States on Hold
-                            </CardContent>
-                        </Card>
-                    </a>
-                    <a href="#">
-                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
-                            <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
-                                Forms Knowledge Base
-                            </CardContent>
-                        </Card>
-                    </a>
-                    <a href="#">
-                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
-                            <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
-                                IPS (Image & Processing System)
-                            </CardContent>
-                        </Card>
-                    </a>
-                    <a href="#">
-                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
-                            <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
-                                Underwriting Workstation
-                            </CardContent>
-                        </Card>
-                    </a>
-                    <a href="#">
-                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
-                            <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
-                                CPP Rater Resource Site
-                            </CardContent>
-                        </Card>
-                    </a>
-                    <a href="#">
-                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
-                            <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
-                                PMS URG
-                            </CardContent>
-                        </Card>
-                    </a>
-                    <a href="#">
-                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
-                            <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
-                                Kentucky Tax and Tax Exemption Job Aid
-                            </CardContent>
-                        </Card>
-                    </a>
-                    <a href="#">
-                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
-                            <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
-                                Experience & Schedule Rating Plans
-                            </CardContent>
-                        </Card>
-                    </a>
-                    <a href="#">
-                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
-                            <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
-                                Error Lookup Tool
-                            </CardContent>
-                        </Card>
-                    </a>
-                    <a href="#">
-                        <Card className="border-3 border-secondary bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
-                            <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
-                                Workaround Tool
-                            </CardContent>
-                        </Card>
-                    </a>
+
+                    {links.map((link : PersonaLink) => (
+                        <a href={link.url}>
+                            <Card className="bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
+                                <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
+                                    {link.name}
+                                </CardContent>
+                            </Card>
+                        </a>
+                    ))}
+
                 </div>
             </div>
 
