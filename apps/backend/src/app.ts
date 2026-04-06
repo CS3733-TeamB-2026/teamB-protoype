@@ -61,6 +61,31 @@ app.get("/api/files", async (req, res) => {
     }
 })
 
+app.post("/api/login", async (req, res) => {
+    try{
+        const {username, password} = req.body;
+        const login = await q.queryLoginByUsername(username);
+
+        if (!login){
+            res.status(401).json({message:"User not found"})
+        }
+
+        if (login.password !== password) {
+            res.status(401).json({message:"Incorrect Password"})
+        }
+
+        res.status(200).json({
+            id: login.id,
+            username: login.username,
+            password: login.password,
+        });
+
+    } catch(error){
+        console.error(error)
+        res.status(500).end()
+    }
+})
+
 /*
 app.post("/form", (req, res) => {
     addToDB(res)

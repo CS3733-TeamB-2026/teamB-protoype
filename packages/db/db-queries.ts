@@ -51,6 +51,14 @@ export async function createEmployee(_id: number, _firstName: string, _lastName:
     })
 }
 
+export async function queryLoginByUsername(username: string) {
+    return {
+        "id": 1,
+        "username": "admin",
+        "password": "admin",
+    }
+}
+
 function employeePersonaHelper(_persona: string | null): p.Persona | null {
     if (_persona == "underwriter") { return p.Persona.underwriter }
     else if (_persona == "businessAnalyst") { return p.Persona.businessAnalyst }

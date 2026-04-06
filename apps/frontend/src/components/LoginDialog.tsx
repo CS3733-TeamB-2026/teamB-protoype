@@ -18,6 +18,22 @@ function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
 
+    const handleLogin = async () => {
+        const res = await fetch("/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password }),
+        })
+
+        if (res.ok) {
+            const user = await res.json();
+            console.log("Logged in: ", user);
+            onOpenChange(false);
+        } else {
+            console.log("Login failed");
+        }
+    }
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent>
@@ -34,9 +50,9 @@ function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
                         <Input placeholder="Enter Password" onChange={(e) => setPassword(e.target.value)} />
                     </div>
                     <button onClick={() => {
-                        onOpenChange(false);
                         console.log(username);
                         console.log(password);
+                        handleLogin();
                     }}>Sign In</button>
                 </div>
             </DialogContent>
