@@ -31,6 +31,7 @@ export async function queryServiceReqsByAssigned(id: number): Promise<p.ServiceR
     })
 }
 
+/*
 export async function queryObjectsByBucket(name: string): Promise<p.objects[]> {
     return prisma.objects.findMany({
         where: {
@@ -39,8 +40,10 @@ export async function queryObjectsByBucket(name: string): Promise<p.objects[]> {
     })
 }
 
+ */
+
 export async function createEmployee(_id: number, _firstName: string, _lastName: string, _persona: string | null): Promise<void> {
-    const _personaTyped: p.Persona | null = employeePersonaHelper(_persona)
+    const _personaTyped: p.Persona = personaHelper(_persona)
     await prisma.employee.create({
         data: {
             id: _id,
@@ -51,10 +54,15 @@ export async function createEmployee(_id: number, _firstName: string, _lastName:
     })
 }
 
-function employeePersonaHelper(_persona: string | null): p.Persona | null {
+function personaHelper(_persona: string | null): p.Persona {
     if (_persona == "underwriter") { return p.Persona.underwriter }
     else if (_persona == "businessAnalyst") { return p.Persona.businessAnalyst }
-    else { return null }
+    else if(_persona == "admin") { return p.Persona.admin }
+    else {
+        return p.Persona.admin
+        //TODO: figure out a default return
+    }
+
 }
 
 export async function createContent(
@@ -65,8 +73,9 @@ export async function createContent(
     _status: p.Status | null,
     _lastModified: Date,
     _expiration: Date | null,
-    _jobPosition: string,
+    _targetPersona: string,
 ): Promise<p.Content> {
+    const _personaTyped: p.Persona = personaHelper(_targetPersona)
     return prisma.content.create({
         data: {
             name: _name,
@@ -76,7 +85,7 @@ export async function createContent(
             status: _status,
             lastModified: _lastModified,
             expiration: _expiration,
-            jobPosition: _jobPosition
+            targetPersona: _personaTyped,
         }
     })
 }

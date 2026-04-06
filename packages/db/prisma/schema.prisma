@@ -23,10 +23,10 @@ model Login {
 }
 
 model Employee {
-  id        Int      @id
+  id        Int     @id
   firstName String
   lastName  String
-  persona   Persona?
+  persona   Persona
 
   ownedContent     Content[]
   ownedRequests    ServiceRequest[] @relation("OwnedBy")
@@ -47,9 +47,9 @@ model Content {
   lastModified DateTime
   expiration   DateTime?
 
-  contentType ContentType
+  contentType   ContentType
   targetPersona Persona
-  status Status?
+  status        Status?
 
   @@schema("public")
 }
