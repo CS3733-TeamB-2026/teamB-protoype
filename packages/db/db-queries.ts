@@ -40,13 +40,13 @@ export async function queryObjectsByBucket(name: string): Promise<p.objects[]> {
 }
 
 export async function createEmployee(_id: number, _firstName: string, _lastName: string, _persona: string | null): Promise<void> {
-    const personaTyped: p.Persona | null = employeePersonaHelper(_persona)
+    const _personaTyped: p.Persona | null = employeePersonaHelper(_persona)
     await prisma.employee.create({
         data: {
             id: _id,
             firstName: _firstName,
             lastName: _lastName,
-            persona: personaTyped
+            persona: _personaTyped
         }
     })
 }
