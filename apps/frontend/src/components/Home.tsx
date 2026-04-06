@@ -96,7 +96,7 @@ function Home() {
                             </TableHeader>
                             <TableBody>
                                 {employees.map((employee: Employee) => (
-                                    <TableRow>
+                                    <TableRow key={employee.id}>
                                         <TableCell>{employee.id}</TableCell>
                                         <TableCell>{employee.firstName}</TableCell>
                                         <TableCell>{employee.lastName}</TableCell>
@@ -116,8 +116,7 @@ function Home() {
                 <div className="flex flex-wrap md:grid-cols-5 gap-6 justify-center">
 
                     {members.map((member: TeamMember) => (
-                        <Card className="shadow-lg text-center p-6 w-60
-                        hover:scale-105 ease-linear duration-100">
+                        <Card className="shadow-lg text-center p-6 w-60 hover:scale-105 ease-linear duration-100" key={member.name}>
                             <CardContent className="flex flex-col items-center justify-center gap-4">
                                 <Avatar className="w-20 h-20">
                                     <AvatarFallback className="text-xl bg-primary text-primary-foreground">{member.initials}</AvatarFallback>
