@@ -1,6 +1,8 @@
 import { prisma } from "./lib/prisma"
 import * as p from "./generated/prisma/client";
 
+
+// Employee Queries
 export async function queryAllEmployees(): Promise<p.Employee[]> {
     return prisma.employee.findMany({})
 }
@@ -11,10 +13,14 @@ export async function queryEmployeeById(id: number): Promise<p.Employee | null> 
     })
 }
 
+
+// Content Queries
 export async function queryAllContent(): Promise<p.Content[]> {
     return prisma.content.findMany({})
 }
 
+
+// Service Request Queries
 export async function queryAllServiceReqs(): Promise<p.ServiceRequest[]> {
     return prisma.serviceRequest.findMany({})
 }
@@ -31,6 +37,7 @@ export async function queryServiceReqsByAssigned(id: number): Promise<p.ServiceR
     })
 }
 
+// Bucket Queries
 export async function queryObjectsByBucket(name: string): Promise<p.objects[]> {
     return prisma.objects.findMany({
         where: {
