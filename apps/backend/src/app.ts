@@ -13,7 +13,8 @@ app.use(express.json())
 
 app.get('/api/employee', async (req, res) => {
     try {
-        const employees = await q.queryAllEmployees()
+        const employees = await q.Employee.queryAllEmployees()
+        //const employees = await q.queryAllEmployees()
         res.status(200).json(employees)
     } catch (error) {
         console.error(error)
@@ -23,8 +24,8 @@ app.get('/api/employee', async (req, res) => {
 
 app.get('/api/content', async (req, res) => {
     try {
-        const employees = await q.queryAllContent()
-        res.status(200).json(employees)
+        const content = await q.queryAllContent()
+        res.status(200).json(content)
     } catch (error) {
         console.error(error)
         res.status(500).end()
@@ -97,49 +98,39 @@ app.post("/api/login", async (req, res) => {
     }
 })
 
-app.post('/api/update-employee', async (req, res) => {
+app.put('/api/update-employee', async (req, res) => {
     try {
         const id = parseInt(req.query.id as string)
         const first = req.query.firstName as string
         const last = req.query.lastName as string
         const persona = req.query.persona as string
-        await q.updateEmployee(id, first, last, persona)
+        await q.Employee.updateEmployee(id, first, last, persona)
     } catch (error){
     console.error(error)
     res.status(500).end()}
     }
 )
 
-    app.post("/api/employee", (req, res) => {
-        const payload = req.body
-        try {
-            createEmployee(
-                payload.firstName,
-                payload.lastName,
-                payload.id,
-                payload.persona
-            );
-        } catch (error) {
-            console.error(error)
-            res.status(500).end()
-        }
-    })
+app.post("/api/employee", (req, res) => {
+    const payload = req.body
+    try {
+        q.Employee.createEmployee(
+            payload.firstName,
+            payload.lastName,
+            payload.id,
+            payload.persona
+        );
+    } catch (error) {
+        console.error(error)
+        res.status(500).end()
+    }
+})
 
-    app.post('/api/delete-employee', async (req, res) => {
-        try {
-            const id = parseInt(req.query.id as string)
-            await q.deleteEmployee(id)
-        } catch (error) {
-            console.error(error)
-            res.status(500).end()
-        }
-    })
-
-app.post('/api/delete-employee', async (req, res) => {
-    try{
+app.delete('/api/delete-employee', async (req, res) => {
+    try {
         const id = parseInt(req.query.id as string)
-        await q.deleteEmployee(id)
-    } catch(error){
+        await q.Employee.deleteEmployee(id)
+    } catch (error) {
         console.error(error)
         res.status(500).end()
     }
@@ -165,13 +156,13 @@ app.post("/api/content", async (req, res) => {
     }
 })
 
-    /*
-    app.post("/form", (req, res) => {
-        addToDB(res)
-    })
-    */
+/*
+app.post("/form", (req, res) => {
+    addToDB(res)
+})
+*/
 
-    app.listen(3000, () => {
-        console.log(`Server is listening on port 3000`);
-        console.log(`    http://localhost:3000`);
-    })
+app.listen(3000, () => {
+    console.log(`Server is listening on port 3000`);
+    console.log(`    http://localhost:3000`);
+})
