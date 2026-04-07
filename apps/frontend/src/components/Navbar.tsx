@@ -40,7 +40,7 @@ function Navbar() {
 
                     <hr className="h-8 w-px bg-primary-foreground border-none ml-1" />
 
-                    <img src={logo} alt="logo" className="shrink-0 h-10 w-auto brightness-0 invert mx-3" />
+                    <a href="/"><img src={logo} alt="logo" className="shrink-0 h-10 w-auto brightness-0 invert mx-3" /></a>
                 </div>
 
                 <div className="flex-1" />

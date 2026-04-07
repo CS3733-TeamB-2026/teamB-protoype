@@ -34,7 +34,6 @@ function App() {
                     </main>
                     <Footer />
                 </div>
-
             </SidebarProvider>
 
         </BrowserRouter>
