@@ -56,7 +56,7 @@ function ManagementForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name,
-        linkURL: linkUrl,
+        linkURL: uploadMode == "url" ? linkUrl : null,
         ownerID: ownerID ? parseInt(ownerID) : null,
         contentType: contentType,
         status,
@@ -119,48 +119,53 @@ function ManagementForm() {
             </div>
 
             {/*Content source selector*/}
-            <Field className="bg-background">
-              <FieldLabel className="text-primary">Content Source</FieldLabel>
-              <RadioGroup
-                value={uploadMode}
-                onValueChange={(v) => setUploadMode(v as "url" | "file")}
-              >
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="url" id="mode-url" />
-                  <Label htmlFor="mode-url">URL</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="file" id="mode-file" />
-                  <Label htmlFor="mode-file">File Upload</Label>
-                </div>
-              </RadioGroup>
-            </Field>
-
-            {/*Input Url Field*/}
             <div className="flex gap-4">
-              {/*TEXTBOX*/}
-              <Field className="bg-background ">
-                <FieldLabel className="text-primary" htmlFor="input-field-url">
-                  URL
-                </FieldLabel>
-                <Input
-                  id="input-field-url"
-                  type="text"
-                  placeholder="Enter the URL of the link"
-                  value={linkUrl}
-                  onChange={(e) => setLinkUrl(e.target.value)}
-                />
-              </Field>
-              <Separator className="bg-primary" orientation="vertical" />
-              {/*File upload field*/}
-
               <Field className="bg-background">
-                <FieldLabel className="text-primary" htmlFor="File">
-                  File Upload
-                </FieldLabel>
-                <Input key={fileKey} id="File" type="file" />
-                <FieldDescription>Select a file to upload.</FieldDescription>
+                <FieldLabel className="text-primary">Content Source</FieldLabel>
+                <RadioGroup
+                  value={uploadMode}
+                  onValueChange={(v) => setUploadMode(v as "url" | "file")}
+                >
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="url" id="mode-url" />
+                    <Label htmlFor="mode-url">URL</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <RadioGroupItem value="file" id="mode-file" />
+                    <Label htmlFor="mode-file">File Upload</Label>
+                  </div>
+                </RadioGroup>
               </Field>
+
+              <Separator className="bg-primary" orientation="vertical" />
+
+              {uploadMode === "url" ? (
+                <Field className="bg-background ">
+                  {/*Input Url Field*/}
+                  <FieldLabel
+                    className="text-primary"
+                    htmlFor="input-field-url"
+                  >
+                    URL
+                  </FieldLabel>
+                  <Input
+                    id="input-field-url"
+                    type="text"
+                    placeholder="Enter the URL of the link"
+                    value={linkUrl}
+                    onChange={(e) => setLinkUrl(e.target.value)}
+                  />
+                </Field>
+              ) : (
+                <Field className="bg-background">
+                  {/*File upload field*/}
+                  <FieldLabel className="text-primary" htmlFor="File">
+                    File Upload
+                  </FieldLabel>
+                  <Input key={fileKey} id="File" type="file" />
+                  <FieldDescription>Select a file to upload.</FieldDescription>
+                </Field>
+              )}
             </div>
 
             {/*Separator*/}
