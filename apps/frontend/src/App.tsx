@@ -9,6 +9,7 @@ import EmployeeForm from "@/components/EmployeeForm.tsx";
 import ManagementForm from "@/components/ManagementForm.tsx";
 import Underwriter from "@/components/Underwriter.tsx";
 import BusinessAnalyst from "@/components/BusinessAnalyst.tsx";
+import EmployeeHome from "@/components/EmployeeHome";
 import { Route, Routes} from "react-router-dom";
 
 function App() {
@@ -16,7 +17,6 @@ function App() {
     return (
 
         <BrowserRouter>
-
             <SidebarProvider defaultOpen={false}>
                 <AppSidebar />
                 <div className="flex flex-col flex-1 min-h-screen">
@@ -30,6 +30,7 @@ function App() {
                             <Route path="/manageform" element={<ManagementForm/>}/>
                             <Route path="/underwriter" element={<Underwriter/>}/>
                             <Route path="/businessanalyst" element={<BusinessAnalyst/>}/>
+                            <Route path="/employeehome" element={<EmployeeHome/>}/>
                         </Routes>
                     </main>
                     <Footer />

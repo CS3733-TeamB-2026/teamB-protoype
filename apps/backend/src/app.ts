@@ -79,6 +79,27 @@ app.post("/api/employee", async (req, res) => {
     }
 })
 
+app.post("/api/login", async (req, res) => {
+    try{
+        const {username, password} = req.body;
+        const login = await q.queryLoginByUsername(username);
+
+        if (!login){
+            res.status(401).json({message:"User not found"})
+        }
+
+        if (login.password !== password) {
+            res.status(401).json({message:"Incorrect Password"})
+        }
+
+        const employee = await q.queryEmployeeById(login.id);
+        res.status(200).json(employee);
+    } catch(error){
+        console.error(error)
+        res.status(500).end()
+    }
+})
+
 app.post("/api/content", async (req, res) => {
     const payload = req.body
     try {
