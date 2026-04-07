@@ -74,11 +74,8 @@ app.post("/api/login", async (req, res) => {
             res.status(401).json({message:"Incorrect Password"})
         }
 
-        res.status(200).json({
-            id: login.id,
-            username: login.username,
-            password: login.password,
-        });
+        const employee = await q.queryEmployeeById(login.id);
+        res.status(200).json(employee);
 
     } catch(error){
         console.error(error)
