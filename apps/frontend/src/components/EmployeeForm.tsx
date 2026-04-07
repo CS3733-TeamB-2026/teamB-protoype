@@ -1,6 +1,8 @@
 "use client"
 import * as React from "react"
-
+import {
+    Card,
+} from "@/components/ui/card"
 import { useState } from "react"
 import {
     Field,
@@ -59,9 +61,11 @@ function EmployeeForm() {
     }
     return (
         /*This gives space between the border and content*/
-        <div className = "px-4">
+        <div className="bg-secondary px-4">
+            <Card className="shadow-lg max-w-5xl mx-auto mt-8 text-center mb-8">
+
             {/*This does the border around the screen*/}
-            <div className="mx-auto mt-6 mb-3 max-w-6xl rounded-2xl border-2 border-primary bg-background p-4 shadow-lg">
+                <div className="px-6">
 
                 <>
                     {/*//Title*/}
@@ -175,6 +179,7 @@ function EmployeeForm() {
                     </div>
                     </>
             </div>
+            </Card>
         </div>
     )
 }
