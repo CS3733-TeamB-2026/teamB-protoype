@@ -130,6 +130,11 @@ app.post('/api/delete-employee', async (req, res) => {
     try{
         const id = parseInt(req.query.id as string)
         await q.deleteEmployee(id)
+    } catch(error){
+        console.error(error)
+        res.status(500).end()
+    }
+})
    
 app.post("/api/content", async (req, res) => {
     const payload = req.body
