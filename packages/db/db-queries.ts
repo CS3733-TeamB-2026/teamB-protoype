@@ -15,6 +15,13 @@ export async function queryAllContent(): Promise<p.Content[]> {
     return prisma.content.findMany({})
 }
 
+export async function queryContentByName(name: string): Promise<p.Content | null> {
+    return prisma.content.findUnique({
+        where: {name: name}
+        //TODO: Maybe add case insensitivity
+    })
+}
+
 export async function queryAllServiceReqs(): Promise<p.ServiceRequest[]> {
     return prisma.serviceRequest.findMany({})
 }
