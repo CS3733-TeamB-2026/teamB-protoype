@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 
 type User = {
     id: number;
@@ -28,6 +28,7 @@ function LoginDialog({ open, onOpenChange, onLogin }: LoginDialogProps) {
     const [error, setError] = useState(""); //For login errors ex. wrong password
 
     const handleLogin = async () => {
+        setError("");
         const res = await fetch("/api/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
