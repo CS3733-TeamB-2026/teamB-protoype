@@ -47,9 +47,11 @@ export class Employee {
     }
 }
 
+// Content
 export async function updateContent(
     _name: string,
     _linkURL: string | null,
+    _fileURI: string | null,
     _ownerID: number | null,
     _contentType: p.ContentType,
     _status: p.Status | null,
@@ -64,101 +66,21 @@ export async function updateContent(
         data: {
             name: _name,
             linkURL: _linkURL,
+            fileURI: _fileURI,
             ownerID: _ownerID,
             contentType: _contentType,
             status: _statusTyped,
             lastModified: _lastModified,
             expiration: _expiration,
-            targetPersona: _personaTyped
+            targetPersona: _personaTyped,
         }
     })
 }
 
-export async function deleteContent(name: string): Promise<void> {
-    const deletedContent = await prisma.content.delete({
-        where: {name: name},
-    })
-}
-
-// Content Queries
-export async function queryAllContent(): Promise<p.Content[]> {
-    return prisma.content.findMany({})
-}
-
-export async function queryContentByName(name: string): Promise<p.Content | null> {
-    return prisma.content.findFirst({
-        where: {name: name}
-        // TODO: Maybe add case insensitivity
-        //  Perhaps better to grab ALL filenames so a fuzzy search may be done - Oscar
-    })
-}
-
-export async function queryAllServiceReqs(): Promise<p.ServiceRequest[]> {
-    return prisma.serviceRequest.findMany({})
-}
-
-export async function queryAssignedServiceReqs(): Promise<p.ServiceRequest[]> {
-    return prisma.serviceRequest.findMany({
-        where: {assigneeID: {not: null}}
-    })
-}
-
-export async function queryServiceReqsByAssigned(id: number): Promise<p.ServiceRequest[]> {
-    return prisma.serviceRequest.findMany({
-        where: {assigneeID: id}
-    })
-}
-
-/*
-export async function queryObjectsByBucket(name: string): Promise<p.objects[]> {
-    return prisma.objects.findMany({
-        where: {
-            bucket_id: name
-        },
-    })
-}
-
- */
-
-export async function queryLoginByUsername(username: string) {
-    return {
-        "id": 1,
-        "username": "admin",
-        "password": "admin",
-    }
-}
-
-function personaHelper(_persona: string | null): p.Persona {
-    if (_persona == "underwriter") { return p.Persona.underwriter }
-    else if (_persona == "businessAnalyst") { return p.Persona.businessAnalyst }
-    else if(_persona == "admin") { return p.Persona.admin }
-    else {
-        return p.Persona.admin
-        //TODO: figure out a default return
-    }
-
-}
-
-function statusHelper(_status: string | null): p.Status {
-    if (_status == "new") { return p.Status.new }
-    else if (_status == "inProgress") { return p.Status.inProgress }
-    else if(_status == "complete") { return p.Status.complete }
-    else {
-        return p.Status.new
-        //TODO: figure out a default return
-    }
-
-}
-
-async function uploadFile(file: Buffer, path: string) {
-    const {data, error} = await supabase.storage.from(bucket).upload(path, file)
-    if (error)  throw error;
-    return data;
-}
-
 export async function createContent(
     _name: string,
-    _linkURL: string | null, _fileURI: string | null,
+    _linkURL: string | null,
+    _fileURI: string | null,
     _ownerID: number | null,
     _contentType: p.ContentType,
     _status: p.Status | null,
@@ -187,4 +109,89 @@ export async function createContent(
             targetPersona: _personaTyped,
         }
     })
+}
+
+export async function deleteContent(name: string): Promise<void> {
+    const deletedContent = await prisma.content.delete({
+        where: {name: name},
+    })
+}
+
+export async function queryAllContent(): Promise<p.Content[]> {
+    return prisma.content.findMany({})
+}
+
+export async function queryContentByName(name: string): Promise<p.Content | null> {
+    return prisma.content.findFirst({
+        where: {name: name}
+        // TODO: Maybe add case insensitivity
+        //  Perhaps better to grab ALL filenames so a fuzzy search may be done - Oscar
+    })
+}
+
+// Service Requests
+export async function queryAllServiceReqs(): Promise<p.ServiceRequest[]> {
+    return prisma.serviceRequest.findMany({})
+}
+
+export async function queryAssignedServiceReqs(): Promise<p.ServiceRequest[]> {
+    return prisma.serviceRequest.findMany({
+        where: {assigneeID: {not: null}}
+    })
+}
+
+export async function queryServiceReqsByAssigned(id: number): Promise<p.ServiceRequest[]> {
+    return prisma.serviceRequest.findMany({
+        where: {assigneeID: id}
+    })
+}
+
+// Bucket
+async function uploadFile(file: Buffer, path: string) {
+    const {data, error} = await supabase.storage.from(bucket).upload(path, file)
+    if (error)  throw error;
+    return data;
+}
+
+/*
+export async function queryObjectsByBucket(name: string): Promise<p.objects[]> {
+    return prisma.objects.findMany({
+        where: {
+            bucket_id: name
+        },
+    })
+}
+
+ */
+
+// Login
+export async function queryLoginByUsername(username: string) {
+    return {
+        "id": 1,
+        "username": "admin",
+        "password": "admin",
+    }
+}
+
+// Helper
+function personaHelper(_persona: string | null): p.Persona {
+    if (_persona == "underwriter") { return p.Persona.underwriter }
+    else if (_persona == "businessAnalyst") { return p.Persona.businessAnalyst }
+    else if(_persona == "admin") { return p.Persona.admin }
+    else {
+        return p.Persona.admin
+        //TODO: figure out a default return
+    }
+
+}
+
+function statusHelper(_status: string | null): p.Status {
+    if (_status == "new") { return p.Status.new }
+    else if (_status == "inProgress") { return p.Status.inProgress }
+    else if(_status == "complete") { return p.Status.complete }
+    else {
+        return p.Status.new
+        //TODO: figure out a default return
+    }
+
 }
