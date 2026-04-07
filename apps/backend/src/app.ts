@@ -27,10 +27,10 @@ app.post("/api/employee", async (req, res) => {
     const payload = req.body;
     try {
         const result = await q.Employee.createEmployee(
+            payload.id,
             payload.firstName,
             payload.lastName,
-            payload.id,
-            payload.persona,
+            payload.persona
         );
         return res.status(201).json(result);
     } catch (error) {
