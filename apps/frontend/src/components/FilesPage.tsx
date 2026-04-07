@@ -1,15 +1,26 @@
-import React, { useEffect, useState } from "react";
-import DocViewer, { DocViewerRenderers } from "@iamjariwala/react-doc-viewer";
+import React, {useEffect, useState} from "react";
+import DocViewer, {DocViewerRenderers} from "@iamjariwala/react-doc-viewer";
 import "@iamjariwala/react-doc-viewer/dist/index.css";
-import { createClient } from "@supabase/supabase-js";
-import {FileText, FileSpreadsheet, Presentation, File, Bookmark, BookmarkCheck, ChevronDown, ChevronRight, Loader2, AlertCircle, FolderOpen, } from "lucide-react";
+import {
+    FileText,
+    FileSpreadsheet,
+    Presentation,
+    File,
+    Bookmark,
+    BookmarkCheck,
+    ChevronDown,
+    ChevronRight,
+    Loader2,
+    AlertCircle,
+    FolderOpen,
+} from "lucide-react";
 
 // Supabase stuff, need to talk to backend to get properly setup
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
-const BUCKET_NAME = "test";
+// const SUPABASE_URL = import.meta.env.SUPABASE_URL as string;
+// const SUPABASE_SECRET_KEY = import.meta.env.SUPABASE_SECRET_KEY as string;
+// const BUCKET_NAME = "test";
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// const supabase
 
 // file types are linked into one supported type
 type SupportedType = "pdf" | "docx" | "pptx" | "xlsx";
@@ -20,7 +31,7 @@ interface FileItem {
     name: string;
     fileType: SupportedType | "other"; //other is anything currently unsupported, mostly so it doesn't break the site
     size?: number;
-    updatedAt?: string;
+    updatedAt: string | null | undefined;
     publicUrl: string;
 }
 
@@ -67,17 +78,17 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 // sets the file icon, we can probably find some svg's but for now I have it edit colors
-function FileIcon({ type, className = "" }: { type: string; className?: string }) {
+function FileIcon({type, className = ""}: { type: string; className?: string }) {
     const base = `shrink-0 ${className}`;
-    if (type === "pdf") return <FileText className={`${base} text-red-500`} />;
-    if (type === "xlsx") return <FileSpreadsheet className={`${base} text-emerald-600`} />;
-    if (type === "pptx") return <Presentation className={`${base} text-orange-500`} />;
-    if (type === "docx") return <FileText className={`${base} text-blue-500`} />;
-    return <File className={`${base} text-muted-foreground`} />;
+    if (type === "pdf") return <FileText className={`${base} text-red-500`}/>;
+    if (type === "xlsx") return <FileSpreadsheet className={`${base} text-emerald-600`}/>;
+    if (type === "pptx") return <Presentation className={`${base} text-orange-500`}/>;
+    if (type === "docx") return <FileText className={`${base} text-blue-500`}/>;
+    return <File className={`${base} text-muted-foreground`}/>;
 }
 
 // what gets showed to users for file types
-function TypeBadge({ type }: { type: string }) {
+function TypeBadge({type}: { type: string }) {
     const colors: Record<string, string> = {
         pdf: "bg-red-100 text-red-700",
         xlsx: "bg-emerald-100 text-emerald-700",
@@ -113,30 +124,25 @@ function FilesPage() {
             setLoading(true);
             setError(null);
             try {
-                const { data, error: listError } = await supabase.storage
-                    .from(BUCKET_NAME)
-                    .list("", { limit: 200, sortBy: { column: "name", order: "asc" } });
+                // Fetch from your backend API instead of Supabase directly
+                const response = await fetch('/api/files'); // Adjust the endpoint to match your backend route
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
 
-                if (listError) throw listError;
-
-                const items: FileItem[] = (data ?? [])
-                    .filter((obj) => obj.name !== ".emptyFolderPlaceholder")
-                    .map((obj) => {
-                        const { data: urlData } = supabase.storage
-                            .from(BUCKET_NAME)
-                            .getPublicUrl(obj.name);
-                        return {
-                            id: obj.id ?? obj.name,
-                            name: obj.name,
-                            fileType: getFileType(obj.name),
-                            size: obj.metadata?.size,
-                            updatedAt: obj.updated_at,
-                            publicUrl: urlData.publicUrl,
-                        };
-                    });
+                const items: FileItem[] = data.map((file: FileItem) => ({
+                    id: file.id,
+                    name: file.name,
+                    fileType: getFileType(file.name),
+                    size: file.size,
+                    updatedAt: file.updatedAt,
+                    publicUrl: file.publicUrl,
+                }));
 
                 setFiles(items);
             } catch (err: unknown) {
+                console.error('Fetch error:', err);
                 setError(err instanceof Error ? err.message : "Failed to load files.");
             } finally {
                 setLoading(false);
@@ -155,7 +161,11 @@ function FilesPage() {
         e.stopPropagation();
         setBookmarks((prev) => {
             const next = new Set(prev);
-            next.has(id) ? next.delete(id) : next.add(id);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
             return next;
         });
     }
@@ -164,7 +174,7 @@ function FilesPage() {
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center py-24 gap-3 text-muted-foreground">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <Loader2 className="w-8 h-8 animate-spin text-primary"/>
                 <p className="text-sm">Loading files…</p>
             </div>
         );
@@ -172,7 +182,7 @@ function FilesPage() {
     if (error) {
         return (
             <div className="flex flex-col items-center justify-center py-24 gap-3 text-destructive">
-                <AlertCircle className="w-8 h-8" />
+                <AlertCircle className="w-8 h-8"/>
                 <p className="text-sm font-medium">{error}</p>
             </div>
         );
@@ -182,7 +192,7 @@ function FilesPage() {
     if (files.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-24 gap-3 text-muted-foreground">
-                <FolderOpen className="w-10 h-10" />
+                <FolderOpen className="w-10 h-10"/>
                 <p className="text-sm">No files found in this bucket.</p>
             </div>
         );
@@ -202,12 +212,13 @@ function FilesPage() {
             </div>
 
             {/* column header */}
-            <div className="grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-x-4 px-3 pb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground select-none">
-                <span className="w-5" /> {/* icon */}
+            <div
+                className="grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-x-4 px-3 pb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground select-none">
+                <span className="w-5"/> {/* icon */}
                 <span>Name</span>
                 <span className="hidden sm:block w-28 text-right">Type</span>
                 <span className="hidden md:block w-20 text-right">Size</span>
-                <span className="w-8" /> {/* bookmark */}
+                <span className="w-8"/> {/* bookmark */}
             </div>
 
             {/* file list */}
@@ -220,7 +231,7 @@ function FilesPage() {
                     return (
                         <div key={file.id}>
                             {}
-                            {idx !== 0 && <div className="h-px bg-border mx-3" />}
+                            {idx !== 0 && <div className="h-px bg-border mx-3"/>}
 
                             {/* file rows */}
                             <div
@@ -243,7 +254,7 @@ function FilesPage() {
                                 }}
                             >
                                 {/* file type icons */}
-                                <FileIcon type={file.fileType} className="w-5 h-5" />
+                                <FileIcon type={file.fileType} className="w-5 h-5"/>
 
                                 {/* file names + expand */}
                                 <div className="flex items-center gap-2 min-w-0">
@@ -253,15 +264,15 @@ function FilesPage() {
                                     {canPreview && (
                                         <span className="text-muted-foreground shrink-0">
                                             {isExpanded
-                                                ? <ChevronDown className="w-4 h-4" />
-                                                : <ChevronRight className="w-4 h-4" />}
+                                                ? <ChevronDown className="w-4 h-4"/>
+                                                : <ChevronRight className="w-4 h-4"/>}
                                         </span>
                                     )}
                                 </div>
 
                                 {/* file badge */}
                                 <div className="hidden sm:flex justify-end w-28">
-                                    <TypeBadge type={file.fileType} />
+                                    <TypeBadge type={file.fileType}/>
                                 </div>
 
                                 {/* file size */}
@@ -275,17 +286,17 @@ function FilesPage() {
                                         w-8 h-8 flex items-center justify-center rounded-md
                                         transition-colors
                                         ${isBookmarked
-                                            ? "text-primary hover:text-primary/70"
-                                            : "text-muted-foreground hover:text-foreground"
-                                        }
+                                        ? "text-primary hover:text-primary/70"
+                                        : "text-muted-foreground hover:text-foreground"
+                                    }
                                     `}
                                     onClick={(e) => toggleBookmark(file.id, e)}
                                     aria-label={isBookmarked ? "Remove bookmark" : "Bookmark file"}
                                     title={isBookmarked ? "Remove bookmark" : "Bookmark"}
                                 >
                                     {isBookmarked
-                                        ? <BookmarkCheck className="w-4 h-4" />
-                                        : <Bookmark className="w-4 h-4" />}
+                                        ? <BookmarkCheck className="w-4 h-4"/>
+                                        : <Bookmark className="w-4 h-4"/>}
                                 </button>
                             </div>
 
@@ -293,11 +304,11 @@ function FilesPage() {
                             {isExpanded && canPreview && (
                                 <div className="border-t border-border bg-background">
                                     <DocViewer
-                                        documents={[{ uri: file.publicUrl, fileType: file.fileType }]}
+                                        documents={[{uri: file.publicUrl, fileType: file.fileType}]}
                                         pluginRenderers={DocViewerRenderers}
-                                        style={{ minHeight: 520 }}
+                                        style={{minHeight: 520}}
                                         config={{
-                                            header: { disableHeader: true },
+                                            header: {disableHeader: true},
                                         }}
                                     />
                                 </div>
@@ -309,7 +320,8 @@ function FilesPage() {
 
             {/* bookmarks list */}
             {bookmarks.size > 0 && (
-                <div className="mt-4 px-3 py-2 rounded-md bg-primary/5 border border-primary/20 text-xs text-muted-foreground">
+                <div
+                    className="mt-4 px-3 py-2 rounded-md bg-primary/5 border border-primary/20 text-xs text-muted-foreground">
                     <span className="font-medium text-primary">{bookmarks.size}</span>{" "}
                     file{bookmarks.size !== 1 ? "s" : ""} bookmarked
                 </div>
