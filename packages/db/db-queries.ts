@@ -16,7 +16,7 @@ export async function queryEmployeeById(id: number): Promise<p.Employee | null> 
 }
 
 export async function updateEmployee(id: number, _firstName: string, _lastName: string, _persona: string | null): Promise<void> {
-    const personaTyped: p.Persona | null = employeePersonaHelper(_persona)
+    const personaTyped: p.Persona | null = personaHelper(_persona)
     const updatedUser = await prisma.employee.update({
         where: {id: id},
         data: {
@@ -27,9 +27,42 @@ export async function updateEmployee(id: number, _firstName: string, _lastName: 
     })
 }
 
+export async function updateContent(
+    _name: string,
+    _linkURL: string | null,
+    _ownerID: number | null,
+    _contentType: p.ContentType,
+    _status: p.Status | null,
+    _lastModified: Date,
+    _expiration: Date | null,
+    _targetPersona: string,
+    ): Promise<void> {
+    const _personaTyped: p.Persona = personaHelper(_targetPersona)
+    const _statusTyped: p.Status = statusHelper(_status)
+    const updatedContent = await prisma.content.update({
+        where: {name: _name},
+        data: {
+            name: _name,
+            linkURL: _linkURL,
+            ownerID: _ownerID,
+            contentType: _contentType,
+            status: _statusTyped,
+            lastModified: _lastModified,
+            expiration: _expiration,
+            targetPersona: _personaTyped
+        }
+    })
+}
+
 export async function deleteEmployee(id: number): Promise<void> {
     const deletedUser = await prisma.employee.delete({
         where: {id: id},
+    })
+}
+
+export async function deleteContent(name: string): Promise<void> {
+    const deletedContent = await prisma.content.delete({
+        where: {name: name},
     })
 }
 
@@ -39,9 +72,10 @@ export async function queryAllContent(): Promise<p.Content[]> {
 }
 
 export async function queryContentByName(name: string): Promise<p.Content | null> {
-    return prisma.content.findUnique({
+    return prisma.content.findFirst({
         where: {name: name}
         //TODO: Maybe add case insensitivity
+        //TODO: Change to return a list
         //  Perhaps better to grab ALL filenames so a fuzzy search may be done - Oscar
     })
 }
@@ -83,6 +117,14 @@ export async function createEmployee(_id: number, _firstName: string, _lastName:
             persona: _personaTyped
         }
     })
+}
+
+export async function queryLoginByUsername(username: string) {
+    return {
+        "id": 1,
+        "username": "admin",
+        "password": "admin",
+    }
 }
 
 function personaHelper(_persona: string | null): p.Persona {

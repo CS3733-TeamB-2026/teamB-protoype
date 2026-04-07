@@ -4,7 +4,6 @@ import morgan from 'morgan';
 import cors from 'cors'
 
 import * as q from "@softeng-app/db";
-import {createContent, createEmployee} from "@softeng-app/db";
 
 const app = express()
 app.use(cors())
@@ -51,6 +50,7 @@ app.get("/api/assigned", async (req, res) => {
         res.status(500).end()
     }
 })
+
 /*
 app.get("/api/files", async (req, res) => {
     try{
@@ -61,78 +61,126 @@ app.get("/api/files", async (req, res) => {
         res.status(500).end()
     }
 })
+*/
 
-app.post('/api/create-employee', async (req, res) => {
+app.post("/api/employee", async (req, res) => {
+    const payload = req.body
+    try {
+        const result = await q.createEmployee(
+            payload.firstName,
+            payload.lastName,
+            payload.id,
+            payload.persona
+        );
+        res.status(201).json(result)
+    } catch (error) {
+        console.error(error)
+        res.status(500).end()
+    }
+})
+
+app.post("/api/login", async (req, res) => {
     try{
-        const id = parseInt(req.query.id as string)
-        const first = req.query.firstName as string
-        const last = req.query.lastName as string
-        const persona = req.query.persona as string
-        await q.createEmployee(id, first, last, persona)
+        const {username, password} = req.body;
+        const login = await q.queryLoginByUsername(username);
+
+        if (!login){
+            res.status(401).json({message:"User not found"})
+        }
+
+        if (login.password !== password) {
+            res.status(401).json({message:"Incorrect Password"})
+        }
+
+        const employee = await q.queryEmployeeById(login.id);
+        res.status(200).json(employee);
     } catch(error){
         console.error(error)
         res.status(500).end()
     }
 })
-*/
 
-app.post('/api/update-employee', async (req, res) => {
+app.post("/api/content", async (req, res) => {
+    const payload = req.body
     try {
-        const id = parseInt(req.query.id as string)
-        const first = req.query.firstName as string
-        const last = req.query.lastName as string
-        const persona = req.query.persona as string
-        await q.updateEmployee(id, first, last, persona)
-    } catch (error){
-    console.error(error)
-    res.status(500).end()}
+        const result = await q.createContent(
+            payload.name,
+            payload.linkURL,
+            payload.ownerID,
+            payload.contentType,
+            payload.status,
+            payload.lastModified,
+            payload.expiration,
+            payload.jobPosition
+        );
+        res.status(201).json(result)
+    } catch (error) {
+        console.error(error)
+        res.status(500).end()
+    }
+})
+
+app.put('/api/employee', async (req, res) => {
+    const payload = req.body
+    try {
+            const result = await q.updateEmployee(
+                payload.id,
+                payload.firstName,
+                payload.lastName,
+                payload.persona
+            );
+            res.status(200).json(result)
+        } catch (error){
+            console.error(error)
+            res.status(500).end()}
     }
 )
 
-    app.post("/api/employee", (req, res) => {
-        const payload = req.body
-        try {
-            createEmployee(
-                payload.firstName,
-                payload.lastName,
-                payload.id,
-                payload.persona
-            );
-        } catch (error) {
-            console.error(error)
-            res.status(500).end()
-        }
-    })
+app.put('/api/content', async (req, res) => {
+    const payload = req.body
+    try{
+        const result = await q.updateContent(
+            payload.name,
+            payload.linkURL,
+            payload.ownerID,
+            payload.contentType,
+            payload.status,
+            payload.lastModified,
+            payload.expiration,
+            payload.jobPosition
+        );
+        res.status(200).json(result)
+    } catch (error){
+        console.error(error)
+        res.status(500).end()
+    }
+})
 
-    app.post('/api/delete-employee', async (req, res) => {
-        try {
-            const id = parseInt(req.query.id as string)
-            await q.deleteEmployee(id)
-        } catch (error) {
-            console.error(error)
-            res.status(500).end()
-        }
-    })
+app.delete('/api/employee', async (req, res) => {
+    const payload = req.body
+    try {
+        const result = await q.deleteEmployee(
+            payload.id
+        )
+        res.status(204).json(result) // 204 since no object remains
+    } catch (error) {
+        console.error(error)
+        res.status(500).end()
+    }
+})
 
-    app.post("/api/content", async (req, res) => {
-        const payload = req.body
-        try {
-            const result = await createContent(
-                payload.name,
-                payload.linkURL,
-                payload.ownerID,
-                payload.contentType,
-                payload.status,
-                payload.lastModified,
-                payload.expiration,
-                payload.jobPosition
-            );
-            res.status(201).json(result)
-        } catch (error) {
-            console.error(error)
-            res.status(500).end()
-        }
-    })
+app.delete('/api/content', async (req, res) => {
+    const payload = req.body
+    try{
+        const result = await q.deleteContent(
+            payload.name
+        )
+        res.status(204).json(result) // 204 since no object remains
+    } catch (error) {
+        console.error(error)
+        res.status(500).end()
+    }
+})
 
     /*
     app.post("/form", (req, res) => {
