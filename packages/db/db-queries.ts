@@ -37,7 +37,7 @@ export async function queryAllContent(): Promise<p.Content[]> {
 }
 
 export async function queryContentByName(name: string): Promise<p.Content | null> {
-    return prisma.content.findFirst({
+    return prisma.content.findUnique({
         where: {name: name}
         //TODO: Maybe add case insensitivity
     })
