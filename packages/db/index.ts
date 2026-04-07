@@ -1,4 +1,3 @@
-//export * from './db-queries'
 export {Login} from "./queries/login"
 export {Bucket} from "./queries/bucket";
 export {ServiceReqs} from "./queries/servicereqs";

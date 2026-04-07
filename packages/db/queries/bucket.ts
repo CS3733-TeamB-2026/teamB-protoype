@@ -8,13 +8,14 @@ export class Bucket {
         return data;
     }
 
-    /*
-    export async function queryObjectsByBucket(name: string): Promise<p.objects[]> {
-        return prisma.objects.findMany({
-            where: {
-                bucket_id: name
-            },
-        })
+    public static async downloadFile(path: string) {
+        const {data, error} = await supabase.storage.from(bucket).download(path)
+        if (error) throw error;
+        return data;
     }
-     */
+
+    public static async deleteFile(path: string) {
+        const {error} = await supabase.storage.from(bucket).remove([path])
+        if (error) throw error;
+    }
 }
