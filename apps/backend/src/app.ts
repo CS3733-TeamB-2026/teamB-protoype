@@ -79,6 +79,26 @@ app.post("/api/employee", async (req, res) => {
     }
 })
 
+app.post("/api/content", async (req, res) => {
+    const payload = req.body
+    try {
+        const result = await q.createContent(
+            payload.name,
+            payload.linkURL,
+            payload.ownerID,
+            payload.contentType,
+            payload.status,
+            payload.lastModified,
+            payload.expiration,
+            payload.jobPosition
+        );
+        return res.status(201).json(result)
+    } catch (error) {
+        console.error(error)
+        return res.status(500).end()
+    }
+})
+
 app.post("/api/login", async (req, res) => {
     try{
         const {username, password} = req.body;
@@ -95,26 +115,6 @@ app.post("/api/login", async (req, res) => {
         const employee = await q.queryEmployeeById(login.id);
         return res.status(200).json(employee);
     } catch(error){
-        console.error(error)
-        return res.status(500).end()
-    }
-})
-
-app.post("/api/content", async (req, res) => {
-    const payload = req.body
-    try {
-        const result = await q.createContent(
-            payload.name,
-            payload.linkURL,
-            payload.ownerID,
-            payload.contentType,
-            payload.status,
-            payload.lastModified,
-            payload.expiration,
-            payload.jobPosition
-        );
-        return res.status(201).json(result)
-    } catch (error) {
         console.error(error)
         return res.status(500).end()
     }
