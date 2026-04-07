@@ -22,7 +22,6 @@ type LoginDialogProps = {
 }
 
 function LoginDialog({ open, onOpenChange, onLogin }: LoginDialogProps) {
-
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState(""); //For login errors ex. wrong password
@@ -41,6 +40,8 @@ function LoginDialog({ open, onOpenChange, onLogin }: LoginDialogProps) {
             localStorage.setItem("user", JSON.stringify(user)); //Adds employee data into local storage
             onLogin(user); //Call func to update navbar
             onOpenChange(false);
+            //navigates to employee home page
+            window.location.href = "/employeehome";
         } else {
             //Unsuccessful login
             const err = await res.json();
