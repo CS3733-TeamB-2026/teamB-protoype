@@ -62,7 +62,28 @@ app.get("/api/files", async (req, res) => {
     }
 })
 
- */
+app.post('/api/create-employee', async (req, res) => {
+    try{
+        const id = parseInt(req.query.id as string)
+        const first = req.query.firstName as string
+        const last = req.query.lastName as string
+        const persona = req.query.persona as string
+        await q.createEmployee(id, first, last, persona)
+    } catch(error){
+        console.error(error)
+        res.status(500).end()
+    }
+})
+*/
+
+app.post('/api/update-employee', async (req, res) => {
+    try{
+        const id = parseInt(req.query.id as string)
+        const first = req.query.firstName as string
+        const last = req.query.lastName as string
+        const persona = req.query.persona as string
+        await q.updateEmployee(id, first, last, persona)
+
 
 app.post("/api/employee", (req, res) => {
     const payload = req.body
@@ -79,6 +100,11 @@ app.post("/api/employee", (req, res) => {
     }
 })
 
+app.post('/api/delete-employee', async (req, res) => {
+    try{
+        const id = parseInt(req.query.id as string)
+        await q.deleteEmployee(id)
+   
 app.post("/api/content", async (req, res) => {
     const payload = req.body
     try {
@@ -98,6 +124,12 @@ app.post("/api/content", async (req, res) => {
         res.status(500).end()
     }
 })
+
+/*
+app.post("/form", (req, res) => {
+    addToDB(res)
+})
+*/
 
 app.listen(3000, () => {
     console.log(`Server is listening on port 3000`);

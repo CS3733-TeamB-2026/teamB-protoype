@@ -13,6 +13,23 @@ export async function queryEmployeeById(id: number): Promise<p.Employee | null> 
     })
 }
 
+export async function updateEmployee(id: number, _firstName: string, _lastName: string, _persona: string | null): Promise<void> {
+    const personaTyped: p.Persona | null = employeePersonaHelper(_persona)
+    const updatedUser = await prisma.employee.update({
+        where: {id: id},
+        data: {
+            firstName: _firstName,
+            lastName: _lastName,
+            persona: personaTyped
+        },
+    })
+}
+
+export async function deleteEmployee(id: number): Promise<void> {
+    const deletedUser = await prisma.employee.delete({
+        where: {id: id},
+    })
+}
 
 // Content Queries
 export async function queryAllContent(): Promise<p.Content[]> {
