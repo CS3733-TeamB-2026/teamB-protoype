@@ -3,32 +3,46 @@ import * as p from "./generated/prisma/client";
 
 
 // Employee Queries
-export async function queryAllEmployees(): Promise<p.Employee[]> {
-    return prisma.employee.findMany({})
-}
+export class Employee {
+    public static async queryAllEmployees(): Promise<p.Employee[]> {
+        return prisma.employee.findMany({})
+    }
 
-export async function queryEmployeeById(id: number): Promise<p.Employee | null> {
-    return prisma.employee.findUnique({
-        where: {id: id}
-    })
-}
+    public static async queryEmployeeById(id: number): Promise<p.Employee | null> {
+        return prisma.employee.findUnique({
+            where: {id: id}
+        })
+    }
 
-export async function updateEmployee(id: number, _firstName: string, _lastName: string, _persona: string | null): Promise<void> {
-    const personaTyped: p.Persona | null = personaHelper(_persona)
-    const updatedUser = await prisma.employee.update({
-        where: {id: id},
-        data: {
-            firstName: _firstName,
-            lastName: _lastName,
-            persona: personaTyped
-        },
-    })
-}
+    public static async updateEmployee(id: number, _firstName: string, _lastName: string, _persona: string | null): Promise<void> {
+        const personaTyped: p.Persona | null = personaHelper(_persona)
+        const updatedUser = await prisma.employee.update({
+            where: {id: id},
+            data: {
+                firstName: _firstName,
+                lastName: _lastName,
+                persona: personaTyped
+            },
+        })
+    }
 
-export async function deleteEmployee(id: number): Promise<void> {
-    const deletedUser = await prisma.employee.delete({
-        where: {id: id},
-    })
+    public static async deleteEmployee(id: number): Promise<void> {
+        const deletedUser = await prisma.employee.delete({
+            where: {id: id},
+        })
+    }
+
+    public static async createEmployee(_id: number, _firstName: string, _lastName: string, _persona: string | null): Promise<void> {
+        const _personaTyped: p.Persona = personaHelper(_persona)
+        await prisma.employee.create({
+            data: {
+                id: _id,
+                firstName: _firstName,
+                lastName: _lastName,
+                persona: _personaTyped
+            }
+        })
+    }
 }
 
 // Content Queries
@@ -70,18 +84,6 @@ export async function queryObjectsByBucket(name: string): Promise<p.objects[]> {
 }
 
  */
-
-export async function createEmployee(_id: number, _firstName: string, _lastName: string, _persona: string | null): Promise<void> {
-    const _personaTyped: p.Persona = personaHelper(_persona)
-    await prisma.employee.create({
-        data: {
-            id: _id,
-            firstName: _firstName,
-            lastName: _lastName,
-            persona: _personaTyped
-        }
-    })
-}
 
 export async function queryLoginByUsername(username: string) {
     return {
