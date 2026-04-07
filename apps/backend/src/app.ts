@@ -51,7 +51,7 @@ app.get("/api/assigned", async (req, res) => {
         res.status(500).end()
     }
 })
-
+/*
 app.get("/api/files", async (req, res) => {
     try{
         const assigned = await q.queryObjectsByBucket("test")
@@ -61,6 +61,8 @@ app.get("/api/files", async (req, res) => {
         res.status(500).end()
     }
 })
+
+ */
 
 app.post("/api/employee", (req, res) => {
     const payload = req.body
@@ -77,10 +79,10 @@ app.post("/api/employee", (req, res) => {
     }
 })
 
-app.post("/api/content", (req, res) => {
+app.post("/api/content", async (req, res) => {
     const payload = req.body
     try {
-        createContent(
+        const result = await createContent(
             payload.name,
             payload.linkURL,
             payload.ownerID,
@@ -90,6 +92,7 @@ app.post("/api/content", (req, res) => {
             payload.expiration,
             payload.jobPosition
         );
+        res.status(201).json(result)
     } catch(error){
         console.error(error)
         res.status(500).end()
