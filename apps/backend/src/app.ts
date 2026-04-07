@@ -104,27 +104,27 @@ app.post("/api/login", async (req, res) => {
 
 app.post("/api/content", upload.single("file"), async (req, res) => {
   const payload = req.body;
-  let fileURI = null;
-  if (req.file) {
-    fileURI =
-      (payload.ownerID as String) +
-      "/" +
-      crypto.randomUUID() +
-      "/" +
-      req.file.originalname;
-    const result = await q.uploadFile(req.file.buffer, fileURI);
-    fileURI = result.path;
-  }
   try {
+    let fileURI = null;
+    if (req.file) {
+      fileURI =
+        (payload.ownerID as String) +
+        "/" +
+        crypto.randomUUID() +
+        "/" +
+        req.file.originalname;
+      const uploadResult = await q.uploadFile(req.file.buffer, fileURI);
+      fileURI = uploadResult.path;
+    }
     const result = await q.createContent(
       payload.name,
-      payload.linkURL,
+      payload.linkURL || null,
       fileURI,
-      payload.ownerID,
+      payload.ownerID ? parseInt(payload.ownerID) : null,
       payload.contentType,
       payload.status,
-      payload.lastModified,
-      payload.expiration,
+      new Date(payload.lastModified),
+      payload.expiration ? new Date(payload.expiration) : null,
       payload.jobPosition,
     );
     res.status(201).json(result);

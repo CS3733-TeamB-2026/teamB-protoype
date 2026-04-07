@@ -192,11 +192,11 @@ export async function queryLoginByUsername(username: string) {
 }
 
 function personaHelper(_persona: string | null): p.Persona {
-  if (_persona == "underwriter") {
+  if (_persona === "underwriter") {
     return p.Persona.underwriter;
-  } else if (_persona == "businessAnalyst") {
+  } else if (_persona === "businessAnalyst") {
     return p.Persona.businessAnalyst;
-  } else if (_persona == "admin") {
+  } else if (_persona === "admin") {
     return p.Persona.admin;
   } else {
     return p.Persona.admin;
@@ -205,11 +205,11 @@ function personaHelper(_persona: string | null): p.Persona {
 }
 
 function statusHelper(_status: string | null): p.Status {
-  if (_status == "new") {
+  if (_status === "new") {
     return p.Status.new;
-  } else if (_status == "inProgress") {
+  } else if (_status === "inProgress") {
     return p.Status.inProgress;
-  } else if (_status == "complete") {
+  } else if (_status === "complete") {
     return p.Status.complete;
   } else {
     return p.Status.new;

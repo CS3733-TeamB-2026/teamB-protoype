@@ -55,7 +55,7 @@ function ManagementForm() {
   const handleSubmit = async () => {
     const formData = new FormData();
     formData.append("name", name);
-    formData.append("linkURL", uploadMode == "url" ? linkUrl : "");
+    formData.append("linkURL", uploadMode === "url" ? linkUrl : "");
     formData.append("ownerID", ownerID);
     formData.append("contentType", contentType);
     formData.append("status", status);
@@ -63,7 +63,7 @@ function ManagementForm() {
     formData.append("expiration", date2?.toISOString() ?? "");
     formData.append("jobPosition", jobPosition);
 
-    if (uploadMode == "file" && file) {
+    if (uploadMode === "file" && file) {
       formData.append("file", file);
     }
 
