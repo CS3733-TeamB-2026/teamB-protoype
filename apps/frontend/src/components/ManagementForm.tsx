@@ -35,7 +35,7 @@ function ManagementForm() {
     const [linkUrl, setLinkUrl] = useState("")
     const [ownerID, setOwnerID] = useState("")
     const [contentType, setContentType] = useState<"reference" | "workflow">("reference")
-    const [status, setStatus] = useState<"todo" | "inProgress" | "done">("todo")
+    const [status, setStatus] = useState<"new" | "inProgress" | "complete">("new")
     const [expirationTime, setExpirationTime] = useState(
         () => new Date().toTimeString().substring(0, 8)
     )
@@ -47,6 +47,8 @@ function ManagementForm() {
     const [lastModifiedTime, setLastModifiedTime] = React.useState(
         () => new Date().toTimeString().substring(0, 8)
     )
+    const [fileKey, setFileKey] = useState(0)
+
 
     const handleSubmit = async () => {
         await fetch('http://localhost:3000/api/content', {
@@ -55,7 +57,7 @@ function ManagementForm() {
             body: JSON.stringify({
                 name,
                 linkURL: linkUrl,
-                ownerID,
+                ownerID: ownerID ? parseInt(ownerID) : null,
                 contentType: contentType,
                 status,
                 lastModified: date,
@@ -63,6 +65,17 @@ function ManagementForm() {
                 jobPosition: jobPosition,
             })
         })
+        setName("")
+        setLinkUrl("")
+        setOwnerID("")
+        setContentType("reference")
+        setStatus("new")
+        setJobPosition("Select job position")
+        setDate(new Date())
+        setDate2(undefined)
+        setLastModifiedTime(new Date().toTimeString().substring(0, 8))
+        setExpirationTime(new Date().toTimeString().substring(0, 8))
+        setFileKey(prev => prev + 1)
     }
 
     return (
@@ -115,7 +128,7 @@ function ManagementForm() {
 
                                 <Field className="bg-background">
                                     <FieldLabel className="text-primary" htmlFor="File">File Upload</FieldLabel>
-                                    <Input id="File" type="file"/>
+                                    <Input key={fileKey} id="File" type="file"/>
                                     <FieldDescription>Select a file to upload.</FieldDescription>
                                 </Field>
                             </div>
@@ -301,17 +314,17 @@ function ManagementForm() {
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button
-                                            variant="outline">{status === "todo" ? "New" : status === "inProgress" ? "In Progress" : "Complete"}</Button>
+                                            variant="outline">{status === "new" ? "New" : status === "inProgress" ? "In Progress" : "complete"}</Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent>
                                         <DropdownMenuGroup>
                                             <DropdownMenuLabel>Document Status</DropdownMenuLabel>
                                             <DropdownMenuRadioGroup value={status}
-                                                                    onValueChange={(v) => setStatus(v as "todo" | "inProgress" | "done")}>
-                                                <DropdownMenuRadioItem value="todo">New</DropdownMenuRadioItem>
+                                                                    onValueChange={(v) => setStatus(v as "new" | "inProgress" | "complete")}>
+                                                <DropdownMenuRadioItem value="new">New</DropdownMenuRadioItem>
                                                 <DropdownMenuRadioItem value="inProgress">In
                                                     Progress</DropdownMenuRadioItem>
-                                                <DropdownMenuRadioItem value="done">Complete</DropdownMenuRadioItem>
+                                                <DropdownMenuRadioItem value="complete">Complete</DropdownMenuRadioItem>
                                             </DropdownMenuRadioGroup>
                                         </DropdownMenuGroup>
                                     </DropdownMenuContent>

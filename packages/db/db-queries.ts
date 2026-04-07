@@ -65,6 +65,17 @@ function personaHelper(_persona: string | null): p.Persona {
 
 }
 
+function statusHelper(_status: string | null): p.Status {
+    if (_status == "new") { return p.Status.new }
+    else if (_status == "inProgress") { return p.Status.inProgress }
+    else if(_status == "complete") { return p.Status.complete }
+    else {
+        return p.Status.new
+        //TODO: figure out a default return
+    }
+
+}
+
 export async function createContent(
     _name: string,
     _linkURL: string | null,
@@ -76,13 +87,14 @@ export async function createContent(
     _targetPersona: string,
 ): Promise<p.Content> {
     const _personaTyped: p.Persona = personaHelper(_targetPersona)
+    const _statusTyped: p.Status = statusHelper(_status)
     return prisma.content.create({
         data: {
             name: _name,
             linkURL: _linkURL,
             ownerID: _ownerID,
             contentType: _contentType,
-            status: _status,
+            status: _statusTyped,
             lastModified: _lastModified,
             expiration: _expiration,
             targetPersona: _personaTyped,
