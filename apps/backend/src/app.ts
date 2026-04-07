@@ -2,7 +2,7 @@ import 'dotenv/config'
 import express from 'express'
 import morgan from 'morgan';
 import cors from 'cors'
-
+import bcrypt from 'bcrypt';
 import * as q from "@softeng-app/db";
 
 const app = express()
@@ -110,15 +110,27 @@ app.post("/api/login", async (req, res) => {
             return res.status(401).json({message:"User not found"})
         }
 
-        if (login.password !== password) {
+        const match = await bcrypt.compare(password, login.passwordHash)
+        if (!match) {
             return res.status(401).json({message:"Incorrect Password"})
         }
 
-        const employee = await q.Employee.queryEmployeeById(login.id);
+        const employee = await q.Employee.queryEmployeeById(login.employeeID);
         return res.status(200).json(employee);
     } catch(error){
         console.error(error)
         return res.status(500).end()
+    }
+})
+
+app.post("/api/login/create", async (req, res) => {
+    try {
+        const {userName, password, employeeID} = req.body;
+        await q.createLogin(userName, password, employeeID);
+        return res.status(201).json({message:"Account Created"});
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({message:"Account Creation Failed"});
     }
 })
 
@@ -161,7 +173,7 @@ app.post("/api/content", async (req, res) => {
 app.delete('/api/employee', async (req, res) => {
     const payload = req.body
     try {
-        const result = await q.deleteEmployee(
+        const result = await q.Employee.deleteEmployee(
             payload.id
         )
         return res.status(204).json(result) // 204 since no object remains
