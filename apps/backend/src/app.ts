@@ -79,8 +79,9 @@ app.get("/api/content", async (req, res) => {
 
 app.post("/api/content", upload.single("file"), async (req, res) => {
     const payload = req.body;
+    let fileURI: string | null = null;
+    let uploaded = false;
     try {
-        let fileURI = null;
         if (req.file) {
             fileURI =
                 (payload.ownerID as String) +
@@ -89,6 +90,7 @@ app.post("/api/content", upload.single("file"), async (req, res) => {
                 "/" +
                 req.file.originalname;
             const uploadResult = await q.Bucket.uploadFile(req.file.buffer, fileURI);
+            uploaded = true;
             fileURI = uploadResult.path;
         }
         const result = await q.Content.createContent(
@@ -104,6 +106,9 @@ app.post("/api/content", upload.single("file"), async (req, res) => {
         );
         return res.status(201).json(result);
     } catch (error) {
+        if (uploaded && fileURI) {
+            await q.Bucket.deleteFile(fileURI).catch(console.error);
+        }
         console.error(error);
         return res.status(500).end();
     }

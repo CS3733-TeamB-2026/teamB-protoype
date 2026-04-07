@@ -13,4 +13,9 @@ export class Bucket {
         if (error) throw error;
         return data;
     }
+
+    public static async deleteFile(path: string) {
+        const {error} = await supabase.storage.from(bucket).remove([path])
+        if (error) throw error;
+    }
 }
