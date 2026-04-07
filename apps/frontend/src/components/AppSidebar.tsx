@@ -1,4 +1,4 @@
-import { Home, FormInput, User, ChevronDown } from "lucide-react"
+import { Home, FormInput, User, ChevronDown, LucideFolders } from "lucide-react"
 import React from "react"
 import {Link} from "react-router-dom";
 import {
@@ -28,6 +28,7 @@ const navItems = [
     { title: "Home", icon: Home, href: "/", children: [] },
     { title: "Management Form", icon: FormInput, href: "/manageform", children: [] },
     { title: "Employee Form", icon: FormInput, href: "/employeeform", children: [] },
+    { title: "Files", icon: LucideFolders, href: "/files", children: [] },
     { title: "Personas", icon: User, href: "/", children: [
             {title: "Underwriter", icon: User, href: "/underwriter", children: []},
             {title: "Business Analyst", icon: User, href: "/businessanalyst", children: []},

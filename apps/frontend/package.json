@@ -16,6 +16,7 @@
     "@fontsource-variable/roboto-slab": "^5.2.8",
     "@hugeicons/core-free-icons": "^4.1.1",
     "@hugeicons/react": "^1.1.6",
+    "@iamjariwala/react-doc-viewer": "^1.8.0",
     "axios": "^1.14.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
