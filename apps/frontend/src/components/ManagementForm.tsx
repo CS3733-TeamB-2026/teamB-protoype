@@ -29,6 +29,8 @@ import {Separator} from "@/components/ui/separator"
 import {
     Card,
 } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 function ManagementForm() {
     const [name, setName] = useState("")
@@ -48,6 +50,7 @@ function ManagementForm() {
         () => new Date().toTimeString().substring(0, 8)
     )
     const [fileKey, setFileKey] = useState(0)
+    const [uploadMode, setUploadMode] = React.useState<"url" | "file">("url")
 
 
     const handleSubmit = async () => {
@@ -87,13 +90,15 @@ function ManagementForm() {
                 <div className="px-6">
                     <>
                         {/*//Title*/}
-
                         <div className="bg-background py-4 text-center">
                             <h1 className="text-primary text-2xl font-semibold">Content Management Form</h1>
                         </div>
+
+                        {/*Separator*/}
                         <div className="bg-background py-2">
                             <Separator className="bg-primary"/>
                         </div>
+
                         {/*//Input Name Field*/}
                         {/* //TEXTBOX*/}
                         <Field className="bg-background ">
@@ -107,9 +112,28 @@ function ManagementForm() {
                                 onChange={(e) => setName(e.target.value)}
                             />
                         </Field>
+
+                        {/*Separator*/}
                         <div className="bg-background py-2">
                             <Separator className="bg-primary"/>
                         </div>
+
+                        {/*Content source selector*/}
+                        <Field className="bg-background">
+                            <FieldLabel className="text-primary">Content Source</FieldLabel>
+                            <RadioGroup value={uploadMode} onValueChange={
+                                (v) => setUploadMode(v as "url" | "file")}>
+                                <div className="flex items-center gap-2">
+                                    <RadioGroupItem value="url" id="mode-url" />
+                                    <Label htmlFor="mode-url">URL</Label>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <RadioGroupItem value="file" id="mode-file" />
+                                    <Label htmlFor="mode-file">File Upload</Label>
+                                </div>
+                            </RadioGroup>
+                        </Field>
+
                         {/*//Input Url Field*/}
                         <div className="flex gap-4">
                             {/* //TEXTBOX*/}
@@ -132,6 +156,8 @@ function ManagementForm() {
                                 <FieldDescription>Select a file to upload.</FieldDescription>
                             </Field>
                         </div>
+
+                        {/*Separator*/}
                         <div className="bg-background py-2">
                             <Separator className="bg-primary"/>
                         </div>
@@ -144,206 +170,207 @@ function ManagementForm() {
                                 ID</FieldLabel>
                             <Input id="input-employee-id" type="number" placeholder="000000"
                                    value={ownerID}
-                                   onChange={(e) => setOwnerID(e.target.value)}/>
+                                   onChange={(e) => setOwnerID(e.target.value)}
+                            />
                             <FieldDescription>
-
-                                {/* Enter the employee ID of the content owner*/}
+                                {/* TODO: Enter the employee ID of the content owner*/}
                             </FieldDescription>
 
                         </Field>
+
+                        {/*Separator*/}
                         <div className="bg-background py-2">
                             <Separator className="bg-primary"/>
                         </div>
 
                         {/*//Job position dropdown, this needs to be updated*/}
-
                         <Field className="bg-background">
                             <FieldLabel className="text-primary">Select job position</FieldLabel>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="outline">
-                                        {jobPosition === "underwriter" ? "Underwriter" : jobPosition === "businessAnalyst" ? "Business Analyst" : jobPosition === "admin" ? "Admin" : "Select job position"}
-                                    </Button>
+                                    <Button variant="outline">{jobPosition}</Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
                                     <DropdownMenuGroup>
                                         <DropdownMenuLabel>Job Position</DropdownMenuLabel>
                                         <DropdownMenuRadioGroup value={jobPosition} onValueChange={setJobPosition}>
-                                            <DropdownMenuRadioItem
-                                                value="underwriter">Underwriter</DropdownMenuRadioItem>
-                                            <DropdownMenuRadioItem value="businessAnalyst">Business
-                                                analyst</DropdownMenuRadioItem>
-                                            <DropdownMenuRadioItem value="admin">Admin</DropdownMenuRadioItem>
+                                            <DropdownMenuRadioItem value="Underwriter">
+                                                Underwriter
+                                            </DropdownMenuRadioItem>
+                                            <DropdownMenuRadioItem value="Business analyst">
+                                                Business analyst
+                                            </DropdownMenuRadioItem>
                                         </DropdownMenuRadioGroup>
                                     </DropdownMenuGroup>
                                 </DropdownMenuContent>
                             </DropdownMenu>
-                        </Field>
-                        <div className="bg-background py-2">
-                            <Separator className="bg-primary"/>
-                        </div>
-
-                        {/* //Date Picker Region*/}
-
-                        <div className="flex flex-wrap items-end gap-4 bg-background py-4">
-
-                            {/* //Last modified date*/}
-
-                            <Field className="bg-background flex-1">
-                                <FieldLabel className="text-primary" htmlFor="date">Last Modified Date</FieldLabel>
-                                <Popover open={open} onOpenChange={setOpen}>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            id="date"
-                                            className="justify-start font-normal"
-                                        >
-                                            {date ? date.toLocaleDateString() : "Select date"}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-                                        <Calendar
-                                            mode="single"
-                                            selected={date}
-                                            defaultMonth={date}
-                                            captionLayout="dropdown"
-                                            onSelect={(date) => {
-                                                setDate(date)
-                                                setOpen(false)
-                                            }}
-                                        />
-                                    </PopoverContent>
-                                </Popover>
                             </Field>
 
-                            {/* //Time picker last modified*/}
-                            <Field className="w-32">
-                                <FieldLabel className="text-primary"
-                                            htmlFor="time-picker-lastmodified">Time</FieldLabel>
-                                <Input
-                                    type="time"
-                                    id="time-picker-lastmodified"
-                                    step="1"
-                                    value={lastModifiedTime}
-                                    onChange={(e) => setLastModifiedTime(e.target.value)}
-                                    className="appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-                                />
-                            </Field>
-                            <Separator className="bg-primary" orientation="vertical"/>
+                            {/*Separator*/}
+                            <div className="bg-background py-2">
+                                <Separator className="bg-primary"/>
+                            </div>
 
-                            {/*  //Expiration Date Picker*/}
-                            <Field className="bg-background flex-1">
-                                <FieldLabel className="text-primary" htmlFor="date-picker-expirationdate">Expiration
-                                    Date</FieldLabel>
-                                <Popover open={open2} onOpenChange={setOpen2}>
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            id="date-picker-expirationdate"
-                                            className="justify-start font-normal"
-                                        >
-                                            {date2 ? date2.toLocaleDateString() : "Select date"}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-                                        <Calendar
-                                            mode="single"
-                                            selected={date2}
-                                            defaultMonth={date2}
-                                            captionLayout="dropdown"
-                                            onSelect={(date) => {
-                                                setDate2(date)
-                                                setOpen2(false)
-                                            }}
-                                        />
-                                    </PopoverContent>
-                                </Popover>
-                            </Field>
+                            {/* //Date Picker Region*/}
+                            <div className="flex flex-wrap items-end gap-4 bg-background py-4">
 
-                            {/*  //Time Picker Expiration Date*/}
+                                {/* //Last modified date*/}
 
-                            <Field className="w-32">
-                                <FieldLabel className="text-primary"
-                                            htmlFor="time-picker-expirationdate">Time</FieldLabel>
-                                <Input
-                                    type="time"
-                                    id="time-picker-expirationdate"
-                                    step="1"
-                                    value={expirationTime}
-                                    onChange={(e) => setExpirationTime(e.target.value)}
-                                    className="appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-                                />
-                            </Field>
+                                <Field className="bg-background flex-1">
+                                    <FieldLabel className="text-primary" htmlFor="date">Last Modified Date</FieldLabel>
+                                    <Popover open={open} onOpenChange={setOpen}>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                id="date"
+                                                className="justify-start font-normal"
+                                            >
+                                                {date ? date.toLocaleDateString() : "Select date"}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                                            <Calendar
+                                                mode="single"
+                                                selected={date}
+                                                defaultMonth={date}
+                                                captionLayout="dropdown"
+                                                onSelect={(date) => {
+                                                    setDate(date)
+                                                    setOpen(false)
+                                                }}
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+                                </Field>
 
-                            {/* //Creation Date Section*/}
+                                {/* //Time picker last modified*/}
+                                <Field className="w-32">
+                                    <FieldLabel className="text-primary"
+                                                htmlFor="time-picker-lastmodified">Time</FieldLabel>
+                                    <Input
+                                        type="time"
+                                        id="time-picker-lastmodified"
+                                        step="1"
+                                        value={lastModifiedTime}
+                                        onChange={(e) => setLastModifiedTime(e.target.value)}
+                                        className="appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                                    />
+                                </Field>
+                                <Separator className="bg-primary" orientation="vertical"/>
+
+                                {/*  //Expiration Date Picker*/}
+                                <Field className="bg-background flex-1">
+                                    <FieldLabel className="text-primary" htmlFor="date-picker-expirationdate">Expiration
+                                        Date</FieldLabel>
+                                    <Popover open={open2} onOpenChange={setOpen2}>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                id="date-picker-expirationdate"
+                                                className="justify-start font-normal"
+                                            >
+                                                {date2 ? date2.toLocaleDateString() : "Select date"}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                                            <Calendar
+                                                mode="single"
+                                                selected={date2}
+                                                defaultMonth={date2}
+                                                captionLayout="dropdown"
+                                                onSelect={(date) => {
+                                                    setDate2(date)
+                                                    setOpen2(false)
+                                                }}
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+                                </Field>
+
+                                {/*  //Time Picker Expiration Date*/}
+
+                                <Field className="w-32">
+                                    <FieldLabel className="text-primary"
+                                                htmlFor="time-picker-expirationdate">Time</FieldLabel>
+                                    <Input
+                                        type="time"
+                                        id="time-picker-expirationdate"
+                                        step="1"
+                                        value={expirationTime}
+                                        onChange={(e) => setExpirationTime(e.target.value)}
+                                        className="appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                                    />
+                                </Field>
+
+                                {/* //Creation Date Section*/}
 
 
-                            {/* Creation date selection*/}
+                                {/* Creation date selection*/}
 
 
-                        </div>
-                        <div className="bg-background py-2">
-                            <Separator className="bg-primary"/>
-                        </div>
+                            </div>
+                            <div className="bg-background py-2">
+                                <Separator className="bg-primary"/>
+                            </div>
 
                         {/* //Type of document dropdown*/}
 
-                        <Field className="bg-background">
-                            <FieldLabel className="text-primary">Type of Document</FieldLabel>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button
-                                        variant="outline">{contentType === "reference" ? "Reference Content" : "Workflow Content"}</Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent>
-                                    <DropdownMenuGroup>
-                                        <DropdownMenuLabel>Document Type</DropdownMenuLabel>
-                                        <DropdownMenuRadioGroup value={contentType}
-                                                                onValueChange={(v) => setContentType(v as "reference" | "workflow")}>
-                                            <DropdownMenuRadioItem value="reference">Reference
-                                                Content</DropdownMenuRadioItem>
-                                            <DropdownMenuRadioItem value="workflow">Workflow
-                                                Content</DropdownMenuRadioItem>
-                                        </DropdownMenuRadioGroup>
-                                    </DropdownMenuGroup>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </Field>
+                            <Field className="bg-background">
+                                <FieldLabel className="text-primary">Type of Document</FieldLabel>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            variant="outline">{contentType === "reference" ? "Reference Content" : "Workflow Content"}</Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent>
+                                        <DropdownMenuGroup>
+                                            <DropdownMenuLabel>Document Type</DropdownMenuLabel>
+                                            <DropdownMenuRadioGroup value={contentType}
+                                                                    onValueChange={(v) => setContentType(v as "reference" | "workflow")}>
+                                                <DropdownMenuRadioItem value="reference">Reference
+                                                    Content</DropdownMenuRadioItem>
+                                                <DropdownMenuRadioItem value="workflow">Workflow
+                                                    Content</DropdownMenuRadioItem>
+                                            </DropdownMenuRadioGroup>
+                                        </DropdownMenuGroup>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </Field>
 
-                        {/*//Document Status dropdown*/}
+                            {/*//Document Status dropdown*/}
 
-                        <Field className="bg-background">
-                            <FieldLabel className="text-primary">Document Status</FieldLabel>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button
-                                        variant="outline">{status === "new" ? "New" : status === "inProgress" ? "In Progress" : "Complete"}</Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent>
-                                    <DropdownMenuGroup>
-                                        <DropdownMenuLabel>Document Status</DropdownMenuLabel>
-                                        <DropdownMenuRadioGroup value={status}
-                                                                onValueChange={(v) => setStatus(v as "new" | "inProgress" | "complete")}>
-                                            <DropdownMenuRadioItem value="new">New</DropdownMenuRadioItem>
-                                            <DropdownMenuRadioItem value="inProgress">In
-                                                Progress</DropdownMenuRadioItem>
-                                            <DropdownMenuRadioItem value="complete">Complete</DropdownMenuRadioItem>
-                                        </DropdownMenuRadioGroup>
-                                    </DropdownMenuGroup>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </Field>
+                            <Field className="bg-background">
+                                <FieldLabel className="text-primary">Document Status</FieldLabel>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            variant="outline">{status === "new" ? "New" : status === "inProgress" ? "In Progress" : "complete"}</Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent>
+                                        <DropdownMenuGroup>
+                                            <DropdownMenuLabel>Document Status</DropdownMenuLabel>
+                                            <DropdownMenuRadioGroup value={status}
+                                                                    onValueChange={(v) => setStatus(v as "new" | "inProgress" | "complete")}>
+                                                <DropdownMenuRadioItem value="new">New</DropdownMenuRadioItem>
+                                                <DropdownMenuRadioItem value="inProgress">In
+                                                    Progress</DropdownMenuRadioItem>
+                                                <DropdownMenuRadioItem value="complete">Complete</DropdownMenuRadioItem>
+                                            </DropdownMenuRadioGroup>
+                                        </DropdownMenuGroup>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </Field>
 
-                        {/* Submit button*/}
+                            {/* Submit button*/}
 
-                        <div className="flex justify-center bg-background py-4">
-                            <Button onClick={handleSubmit}
-                                    className="bg-primary text-background hover:bg-black hover:text-background"
-                                    variant="outline"
-                                    size="lg">
-                                Submit
-                            </Button>
-                        </div>
+                            <div className="flex justify-center bg-background py-4">
+                                <Button onClick={handleSubmit}
+                                        className="bg-primary text-background hover:bg-black hover:text-background"
+                                        variant="outline"
+                                        size="lg">
+                                    Submit
+                                </Button>
+                            </div>
                     </>
                 </div>
             </Card>
