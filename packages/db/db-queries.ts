@@ -25,9 +25,42 @@ export async function updateEmployee(id: number, _firstName: string, _lastName: 
     })
 }
 
+export async function updateContent(
+    _name: string,
+    _linkURL: string | null,
+    _ownerID: number | null,
+    _contentType: p.ContentType,
+    _status: p.Status | null,
+    _lastModified: Date,
+    _expiration: Date | null,
+    _targetPersona: string,
+    ): Promise<void> {
+    const _personaTyped: p.Persona = personaHelper(_targetPersona)
+    const _statusTyped: p.Status = statusHelper(_status)
+    const updatedContent = await prisma.content.update({
+        where: {name: _name},
+        data: {
+            name: _name,
+            linkURL: _linkURL,
+            ownerID: _ownerID,
+            contentType: _contentType,
+            status: _statusTyped,
+            lastModified: _lastModified,
+            expiration: _expiration,
+            targetPersona: _personaTyped
+        }
+    })
+}
+
 export async function deleteEmployee(id: number): Promise<void> {
     const deletedUser = await prisma.employee.delete({
         where: {id: id},
+    })
+}
+
+export async function deleteContent(name: string): Promise<void> {
+    const deletedContent = await prisma.content.delete({
+        where: {name: name},
     })
 }
 
