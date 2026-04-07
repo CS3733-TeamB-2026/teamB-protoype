@@ -4,6 +4,7 @@ import {Helper} from "./helper";
 
 export class Content {
     public static async updateContent(
+        id: number,
         _name: string,
         _linkURL: string | null,
         _fileURI: string | null,
@@ -17,9 +18,9 @@ export class Content {
         const _personaTyped: p.Persona = Helper.personaHelper(_targetPersona)
         const _statusTyped: p.Status = Helper.statusHelper(_status)
         const updatedContent = await prisma.content.update({
-            where: {name: _name},
+            where: {id: id},
             data: {
-                name: _name,
+                displayName: _name,
                 linkURL: _linkURL,
                 fileURI: _fileURI,
                 ownerID: _ownerID,
@@ -53,7 +54,7 @@ export class Content {
         const _statusTyped: p.Status = Helper.statusHelper(_status)
         return prisma.content.create({
             data: {
-                name: _name,
+                displayName: _name,
                 linkURL: _linkURL,
                 fileURI: _fileURI,
                 ownerID: _ownerID,
@@ -66,9 +67,9 @@ export class Content {
         })
     }
 
-    public static async deleteContent(name: string): Promise<void> {
+    public static async deleteContent(id: number): Promise<void> {
         const deletedContent = await prisma.content.delete({
-            where: {name: name},
+            where: {id: id},
         })
     }
 
@@ -78,7 +79,7 @@ export class Content {
 
     public static async queryContentByName(name: string): Promise<p.Content | null> {
         return prisma.content.findFirst({
-            where: {name: name}
+            where: {displayName: name}
             // TODO: Maybe add case insensitivity
             //  Perhaps better to grab ALL filenames so a fuzzy search may be done - Oscar
         })

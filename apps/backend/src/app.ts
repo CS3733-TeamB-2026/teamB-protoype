@@ -113,6 +113,7 @@ app.put("/api/content", async (req, res) => {
     const payload = req.body;
     try {
         const result = await q.Content.updateContent(
+            payload.id,
             payload.name,
             payload.linkURL,
             payload.fileURI,
@@ -133,7 +134,7 @@ app.put("/api/content", async (req, res) => {
 app.delete("/api/content", async (req, res) => {
     const payload = req.body;
     try {
-        const result = await q.Content.deleteContent(payload.name);
+        const result = await q.Content.deleteContent(payload.id);
         return res.status(204).json(result);
     } catch (error) {
         console.error(error);
