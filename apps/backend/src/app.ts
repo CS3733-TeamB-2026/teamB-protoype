@@ -20,6 +20,16 @@ app.get('/api/employee', async (req, res) => {
     }
 })
 
+app.get('/api/content', async (req, res) => {
+    try {
+        const content = await q.queryAllContent()
+        return res.status(200).json(content)
+    } catch (error) {
+        console.error(error)
+        return res.status(500).end()
+    }
+})
+
 app.get("/api/servicereqs", async (req, res) => {
     try {
         const servicereqs = await q.queryAllServiceReqs()
@@ -63,16 +73,6 @@ app.post("/api/employee", async (req, res) => {
             payload.persona
         );
         return res.status(201).json(result)
-    } catch (error) {
-        console.error(error)
-        return res.status(500).end()
-    }
-})
-
-app.get('/api/content', async (req, res) => {
-    try {
-        const content = await q.queryAllContent()
-        return res.status(200).json(content)
     } catch (error) {
         console.error(error)
         return res.status(500).end()
@@ -161,7 +161,7 @@ app.post("/api/content", async (req, res) => {
 app.delete('/api/employee', async (req, res) => {
     const payload = req.body
     try {
-        const result = await q.deleteEmployee(
+        const result = await q.Employee.deleteEmployee(
             payload.id
         )
         return res.status(204).json(result) // 204 since no object remains
