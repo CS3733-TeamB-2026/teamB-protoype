@@ -56,7 +56,7 @@ app.put('/api/employee', async (req, res) => {
 app.delete('/api/employee', async (req, res) => {
     const payload = req.body
     try {
-        const result = await q.deleteEmployee(
+        const result = await q.Employee.deleteEmployee(
             payload.id
         )
         return res.status(204).json(result) // 204 since no object remains
@@ -69,7 +69,7 @@ app.delete('/api/employee', async (req, res) => {
 // Service Requests
 app.get("/api/servicereqs", async (req, res) => {
     try {
-        const servicereqs = await q.queryAllServiceReqs()
+        const servicereqs = await q.ServiceReqs.queryAllServiceReqs()
         return res.status(200).json(servicereqs)
     } catch (error) {
         console.error(error)
@@ -80,7 +80,7 @@ app.get("/api/servicereqs", async (req, res) => {
 app.get("/api/assigned", async (req, res) => {
     try {
         const id = parseInt(req.query.id as string)
-        const assigned = await q.queryAssignedServiceReqs()
+        const assigned = await q.ServiceReqs.queryAssignedServiceReqs()
         return res.status(200).json(assigned)
     } catch (error) {
         console.error(error)
@@ -104,7 +104,7 @@ app.get("/api/files", async (req, res) => {
 // Content
 app.get('/api/content', async (req, res) => {
     try {
-        const content = await q.queryAllContent()
+        const content = await q.Content.queryAllContent()
         return res.status(200).json(content)
     } catch (error) {
         console.error(error)
@@ -115,7 +115,7 @@ app.get('/api/content', async (req, res) => {
 app.post("/api/content", async (req, res) => {
     const payload = req.body
     try {
-        const result = await q.createContent(
+        const result = await q.Content.createContent(
             payload.name,
             payload.linkURL,
             payload.fileURI,
@@ -136,7 +136,7 @@ app.post("/api/content", async (req, res) => {
 app.put("/api/content", async (req, res) => {
     const payload = req.body
     try {
-        const result = await q.updateContent(
+        const result = await q.Content.updateContent(
             payload.name,
             payload.linkURL,
             payload.fileURI,
@@ -157,7 +157,7 @@ app.put("/api/content", async (req, res) => {
 app.delete('/api/content', async (req, res) => {
     const payload = req.body
     try{
-        const result = await q.deleteContent(
+        const result = await q.Content.deleteContent(
             payload.name
         )
         return res.status(204).json(result) // 204 since no object remains
@@ -171,7 +171,7 @@ app.delete('/api/content', async (req, res) => {
 app.post("/api/login", async (req, res) => {
     try{
         const {username, password} = req.body;
-        const login = await q.queryLoginByUsername(username);
+        const login = await q.Login.queryLoginByUsername(username);
 
         if (!login){
             return res.status(401).json({message:"User not found"})
