@@ -4,6 +4,7 @@ import morgan from 'morgan';
 import cors from 'cors'
 
 import * as q from "@softeng-app/db";
+import {createContent, createEmployee} from "@softeng-app/db";
 
 const app = express()
 app.use(cors())
@@ -50,7 +51,7 @@ app.get("/api/assigned", async (req, res) => {
         res.status(500).end()
     }
 })
-
+/*
 app.get("/api/files", async (req, res) => {
     try{
         const assigned = await q.queryObjectsByBucket("test")
@@ -73,6 +74,7 @@ app.post('/api/create-employee', async (req, res) => {
         res.status(500).end()
     }
 })
+*/
 
 app.post('/api/update-employee', async (req, res) => {
     try{
@@ -81,6 +83,17 @@ app.post('/api/update-employee', async (req, res) => {
         const last = req.query.lastName as string
         const persona = req.query.persona as string
         await q.updateEmployee(id, first, last, persona)
+
+
+app.post("/api/employee", (req, res) => {
+    const payload = req.body
+    try {
+        createEmployee(
+            payload.firstName,
+            payload.lastName,
+            payload.id,
+            payload.persona
+        );
     } catch(error){
         console.error(error)
         res.status(500).end()
@@ -91,6 +104,21 @@ app.post('/api/delete-employee', async (req, res) => {
     try{
         const id = parseInt(req.query.id as string)
         await q.deleteEmployee(id)
+   
+app.post("/api/content", async (req, res) => {
+    const payload = req.body
+    try {
+        const result = await createContent(
+            payload.name,
+            payload.linkURL,
+            payload.ownerID,
+            payload.contentType,
+            payload.status,
+            payload.lastModified,
+            payload.expiration,
+            payload.jobPosition
+        );
+        res.status(201).json(result)
     } catch(error){
         console.error(error)
         res.status(500).end()
