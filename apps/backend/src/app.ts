@@ -4,6 +4,7 @@ import morgan from 'morgan';
 import cors from 'cors'
 
 import * as q from "@softeng-app/db";
+import {createContent, createEmployee} from "@softeng-app/db";
 
 const app = express()
 app.use(cors())
@@ -50,7 +51,7 @@ app.get("/api/assigned", async (req, res) => {
         res.status(500).end()
     }
 })
-
+/*
 app.get("/api/files", async (req, res) => {
     try{
         const assigned = await q.queryObjectsByBucket("test")
@@ -61,11 +62,42 @@ app.get("/api/files", async (req, res) => {
     }
 })
 
-/*
-app.post("/form", (req, res) => {
-    addToDB(res)
+ */
+
+app.post("/api/employee", (req, res) => {
+    const payload = req.body
+    try {
+        createEmployee(
+            payload.firstName,
+            payload.lastName,
+            payload.id,
+            payload.persona
+        );
+    } catch(error){
+        console.error(error)
+        res.status(500).end()
+    }
 })
-*/
+
+app.post("/api/content", async (req, res) => {
+    const payload = req.body
+    try {
+        const result = await createContent(
+            payload.name,
+            payload.linkURL,
+            payload.ownerID,
+            payload.contentType,
+            payload.status,
+            payload.lastModified,
+            payload.expiration,
+            payload.jobPosition
+        );
+        res.status(201).json(result)
+    } catch(error){
+        console.error(error)
+        res.status(500).end()
+    }
+})
 
 app.listen(3000, () => {
     console.log(`Server is listening on port 3000`);
