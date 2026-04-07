@@ -9,35 +9,48 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["public", "storage"]
+  schemas  = ["public"]
+}
+
+model Login {
+  userName String
+  passwordHash String
+
+  employee Employee @relation(fields: [employeeID], references: [id])
+  employeeID  Int      @id
+
+  @@schema("public")
 }
 
 model Employee {
-  id        Int      @id
+  id        Int     @id
   firstName String
   lastName  String
-  persona   Persona?
+  persona   Persona
 
   ownedContent     Content[]
   ownedRequests    ServiceRequest[] @relation("OwnedBy")
   assignedRequests ServiceRequest[] @relation("AssignedTo")
+  logins           Login[]
 
   @@schema("public")
 }
 
 model Content {
-  id      Int     @id @default(autoincrement())
-  name    String
-  linkURL String?
+  id            Int     @id @default(autoincrement())
+  displayName   String
+  linkURL       String? @unique()
+  fileURI       String? @unique()
 
   owner   Employee? @relation(fields: [ownerID], references: [id])
   ownerID Int?
 
-  lastModified DateTime  @default(now())
+  lastModified DateTime
   expiration   DateTime?
 
-  isWorkflow ContentType
-  status     Status?
+  contentType   ContentType
+  targetPersona Persona
+  status        Status?
 
   @@schema("public")
 }
@@ -57,34 +70,18 @@ model ServiceRequest {
   @@schema("public")
 }
 
-// TODO: Figure out how to make this one "read-only"
-model objects {
-  id               String   @id
-  bucket_id        String
-  name             String
-  created_at       DateTime
-  updated_at       DateTime
-  last_accessed_at DateTime
-  metadata         Json
-  path_tokens      String[]
-  version          String
-  owner_id         String
-  user_metadata    String
-
-  @@schema("storage")
-}
-
 enum Persona {
   underwriter
   businessAnalyst
+  admin
 
   @@schema("public")
 }
 
 enum Status {
-  todo
+  new
   inProgress
-  done
+  complete
 
   @@schema("public")
 }

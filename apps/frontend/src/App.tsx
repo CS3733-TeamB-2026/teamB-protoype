@@ -9,6 +9,7 @@ import EmployeeForm from "@/components/EmployeeForm.tsx";
 import ManagementForm from "@/components/ManagementForm.tsx";
 import Underwriter from "@/components/Underwriter.tsx";
 import BusinessAnalyst from "@/components/BusinessAnalyst.tsx";
+import EmployeeHome from "@/components/EmployeeHome";
 import { Route, Routes} from "react-router-dom";
 import FilesPage from "@/components/FilesPage.tsx";
 
@@ -32,6 +33,7 @@ function App() {
                             <Route path="/underwriter" element={<Underwriter/>}/>
                             <Route path="/businessanalyst" element={<BusinessAnalyst/>}/>
                             <Route path="/files" element={<FilesPage/>}/>
+                            <Route path="/employeehome" element={<EmployeeHome/>}/>
                         </Routes>
                     </main>
                     <Footer />
