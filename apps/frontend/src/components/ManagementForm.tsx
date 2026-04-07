@@ -29,6 +29,8 @@ import {Separator} from "@/components/ui/separator"
 import {
     Card,
 } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 
 function ManagementForm() {
     const [name, setName] = useState("")
@@ -48,6 +50,7 @@ function ManagementForm() {
         () => new Date().toTimeString().substring(0, 8)
     )
     const [fileKey, setFileKey] = useState(0)
+    const [uploadMode, setUploadMode] = React.useState<"url" | "file">("url")
 
 
     const handleSubmit = async () => {
@@ -87,101 +90,128 @@ function ManagementForm() {
                 <div className="px-6">
                     <>
                         {/*//Title*/}
+                        <div className="bg-background py-4 text-center">
+                            <h1 className="text-primary text-2xl font-semibold">Content Management Form</h1>
+                        </div>
 
-                            <div className="bg-background py-4 text-center">
-                                <h1 className="text-primary text-2xl font-semibold">Content Management Form</h1>
-                            </div>
-                            <div className="bg-background py-2">
-                                <Separator className="bg-primary"/>
-                            </div>
+                        {/*Separator*/}
+                        <div className="bg-background py-2">
+                            <Separator className="bg-primary"/>
+                        </div>
+
                         {/*//Input Name Field*/}
                         {/* //TEXTBOX*/}
+                        <Field className="bg-background ">
+                            {/* //Primary Color and input field*/}
+                            <FieldLabel className="text-primary" htmlFor="input-field-name">Name</FieldLabel>
+                            <Input
+                                id="input-field-name"
+                                type="text"
+                                placeholder="Enter document name"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                            />
+                        </Field>
+
+                        {/*Separator*/}
+                        <div className="bg-background py-2">
+                            <Separator className="bg-primary"/>
+                        </div>
+
+                        {/*Content source selector*/}
+                        <Field className="bg-background">
+                            <FieldLabel className="text-primary">Content Source</FieldLabel>
+                            <RadioGroup value={uploadMode} onValueChange={
+                                (v) => setUploadMode(v as "url" | "file")}>
+                                <div className="flex items-center gap-2">
+                                    <RadioGroupItem value="url" id="mode-url" />
+                                    <Label htmlFor="mode-url">URL</Label>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <RadioGroupItem value="file" id="mode-file" />
+                                    <Label htmlFor="mode-file">File Upload</Label>
+                                </div>
+                            </RadioGroup>
+                        </Field>
+
+                        {/*//Input Url Field*/}
+                        <div className="flex gap-4">
+                            {/* //TEXTBOX*/}
                             <Field className="bg-background ">
-                                {/* //Primary Color and input field*/}
-                                <FieldLabel className="text-primary" htmlFor="input-field-name">Name</FieldLabel>
+                                <FieldLabel className="text-primary" htmlFor="input-field-url">URL</FieldLabel>
                                 <Input
-                                    id="input-field-name"
+                                    id="input-field-url"
                                     type="text"
-                                    placeholder="Enter document name"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder="Enter the URL of the link"
+                                    value={linkUrl}
+                                    onChange={(e) => setLinkUrl(e.target.value)}
                                 />
                             </Field>
-                            <div className="bg-background py-2">
-                                <Separator className="bg-primary"/>
-                            </div>
-                        {/*//Input Url Field*/}
-                            <div className="flex gap-4">
-                                {/* //TEXTBOX*/}
-                                <Field className="bg-background ">
-                                    <FieldLabel className="text-primary" htmlFor="input-field-url">URL</FieldLabel>
-                                    <Input
-                                        id="input-field-url"
-                                        type="text"
-                                        placeholder="Enter the URL of the link"
-                                        value={linkUrl}
-                                        onChange={(e) => setLinkUrl(e.target.value)}
-                                    />
-                                </Field>
-                                <Separator className="bg-primary" orientation="vertical"/>
-                                {/*//File upload field*/}
+                            <Separator className="bg-primary" orientation="vertical"/>
+                            {/*//File upload field*/}
 
-                                <Field className="bg-background">
-                                    <FieldLabel className="text-primary" htmlFor="File">File Upload</FieldLabel>
-                                    <Input key={fileKey} id="File" type="file"/>
-                                    <FieldDescription>Select a file to upload.</FieldDescription>
-                                </Field>
-                            </div>
-                            <div className="bg-background py-2">
-                                <Separator className="bg-primary"/>
-                            </div>
+                            <Field className="bg-background">
+                                <FieldLabel className="text-primary" htmlFor="File">File Upload</FieldLabel>
+                                <Input key={fileKey} id="File" type="file"/>
+                                <FieldDescription>Select a file to upload.</FieldDescription>
+                            </Field>
+                        </div>
+
+                        {/*Separator*/}
+                        <div className="bg-background py-2">
+                            <Separator className="bg-primary"/>
+                        </div>
 
                         {/*//Employee ID Field*/}
 
                         {/*//Only allows ints*/}
-                            <Field className="bg-background">
-                                <FieldLabel className="text-primary" htmlFor="input-employee-id">Owner Employee
-                                    ID</FieldLabel>
-                                <Input id="input-employee-id" type="number" placeholder="000000"
-                                       value={ownerID}
-                                       onChange={(e) => setOwnerID(e.target.value)}/>
-                                <FieldDescription>
+                        <Field className="bg-background">
+                            <FieldLabel className="text-primary" htmlFor="input-employee-id">Owner Employee
+                                ID</FieldLabel>
+                            <Input id="input-employee-id" type="number" placeholder="000000"
+                                   value={ownerID}
+                                   onChange={(e) => setOwnerID(e.target.value)}
+                            />
+                            <FieldDescription>
+                                {/* TODO: Enter the employee ID of the content owner*/}
+                            </FieldDescription>
 
-                                    {/* Enter the employee ID of the content owner*/}
-                                </FieldDescription>
+                        </Field>
 
-                            </Field>
-                            <div className="bg-background py-2">
-                                <Separator className="bg-primary"/>
-                            </div>
+                        {/*Separator*/}
+                        <div className="bg-background py-2">
+                            <Separator className="bg-primary"/>
+                        </div>
 
                         {/*//Job position dropdown, this needs to be updated*/}
-
-                            <Field className="bg-background">
-                                <FieldLabel className="text-primary">Select job position</FieldLabel>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline">{jobPosition}</Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                        <DropdownMenuGroup>
-                                            <DropdownMenuLabel>Job Position</DropdownMenuLabel>
-                                            <DropdownMenuRadioGroup value={jobPosition} onValueChange={setJobPosition}>
-                                                <DropdownMenuRadioItem
-                                                    value="Underwriter">Underwriter</DropdownMenuRadioItem>
-                                                <DropdownMenuRadioItem value="Business analyst">Business
-                                                    analyst</DropdownMenuRadioItem>
-                                            </DropdownMenuRadioGroup>
-                                        </DropdownMenuGroup>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                        <Field className="bg-background">
+                            <FieldLabel className="text-primary">Select job position</FieldLabel>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline">{jobPosition}</Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                    <DropdownMenuGroup>
+                                        <DropdownMenuLabel>Job Position</DropdownMenuLabel>
+                                        <DropdownMenuRadioGroup value={jobPosition} onValueChange={setJobPosition}>
+                                            <DropdownMenuRadioItem value="Underwriter">
+                                                Underwriter
+                                            </DropdownMenuRadioItem>
+                                            <DropdownMenuRadioItem value="Business analyst">
+                                                Business analyst
+                                            </DropdownMenuRadioItem>
+                                        </DropdownMenuRadioGroup>
+                                    </DropdownMenuGroup>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                             </Field>
+
+                            {/*Separator*/}
                             <div className="bg-background py-2">
                                 <Separator className="bg-primary"/>
                             </div>
 
-                        {/* //Date Picker Region*/}
-
+                            {/* //Date Picker Region*/}
                             <div className="flex flex-wrap items-end gap-4 bg-background py-4">
 
                                 {/* //Last modified date*/}

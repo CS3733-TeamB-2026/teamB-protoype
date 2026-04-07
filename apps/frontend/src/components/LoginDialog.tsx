@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 
 type User = {
     id: number;
@@ -22,12 +22,12 @@ type LoginDialogProps = {
 }
 
 function LoginDialog({ open, onOpenChange, onLogin }: LoginDialogProps) {
-
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState(""); //For login errors ex. wrong password
 
     const handleLogin = async () => {
+        setError("");
         const res = await fetch("/api/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -41,6 +41,8 @@ function LoginDialog({ open, onOpenChange, onLogin }: LoginDialogProps) {
             localStorage.setItem("user", JSON.stringify(user)); //Adds employee data into local storage
             onLogin(user); //Call func to update navbar
             onOpenChange(false);
+            //navigates to employee home page
+            window.location.href = "/employeehome";
         } else {
             //Unsuccessful login
             const err = await res.json();

@@ -4,7 +4,6 @@ import morgan from 'morgan';
 import cors from 'cors'
 
 import * as q from "@softeng-app/db";
-import {createContent, createEmployee} from "@softeng-app/db";
 
 const app = express()
 app.use(cors())
@@ -14,31 +13,20 @@ app.use(express.json())
 app.get('/api/employee', async (req, res) => {
     try {
         const employees = await q.Employee.queryAllEmployees()
-        //const employees = await q.queryAllEmployees()
-        res.status(200).json(employees)
+        return res.status(200).json(employees)
     } catch (error) {
         console.error(error)
-        res.status(500).end()
-    }
-})
-
-app.get('/api/content', async (req, res) => {
-    try {
-        const content = await q.queryAllContent()
-        res.status(200).json(content)
-    } catch (error) {
-        console.error(error)
-        res.status(500).end()
+        return res.status(500).end()
     }
 })
 
 app.get("/api/servicereqs", async (req, res) => {
     try {
         const servicereqs = await q.queryAllServiceReqs()
-        res.status(200).json(servicereqs)
+        return res.status(200).json(servicereqs)
     } catch (error) {
         console.error(error)
-        res.status(500).end()
+        return res.status(500).end()
     }
 })
 
@@ -46,12 +34,13 @@ app.get("/api/assigned", async (req, res) => {
     try {
         const id = parseInt(req.query.id as string)
         const assigned = await q.queryAssignedServiceReqs()
-        res.status(200).json(assigned)
+        return res.status(200).json(assigned)
     } catch (error) {
         console.error(error)
-        res.status(500).end()
+        return res.status(500).end()
     }
 })
+
 /*
 app.get("/api/files", async (req, res) => {
     try{
@@ -62,20 +51,55 @@ app.get("/api/files", async (req, res) => {
         res.status(500).end()
     }
 })
+*/
 
-app.post('/api/create-employee', async (req, res) => {
-    try{
-        const id = parseInt(req.query.id as string)
-        const first = req.query.firstName as string
-        const last = req.query.lastName as string
-        const persona = req.query.persona as string
-        await q.createEmployee(id, first, last, persona)
-    } catch(error){
+app.post("/api/employee", async (req, res) => {
+    const payload = req.body
+    try {
+        const result = await q.Employee.createEmployee(
+            payload.firstName,
+            payload.lastName,
+            payload.id,
+            payload.persona
+        );
+        return res.status(201).json(result)
+    } catch (error) {
         console.error(error)
-        res.status(500).end()
+        return res.status(500).end()
     }
 })
-*/
+
+app.get('/api/content', async (req, res) => {
+    try {
+        const content = await q.queryAllContent()
+        return res.status(200).json(content)
+    } catch (error) {
+        console.error(error)
+        return res.status(500).end()
+    }
+})
+
+app.post("/api/content", async (req, res) => {
+    const payload = req.body
+    try {
+        const result = await q.createContent(
+            payload.name,
+            payload.linkURL,
+            payload.fileURI,
+            payload.ownerID,
+            payload.contentType,
+            payload.status,
+            payload.lastModified,
+            payload.expiration,
+            payload.targetPersona
+        );
+        return res.status(201).json(result)
+    } catch (error) {
+        console.error(error)
+        return res.status(500).end()
+    }
+})
+
 
 app.post("/api/login", async (req, res) => {
     try{
@@ -83,63 +107,41 @@ app.post("/api/login", async (req, res) => {
         const login = await q.queryLoginByUsername(username);
 
         if (!login){
-            res.status(401).json({message:"User not found"})
+            return res.status(401).json({message:"User not found"})
         }
 
         if (login.password !== password) {
-            res.status(401).json({message:"Incorrect Password"})
+            return res.status(401).json({message:"Incorrect Password"})
         }
 
-        const employee = await q.queryEmployeeById(login.id);
-        res.status(200).json(employee);
+        const employee = await q.Employee.queryEmployeeById(login.id);
+        return res.status(200).json(employee);
     } catch(error){
         console.error(error)
-        res.status(500).end()
+        return res.status(500).end()
     }
 })
 
-app.put('/api/update-employee', async (req, res) => {
-    try {
-        const id = parseInt(req.query.id as string)
-        const first = req.query.firstName as string
-        const last = req.query.lastName as string
-        const persona = req.query.persona as string
-        await q.Employee.updateEmployee(id, first, last, persona)
-    } catch (error){
-    console.error(error)
-    res.status(500).end()}
-    }
-)
-
-app.post("/api/employee", (req, res) => {
+app.put('/api/employee', async (req, res) => {
     const payload = req.body
     try {
-        q.Employee.createEmployee(
+        const result = await q.Employee.updateEmployee(
+            payload.id,
             payload.firstName,
             payload.lastName,
-            payload.id,
             payload.persona
         );
+        return res.status(200).json(result)
     } catch (error) {
         console.error(error)
-        res.status(500).end()
-    }
-})
-
-app.delete('/api/delete-employee', async (req, res) => {
-    try {
-        const id = parseInt(req.query.id as string)
-        await q.Employee.deleteEmployee(id)
-    } catch (error) {
-        console.error(error)
-        res.status(500).end()
+        return res.status(500).end()
     }
 })
    
 app.post("/api/content", async (req, res) => {
     const payload = req.body
     try {
-        const result = await createContent(
+        const result = await q.updateContent(
             payload.name,
             payload.linkURL,
             payload.ownerID,
@@ -149,10 +151,36 @@ app.post("/api/content", async (req, res) => {
             payload.expiration,
             payload.jobPosition
         );
-        res.status(201).json(result)
-    } catch(error){
+        return res.status(200).json(result)
+    } catch (error){
         console.error(error)
-        res.status(500).end()
+        return res.status(500).end()
+    }
+})
+
+app.delete('/api/employee', async (req, res) => {
+    const payload = req.body
+    try {
+        const result = await q.deleteEmployee(
+            payload.id
+        )
+        return res.status(204).json(result) // 204 since no object remains
+    } catch (error) {
+        console.error(error)
+        return res.status(500).end()
+    }
+})
+
+app.delete('/api/content', async (req, res) => {
+    const payload = req.body
+    try{
+        const result = await q.deleteContent(
+            payload.name
+        )
+        return res.status(204).json(result) // 204 since no object remains
+    } catch (error) {
+        console.error(error)
+        return res.status(500).end()
     }
 })
 

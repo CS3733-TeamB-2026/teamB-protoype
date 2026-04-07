@@ -1,6 +1,8 @@
 import { prisma } from "./lib/prisma"
 import * as p from "./generated/prisma/client";
+import { supabase } from './lib/supabase'
 
+const bucket = "content"
 
 // Employee Queries
 export class Employee {
@@ -45,6 +47,39 @@ export class Employee {
     }
 }
 
+export async function updateContent(
+    _name: string,
+    _linkURL: string | null,
+    _ownerID: number | null,
+    _contentType: p.ContentType,
+    _status: p.Status | null,
+    _lastModified: Date,
+    _expiration: Date | null,
+    _targetPersona: string,
+): Promise<void> {
+    const _personaTyped: p.Persona = personaHelper(_targetPersona)
+    const _statusTyped: p.Status = statusHelper(_status)
+    const updatedContent = await prisma.content.update({
+        where: {name: _name},
+        data: {
+            name: _name,
+            linkURL: _linkURL,
+            ownerID: _ownerID,
+            contentType: _contentType,
+            status: _statusTyped,
+            lastModified: _lastModified,
+            expiration: _expiration,
+            targetPersona: _personaTyped
+        }
+    })
+}
+
+export async function deleteContent(name: string): Promise<void> {
+    const deletedContent = await prisma.content.delete({
+        where: {name: name},
+    })
+}
+
 // Content Queries
 export async function queryAllContent(): Promise<p.Content[]> {
     return prisma.content.findMany({})
@@ -53,8 +88,8 @@ export async function queryAllContent(): Promise<p.Content[]> {
 export async function queryContentByName(name: string): Promise<p.Content | null> {
     return prisma.content.findFirst({
         where: {name: name}
-        //TODO: Maybe add case insensitivity
-        //TODO: Change to return a list
+        // TODO: Maybe add case insensitivity
+        //  Perhaps better to grab ALL filenames so a fuzzy search may be done - Oscar
     })
 }
 
@@ -115,9 +150,15 @@ function statusHelper(_status: string | null): p.Status {
 
 }
 
+async function uploadFile(file: Buffer, path: string) {
+    const {data, error} = await supabase.storage.from(bucket).upload(path, file)
+    if (error)  throw error;
+    return data;
+}
+
 export async function createContent(
     _name: string,
-    _linkURL: string | null,
+    _linkURL: string | null, _fileURI: string | null,
     _ownerID: number | null,
     _contentType: p.ContentType,
     _status: p.Status | null,
@@ -125,12 +166,19 @@ export async function createContent(
     _expiration: Date | null,
     _targetPersona: string,
 ): Promise<p.Content> {
+    if (!_linkURL && !_fileURI) {
+        throw new Error("Content must have either a linkURL or a fileURI")
+    }
+    if (_linkURL && _fileURI) {
+        throw new Error("Content cannot have both a linkURL and a fileURI")
+    }
     const _personaTyped: p.Persona = personaHelper(_targetPersona)
     const _statusTyped: p.Status = statusHelper(_status)
     return prisma.content.create({
         data: {
             name: _name,
             linkURL: _linkURL,
+            fileURI: _fileURI,
             ownerID: _ownerID,
             contentType: _contentType,
             status: _statusTyped,

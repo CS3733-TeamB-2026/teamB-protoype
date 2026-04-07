@@ -40,6 +40,7 @@ model Content {
   id      Int     @id @default(autoincrement())
   name    String
   linkURL String?
+  fileURI String?
 
   owner   Employee? @relation(fields: [ownerID], references: [id])
   ownerID Int?
