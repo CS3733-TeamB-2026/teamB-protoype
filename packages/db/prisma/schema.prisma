@@ -14,10 +14,10 @@ datasource db {
 
 model Login {
   userName String
-  password String
+  passwordHash String
 
-  employee Employee @relation(fields: [loginID], references: [id])
-  loginID  Int      @id
+  employee Employee @relation(fields: [employeeID], references: [id])
+  employeeID  Int      @id
 
   @@schema("public")
 }
@@ -37,10 +37,10 @@ model Employee {
 }
 
 model Content {
-  id      Int     @id @default(autoincrement())
-  name    String
-  linkURL String?
-  fileURI String?
+  id            Int     @id @default(autoincrement())
+  displayName   String
+  linkURL       String? @unique()
+  fileURI       String? @unique()
 
   owner   Employee? @relation(fields: [ownerID], references: [id])
   ownerID Int?
