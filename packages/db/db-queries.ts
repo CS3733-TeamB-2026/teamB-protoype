@@ -1,6 +1,8 @@
 import { prisma } from "./lib/prisma"
 import * as p from "./generated/prisma/client";
 
+
+// Employee Queries
 export async function queryAllEmployees(): Promise<p.Employee[]> {
     return prisma.employee.findMany({})
 }
@@ -11,6 +13,8 @@ export async function queryEmployeeById(id: number): Promise<p.Employee | null> 
     })
 }
 
+
+// Content Queries
 export async function queryAllContent(): Promise<p.Content[]> {
     return prisma.content.findMany({})
 }
