@@ -13,30 +13,30 @@ app.use(express.json())
 app.get('/api/employee', async (req, res) => {
     try {
         const employees = await q.queryAllEmployees()
-        res.status(200).json(employees)
+        return res.status(200).json(employees)
     } catch (error) {
         console.error(error)
-        res.status(500).end()
+        return res.status(500).end()
     }
 })
 
 app.get('/api/content', async (req, res) => {
     try {
         const employees = await q.queryAllContent()
-        res.status(200).json(employees)
+        return res.status(200).json(employees)
     } catch (error) {
         console.error(error)
-        res.status(500).end()
+        return res.status(500).end()
     }
 })
 
 app.get("/api/servicereqs", async (req, res) => {
     try {
         const servicereqs = await q.queryAllServiceReqs()
-        res.status(200).json(servicereqs)
+        return res.status(200).json(servicereqs)
     } catch (error) {
         console.error(error)
-        res.status(500).end()
+        return res.status(500).end()
     }
 })
 
@@ -44,10 +44,10 @@ app.get("/api/assigned", async (req, res) => {
     try {
         const id = parseInt(req.query.id as string)
         const assigned = await q.queryAssignedServiceReqs()
-        res.status(200).json(assigned)
+        return res.status(200).json(assigned)
     } catch (error) {
         console.error(error)
-        res.status(500).end()
+        return res.status(500).end()
     }
 })
 
@@ -72,31 +72,10 @@ app.post("/api/employee", async (req, res) => {
             payload.id,
             payload.persona
         );
-        res.status(201).json(result)
+        return res.status(201).json(result)
     } catch (error) {
         console.error(error)
-        res.status(500).end()
-    }
-})
-
-app.post("/api/login", async (req, res) => {
-    try{
-        const {username, password} = req.body;
-        const login = await q.queryLoginByUsername(username);
-
-        if (!login){
-            res.status(401).json({message:"User not found"})
-        }
-
-        if (login.password !== password) {
-            res.status(401).json({message:"Incorrect Password"})
-        }
-
-        const employee = await q.queryEmployeeById(login.id);
-        res.status(200).json(employee);
-    } catch(error){
-        console.error(error)
-        res.status(500).end()
+        return res.status(500).end()
     }
 })
 
@@ -106,17 +85,39 @@ app.post("/api/content", async (req, res) => {
         const result = await q.createContent(
             payload.name,
             payload.linkURL,
+            payload.fileURI,
             payload.ownerID,
             payload.contentType,
             payload.status,
             payload.lastModified,
             payload.expiration,
-            payload.jobPosition
+            payload.targetPersona
         );
-        res.status(201).json(result)
+        return res.status(201).json(result)
     } catch (error) {
         console.error(error)
-        res.status(500).end()
+        return res.status(500).end()
+    }
+})
+
+app.post("/api/login", async (req, res) => {
+    try{
+        const {username, password} = req.body;
+        const login = await q.queryLoginByUsername(username);
+
+        if (!login){
+            return res.status(401).json({message:"User not found"})
+        }
+
+        if (login.password !== password) {
+            return res.status(401).json({message:"Incorrect Password"})
+        }
+
+        const employee = await q.queryEmployeeById(login.id);
+        return res.status(200).json(employee);
+    } catch(error){
+        console.error(error)
+        return res.status(500).end()
     }
 })
 
@@ -129,10 +130,10 @@ app.put('/api/employee', async (req, res) => {
                 payload.lastName,
                 payload.persona
             );
-            res.status(200).json(result)
+            return res.status(200).json(result)
         } catch (error){
             console.error(error)
-            res.status(500).end()}
+            return res.status(500).end()}
     }
 )
 
@@ -149,10 +150,10 @@ app.put('/api/content', async (req, res) => {
             payload.expiration,
             payload.jobPosition
         );
-        res.status(200).json(result)
+        return res.status(200).json(result)
     } catch (error){
         console.error(error)
-        res.status(500).end()
+        return res.status(500).end()
     }
 })
 
@@ -162,10 +163,10 @@ app.delete('/api/employee', async (req, res) => {
         const result = await q.deleteEmployee(
             payload.id
         )
-        res.status(204).json(result) // 204 since no object remains
+        return res.status(204).json(result) // 204 since no object remains
     } catch (error) {
         console.error(error)
-        res.status(500).end()
+        return res.status(500).end()
     }
 })
 
@@ -175,10 +176,10 @@ app.delete('/api/content', async (req, res) => {
         const result = await q.deleteContent(
             payload.name
         )
-        res.status(204).json(result) // 204 since no object remains
+        return res.status(204).json(result) // 204 since no object remains
     } catch (error) {
         console.error(error)
-        res.status(500).end()
+        return res.status(500).end()
     }
 })
 
