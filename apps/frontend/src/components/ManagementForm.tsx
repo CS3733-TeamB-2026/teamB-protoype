@@ -49,33 +49,43 @@ function ManagementForm() {
   );
   const [fileKey, setFileKey] = useState(0);
   const [uploadMode, setUploadMode] = React.useState<"url" | "file">("url");
+  const [file, setFile] = React.useState<File | null>(null);
 
+  // Function to handle post requests to backend
   const handleSubmit = async () => {
-    await fetch("http://localhost:3000/api/content", {
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("linkURL", uploadMode == "url" ? linkUrl : "");
+    formData.append("ownerID", ownerID);
+    formData.append("contentType", contentType);
+    formData.append("status", status);
+    formData.append("lastModified", date?.toISOString() ?? "");
+    formData.append("expiration", date2?.toISOString() ?? "");
+    formData.append("jobPosition", jobPosition);
+
+    if (uploadMode == "file" && file) {
+      formData.append("file", file);
+    }
+
+    const res = await fetch("http://localhost:3000/api/content", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name,
-        linkURL: uploadMode == "url" ? linkUrl : null,
-        ownerID: ownerID ? parseInt(ownerID) : null,
-        contentType: contentType,
-        status,
-        lastModified: date,
-        expiration: date2 ?? null,
-        jobPosition: jobPosition,
-      }),
+      body: formData,
     });
-    setName("");
-    setLinkUrl("");
-    setOwnerID("");
-    setContentType("reference");
-    setStatus("new");
-    setJobPosition("Select job position");
-    setDate(new Date());
-    setDate2(undefined);
-    setLastModifiedTime(new Date().toTimeString().substring(0, 8));
-    setExpirationTime(new Date().toTimeString().substring(0, 8));
-    setFileKey((prev) => prev + 1);
+
+    if (res.status === 201) {
+      setName("");
+      setLinkUrl("");
+      setOwnerID("");
+      setContentType("reference");
+      setStatus("new");
+      setJobPosition("Select job position");
+      setDate(new Date());
+      setDate2(undefined);
+      setLastModifiedTime(new Date().toTimeString().substring(0, 8));
+      setExpirationTime(new Date().toTimeString().substring(0, 8));
+      setFileKey((prev) => prev + 1);
+      setFile(null);
+    }
   };
 
   return (
@@ -159,10 +169,15 @@ function ManagementForm() {
               ) : (
                 <Field className="bg-background">
                   {/*File upload field*/}
-                  <FieldLabel className="text-primary" htmlFor="File">
+                  <FieldLabel className="text-primary" htmlFor="file">
                     File Upload
                   </FieldLabel>
-                  <Input key={fileKey} id="File" type="file" />
+                  <Input
+                    key={fileKey}
+                    id="file"
+                    type="file"
+                    onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                  />
                   <FieldDescription>Select a file to upload.</FieldDescription>
                 </Field>
               )}
@@ -232,6 +247,7 @@ function ManagementForm() {
             {/*Date Picker Region*/}
             <div className="flex flex-wrap items-end gap-4 bg-background py-4">
               {/*Last modified date*/}
+              {/*TODO: Consider whether to do this*/}
               <Field className="bg-background flex-1">
                 <FieldLabel className="text-primary" htmlFor="date">
                   Last Modified Date

@@ -6,6 +6,7 @@ import multer from "multer";
 
 import * as q from "@softeng-app/db";
 
+const upload = multer({ storage: multer.memoryStorage() });
 const app = express();
 app.use(cors());
 app.use(morgan("dev"));
@@ -101,12 +102,24 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-app.post("/api/content", async (req, res) => {
+app.post("/api/content", upload.single("file"), async (req, res) => {
   const payload = req.body;
+  let fileURI = null;
+  if (req.file) {
+    fileURI =
+      (payload.ownerID as String) +
+      "/" +
+      crypto.randomUUID() +
+      "/" +
+      req.file.originalname;
+    const result = await q.uploadFile(req.file.buffer, fileURI);
+    fileURI = result.path;
+  }
   try {
     const result = await q.createContent(
       payload.name,
       payload.linkURL,
+      fileURI,
       payload.ownerID,
       payload.contentType,
       payload.status,

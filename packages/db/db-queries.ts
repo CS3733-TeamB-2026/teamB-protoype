@@ -34,10 +34,16 @@ export async function updateEmployee(
   });
 }
 
-async function uploadFile(file: Buffer, path: string) {
+export async function uploadFile(file: Buffer, path: string) {
   const { data, error } = await supabase.storage
     .from(bucket)
     .upload(path, file);
+  if (error) throw error;
+  return data;
+}
+
+export async function downloadFile(path: string) {
+  const { data, error } = await supabase.storage.from(bucket).download(path);
   if (error) throw error;
   return data;
 }
