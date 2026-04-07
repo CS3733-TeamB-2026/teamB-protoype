@@ -15,19 +15,19 @@ export async function queryEmployeeById(id: number): Promise<p.Employee | null> 
 
 export async function updateEmployee(id: number, _firstName: string, _lastName: string, _persona: string | null): Promise<void> {
     const personaTyped: p.Persona | null = employeePersonaHelper(_persona)
-    prisma.employee.update({
+    const updatedUser = await prisma.employee.update({
         where: {id: id},
         data: {
             firstName: _firstName,
             lastName: _lastName,
             persona: personaTyped
-        }
+        },
     })
 }
 
 export async function deleteEmployee(id: number): Promise<void> {
-    prisma.employee.delete({
-        where: {id: id}
+    const deletedUser = await prisma.employee.delete({
+        where: {id: id},
     })
 }
 
