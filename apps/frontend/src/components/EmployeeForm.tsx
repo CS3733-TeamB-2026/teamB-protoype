@@ -36,8 +36,8 @@ function EmployeeForm() {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
-                firstname: firstName,
-                lastname: lastName,
+                firstName: firstName,
+                lastName: lastName,
                 id: parseInt(id),
                 persona: targetPersona,
             })
@@ -49,7 +49,7 @@ function EmployeeForm() {
             body: JSON.stringify({
             userName: userName,
             password: password,
-            id: parseInt(id),
+            employeeID: parseInt(id),
             })
         })
         setTargetPersona("Select job position")
@@ -98,6 +98,7 @@ function EmployeeForm() {
                         <FieldLabel className="text-primary" htmlFor="input-field-last-name">Last Name</FieldLabel>
                         <Input
                             value={lastName}
+                            onChange={(e) => setLastName(e.target.value)}
                             id="input-field-last-name"
                             type="text"
                             placeholder="Enter your last name"
@@ -137,8 +138,9 @@ function EmployeeForm() {
                                 <DropdownMenuGroup>
                                     <DropdownMenuLabel>Job Position</DropdownMenuLabel>
                                     <DropdownMenuRadioGroup value={targetPersona} onValueChange={setTargetPersona}>
-                                        <DropdownMenuRadioItem value="Underwriter">Underwriter</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="Business analyst">Business analyst</DropdownMenuRadioItem>
+                                        <DropdownMenuRadioItem value="underwriter">Underwriter</DropdownMenuRadioItem>
+                                        <DropdownMenuRadioItem value="businessAnalyst">Business analyst</DropdownMenuRadioItem>
+                                        <DropdownMenuRadioItem value={"admin"}>Admin</DropdownMenuRadioItem>
                                     </DropdownMenuRadioGroup>
                                 </DropdownMenuGroup>
                             </DropdownMenuContent>
