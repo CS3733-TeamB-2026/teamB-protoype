@@ -133,40 +133,6 @@ app.post("/api/content", async (req, res) => {
     }
 })
 
-
-app.post("/api/login", async (req, res) => {
-    try{
-        const {username, password} = req.body;
-        const login = await q.Login.queryLoginByUsername(username);
-
-        if (!login){
-            return res.status(401).json({message:"User not found"})
-        }
-
-        const match = await bcrypt.compare(password, login.passwordHash)
-        if (!match) {
-            return res.status(401).json({message:"Incorrect Password"})
-        }
-
-        const employee = await q.Employee.queryEmployeeById(login.employeeID);
-        return res.status(200).json(employee);
-    } catch(error){
-        console.error(error)
-        return res.status(500).end()
-    }
-})
-
-app.post("/api/login/create", async (req, res) => {
-    try {
-        const {userName, password, employeeID} = req.body;
-        await q.Login.createLogin(userName, password, employeeID);
-        return res.status(201).json({message:"Account Created"});
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({message:"Account Creation Failed"});
-    }
-})
-
 app.put('/api/employee', async (req, res) => {
     const payload = req.body
     try {
@@ -211,15 +177,27 @@ app.post("/api/login", async (req, res) => {
             return res.status(401).json({message:"User not found"})
         }
 
-        if (login.password !== password) {
+        const match = await bcrypt.compare(password, login.passwordHash)
+        if (!match) {
             return res.status(401).json({message:"Incorrect Password"})
         }
 
-        const employee = await q.Employee.queryEmployeeById(login.id);
+        const employee = await q.Employee.queryEmployeeById(login.employeeID);
         return res.status(200).json(employee);
     } catch(error){
         console.error(error)
         return res.status(500).end()
+    }
+})
+
+app.post("/api/login/create", async (req, res) => {
+    try {
+        const {userName, password, employeeID} = req.body;
+        await q.Login.createLogin(userName, password, employeeID);
+        return res.status(201).json({message:"Account Created"});
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({message:"Account Creation Failed"});
     }
 })
 
