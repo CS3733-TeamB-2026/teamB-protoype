@@ -62,6 +62,22 @@ app.get("/api/files", async (req, res) => {
     }
 })
 
+app.post("/api/login", async (req, res) => {
+    try{
+        const {username, password} = req.body;
+        const login = await q.queryLoginByUsername(username);
+
+        if (!login){
+            res.status(401).json({message:"User not found"})
+        }
+
+        if (login.password !== password) {
+            res.status(401).json({message:"Incorrect Password"})
+        }
+
+        const employee = await q.queryEmployeeById(login.id);
+        res.status(200).json(employee);
+
 app.post('/api/create-employee', async (req, res) => {
     try{
         const id = parseInt(req.query.id as string)
@@ -73,6 +89,11 @@ app.post('/api/create-employee', async (req, res) => {
         console.error(error)
         res.status(500).end()
     }
+})
+
+/*
+app.post("/form", (req, res) => {
+    addToDB(res)
 })
 */
 
