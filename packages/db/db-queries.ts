@@ -14,7 +14,7 @@ export async function queryEmployeeById(id: number): Promise<p.Employee | null> 
 }
 
 export async function updateEmployee(id: number, _firstName: string, _lastName: string, _persona: string | null): Promise<void> {
-    const personaTyped: p.Persona | null = employeePersonaHelper(_persona)
+    const personaTyped: p.Persona | null = personaHelper(_persona)
     const updatedUser = await prisma.employee.update({
         where: {id: id},
         data: {
@@ -37,9 +37,10 @@ export async function queryAllContent(): Promise<p.Content[]> {
 }
 
 export async function queryContentByName(name: string): Promise<p.Content | null> {
-    return prisma.content.findUnique({
+    return prisma.content.findFirst({
         where: {name: name}
         //TODO: Maybe add case insensitivity
+        //TODO: Change to return a list
     })
 }
 
