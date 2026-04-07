@@ -4,11 +4,11 @@ import { Menu } from "lucide-react";
 import logo from "../assets/hanover_logo.svg"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu.tsx";
+    Popover,
+    PopoverContent,
+    PopoverTrigger
+} from "@/components/ui/popover"
+import { Separator } from "@/components/ui/separator"
 import LoginDialog from "@/components/LoginDialog"
 
 
@@ -39,39 +39,50 @@ function Navbar() {
 
                 <div className="flex-1" />
 
-                {/* User Avatar/Dropdown */}
+                {/* User Avatar/Dropdown Popover */}
 
-                <DropdownMenu modal={false}>
-                    <DropdownMenuTrigger asChild>
+                <Popover>
+                    <PopoverTrigger asChild>
                         <button className="rounded-full flex items-center gap-2 hover:underline hover:scale-[1.03] active:scale-[0.96]">
                             { !user && <span className="font-semibold">Log In</span>}
                             <Avatar className="cursor-pointer w-10 h-10 ">
                                 <AvatarFallback className="bg-secondary text-primary">{user ? user.firstName[0] + user.lastName[0] : "?"}</AvatarFallback>
                             </Avatar>
                         </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
+                    </PopoverTrigger>
+                    <PopoverContent className="w-60">
                         {
                             //Check if logged in
                             user ?
-                                //User is logged in
-                                <DropdownMenuItem onSelect={() => {
-                                    localStorage.removeItem("user");
-                                    setUser(null);
-                                }}>
-                                    Log Out
-                                </DropdownMenuItem>
-                                :
+                                <div className="flex flex-col gap-3">
+                                    <div className="flex items-center gap-3">
+                                        <Avatar className="cursor-pointer w-10 h-10 ">
+                                            <AvatarFallback className="bg-primary text-primary-foreground">{user.firstName[0] + user.lastName[0]}</AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                            <p className="font-semibold text-lg">{user.firstName} {user.lastName}</p>
+                                            <p className="text-muted-foreground text-md capitalize">{user.persona}</p>
+                                        </div>
+                                    </div>
+                                    <Separator className="bg-primary" />
+                                    <button className="w-full active:scale-97 bg-secondary rounded-lg px-2 py-2 transition-colors hover:bg-primary hover:text-primary-foreground" onClick={() => {
+                                        localStorage.removeItem("user");
+                                        setUser(null);
+                                    }}>
+                                        Log Out
+                                    </button>
+                                </div>
+                            :
                                 //User is not logged in
-                                <DropdownMenuItem onSelect={(e) => {
+                                <button className="w-full active:scale-97 bg-secondary rounded-lg px-2 py-2 transition-colors hover:bg-primary hover:text-primary-foreground" onClick={(e) => {
                                     e.preventDefault();
                                     setTimeout(() => setLoginOpen(true), 50); //Timeout b/c object destroys too fast to open dialog
                                 }}>
                                     Log In
-                                </DropdownMenuItem>
+                                </button>
                         }
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                    </PopoverContent>
+                </Popover>
 
                 {/* Login Dialog*/}
 
