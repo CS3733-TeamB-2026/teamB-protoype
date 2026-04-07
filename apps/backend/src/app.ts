@@ -76,6 +76,27 @@ app.post('/api/create-employee', async (req, res) => {
 })
 */
 
+app.post("/api/login", async (req, res) => {
+    try{
+        const {username, password} = req.body;
+        const login = await q.queryLoginByUsername(username);
+
+        if (!login){
+            res.status(401).json({message:"User not found"})
+        }
+
+        if (login.password !== password) {
+            res.status(401).json({message:"Incorrect Password"})
+        }
+
+        const employee = await q.queryEmployeeById(login.id);
+        res.status(200).json(employee);
+    } catch(error){
+        console.error(error)
+        res.status(500).end()
+    }
+})
+
 app.post('/api/update-employee', async (req, res) => {
     try {
         const id = parseInt(req.query.id as string)
@@ -114,25 +135,35 @@ app.post('/api/update-employee', async (req, res) => {
         }
     })
 
-    app.post("/api/content", async (req, res) => {
-        const payload = req.body
-        try {
-            const result = await createContent(
-                payload.name,
-                payload.linkURL,
-                payload.ownerID,
-                payload.contentType,
-                payload.status,
-                payload.lastModified,
-                payload.expiration,
-                payload.jobPosition
-            );
-            res.status(201).json(result)
-        } catch (error) {
-            console.error(error)
-            res.status(500).end()
-        }
-    })
+app.post('/api/delete-employee', async (req, res) => {
+    try{
+        const id = parseInt(req.query.id as string)
+        await q.deleteEmployee(id)
+    } catch(error){
+        console.error(error)
+        res.status(500).end()
+    }
+})
+   
+app.post("/api/content", async (req, res) => {
+    const payload = req.body
+    try {
+        const result = await createContent(
+            payload.name,
+            payload.linkURL,
+            payload.ownerID,
+            payload.contentType,
+            payload.status,
+            payload.lastModified,
+            payload.expiration,
+            payload.jobPosition
+        );
+        res.status(201).json(result)
+    } catch(error){
+        console.error(error)
+        res.status(500).end()
+    }
+})
 
     /*
     app.post("/form", (req, res) => {
