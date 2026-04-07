@@ -85,12 +85,13 @@ app.post("/api/content", async (req, res) => {
         const result = await q.createContent(
             payload.name,
             payload.linkURL,
+            payload.fileURI,
             payload.ownerID,
             payload.contentType,
             payload.status,
             payload.lastModified,
             payload.expiration,
-            payload.jobPosition
+            payload.targetPersona
         );
         return res.status(201).json(result)
     } catch (error) {

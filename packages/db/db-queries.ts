@@ -74,8 +74,8 @@ export async function queryAllContent(): Promise<p.Content[]> {
 export async function queryContentByName(name: string): Promise<p.Content | null> {
     return prisma.content.findFirst({
         where: {name: name}
-        //TODO: Maybe add case insensitivity
-        //TODO: Change to return a list
+        // TODO: Maybe add case insensitivity
+        // TODO: Change to return a list
         //  Perhaps better to grab ALL filenames so a fuzzy search may be done - Oscar
     })
 }
