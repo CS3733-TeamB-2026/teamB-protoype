@@ -13,6 +13,7 @@ datasource db {
 }
 
 model Login {
+  //TODO: change userName to username
   userName String
   passwordHash String
 
@@ -32,6 +33,7 @@ model Employee {
   ownedRequests    ServiceRequest[] @relation("OwnedBy")
   assignedRequests ServiceRequest[] @relation("AssignedTo")
   logins           Login[]
+  //TODO: make logins one-to-one
 
   @@schema("public")
 }
@@ -55,6 +57,7 @@ model Content {
   @@schema("public")
 }
 
+//TODO: delete once we know we aren't using this
 model ServiceRequest {
   owner   Employee @relation("OwnedBy", fields: [ownerID], references: [id])
   ownerID Int
