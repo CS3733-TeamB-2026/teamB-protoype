@@ -1,14 +1,14 @@
 "use client";
 import * as React from "react";
-import { useState } from "react";
-import { Field, FieldLabel, FieldDescription } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import {useState} from "react";
+import {Field, FieldLabel, FieldDescription} from "@/components/ui/field";
+import {Input} from "@/components/ui/input";
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+import {Calendar} from "@/components/ui/calendar";
 
 import {
     DropdownMenu,
@@ -20,11 +20,12 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {Button} from "@/components/ui/button";
+import {Separator} from "@/components/ui/separator";
+import {Card} from "@/components/ui/card";
+import {Label} from "@/components/ui/label";
+import {RadioGroup, RadioGroupItem} from "@/components/ui/radio-group";
+import {ChevronDown} from "lucide-react";
 
 function ManagementForm() {
     const [name, setName] = useState("");
@@ -50,42 +51,51 @@ function ManagementForm() {
     const [fileKey, setFileKey] = useState(0);
     const [uploadMode, setUploadMode] = React.useState<"url" | "file">("url");
     const [file, setFile] = React.useState<File | null>(null);
+    const [submitResult, setSubmitResult] = useState<"success" | "error" | null>(null)
 
     // Function to handle post requests to backend
     const handleSubmit = async () => {
-        const formData = new FormData();
-        formData.append("name", name);
-        formData.append("linkURL", uploadMode === "url" ? linkUrl : "");
-        formData.append("ownerID", ownerID);
-        formData.append("contentType", contentType);
-        formData.append("status", status);
-        formData.append("lastModified", date?.toISOString() ?? "");
-        formData.append("expiration", date2?.toISOString() ?? "");
-        formData.append("jobPosition", jobPosition);
+        try {
 
-        if (uploadMode === "file" && file) {
-            formData.append("file", file);
-        }
+            const formData = new FormData();
+            formData.append("name", name);
+            formData.append("linkURL", uploadMode === "url" ? linkUrl : "");
+            formData.append("ownerID", ownerID);
+            formData.append("contentType", contentType);
+            formData.append("status", status);
+            formData.append("lastModified", date?.toISOString() ?? "");
+            formData.append("expiration", date2?.toISOString() ?? "");
+            formData.append("jobPosition", jobPosition);
 
-        const res = await fetch("http://localhost:3000/api/content", {
-            method: "POST",
-            body: formData,
-        });
+            if (uploadMode === "file" && file) {
+                formData.append("file", file);
+            }
 
-        if (res.status === 201) {
-            setName("");
-            setLinkUrl("");
-            setOwnerID("");
-            setContentType("reference");
-            setStatus("new");
-            setJobPosition("Select job position");
-            setDate(new Date());
-            setDate2(undefined);
-            setLastModifiedTime(new Date().toTimeString().substring(0, 8));
-            setExpirationTime(new Date().toTimeString().substring(0, 8));
-            setFileKey((prev) => prev + 1);
-            setFile(null);
-        }
+            const res = await fetch("http://localhost:3000/api/content", {
+                method: "POST",
+                body: formData,
+            });
+            if (!res.ok) throw new Error()
+
+
+            if (res.status === 201) {
+                setSubmitResult("success")
+                setName("");
+                setLinkUrl("");
+                setOwnerID("");
+                setContentType("reference");
+                setStatus("new");
+                setJobPosition("Select job position");
+                setDate(new Date());
+                setDate2(undefined);
+                setLastModifiedTime(new Date().toTimeString().substring(0, 8));
+                setExpirationTime(new Date().toTimeString().substring(0, 8));
+                setFileKey((prev) => prev + 1);
+                setFile(null);
+            }
+        }catch {
+                setSubmitResult("error")
+            }
     };
 
     return (
@@ -104,7 +114,7 @@ function ManagementForm() {
 
                         {/*Separator*/}
                         <div className="bg-background py-2">
-                            <Separator className="bg-primary" />
+                            <Separator className="bg-primary"/>
                         </div>
 
                         {/*Input Name Field*/}
@@ -128,7 +138,7 @@ function ManagementForm() {
 
                         {/*Separator*/}
                         <div className="bg-background py-2">
-                            <Separator className="bg-primary" />
+                            <Separator className="bg-primary"/>
                         </div>
 
                         {/*Content source selector*/}
@@ -212,7 +222,7 @@ function ManagementForm() {
 
                         {/*Separator*/}
                         <div className="bg-background py-2">
-                            <Separator className="bg-primary" />
+                            <Separator className="bg-primary"/>
                         </div>
 
                         {/*Employee ID Field*/}
@@ -238,7 +248,7 @@ function ManagementForm() {
 
                         {/*Separator*/}
                         <div className="bg-background py-2">
-                            <Separator className="bg-primary" />
+                            <Separator className="bg-primary"/>
                         </div>
 
                         {/*Job position dropdown, this needs to be updated*/}
@@ -248,8 +258,9 @@ function ManagementForm() {
                             </FieldLabel>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="outline">
+                                    <Button variant="outline" className="bg-background justify-between">
                                         {jobPosition}
+                                        <ChevronDown className="h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
@@ -275,7 +286,7 @@ function ManagementForm() {
 
                         {/*Separator*/}
                         <div className="bg-background py-2">
-                            <Separator className="bg-primary" />
+                            <Separator className="bg-primary"/>
                         </div>
 
                         {/*Date Picker Region*/}
@@ -354,6 +365,7 @@ function ManagementForm() {
                                 <Popover open={open2} onOpenChange={setOpen2}>
                                     <PopoverTrigger asChild>
                                         <Button
+
                                             variant="outline"
                                             id="date-picker-expirationdate"
                                             className="justify-start font-normal"
@@ -397,6 +409,7 @@ function ManagementForm() {
                                     onChange={(e) =>
                                         setExpirationTime(e.target.value)
                                     }
+
                                     className="appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
                                 />
                             </Field>
@@ -404,7 +417,7 @@ function ManagementForm() {
 
                         {/*Separator*/}
                         <div className="bg-background py-2">
-                            <Separator className="bg-primary" />
+                            <Separator className="bg-primary"/>
                         </div>
 
                         {/*Type of document dropdown*/}
@@ -414,10 +427,11 @@ function ManagementForm() {
                             </FieldLabel>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="outline">
-                                        {contentType === "reference"
+                                    <Button variant="outline" className="bg-background justify-between">
+                                    {contentType === "reference"
                                             ? "Reference Content"
                                             : "Workflow Content"}
+                                        <ChevronDown className="h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
@@ -454,12 +468,14 @@ function ManagementForm() {
                             </FieldLabel>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="outline">
+                                    <Button variant="outline" className="bg-background justify-between">
                                         {status === "new"
                                             ? "New"
                                             : status === "inProgress"
-                                              ? "In Progress"
-                                              : "complete"}
+                                                ? "In Progress"
+                                                : "complete"}
+                                        <ChevronDown className="h-4 w-4" />
+
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
@@ -492,7 +508,17 @@ function ManagementForm() {
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </Field>
+                        {submitResult === "success" && (
+                            <div className="mt-4 rounded-md bg-chart-1 border-chart-2 px-3 py-2">
+                                Content created successfully!
+                            </div>
+                        )}
 
+                        {submitResult === "error" && (
+                            <div className="mt-4 rounded-md bg-destructive border-destructive text-background px-3 py-2">
+                                Error creating content.
+                            </div>
+                        )}
                         {/*Submit button*/}
                         <div className="flex justify-center bg-background py-4">
                             <Button

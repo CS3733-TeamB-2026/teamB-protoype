@@ -62,11 +62,15 @@ function LoginDialog({ open, onOpenChange, onLogin }: LoginDialogProps) {
                     {error && <p className="text-sm text-destructive">{error}</p>}
                     <div>
                         <Label className="my-2">Username</Label>
-                        <Input className="bg-secondary" placeholder="Enter Username" onChange={(e) => setUsername(e.target.value)} />
+                        <Input className="bg-secondary" placeholder="Enter Username" onChange={(e) => setUsername(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") handleLogin() }} />
                     </div>
                     <div>
                         <Label className="my-2">Password</Label>
-                        <Input className="bg-secondary" placeholder="Enter Password" onChange={(e) => setPassword(e.target.value)} />
+                        <Input className="bg-secondary" placeholder="Enter Password" onChange={(e) => setPassword(e.target.value)}
+                               onKeyDown={(e) => {
+                                   if (e.key === "Enter") handleLogin()
+                               }}
+                        />
                     </div>
                     <button className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-20 mx-auto rounded-lg px-2 py-1" onClick={() => {
                         console.log(username);
