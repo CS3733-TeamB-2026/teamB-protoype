@@ -12,6 +12,7 @@ import {
     type Category,
     CATEGORY_COLORS,
 } from "@/helpers/mime";
+import { Badge } from "@/components/ui/badge";
 
 export function ContentIcon({
     category,
@@ -55,10 +56,8 @@ export function ExtBadge({
     const colors = CATEGORY_COLORS[isLink ? "link" : category];
     const label = isLink ? "Link" : (ext ?? "unknown").toUpperCase();
     return (
-        <span
-            className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${colors.badge}`}
-        >
+        <Badge className={`text-xs ${colors.badge}`}>
             {label}
-        </span>
+        </Badge>
     );
 }

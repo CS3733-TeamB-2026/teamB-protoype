@@ -43,8 +43,9 @@ app.get("/api/employee", async (req, res) => {
 app.get("/api/employee/:id", async (req, res) => {
     try {
         const id = parseInt(req.params.id);
-        const employees = await q.Employee.queryEmployeeById(id);
-        return res.status(200).json(employees);
+        const employee = await q.Employee.queryEmployeeById(id);
+        if (!employee) return res.status(404).json({ message: "Employee not found" });
+        return res.status(200).json(employee);
     } catch (error) {
         console.error(error);
         return res.status(500).end();
@@ -86,8 +87,8 @@ app.put("/api/employee", async (req, res) => {
 app.delete("/api/employee", async (req, res) => {
     const payload = req.body;
     try {
-        const result = await q.Employee.deleteEmployee(payload.id);
-        return res.status(204).json(result);
+        await q.Employee.deleteEmployee(payload.id);
+        return res.status(204).end();
     } catch (error) {
         console.error(error);
         return res.status(500).end();
@@ -258,7 +259,7 @@ app.delete("/api/content/:id", async (req, res) => {
             await q.Bucket.deleteFile(content.fileURI)
         }
         await q.Content.deleteContent(id);
-        return res.status(205).json(content);
+        return res.status(200).json(content);
     } catch (error) {
         console.error(error);
         return res.status(500).end();
@@ -324,10 +325,8 @@ app.post("/api/login/create", async (req, res) => {
 app.delete('/api/login', async (req, res) => {
     const payload = req.body
     try {
-        const result = await q.Login.deleteLogin(
-            payload.id
-        )
-        return res.status(204).json(result) // 204 since no object remains
+        await q.Login.deleteLogin(payload.id)
+        return res.status(204).end()
     } catch (error) {
         console.error(error)
         return res.status(500).end()
