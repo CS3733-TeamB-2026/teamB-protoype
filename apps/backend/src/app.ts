@@ -224,6 +224,20 @@ app.get("/api/employee/all", async (req, res) => {
     }
 })
 
+app.put('/api/login', async (req, res) => {
+    const payload = req.body
+    try {
+        const result = await q.Login.updateLogin(
+            payload.userName,
+            payload.employeeID
+        );
+        return res.status(200).json(result)
+    } catch (error) {
+        console.error(error)
+        return res.status(500).end()
+    }
+})
+
 /*
 app.post("/form", (req, res) => {
     addToDB(res)

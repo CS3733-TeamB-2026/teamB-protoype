@@ -45,6 +45,7 @@ export class Employee {
 
     public static async queryAllEmployeesWithLogin() {
         return prisma.employee.findMany({
+            orderBy: { id: 'asc' },
             include: {
                 login: {
                     select: {
