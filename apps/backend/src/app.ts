@@ -18,6 +18,18 @@ app.use(morgan("dev"));
 app.use(express.json());
 
 // Employee
+
+app.get("/api/employee/all", async (req, res) => {
+    try {
+        const employees = await q.Employee.queryAllEmployeesWithLogin();
+        return res.status(200).json(employees);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+})
+
+
 app.get("/api/employee", async (req, res) => {
     try {
         const employees = await q.Employee.queryAllEmployees();
@@ -83,9 +95,10 @@ app.delete("/api/employee", async (req, res) => {
 });
 
 // Content
-app.get("/api/content", async (req, res) => {
+app.get("/api/content/:persona", async (req, res) => {
+    const persona = req.params.persona;
     try {
-        const content = await q.Content.queryAllContent();
+        const content = await q.Content.queryContentByPersona(persona);
         return res.status(200).json(content);
     } catch (error) {
         console.error(error);
@@ -93,10 +106,9 @@ app.get("/api/content", async (req, res) => {
     }
 });
 
-app.get("/api/content/:persona", async (req, res) => {
-    const persona = req.params.persona;
+app.get("/api/content", async (req, res) => {
     try {
-        const content = await q.Content.queryContentByPersona(persona);
+        const content = await q.Content.queryAllContent();
         return res.status(200).json(content);
     } catch (error) {
         console.error(error);
@@ -309,15 +321,7 @@ app.delete('/api/login', async (req, res) => {
     }
 })
 
-app.get("/api/employee/all", async (req, res) => {
-    try {
-        const employees = await q.Employee.queryAllEmployeesWithLogin();
-        return res.status(200).json(employees);
-    } catch (error) {
-        console.error(error);
-        return res.status(500).end();
-    }
-})
+
 
 app.put('/api/login', async (req, res) => {
     const payload = req.body

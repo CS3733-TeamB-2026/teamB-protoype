@@ -13,7 +13,6 @@ import EmployeeHome from "@/components/EmployeeHome";
 import UserManagement from "@/components/UserManagement";
 import FilesPage from "@/components/FilesPage";
 import { Route, Routes} from "react-router-dom";
-import FilesPage from "@/components/FilesPage.tsx";
 
 function App() {
     // Your application must be wrapped with the BrowserRouter component to enable routing

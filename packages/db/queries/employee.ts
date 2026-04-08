@@ -9,7 +9,7 @@ export class Employee {
 
     public static async queryEmployeeById(id: number): Promise<p.Employee | null> {
         return prisma.employee.findUnique({
-            where: {id: id}
+            where: {id}
         })
     }
 
