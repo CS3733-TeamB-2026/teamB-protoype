@@ -12,6 +12,7 @@ import {
 import {Label} from "@/components/ui/label.tsx";
 import {Input} from "@/components/ui/input.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import banner from "../assets/hanover_banner.webp"
 
 function UserManagement() {
 
@@ -94,10 +95,25 @@ function UserManagement() {
 
     return (
       <>
-          <div className="flex flex-col items-center justify-center py-20 px-8 bg-secondary-foreground text-primary-foreground">
-              <h1 className="text-4xl font-bold mb-4">User Management</h1>
-              <Users className="w-8 h-8" />
-              <p className="text-lg my-4 text-primary-foreground/80">Add, Remove, and Modify users here.</p>
+          <div className="relative flex flex-col items-center justify-center py-20 px-8 text-primary-foreground shadow-xl overflow-hidden">
+              <div
+                  className="absolute inset-0 bg-cover bg-center"
+                  style={{
+                      backgroundImage: `url(${banner})`,
+                      backgroundPosition: "center 38%"
+                  }}
+              />
+              <div className="absolute inset-0 bg-linear-to-b from-white/50 via-transparent to-white/50" />
+              <div className="relative z-10 text-center flex flex-col items-center rounded-lg py-6 px-8"
+                   style={{
+                       background: "radial-gradient(ellipse, rgba(0,0,0,.9) 0%, transparent 70%)",
+                       backgroundSize: "105% 105%",
+                       backgroundPosition: "center"
+                   }}>
+                  <h1 className="text-5xl font-bold text-primary-foreground " style={{ textShadow: "0 0 30px rgba(0,0,0,.9), 0 0 50px rgba(0,0,0,.6)" }} >User Management</h1>
+                  <p className="text-lg mb-8 mt-4 text-primary-foreground" style={{ textShadow: "0 0 30px rgba(0,0,0,1), 0 0 50px rgba(0,0,0,1)" }} >Add, Remove, and Modify users here.</p>
+                  <Users className="w-8 h-8 drop-shadow-[0_0_20px_rgba(0,0,0,0.9)]" />
+              </div>
           </div>
 
           <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center">
