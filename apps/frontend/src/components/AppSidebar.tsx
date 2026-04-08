@@ -28,9 +28,9 @@ type NavItem = {
 const navItems = [
     { title: "Home", icon: Home, href: "/", children: [], access: [] },
     { title: "User Management", icon: Users, href: "/usermanagement", children: [], access: ["admin"] },
+    { title: "Content Management", icon: LucideFolders, href: "/files", children: [], access: ["admin", "underwriter", "businessAnalyst"] },
     { title: "Add Employee Form", icon: ClipboardPenIcon, href: "/employeeform", children: [], access: ["admin"] },
-    { title: "Management Form", icon: FormInput, href: "/manageform", children: [], access: [] },
-    { title: "Files", icon: LucideFolders, href: "/files", children: [], access: [] },
+    { title: "Add Content Form", icon: FormInput, href: "/manageform", children: [], access: ["admin", "underwriter", "businessAnalyst"] },
     { title: "Personas", icon: User, href: "/", children: [
             {title: "Underwriter", icon: User, href: "/underwriter", children: [], access: []},
             {title: "Business Analyst", icon: User, href: "/businessanalyst", children: [], access: []},
