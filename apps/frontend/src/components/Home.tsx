@@ -17,8 +17,10 @@ import {
 import {
     Avatar,
     AvatarFallback,
+    AvatarImage,
 } from "@/components/ui/avatar"
 import {useEffect, useState} from "react";
+import { teamPhotos } from "@/components/ui/team-photos";
 
 function Home() {
 
@@ -37,23 +39,26 @@ function Home() {
             .then(data => setEmployees(data))
     }, [])
 
+    type ImageKey = keyof typeof teamPhotos;
+
     type TeamMember = {
         name: string;
         initials: string;
         role: string;
+        photo: ImageKey;
     }
 
     const members: TeamMember[] = [
-        { name: "Dylan Zickus", initials: "DZ", role: "Lead Software Engineer" },
-        { name: "Oscar Stomberg", initials: "OS", role: "Assistant Lead Software Engineer" },
-        { name: "Jake Swanson", initials: "JS", role: "Assistant Lead Software Engineer" },
-        { name: "Luke Ciarletta", initials: "LC", role: "Full Time Software Engineer" },
-        { name: "Nick Houghton", initials: "NH", role: "Full Time Software Engineer" },
-        { name: "Cameron Pietraski", initials: "CP", role: "Full Time Software Engineer" },
-        { name: "Hayden Schultz", initials: "HS", role: "FT Software Engineer & Scrum Master" },
-        { name: "Philip Ostrowski", initials: "PO", role: "PT Software Engineer & Project Manager" },
-        { name: "Joseph Hemmerle", initials: "JH", role: "PT Software Engineer & Project Owner" },
-        { name: "Ricardo Guzman Volpe", initials: "RG", role: "PT Software Engineer & Documentation Analyst" }
+        { name: "Dylan Zickus", initials: "DZ", role: "Lead Software Engineer", photo: "dylan" },
+        { name: "Oscar Stomberg", initials: "OS", role: "Assistant Lead Software Engineer", photo: "oscar" },
+        { name: "Jake Swanson", initials: "JS", role: "Assistant Lead Software Engineer", photo: "jake" },
+        { name: "Luke Ciarletta", initials: "LC", role: "Full Time Software Engineer", photo: "luke" },
+        { name: "Nick Houghton", initials: "NH", role: "Full Time Software Engineer", photo: "nicholas" },
+        { name: "Cameron Pietraski", initials: "CP", role: "Full Time Software Engineer", photo: "cameron" },
+        { name: "Hayden Schultz", initials: "HS", role: "FT Software Engineer & Scrum Master", photo: "hayden" },
+        { name: "Philip Ostrowski", initials: "PO", role: "PT Software Engineer & Project Manager", photo: "philip" },
+        { name: "Joseph Hemmerle", initials: "JH", role: "PT Software Engineer & Project Owner", photo: "joey" },
+        { name: "Ricardo Guzman Volpe", initials: "RG", role: "PT Software Engineer & Documentation Analyst", photo: "ricardo" }
     ]
 
     return (
@@ -119,7 +124,13 @@ function Home() {
                         <Card className="shadow-lg text-center p-6 w-60 hover:scale-105 ease-linear duration-100" key={member.name}>
                             <CardContent className="flex flex-col items-center justify-center gap-4">
                                 <Avatar className="w-20 h-20">
-                                    <AvatarFallback className="text-xl bg-primary text-primary-foreground">{member.initials}</AvatarFallback>
+                                    <AvatarImage
+                                        src={teamPhotos[member.photo]}
+                                        alt={member.name}
+                                    />
+                                    <AvatarFallback className="text-xl bg-primary text-primary-foreground">
+                                        {member.initials}
+                                    </AvatarFallback>
                                 </Avatar>
                                 <div>
                                     <h2 className="font-semibold text-lg">{member.name}</h2>
