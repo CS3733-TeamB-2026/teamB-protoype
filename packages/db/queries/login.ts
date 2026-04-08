@@ -14,4 +14,11 @@ export class Login {
             data: {userName, passwordHash: hashed, employeeID}
         })
     }
+
+    public static async deleteLogin(id: number): Promise<void> {
+        const deletedUser = await prisma.login.delete({
+            where: {employeeID: id},
+        })
+    }
+
 }

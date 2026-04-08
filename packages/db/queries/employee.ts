@@ -42,4 +42,17 @@ export class Employee {
             }
         })
     }
+
+    public static async queryAllEmployeesWithLogin() {
+        return prisma.employee.findMany({
+            include: {
+                login: {
+                    select: {
+                        userName: true
+                    }
+                }
+            }
+        })
+    }
+
 }

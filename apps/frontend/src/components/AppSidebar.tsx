@@ -1,4 +1,4 @@
-import { Home, FormInput, User, ChevronDown } from "lucide-react"
+import { Home, FormInput, User, ChevronDown, Users } from "lucide-react"
 import React from "react"
 import {Link} from "react-router-dom";
 import {
@@ -20,21 +20,26 @@ type NavItem = {
     icon: React.ComponentType;
     href: string;
     children: NavItem[];
+    access: string[];
 }
 
 //Add pages here, icons imported from lucide react
 //For dropdowns, add more items in children array, leave array empty for single item
 const navItems = [
-    { title: "Home", icon: Home, href: "/", children: [] },
-    { title: "Management Form", icon: FormInput, href: "/manageform", children: [] },
-    { title: "Employee Form", icon: FormInput, href: "/employeeform", children: [] },
+    { title: "Home", icon: Home, href: "/", children: [], access: [] },
+    { title: "User Management", icon: Users, href: "/usermanagement", children: [], access: ["admin"] },
+    { title: "Management Form", icon: FormInput, href: "/manageform", children: [], access: [] },
+    { title: "Employee Form", icon: FormInput, href: "/employeeform", children: [], access: [] },
     { title: "Personas", icon: User, href: "/", children: [
-            {title: "Underwriter", icon: User, href: "/underwriter", children: []},
-            {title: "Business Analyst", icon: User, href: "/businessanalyst", children: []},
-        ] },
+            {title: "Underwriter", icon: User, href: "/underwriter", children: [], access: []},
+            {title: "Business Analyst", icon: User, href: "/businessanalyst", children: [], access: []},
+        ], access: [] },
 ]
 
 function AppSidebar() {
+
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+
     return (
         <Sidebar className="bg-sidebar border-r-2!">
 
@@ -48,7 +53,9 @@ function AppSidebar() {
             <SidebarContent className="p-2">
 
                 <SidebarMenu>
-                    {navItems.map((item: NavItem) => (
+                    {navItems
+                        .filter((item : NavItem)=> item.access.length === 0 || (user && item.access.includes(user.persona)))
+                        .map((item: NavItem) => (
 
                         item.children.length > 0 ? (
                             //Collapsible
