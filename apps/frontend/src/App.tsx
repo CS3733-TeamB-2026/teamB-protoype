@@ -11,12 +11,14 @@ import Underwriter from "@/components/Underwriter.tsx";
 import BusinessAnalyst from "@/components/BusinessAnalyst.tsx";
 import EmployeeHome from "@/components/EmployeeHome";
 import { Route, Routes} from "react-router-dom";
+import FilesPage from "@/components/FilesPage.tsx";
 
 function App() {
     // Your application must be wrapped with the BrowserRouter component to enable routing
     return (
 
         <BrowserRouter>
+
             <SidebarProvider defaultOpen={false}>
                 <AppSidebar />
                 <div className="flex flex-col flex-1 min-h-screen">
@@ -30,11 +32,13 @@ function App() {
                             <Route path="/manageform" element={<ManagementForm/>}/>
                             <Route path="/underwriter" element={<Underwriter/>}/>
                             <Route path="/businessanalyst" element={<BusinessAnalyst/>}/>
+                            <Route path="/files" element={<FilesPage/>}/>
                             <Route path="/employeehome" element={<EmployeeHome/>}/>
                         </Routes>
                     </main>
                     <Footer />
                 </div>
+
             </SidebarProvider>
 
         </BrowserRouter>
