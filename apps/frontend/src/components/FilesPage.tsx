@@ -145,7 +145,7 @@ function FilesPage() {
                 setContent(data);
                 data.filter((item) => item.linkURL).forEach((item) => {
                     fetch(
-                        `/api/content/preview?url=${encodeURIComponent(item.linkURL!)}`,
+                        `/api/preview?url=${encodeURIComponent(item.linkURL!)}`,
                     )
                         .then((res) => res.json())
                         .then((preview) =>
