@@ -131,16 +131,40 @@ function FilesPage() {
         siteName: string | null;
         favicon: string | null;
     }>>({});
+    const [fileOwners, setFileOwners] = useState<Record<number, string>>({});
+    const [user] = React.useState(() => {
+        return JSON.parse(localStorage.getItem("user") || "null");
+    })
 
     useEffect(() => {
-        fetch("/api/content")
+        fetch(`/api/content/${encodeURIComponent(user.persona)}`)
             .then((res) => res.json())
             .then((data: ContentItem[]) => {
                 setContent(data);
                 data.filter((item) => item.linkURL).forEach((item) => {
-                    fetch(`/api/content/preview?url=${encodeURIComponent(item.linkURL!)}`)
+                    fetch(
+                        `/api/content/preview?url=${encodeURIComponent(item.linkURL!)}`,
+                    )
                         .then((res) => res.json())
-                        .then((preview) => setLinkPreviews((prev) => ({...prev, [item.id]: preview})))
+                        .then((preview) =>
+                            setLinkPreviews((prev) => ({
+                                ...prev,
+                                [item.id]: preview,
+                            })),
+                        )
+                        .catch(console.error);
+                });
+                data.forEach((item) => {
+                    fetch(
+                        `/api/employee/${encodeURIComponent(item.ownerID!)}`,
+                    )
+                        .then((res) => res.json())
+                        .then((owner) =>
+                            setFileOwners((prev) => ({
+                                ...prev,
+                                [item.id]: owner.firstName + " " + owner.lastName,
+                            })),
+                        )
                         .catch(console.error);
                 });
             })
@@ -226,10 +250,11 @@ function FilesPage() {
             </div>
 
             {/* column header */}
-            <div className="grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-x-4 px-3 pb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground select-none">
+            <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto] items-center gap-x-4 px-3 pb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground select-none">
                 <span className="w-5" />
                 <span>Name</span>
                 <span className="hidden sm:block w-28 text-right">Owner</span>
+                <span className="hidden sm:block w-28 text-right">Persona</span>
                 <span className="hidden sm:block w-28 text-right">Type</span>
                 <span className="hidden md:block w-36 text-right">
                     File / Link
@@ -264,7 +289,7 @@ function FilesPage() {
 
                             <div
                                 className={`
-                                    grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-x-4
+                                    grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto] items-center gap-x-4
                                     px-3 py-3
                                     transition-colors duration-150
                                     cursor-pointer hover:bg-muted/60
@@ -310,7 +335,13 @@ function FilesPage() {
 
                                 <div className="hidden sm:flex justify-end w-28">
                                     <span className="truncate text-sm text-foreground">
-                                        {item.ownerID}
+                                        {fileOwners[item.id]}
+                                    </span>
+                                </div>
+
+                                <div className="hidden sm:flex justify-end w-28">
+                                    <span className="truncate text-sm text-foreground">
+                                        {item.targetPersona}
                                     </span>
                                 </div>
 

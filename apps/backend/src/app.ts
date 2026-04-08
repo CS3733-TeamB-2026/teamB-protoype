@@ -25,6 +25,17 @@ app.get("/api/employee", async (req, res) => {
     }
 });
 
+app.get("/api/employee/:id", async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const employees = await q.Employee.queryEmployeeById(id);
+        return res.status(200).json(employees);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+});
+
 app.post("/api/employee", async (req, res) => {
     const payload = req.body;
     try {
@@ -72,6 +83,17 @@ app.delete("/api/employee", async (req, res) => {
 app.get("/api/content", async (req, res) => {
     try {
         const content = await q.Content.queryAllContent();
+        return res.status(200).json(content);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+});
+
+app.get("/api/content/:persona", async (req, res) => {
+    const persona = req.params.persona;
+    try {
+        const content = await q.Content.queryContentByPersona(persona);
         return res.status(200).json(content);
     } catch (error) {
         console.error(error);
