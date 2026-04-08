@@ -11,6 +11,7 @@ import Underwriter from "@/components/Underwriter.tsx";
 import BusinessAnalyst from "@/components/BusinessAnalyst.tsx";
 import EmployeeHome from "@/components/EmployeeHome";
 import UserManagement from "@/components/UserManagement";
+import FilesPage from "@/components/FilesPage";
 import { Route, Routes} from "react-router-dom";
 
 function App() {
@@ -32,6 +33,7 @@ function App() {
                             <Route path="/usermanagement" element={<UserManagement/>}/>
                             <Route path="/underwriter" element={<Underwriter/>}/>
                             <Route path="/businessanalyst" element={<BusinessAnalyst/>}/>
+                            <Route path="/files" element={<FilesPage/>}/>
                             <Route path="/employeehome" element={<EmployeeHome/>}/>
                         </Routes>
                     </main>

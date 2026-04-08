@@ -1,4 +1,4 @@
-import { Home, FormInput, User, ChevronDown, Users, ClipboardPenIcon } from "lucide-react"
+import { Home, FormInput, User, ChevronDown, Users, ClipboardPenIcon, LucideFolders } from "lucide-react"
 import React from "react"
 import {Link} from "react-router-dom";
 import {
@@ -30,6 +30,7 @@ const navItems = [
     { title: "User Management", icon: Users, href: "/usermanagement", children: [], access: ["admin"] },
     { title: "Add Employee Form", icon: ClipboardPenIcon, href: "/employeeform", children: [], access: ["admin"] },
     { title: "Management Form", icon: FormInput, href: "/manageform", children: [], access: [] },
+    { title: "Files", icon: LucideFolders, href: "/files", children: [], access: [] },
     { title: "Personas", icon: User, href: "/", children: [
             {title: "Underwriter", icon: User, href: "/underwriter", children: [], access: []},
             {title: "Business Analyst", icon: User, href: "/businessanalyst", children: [], access: []},
