@@ -52,7 +52,7 @@ function UserManagement() {
 
         setError("")
 
-        const empRes = await fetch("api/employee", {
+        const empRes = await fetch("/api/employee", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -64,7 +64,7 @@ function UserManagement() {
         })
 
         if (modifiedEmployee.login?.userName) {
-            await fetch("api/login", {
+            await fetch("/api/login", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -95,121 +95,119 @@ function UserManagement() {
     }
 
     return (
-      <>
-          <Hero
-              icon="employees"
-              title="User Management"
-              description="Add, update, and delete users."
-          />
+    <>
+      <Hero
+          icon="employees"
+          title="User Management"
+          description="Add, update, and delete users."
+      />
 
-          <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center">
-              <CardHeader>
-                  <CardTitle className="text-3xl text-primary mt-4">All Users</CardTitle>
-                  <CardDescription>Total Users: {employees.length}</CardDescription>
-              </CardHeader>
-              <CardContent>
+      <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center">
+          <CardHeader>
+              <CardTitle className="text-3xl text-primary mt-4">All Users</CardTitle>
+              <CardDescription>Total Users: {employees.length}</CardDescription>
+          </CardHeader>
+          <CardContent>
 
-                  <Link to="/employeeform">
-                      <Button className="my-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-60 mx-auto rounded-lg px-2 py-6 text-xl">Add Employee</Button>
-                  </Link>
+              <Link to="/employeeform">
+                  <Button className="my-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-60 mx-auto rounded-lg px-2 py-6 text-xl">Add Employee</Button>
+              </Link>
 
-                  <div className="max-w-4xl mx-auto">
-                      <Table className="my-4">
-                          <TableHeader>
-                              <TableRow className="text-lg bg-muted/80">
-                                  <TableHead className="text-center font-light">ID</TableHead>
-                                  <TableHead className="text-center font-light">First Name</TableHead>
-                                  <TableHead className="text-center font-light">Last Name</TableHead>
-                                  <TableHead className="text-center font-light">Persona</TableHead>
-                                  <TableHead className="text-center font-light">User Name</TableHead>
-                                  <TableHead className="text-center font-light">Actions</TableHead>
-                              </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                              {employees.map((employee: Employee) => (
-                                  <TableRow key={employee.id} className="hover:bg-muted/50 transition-colors">
-                                      <TableCell>{employee.id}</TableCell>
-                                      <TableCell>{employee.firstName}</TableCell>
-                                      <TableCell>{employee.lastName}</TableCell>
-                                      <TableCell className="capitalize">{employee.persona}</TableCell>
-                                      <TableCell>{employee.login?.userName || "NA"}</TableCell>
-                                      <TableCell>
-                                          <div className="flex justify-center gap-2">
-                                              <Button variant="outline" size="sm" onClick={ () => {
-                                                  setEditOpen(true);
-                                                  setEditingEmployee(employee);
-                                                  setModifiedEmployee({...employee});
-                                              }}>
-                                                  <Pencil className="w-4 h-4" />
-                                              </Button>
-                                              <Button variant="destructive" size="sm" onClick={() => handleDelete(employee)}>
-                                                  <Trash2 className="w-4 h-4" />
-                                              </Button>
-                                          </div>
-                                      </TableCell>
-                                  </TableRow>
-                              ))}
-                          </TableBody>
-                      </Table>
-                  </div>
+              <Table className="text-left">
+                  <TableHeader>
+                      <TableRow className="uppercase tracking-wider text-muted-foreground select-none hover:bg-transparent">
+                          <TableHead>ID</TableHead>
+                          <TableHead>First Name</TableHead>
+                          <TableHead>Last Name</TableHead>
+                          <TableHead>Persona</TableHead>
+                          <TableHead>User Name</TableHead>
+                          <TableHead>Actions</TableHead>
+                      </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                      {employees.map((employee: Employee) => (
+                          <TableRow key={employee.id}>
+                              <TableCell>{employee.id}</TableCell>
+                              <TableCell>{employee.firstName}</TableCell>
+                              <TableCell>{employee.lastName}</TableCell>
+                              <TableCell className="capitalize">{employee.persona}</TableCell>
+                              <TableCell>{employee.login?.userName || "NA"}</TableCell>
+                              <TableCell>
+                                  <div className="flex justify-center gap-2">
+                                      <Button variant="outline" size="sm" onClick={ () => {
+                                          setEditOpen(true);
+                                          setEditingEmployee(employee);
+                                          setModifiedEmployee({...employee});
+                                      }}>
+                                          <Pencil className="w-4 h-4" />
+                                      </Button>
+                                      <Button variant="destructive" size="sm" onClick={() => handleDelete(employee)}>
+                                          <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                  </div>
+                              </TableCell>
+                          </TableRow>
+                      ))}
+                  </TableBody>
+              </Table>
 
-              </CardContent>
-          </Card>
+          </CardContent>
+      </Card>
 
-          { editingEmployee && (
-              <Dialog open={editOpen} onOpenChange={setEditOpen}>
-                  <DialogContent>
-                      <DialogHeader>
-                          <DialogTitle>Modify User</DialogTitle>
-                          <DialogDescription className="text-md text-muted-foreground">Modify user values here.</DialogDescription>
-                      </DialogHeader>
-                      <div className="flex flex-col gap-2">
-                          {error && <p className="text-sm text-destructive">{error}</p>}
-                          <div>
-                              <Label className="my-2">Employee ID</Label>
-                              <Input defaultValue={editingEmployee?.id} className="bg-secondary" placeholder="Enter Employee ID" disabled />
-                          </div>
-                          <div>
-                              <Label className="my-2">First Name</Label>
-                              <Input defaultValue={editingEmployee?.firstName} className="bg-secondary" placeholder="Enter Employee First Name" onChange={(e) => {
-                                  setModifiedEmployee(prev => prev ? {...prev, firstName: e.target.value} : null);
-                              }} />
-                          </div>
-                          <div>
-                              <Label className="my-2">Last Name</Label>
-                              <Input defaultValue={editingEmployee?.lastName} className="bg-secondary" placeholder="Enter Employee Last Name" onChange={(e) => {
-                                  setModifiedEmployee(prev => prev ? {...prev, lastName: e.target.value} : null);
-                              }} />
-                          </div>
-                          <div>
-                              <Label className="my-2">Persona</Label>
-                              <Select defaultValue={modifiedEmployee?.persona} onValueChange={(value) => {
-                                  setModifiedEmployee(prev => prev ? {...prev, persona: value} : null);
-                              }} >
-                                  <SelectTrigger className="bg-secondary">
-                                      <SelectValue placeholder="Select Persona" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                      <SelectItem value="admin">Admin</SelectItem>
-                                      <SelectItem value="underwriter">Underwriter</SelectItem>
-                                      <SelectItem value="businessAnalyst">Business Analyst</SelectItem>
-                                  </SelectContent>
-                              </Select>
-                          </div>
-                          <div>
-                              <Label className="my-2">Username</Label>
-                              <Input defaultValue={editingEmployee?.login?.userName} className="bg-secondary" placeholder="Enter Employee Username" onChange={(e) => {
-                                  setModifiedEmployee(prev => prev ? {...prev, login: {...prev.login, userName: e.target.value}} : null);
-                              }} />
-                          </div>
-                          <button className="mt-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-20 mx-auto rounded-lg px-2 py-1" onClick={ () => handleModify()}>Apply</button>
+      { editingEmployee && (
+          <Dialog open={editOpen} onOpenChange={setEditOpen}>
+              <DialogContent>
+                  <DialogHeader>
+                      <DialogTitle>Modify User</DialogTitle>
+                      <DialogDescription className="text-md text-muted-foreground">Modify user values here.</DialogDescription>
+                  </DialogHeader>
+                  <div className="flex flex-col gap-2">
+                      {error && <p className="text-sm text-destructive">{error}</p>}
+                      <div>
+                          <Label className="my-2">Employee ID</Label>
+                          <Input defaultValue={editingEmployee?.id} className="bg-secondary" placeholder="Enter Employee ID" disabled />
                       </div>
-                  </DialogContent>
+                      <div>
+                          <Label className="my-2">First Name</Label>
+                          <Input defaultValue={editingEmployee?.firstName} className="bg-secondary" placeholder="Enter Employee First Name" onChange={(e) => {
+                              setModifiedEmployee(prev => prev ? {...prev, firstName: e.target.value} : null);
+                          }} />
+                      </div>
+                      <div>
+                          <Label className="my-2">Last Name</Label>
+                          <Input defaultValue={editingEmployee?.lastName} className="bg-secondary" placeholder="Enter Employee Last Name" onChange={(e) => {
+                              setModifiedEmployee(prev => prev ? {...prev, lastName: e.target.value} : null);
+                          }} />
+                      </div>
+                      <div>
+                          <Label className="my-2">Persona</Label>
+                          <Select defaultValue={modifiedEmployee?.persona} onValueChange={(value) => {
+                              setModifiedEmployee(prev => prev ? {...prev, persona: value} : null);
+                          }} >
+                              <SelectTrigger className="bg-secondary">
+                                  <SelectValue placeholder="Select Persona" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                  <SelectItem value="admin">Admin</SelectItem>
+                                  <SelectItem value="underwriter">Underwriter</SelectItem>
+                                  <SelectItem value="businessAnalyst">Business Analyst</SelectItem>
+                              </SelectContent>
+                          </Select>
+                      </div>
+                      <div>
+                          <Label className="my-2">Username</Label>
+                          <Input defaultValue={editingEmployee?.login?.userName} className="bg-secondary" placeholder="Enter Employee Username" onChange={(e) => {
+                              setModifiedEmployee(prev => prev ? {...prev, login: {...prev.login, userName: e.target.value}} : null);
+                          }} />
+                      </div>
+                      <Button className="mt-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-20 mx-auto rounded-lg px-2 py-1" onClick={() => handleModify()}>Apply</Button>
+                  </div>
+              </DialogContent>
 
-              </Dialog>
-          )}
+          </Dialog>
+      )}
 
-      </>
+    </>
     );
 }
 
