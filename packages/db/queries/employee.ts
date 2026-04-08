@@ -9,7 +9,29 @@ export class Employee {
 
     public static async queryEmployeeById(id: number): Promise<p.Employee | null> {
         return prisma.employee.findUnique({
-            where: {id}
+            where: {id: id}
+        })
+    }
+
+    public static async queryEmployeesByName(_firstName: string | null, _lastName: string | null): Promise<p.Employee[] | null> {
+        if (_firstName === null && _lastName === null) {
+            throw new Error("No name provided");
+        }
+        else if (_lastName === null) {
+            return prisma.employee.findMany({
+                where: {firstName: _firstName}
+            })
+        }
+        else if (_firstName === null) {
+            return prisma.employee.findMany({
+                where: {lastName: _lastName}
+            })
+        }
+        return prisma.employee.findMany({
+            where: {
+                firstName: _firstName,
+                lastName: _lastName
+            }
         })
     }
 
