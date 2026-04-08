@@ -45,6 +45,7 @@ import {
 } from "@/helpers/mime";
 import { ContentExtBadge } from "@/components/shared/ContentExtBadge.tsx";
 import { ContentStatusBadge } from "@/components/shared/ContentStatusBadge.tsx";
+import { ContentTypeBadge } from "@/components/shared/ContentTypeBadge.tsx";
 
 // Matches the Content model from Prisma (with joined owner)
 interface ContentItem {
@@ -256,6 +257,7 @@ function ViewContent() {
                                 <TableHead>Name</TableHead>
                                 <TableHead className="hidden sm:table-cell">Owner</TableHead>
                                 <TableHead className="hidden sm:table-cell">Status</TableHead>
+                                <TableHead className="hidden sm:table-cell">Kind</TableHead>
                                 <TableHead className="hidden sm:table-cell text-center">Type</TableHead>
                                 <TableHead className="w-8" />
                                 <TableHead className="w-8" />
@@ -349,6 +351,12 @@ function ViewContent() {
                                                 />
                                             </TableCell>
 
+                                            <TableCell className="hidden sm:table-cell">
+                                                <ContentTypeBadge
+                                                    contentType={item.contentType}
+                                                />
+                                            </TableCell>
+
                                             <TableCell className="hidden sm:table-cell text-center">
                                                 <ContentExtBadge
                                                     category={category}
@@ -399,7 +407,7 @@ function ViewContent() {
                                         {isExpanded && (
                                             <TableRow className="hover:bg-transparent">
                                                 <TableCell
-                                                    colSpan={7}
+                                                    colSpan={8}
                                                     className="px-6 py-2 bg-muted/10 border-t border-border"
                                                 >
                                                     <div className="flex gap-6 text-xs text-muted-foreground">
@@ -439,7 +447,7 @@ function ViewContent() {
                                                 return (
                                                     <TableRow className="hover:bg-transparent">
                                                         <TableCell
-                                                            colSpan={7}
+                                                            colSpan={8}
                                                             className="p-0"
                                                         >
                                                             <a
@@ -526,7 +534,7 @@ function ViewContent() {
                                         {isExpanded && isFile && (
                                             <TableRow className="hover:bg-transparent">
                                                 <TableCell
-                                                    colSpan={7}
+                                                    colSpan={8}
                                                     className="p-0"
                                                 >
                                                     <div className="bg-background">
