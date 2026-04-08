@@ -18,7 +18,7 @@ export type Employee = {
     };
 };
 
-function UserManagement() {
+function ViewEmployees() {
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [loading, setLoading] = useState(true);
     const [editOpen, setEditOpen] = useState(false);
@@ -52,14 +52,14 @@ function UserManagement() {
         <>
             <Hero
                 icon="employees"
-                title="User Management"
-                description="Add, update, and delete users."
+                title="View Employees"
+                description="View, update, and delete employees."
             />
 
             <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center">
                 <CardHeader>
-                    <CardTitle className="text-3xl text-primary mt-4">All Users</CardTitle>
-                    <CardDescription>Total Users: {employees.length}</CardDescription>
+                    <CardTitle className="text-3xl text-primary mt-4">All Employees</CardTitle>
+                    <CardDescription>Total Employees: {employees.length}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Link to="/employeeform">
@@ -148,4 +148,4 @@ function UserManagement() {
     );
 }
 
-export default UserManagement;
+export default ViewEmployees;

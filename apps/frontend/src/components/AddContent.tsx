@@ -27,7 +27,7 @@ import {Label} from "@/components/ui/label";
 import {RadioGroup, RadioGroupItem} from "@/components/ui/radio-group";
 import {ChevronDown} from "lucide-react";
 
-function ManagementForm() {
+function AddContent() {
     const [name, setName] = useState("");
     const [linkUrl, setLinkUrl] = useState("");
     const [ownerID, setOwnerID] = useState("");
@@ -108,7 +108,7 @@ function ManagementForm() {
                         {/*Title*/}
                         <div className="bg-background py-4 text-center">
                             <h1 className="text-primary text-2xl font-semibold">
-                                Content Management Form
+                                Add Content
                             </h1>
                         </div>
 
@@ -276,7 +276,10 @@ function ManagementForm() {
                                                 Underwriter
                                             </DropdownMenuRadioItem>
                                             <DropdownMenuRadioItem value="businessAnalyst">
-                                                Business analyst
+                                                Business Analyst
+                                            </DropdownMenuRadioItem>
+                                            <DropdownMenuRadioItem value="admin">
+                                                Admin
                                             </DropdownMenuRadioItem>
                                         </DropdownMenuRadioGroup>
                                     </DropdownMenuGroup>
@@ -537,4 +540,4 @@ function ManagementForm() {
     );
 }
 
-export default ManagementForm;
+export default AddContent;

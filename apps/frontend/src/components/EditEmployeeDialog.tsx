@@ -16,7 +16,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import type { Employee } from "@/components/UserManagement";
+import type { Employee } from "@/components/ViewEmployees";
 
 interface Props {
     employee: Employee;
