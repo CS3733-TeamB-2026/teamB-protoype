@@ -19,7 +19,6 @@ import {
     FolderOpen,
     Download,
     Trash2,
-    LucideFolders,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,7 +28,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card.tsx";
-import banner from "@/assets/hanover_banner.webp";
+import { Hero } from "@/components/shared/Hero.tsx";
 
 // Matches the Content model from Prisma (with joined owner)
 interface ContentItem {
@@ -346,26 +345,11 @@ function FilesPage() {
 
     return (
         <>
-            <div className="relative flex flex-col items-center justify-center py-20 px-8 text-primary-foreground shadow-xl overflow-hidden">
-                <div
-                    className="absolute inset-0 bg-cover bg-center"
-                    style={{
-                        backgroundImage: `url(${banner})`,
-                        backgroundPosition: "center 38%"
-                    }}
-                />
-                <div className="absolute inset-0 bg-linear-to-b from-white/50 via-transparent to-white/50" />
-                <div className="relative z-10 text-center flex flex-col items-center rounded-lg py-6 px-8"
-                     style={{
-                         background: "radial-gradient(ellipse, rgba(0,0,0,.9) 0%, transparent 70%)",
-                         backgroundSize: "105% 105%",
-                         backgroundPosition: "center"
-                     }}>
-                    <h1 className="text-5xl font-bold text-primary-foreground " style={{ textShadow: "0 0 30px rgba(0,0,0,.9), 0 0 50px rgba(0,0,0,.6)" }} >Content Management</h1>
-                    <p className="text-lg mb-8 mt-4 text-primary-foreground" style={{ textShadow: "0 0 30px rgba(0,0,0,1), 0 0 50px rgba(0,0,0,1)" }} >Add, Remove, Modify, and View content here.</p>
-                    <LucideFolders className="w-8 h-8 drop-shadow-[0_0_20px_rgba(0,0,0,0.9)]" />
-                </div>
-            </div>
+            <Hero
+                icon="content"
+                title="Hanover Insurance - Content Management Application"
+                description="CS3733 Team B D26"
+            />;
 
             <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center">
                 <CardHeader>
