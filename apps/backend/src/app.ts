@@ -138,6 +138,56 @@ app.get("/api/content", async (req, res) => {
     }
 });
 
+app.get("/api/content/:id", async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const content = await q.Content.queryContentById(id);
+        if (!content || !content.fileURI) {
+            return res.status(404).json({ message: "File not found" });
+        }
+        return res.status(200).json(content);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+});
+
+app.get("/api/content/info/:id", async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const content = await q.Content.queryContentById(id);
+        if (!content || !content.fileURI) {
+            return res.status(404).json({ message: "File not found" });
+        }
+        const metadata = await q.Bucket.getFileMetadata(content.fileURI);
+        return res.status(200).json(metadata);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+});
+
+app.get("/api/content/download/:id", async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const content = await q.Content.queryContentById(id);
+        if (!content || !content.fileURI) {
+            return res.status(404).json({ message: "File not found" });
+        }
+        const blob = await q.Bucket.downloadFile(content.fileURI);
+        const buffer = Buffer.from(await blob.arrayBuffer());
+        const filename = content.fileURI.split("/").pop() ?? "download";
+        const contentType = mime.lookup(filename) || "application/octet-stream";
+        res.setHeader("Content-Type", contentType);
+        res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+        res.setHeader("Content-Length", buffer.length);
+        return res.send(buffer);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+});
+
 app.post("/api/content", upload.single("file"), async (req, res) => {
     const payload = req.body;
     let fileURI: string | null = null;
@@ -197,47 +247,18 @@ app.put("/api/content", async (req, res) => {
     }
 });
 
-app.get("/api/content/info/:id", async (req, res) => {
+app.delete("/api/content/:id", async (req, res) => {
     try {
         const id = parseInt(req.params.id);
         const content = await q.Content.queryContentById(id);
-        if (!content || !content.fileURI) {
+        if (!content) {
             return res.status(404).json({ message: "File not found" });
         }
-        const metadata = await q.Bucket.getFileMetadata(content.fileURI);
-        return res.status(200).json(metadata);
-    } catch (error) {
-        console.error(error);
-        return res.status(500).end();
-    }
-});
-
-app.get("/api/content/download/:id", async (req, res) => {
-    try {
-        const id = parseInt(req.params.id);
-        const content = await q.Content.queryContentById(id);
-        if (!content || !content.fileURI) {
-            return res.status(404).json({ message: "File not found" });
+        if (!!content.fileURI) {
+            await q.Bucket.deleteFile(content.fileURI)
         }
-        const blob = await q.Bucket.downloadFile(content.fileURI);
-        const buffer = Buffer.from(await blob.arrayBuffer());
-        const filename = content.fileURI.split("/").pop() ?? "download";
-        const contentType = mime.lookup(filename) || "application/octet-stream";
-        res.setHeader("Content-Type", contentType);
-        res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
-        res.setHeader("Content-Length", buffer.length);
-        return res.send(buffer);
-    } catch (error) {
-        console.error(error);
-        return res.status(500).end();
-    }
-});
-
-app.delete("/api/content", async (req, res) => {
-    const payload = req.body;
-    try {
-        const result = await q.Content.deleteContent(payload.id);
-        return res.status(204).json(result);
+        await q.Content.deleteContent(id);
+        return res.status(205).json(content);
     } catch (error) {
         console.error(error);
         return res.status(500).end();

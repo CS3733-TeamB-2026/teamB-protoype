@@ -25,7 +25,7 @@ function Navbar() {
     return (
         <>
             {/* TOP BAR/HEADER */}
-            <nav className="flex items-center bg-primary text-primary-foreground p-4 w-full shrink-0">
+            <nav className="flex items-center bg-primary text-primary-foreground p-4 w-full shrink-0 sticky top-0 z-50">
                 <div className="flex items-center gap-2 min-w-fit z-10">
                     {/* Sidebar Trigger */}
                     <button onClick={toggleSidebar} className="group cursor-pointer active:scale-[0.96] shrink-0 px-2 py-2 text-xl flex items-center gap-3 transition-all duration-200 hover:opacity-80">

@@ -74,7 +74,7 @@ export class Content {
     }
 
     public static async deleteContent(id: number): Promise<void> {
-        const deletedContent = await prisma.content.delete({
+        await prisma.content.delete({
             where: {id: id},
         })
     }
