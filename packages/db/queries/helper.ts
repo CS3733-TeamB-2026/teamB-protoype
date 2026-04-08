@@ -9,6 +9,7 @@ export class Helper {
         } else if (_persona == "admin") {
             return p.Persona.admin
         } else {
+            console.log(_persona);
             return null
             //TODO: figure out a default return
         }

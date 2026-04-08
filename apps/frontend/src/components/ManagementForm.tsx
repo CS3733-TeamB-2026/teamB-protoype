@@ -272,10 +272,10 @@ function ManagementForm() {
                                             value={jobPosition}
                                             onValueChange={setJobPosition}
                                         >
-                                            <DropdownMenuRadioItem value="Underwriter">
+                                            <DropdownMenuRadioItem value="underwriter">
                                                 Underwriter
                                             </DropdownMenuRadioItem>
-                                            <DropdownMenuRadioItem value="Business analyst">
+                                            <DropdownMenuRadioItem value="businessAnalyst">
                                                 Business analyst
                                             </DropdownMenuRadioItem>
                                         </DropdownMenuRadioGroup>
