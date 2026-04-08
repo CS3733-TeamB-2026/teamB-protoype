@@ -42,7 +42,7 @@ function LoginDialog({ open, onOpenChange, onLogin }: LoginDialogProps) {
             onLogin(user); //Call func to update navbar
             onOpenChange(false);
             //navigates to employee home page
-            window.location.href = "/employeehome";
+            window.location.href = "/files";
         } else {
             //Unsuccessful login
             const err = await res.json();
