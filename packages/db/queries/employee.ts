@@ -9,8 +9,42 @@ export class Employee {
 
     public static async queryEmployeeById(id: number): Promise<p.Employee | null> {
         return prisma.employee.findUnique({
-            where: {id}
+            where: {id: id}
         })
+    }
+
+    public static async queryEmployeesByName(firstName: string | null, lastName: string | null): Promise<p.Employee[] | null> {
+        let _firstName
+        let _lastName
+        if (firstName !== null && lastName !== null) {
+            _firstName = firstName
+            _lastName = lastName
+            return prisma.employee.findMany({
+                where: {
+                    firstName: _firstName,
+                    lastName: _lastName
+                }
+            })
+        }
+        else if(firstName !== null && lastName === null) {
+            _firstName = firstName
+            return prisma.employee.findMany({
+                where: {
+                    firstName: _firstName
+                }
+            })
+        }
+        else if(firstName === null && lastName !== null) {
+            _lastName = lastName
+            return prisma.employee.findMany({
+                where: {
+                    lastName: _lastName
+                }
+            })
+        }
+        else{
+            throw new Error("No persona type provided")
+        }
     }
 
     public static async updateEmployee(id: number, _firstName: string, _lastName: string, _persona: string | null): Promise<void> {

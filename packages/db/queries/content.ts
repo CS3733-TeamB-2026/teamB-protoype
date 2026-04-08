@@ -99,9 +99,16 @@ export class Content {
         })
     }
 
-    public static async queryContentById(id: number): Promise<p.Content | null> {
+    public static async queryContentById(id: number | null): Promise<p.Content | null> {
+        let _id
+        if (id === null){
+            _id = JSON.parse(localStorage.getItem("user")!).id
+        }
+        else{
+            _id = id
+        }
         return prisma.content.findUnique({
-            where: {id: id}
+            where: {id: _id}
         })
     }
 

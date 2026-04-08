@@ -276,7 +276,10 @@ function AddContent() {
                                                 Underwriter
                                             </DropdownMenuRadioItem>
                                             <DropdownMenuRadioItem value="businessAnalyst">
-                                                Business analyst
+                                                Business Analyst
+                                            </DropdownMenuRadioItem>
+                                            <DropdownMenuRadioItem value="admin">
+                                                Admin
                                             </DropdownMenuRadioItem>
                                         </DropdownMenuRadioGroup>
                                     </DropdownMenuGroup>
