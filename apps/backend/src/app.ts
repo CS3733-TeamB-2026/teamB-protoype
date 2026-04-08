@@ -206,6 +206,48 @@ app.post("/api/login/create", async (req, res) => {
     }
 })
 
+app.delete('/api/login', async (req, res) => {
+    const payload = req.body
+    try {
+        const result = await q.Login.deleteLogin(
+            payload.id
+        )
+        return res.status(204).json(result) // 204 since no object remains
+    } catch (error) {
+        console.error(error)
+        return res.status(500).end()
+    }
+})
+
+app.get("/api/employee/all", async (req, res) => {
+    try {
+        const employees = await q.Employee.queryAllEmployeesWithLogin();
+        return res.status(200).json(employees);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+})
+
+app.put('/api/login', async (req, res) => {
+    const payload = req.body
+    try {
+        const result = await q.Login.updateLogin(
+            payload.userName,
+            payload.employeeID
+        );
+        return res.status(200).json(result)
+    } catch (error) {
+        console.error(error)
+        return res.status(500).end()
+    }
+})
+
+/*
+app.post("/form", (req, res) => {
+    addToDB(res)
+})
+*/
     /*
     app.post("/form", (req, res) => {
         addToDB(res)

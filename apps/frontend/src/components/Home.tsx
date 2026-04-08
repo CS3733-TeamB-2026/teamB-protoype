@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button"
 import {
     Card,
     CardHeader,
@@ -7,40 +6,17 @@ import {
     CardContent
 } from "@/components/ui/card"
 import {
-    Table,
-    TableHeader,
-    TableBody,
-    TableRow,
-    TableHead,
-    TableCell,
-} from "@/components/ui/table"
-import {
     Avatar,
     AvatarFallback,
     AvatarImage,
 } from "@/components/ui/avatar"
-import {useEffect, useState} from "react";
 import { teamPhotos } from "@/components/ui/team-photos";
+import banner from "@/assets/hanover_banner.webp";
+import {Home as HomeIcon} from "lucide-react";
 
 function Home() {
 
-    type Employee = {
-        firstName: string;
-        lastName: string;
-        id: number;
-        persona: string;
-    }
-
-    const [employees, setEmployees] = useState<Employee[]>([]);
-
-    useEffect(() => {
-        fetch("/api/employee")
-            .then(res => res.json())
-            .then(data => setEmployees(data))
-    }, [])
-
     type ImageKey = keyof typeof teamPhotos;
-
     type TeamMember = {
         name: string;
         initials: string;
@@ -64,10 +40,29 @@ function Home() {
     return (
         <>
             {/*Hero*/}
-            <div className="flex flex-col items-center justify-center py-20 px-8 bg-secondary-foreground text-primary-foreground">
-                <h1 className="text-4xl font-bold mb-4">Hanover Insurance - Content Management Application</h1>
-                <p className="text-lg mb-8 text-primary-foreground/80">CS3733 Team B D26</p>
-                <Button variant="secondary" size="lg">Get Started</Button>
+            <div className="relative flex flex-col items-center justify-center py-20 px-8 text-primary-foreground shadow-xl overflow-hidden">
+                <div
+                    className="absolute inset-0 bg-cover bg-center"
+                    style={{
+                        backgroundImage: `url(${banner})`,
+                        backgroundPosition: "center 38%",
+                        backgroundSize: "cover",
+                        minWidth: "100vw",
+                        left: "50%",
+                        transform: "translateX(-50%)"
+                    }}
+                />
+                <div className="absolute inset-0 bg-linear-to-b from-white/50 via-transparent to-white/50" />
+                <div className="relative z-10 text-center flex flex-col items-center rounded-lg py-6 px-8"
+                     style={{
+                         background: "radial-gradient(ellipse, rgba(0,0,0,.9) 0%, transparent 70%)",
+                         backgroundSize: "105% 105%",
+                         backgroundPosition: "center"
+                     }}>
+                    <h1 className="text-5xl font-bold text-primary-foreground " style={{ textShadow: "0 0 30px rgba(0,0,0,.9), 0 0 50px rgba(0,0,0,.6)" }} >Hanover Insurance - Content Management Application</h1>
+                    <p className="text-lg mb-8 mt-4 text-primary-foreground" style={{ textShadow: "0 0 30px rgba(0,0,0,1), 0 0 50px rgba(0,0,0,1)" }} >CS3733 Team B D26</p>
+                    <HomeIcon className="w-8 h-8 drop-shadow-[0_0_20px_rgba(0,0,0,0.9)]" />
+                </div>
             </div>
 
             {/*Main Paragraph*/}
@@ -84,33 +79,6 @@ function Home() {
                     </p>
 
                     <br />
-
-                    <h1 className="text-lg">
-                        Employees (From Database):
-                    </h1>
-
-                    <div className="max-w-3xl mx-auto">
-                        <Table className="my-4">
-                            <TableHeader>
-                                <TableRow className="text-lg">
-                                    <TableHead className="text-center font-light">ID</TableHead>
-                                    <TableHead className="text-center font-light">First Name</TableHead>
-                                    <TableHead className="text-center font-light">Last Name</TableHead>
-                                    <TableHead className="text-center font-light">Persona</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {employees.map((employee: Employee) => (
-                                    <TableRow key={employee.id}>
-                                        <TableCell>{employee.id}</TableCell>
-                                        <TableCell>{employee.firstName}</TableCell>
-                                        <TableCell>{employee.lastName}</TableCell>
-                                        <TableCell>{employee.persona}</TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </div>
 
                 </CardContent>
             </Card>

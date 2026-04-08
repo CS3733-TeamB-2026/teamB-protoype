@@ -1,5 +1,7 @@
 import { prisma } from "../lib/prisma"
 import bcrypt from "bcrypt"
+import * as p from "../generated/prisma/client";
+import {Helper} from "./helper";
 
 export class Login {
     public static async queryLoginByUsername(userName: string):
@@ -20,4 +22,18 @@ export class Login {
             data: {userName, passwordHash: hashed, employeeID}
         })
     }
+
+    public static async deleteLogin(id: number): Promise<void> {
+        const deletedUser = await prisma.login.delete({
+            where: {employeeID: id},
+        })
+    }
+
+    public static async updateLogin(userName: string, employeeID: number){
+        return prisma.login.update({
+            where: { employeeID },
+            data: { userName }
+        })
+    }
+
 }
