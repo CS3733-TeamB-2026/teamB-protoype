@@ -151,14 +151,28 @@ function FilesPage() {
                     fetch(
                         `/api/preview?url=${encodeURIComponent(item.linkURL!)}`,
                     )
-                        .then((res) => res.json())
+                        .then((res) => {
+                            if (!res.ok) throw new Error(`preview ${res.status}`);
+                            return res.json();
+                        })
                         .then((preview) =>
                             setLinkPreviews((prev) => ({
                                 ...prev,
                                 [item.id]: preview,
                             })),
                         )
-                        .catch(console.error);
+                        .catch(() =>
+                            setLinkPreviews((prev) => ({
+                                ...prev,
+                                [item.id]: {
+                                    title: null,
+                                    description: null,
+                                    image: null,
+                                    siteName: null,
+                                    favicon: null,
+                                },
+                            })),
+                        );
                 });
             })
             .catch(() => setError("Failed to load content."));
@@ -421,43 +435,59 @@ function FilesPage() {
                             </div>
 
                             {/* Expanded: link preview */}
-                            {isExpanded && isLink && linkPreviews[item.id] && (
-                                <a
-                                    href={item.linkURL!}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="border-t border-border bg-muted/20 px-6 py-3 flex items-center gap-4 hover:bg-muted/40 transition-colors"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    {linkPreviews[item.id].image && (
-                                        <img
-                                            src={linkPreviews[item.id].image!}
-                                            alt=""
-                                            className="w-16 h-16 rounded object-cover shrink-0"
-                                        />
-                                    )}
-                                    <div className="min-w-0">
-                                        {linkPreviews[item.id].siteName && (
-                                            <p className="text-xs text-muted-foreground">
-                                                {linkPreviews[item.id].siteName}
-                                            </p>
-                                        )}
-                                        {linkPreviews[item.id].title && (
+                            {isExpanded && isLink && (() => {
+                                const preview = linkPreviews[item.id];
+                                const hasImage = !!preview?.image;
+                                const hasFavicon = !!preview?.favicon;
+                                const topLabel = preview?.siteName
+                                    ?? (preview && !preview.title && !preview.description && !preview.image
+                                        ? "Preview unavailable"
+                                        : null);
+                                return (
+                                    <a
+                                        href={item.linkURL!}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="border-t border-border bg-muted/20 px-6 py-3 flex items-center gap-4 hover:bg-muted/40 transition-colors"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        {hasImage ? (
+                                            <img
+                                                src={preview!.image!}
+                                                alt=""
+                                                className="w-16 h-16 rounded object-cover shrink-0"
+                                                onError={(e) => {
+                                                    (e.currentTarget as HTMLImageElement).style.display = "none";
+                                                }}
+                                            />
+                                        ) : hasFavicon ? (
+                                            <img
+                                                src={preview!.favicon!}
+                                                alt=""
+                                                className="w-8 h-8 rounded shrink-0"
+                                                onError={(e) => {
+                                                    (e.currentTarget as HTMLImageElement).style.display = "none";
+                                                }}
+                                            />
+                                        ) : null}
+                                        <div className="min-w-0">
+                                            {topLabel && (
+                                                <p className="text-xs text-muted-foreground">
+                                                    {topLabel}
+                                                </p>
+                                            )}
                                             <p className="text-sm font-medium text-foreground truncate">
-                                                {linkPreviews[item.id].title}
+                                                {preview?.title || item.linkURL}
                                             </p>
-                                        )}
-                                        {linkPreviews[item.id].description && (
-                                            <p className="text-xs text-muted-foreground line-clamp-2">
-                                                {
-                                                    linkPreviews[item.id]
-                                                        .description
-                                                }
-                                            </p>
-                                        )}
-                                    </div>
-                                </a>
-                            )}
+                                            {preview?.description && (
+                                                <p className="text-xs text-muted-foreground line-clamp-2">
+                                                    {preview.description}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </a>
+                                );
+                            })()}
 
                             {/* Expanded: file preview */}
                             {isExpanded && isFile && (
