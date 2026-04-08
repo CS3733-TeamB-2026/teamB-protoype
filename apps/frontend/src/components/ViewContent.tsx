@@ -430,8 +430,8 @@ function ViewContent() {
             <ConfirmDeleteDialog
                 open={!!deleteTarget}
                 onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
-                description={deleteTarget ? `This will permanently delete "${deleteTarget.displayName}".` : undefined}
-                onConfirm={() => deleteTarget && handleDelete(deleteTarget.id)}
+                description={deleteTarget ? <span>This will permanently delete <strong>"{deleteTarget.displayName}"</strong>.</span> : undefined}
+                onConfirm={() => handleDelete(deleteTarget!.id)}
             />
         </>
     );

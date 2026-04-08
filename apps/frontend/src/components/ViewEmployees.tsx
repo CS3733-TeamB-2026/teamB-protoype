@@ -127,8 +127,8 @@ function ViewEmployees() {
             <ConfirmDeleteDialog
                 open={!!deleteTarget}
                 onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
-                description={deleteTarget ? `This will permanently delete ${deleteTarget.firstName} ${deleteTarget.lastName}.` : undefined}
-                onConfirm={() => deleteTarget && handleDelete(deleteTarget)}
+                description={deleteTarget ? <span>This will permanently delete {deleteTarget.persona} <strong>{deleteTarget.firstName} {deleteTarget.lastName}</strong> and any files they own.</span> : undefined}
+                onConfirm={() => handleDelete(deleteTarget!)}
             />
 
             {editingEmployee && (
