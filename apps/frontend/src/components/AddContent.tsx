@@ -108,7 +108,7 @@ function ManagementForm() {
                         {/*Title*/}
                         <div className="bg-background py-4 text-center">
                             <h1 className="text-primary text-2xl font-semibold">
-                                Content Management Form
+                                Add Content
                             </h1>
                         </div>
 
