@@ -6,6 +6,9 @@ import multer from "multer";
 import bcrypt from 'bcrypt';
 import mime from 'mime-types';
 import * as cheerio from 'cheerio';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
 import * as q from "@softeng-app/db";
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -293,13 +296,20 @@ app.post("/api/login/create", async (req, res) => {
     }
 })
 
-/*
-app.post("/form", (req, res) => {
-    addToDB(res)
-})
-*/
+    /*
+    app.post("/form", (req, res) => {
+        addToDB(res)
+    })
+    */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-app.listen(3000, () => {
-    console.log(`Server is listening on port 3000`);
-    console.log(`    http://localhost:3000`);
+app.use(express.static(path.join(__dirname, '../../frontend/dist')));
+app.get('/{*splat}', (req, res) => {
+    res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'));
 });
+
+app.listen(3000, '0.0.0.0', () => {
+        console.log(`Server is listening on port 3000`);
+        console.log(`    http://localhost:3000`);
+    })
