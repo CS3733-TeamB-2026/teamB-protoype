@@ -1,4 +1,5 @@
 "use client"
+import { ChevronDown } from "lucide-react"
 import * as React from "react"
 import {
     Card,
@@ -31,33 +32,49 @@ function EmployeeForm() {
     const [userName, setUserName] = React.useState("")
     const [password, setPassword] = React.useState("")
     const [id, setID] = React.useState("")
+    const [submitResult, setSubmitResult] = useState<"success" | "error" | null>(null)
     const handleSubmit = async () => {
-        await fetch('http://localhost:3000/api/employee', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                firstName: firstName,
-                lastName: lastName,
-                id: parseInt(id),
-                persona: targetPersona,
+        {/*TODO: This forces the user to enter all the fields, should probably do this on backend later */}
+        if (!firstName || !lastName || !id || !userName || !password || targetPersona === "Select job position") {
+            setSubmitResult("error")
+            return
+        }
+            try {
+            const empRes =  await fetch('http://localhost:3000/api/employee', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    firstName: firstName,
+                    lastName: lastName,
+                    id: parseInt(id),
+                    persona: targetPersona,
+                })
             })
-        })
+            if (!empRes.ok) throw new Error()
 
-        await fetch('http://localhost:3000/api/login/create', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-            userName: userName,
-            password: password,
-            employeeID: parseInt(id),
+
+
+            const loginRes = await fetch('http://localhost:3000/api/login/create', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    userName: userName,
+                    password: password,
+                    employeeID: parseInt(id),
+                })
             })
-        })
-        setTargetPersona("Select job position")
-        setFirstName("")
-        setLastName("")
-        setUserName("")
-        setPassword("")
-        setID("")
+            if (!loginRes.ok) throw new Error()
+            setSubmitResult("success")
+
+            setTargetPersona("Select job position")
+            setFirstName("")
+            setLastName("")
+            setUserName("")
+            setPassword("")
+            setID("")
+        }catch {
+            setSubmitResult("error")
+        }
     }
     return (
         /*This gives space between the border and content*/
@@ -132,7 +149,10 @@ function EmployeeForm() {
                         <FieldLabel className="text-primary">Select job position</FieldLabel>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline">{targetPersona}</Button>
+                                <Button variant="outline" className="bg-background justify-between">
+                                    {targetPersona === "underwriter" ? "Underwriter" : targetPersona === "businessAnalyst" ? "Business Analyst" : targetPersona === "admin" ? "Admin" : "Select job position"}
+                                    <ChevronDown className="h-4 w-4" />
+                                </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
                                 <DropdownMenuGroup>
@@ -174,6 +194,17 @@ function EmployeeForm() {
                         />
                     </Field>
                         </div>
+                    {submitResult === "success" && (
+                        <div className="rounded-md bg-chart-1 border-chart-2 px-3 py-2">
+                            Employee created successfully!
+                        </div>
+                    )}
+
+                    {submitResult === "error" && (
+                        <div className="rounded-md bg-destructive border-destructive text-background px-3 py-2">
+                            Error creating employee.
+                        </div>
+                    )}
                     <div className="flex justify-center bg-background py-4">
                         <Button onClick={handleSubmit} className="bg-primary text-white hover:bg-black hover:text-white" variant="outline" size="lg">
                             Submit
