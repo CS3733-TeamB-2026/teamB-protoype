@@ -171,7 +171,7 @@ app.post("/api/content", async (req, res) => {
     })
     */
 
-    app.listen(3000, () => {
+app.listen(3000, '0.0.0.0', () => {
         console.log(`Server is listening on port 3000`);
         console.log(`    http://localhost:3000`);
     })
