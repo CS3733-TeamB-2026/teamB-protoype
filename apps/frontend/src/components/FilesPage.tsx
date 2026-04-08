@@ -17,8 +17,10 @@ import {
     ChevronRight,
     AlertCircle,
     FolderOpen,
-    Download,
+    Download, Trash2,
 } from "lucide-react";
+import { Button } from "@/components/ui/button"
+
 
 // Matches the Content model from Prisma
 interface ContentItem {
@@ -237,6 +239,18 @@ function FilesPage() {
             </div>
         );
     }
+    const handleDelete = async (id: number, e: React.MouseEvent) => {
+        e.stopPropagation()
+        const res = await fetch(`/api/content`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id })
+        })
+
+        if (res.ok) {
+            setContent(content.filter(item => item.id !== id))
+        }
+    }
 
     return (
         <div className="max-w-5xl mx-auto px-4 py-8">
@@ -250,7 +264,7 @@ function FilesPage() {
             </div>
 
             {/* column header */}
-            <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto] items-center gap-x-4 px-3 pb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground select-none">
+            <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto_auto] items-center gap-x-4 px-3 pb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground select-none">
                 <span className="w-5" />
                 <span>Name</span>
                 <span className="hidden sm:block w-28 text-right">Owner</span>
@@ -289,7 +303,7 @@ function FilesPage() {
 
                             <div
                                 className={`
-                                    grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto] items-center gap-x-4
+                                    grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto_auto] items-center gap-x-4
                                     px-3 py-3
                                     transition-colors duration-150
                                     cursor-pointer hover:bg-muted/60
@@ -409,6 +423,10 @@ function FilesPage() {
                                         <Bookmark className="w-4 h-4" />
                                     )}
                                 </button>
+
+                                <Button variant="destructive" size="sm" onClick={(e) => handleDelete(item.id, e)}>
+                                    <Trash2 className="w-4 h-4" />
+                                </Button>
                             </div>
 
                             {/* Expanded: link preview */}
