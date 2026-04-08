@@ -225,7 +225,9 @@ function ViewContent() {
             <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center">
                 <CardHeader>
                     <CardTitle className="text-3xl text-primary mt-4">
-                        Content
+                        {user.persona === "underwriter" ? "Underwriter" :
+                            user.persona === "businessAnalyst" ? "Business Analyst" :
+                                "Admin"} Content
                     </CardTitle>
                     <CardDescription>
                         Total Content Items: {content.length}
