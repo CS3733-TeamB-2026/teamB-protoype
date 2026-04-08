@@ -34,6 +34,7 @@ import {
     ContentIcon,
     ExtBadge,
 } from "@/components/shared/Mime.tsx";
+import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
 import {
     getCategory,
     getExtension,
@@ -74,6 +75,7 @@ function FilesPage() {
     const [error, setError] = useState<string | null>(null);
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [bookmarks, setBookmarks] = useState<Set<number>>(new Set());
+    const [deleteTarget, setDeleteTarget] = useState<ContentItem | null>(null);
     const [fileSizes, setFileSizes] = useState<Record<number, number | null>>(
         {},
     );
@@ -196,13 +198,12 @@ function FilesPage() {
         });
     }
 
-    const handleDelete = async (id: number, e: React.MouseEvent) => {
-        e.stopPropagation();
+    const handleDelete = async (id: number) => {
         const res = await fetch(`/api/content/${id}`, { method: "DELETE" });
-
         if (res.ok) {
-            setContent(content.filter((item) => item.id !== id));
+            setContent((prev) => prev.filter((item) => item.id !== id));
         }
+        setDeleteTarget(null);
     };
 
     return (
@@ -333,7 +334,7 @@ function FilesPage() {
                                             </TableCell>
 
                                             <TableCell className="w-8 px-1">
-                                                <Button variant="destructive" size="sm" onClick={(e) => handleDelete(item.id, e)}>
+                                                <Button variant="destructive" size="sm" onClick={(e) => { e.stopPropagation(); setDeleteTarget(item); }}>
                                                     <Trash2 className="w-4 h-4" />
                                                 </Button>
                                             </TableCell>
@@ -425,6 +426,13 @@ function FilesPage() {
                     )}
                 </CardContent>
             </Card>
+
+            <ConfirmDeleteDialog
+                open={!!deleteTarget}
+                onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+                description={deleteTarget ? `This will permanently delete "${deleteTarget.displayName}".` : undefined}
+                onConfirm={() => deleteTarget && handleDelete(deleteTarget.id)}
+            />
         </>
     );
 }

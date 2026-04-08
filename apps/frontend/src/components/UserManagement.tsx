@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Hero } from "@/components/shared/Hero.tsx";
 import { EditEmployeeDialog } from "@/components/EditEmployeeDialog";
+import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
 
 export type Employee = {
     firstName: string;
@@ -22,6 +23,7 @@ function UserManagement() {
     const [loading, setLoading] = useState(true);
     const [editOpen, setEditOpen] = useState(false);
     const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<Employee | null>(null);
     const currentUser = JSON.parse(localStorage.getItem("user") || "null");
 
     useEffect(() => {
@@ -43,6 +45,7 @@ function UserManagement() {
         if (res.ok) {
             setEmployees((prev) => prev.filter((e) => e.id !== employee.id));
         }
+        setDeleteTarget(null);
     };
 
     return (
@@ -107,7 +110,7 @@ function UserManagement() {
                                                     variant="destructive"
                                                     size="sm"
                                                     disabled={employee.id === currentUser?.id}
-                                                    onClick={() => handleDelete(employee)}
+                                                    onClick={() => setDeleteTarget(employee)}
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </Button>
@@ -120,6 +123,13 @@ function UserManagement() {
                     )}
                 </CardContent>
             </Card>
+
+            <ConfirmDeleteDialog
+                open={!!deleteTarget}
+                onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+                description={deleteTarget ? `This will permanently delete ${deleteTarget.firstName} ${deleteTarget.lastName}.` : undefined}
+                onConfirm={() => deleteTarget && handleDelete(deleteTarget)}
+            />
 
             {editingEmployee && (
                 <EditEmployeeDialog
