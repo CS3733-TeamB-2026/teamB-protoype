@@ -1,7 +1,7 @@
 import * as p from "../generated/prisma/client";
 
 export class Helper {
-    public static personaHelper(_persona: string | null): p.Persona {
+    public static personaHelper(_persona: string | null): p.Persona | null {
         if (_persona == "underwriter") {
             return p.Persona.underwriter
         } else if (_persona == "businessAnalyst") {
@@ -9,7 +9,7 @@ export class Helper {
         } else if (_persona == "admin") {
             return p.Persona.admin
         } else {
-            return p.Persona.admin
+            return null
             //TODO: figure out a default return
         }
 
