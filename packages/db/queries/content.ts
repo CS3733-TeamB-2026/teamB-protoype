@@ -79,11 +79,13 @@ export class Content {
         })
     }
 
-    public static async queryAllContent(): Promise<p.Content[]> {
-        return prisma.content.findMany({})
+    public static async queryAllContent() {
+        return prisma.content.findMany({
+            include: {owner: true},
+        })
     }
 
-    public static async queryContentByPersona(persona: string): Promise<p.Content[]> {
+    public static async queryContentByPersona(persona: string) {
         if (persona == "admin") {
             return this.queryAllContent()
         }
@@ -92,7 +94,8 @@ export class Content {
             throw new Error("No persona type provided")
         }
         return prisma.content.findMany({
-            where: {targetPersona: _personaTyped}
+            where: {targetPersona: _personaTyped},
+            include: {owner: true},
         })
     }
 

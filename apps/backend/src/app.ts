@@ -125,20 +125,12 @@ app.get("/api/preview", async (req, res) => {
     }
 });
 
-app.get("/api/content/:persona", async (req, res) => {
-    const persona = req.params.persona;
-    try {
-        const content = await q.Content.queryContentByPersona(persona);
-        return res.status(200).json(content);
-    } catch (error) {
-        console.error(error);
-        return res.status(500).end();
-    }
-});
-
 app.get("/api/content", async (req, res) => {
+    const persona = req.query.persona as string | undefined;
     try {
-        const content = await q.Content.queryAllContent();
+        const content = persona
+            ? await q.Content.queryContentByPersona(persona)
+            : await q.Content.queryAllContent();
         return res.status(200).json(content);
     } catch (error) {
         console.error(error);

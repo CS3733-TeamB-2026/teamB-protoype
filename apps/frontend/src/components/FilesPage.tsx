@@ -22,13 +22,18 @@ import {
 import { Button } from "@/components/ui/button"
 
 
-// Matches the Content model from Prisma
+// Matches the Content model from Prisma (with joined owner)
 interface ContentItem {
     id: number;
     displayName: string;
     linkURL: string | null;
     fileURI: string | null;
     ownerID: number | null;
+    owner: {
+        id: number;
+        firstName: string;
+        lastName: string;
+    } | null;
     lastModified: string;
     expiration: string | null;
     contentType: string;
@@ -133,13 +138,12 @@ function FilesPage() {
         siteName: string | null;
         favicon: string | null;
     }>>({});
-    const [fileOwners, setFileOwners] = useState<Record<number, string>>({});
     const [user] = React.useState(() => {
         return JSON.parse(localStorage.getItem("user") || "null");
     })
 
     useEffect(() => {
-        fetch(`/api/content/${encodeURIComponent(user.persona)}`)
+        fetch(`/api/content?persona=${encodeURIComponent(user.persona)}`)
             .then((res) => res.json())
             .then((data: ContentItem[]) => {
                 setContent(data);
@@ -152,19 +156,6 @@ function FilesPage() {
                             setLinkPreviews((prev) => ({
                                 ...prev,
                                 [item.id]: preview,
-                            })),
-                        )
-                        .catch(console.error);
-                });
-                data.forEach((item) => {
-                    fetch(
-                        `/api/employee/${encodeURIComponent(item.ownerID!)}`,
-                    )
-                        .then((res) => res.json())
-                        .then((owner) =>
-                            setFileOwners((prev) => ({
-                                ...prev,
-                                [item.id]: owner.firstName + " " + owner.lastName,
                             })),
                         )
                         .catch(console.error);
@@ -349,7 +340,7 @@ function FilesPage() {
 
                                 <div className="hidden sm:flex justify-end w-28">
                                     <span className="truncate text-sm text-foreground">
-                                        {fileOwners[item.id]}
+                                        {item.owner ? `${item.owner.firstName} ${item.owner.lastName}` : ""}
                                     </span>
                                 </div>
 
