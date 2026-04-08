@@ -8,11 +8,7 @@ import {
     FileVideo,
     Link,
 } from "lucide-react";
-import {
-    type Category,
-    CATEGORY_COLORS,
-} from "@/helpers/mime";
-import { Badge } from "@/components/ui/badge";
+import { type Category, CATEGORY_COLORS } from "@/helpers/mime";
 
 export function ContentIcon({
     category,
@@ -42,22 +38,4 @@ export function ContentIcon({
         default:
             return <File className={cls} />;
     }
-}
-
-export function ExtBadge({
-    category,
-    ext,
-    isLink,
-}: {
-    category: Category;
-    ext: string | null;
-    isLink: boolean;
-}) {
-    const colors = CATEGORY_COLORS[isLink ? "link" : category];
-    const label = isLink ? "Link" : (ext ?? "unknown").toUpperCase();
-    return (
-        <Badge className={`text-xs ${colors.badge}`}>
-            {label}
-        </Badge>
-    );
 }
