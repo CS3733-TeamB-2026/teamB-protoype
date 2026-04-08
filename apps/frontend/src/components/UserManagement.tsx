@@ -13,6 +13,7 @@ import {Label} from "@/components/ui/label.tsx";
 import {Input} from "@/components/ui/input.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import banner from "../assets/hanover_banner.webp"
+import { Link } from "react-router-dom";
 
 function UserManagement() {
 
@@ -118,10 +119,14 @@ function UserManagement() {
 
           <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center">
               <CardHeader>
-                  <CardTitle className="text-3xl text-primary">All Users</CardTitle>
+                  <CardTitle className="text-3xl text-primary mt-4">All Users</CardTitle>
                   <CardDescription>Total Users: {employees.length}</CardDescription>
               </CardHeader>
               <CardContent>
+
+                  <Link to="/employeeform">
+                      <Button className="my-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-60 mx-auto rounded-lg px-2 py-6 text-xl">Add Employee</Button>
+                  </Link>
 
                   <div className="max-w-4xl mx-auto">
                       <Table className="my-4">
@@ -168,7 +173,6 @@ function UserManagement() {
 
           { editingEmployee && (
               <Dialog open={editOpen} onOpenChange={setEditOpen}>
-
                   <DialogContent>
                       <DialogHeader>
                           <DialogTitle>Modify User</DialogTitle>
