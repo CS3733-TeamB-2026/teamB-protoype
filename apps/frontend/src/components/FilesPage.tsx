@@ -1,163 +1,93 @@
-import React, {useEffect, useState} from "react";
+import {useEffect, useState} from "react";
 import DocViewer, {DocViewerRenderers} from "@iamjariwala/react-doc-viewer";
 import "@iamjariwala/react-doc-viewer/dist/index.css";
 import {
-    FileText,
-    FileSpreadsheet,
-    Presentation,
     File,
+    Link,
     Bookmark,
     BookmarkCheck,
     ChevronDown,
     ChevronRight,
-    Loader2,
     AlertCircle,
     FolderOpen,
+    Download,
 } from "lucide-react";
 
-// Supabase stuff, need to talk to backend to get properly setup
-// const SUPABASE_URL = import.meta.env.SUPABASE_URL as string;
-// const SUPABASE_SECRET_KEY = import.meta.env.SUPABASE_SECRET_KEY as string;
-// const BUCKET_NAME = "test";
-
-// const supabase
-
-// file types are linked into one supported type
-type SupportedType = "pdf" | "docx" | "pptx" | "xlsx";
-
-// file metadata
-interface FileItem {
-    id: string;
-    name: string;
-    fileType: SupportedType | "other"; //other is anything currently unsupported, mostly so it doesn't break the site
-    size?: number;
-    updatedAt: string | null | undefined;
-    publicUrl: string;
+// Matches the Content model from Prisma
+interface ContentItem {
+    id: number;
+    displayName: string;
+    linkURL: string | null;
+    fileURI: string | null;
+    ownerID: number | null;
+    lastModified: string;
+    expiration: string | null;
+    contentType: string;
+    targetPersona: string;
+    status: string | null;
 }
 
-// supported types as of rn
-const SUPPORTED_TYPES: Record<string, SupportedType> = {
-    pdf: "pdf",
-    docx: "docx",
-    pptx: "pptx",
-    xlsx: "xlsx",
-};
-
-// HELPER FUNCTIONS //
-function getFileType(name: string): SupportedType | "other" {
-    const ext = name.split(".").pop()?.toLowerCase() ?? "";
-    return SUPPORTED_TYPES[ext] ?? "other";
+function getOriginalFilename(fileURI: string): string {
+    return fileURI.split("/").pop() ?? fileURI;
 }
 
-//just formats how we display file size
-function formatBytes(bytes?: number): string {
-    if (!bytes) return "—";
+function formatBytes(bytes: number): string {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-//not used rn cause im still not sure if im using the toLocaleDateString function correctly
-/*
-function formatDate(iso?: string): string {
-    if (!iso) return "—";
-    return new Date(iso).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-    });
-} */
-
-// Labels that get displayed to the user
-const TYPE_LABELS: Record<string, string> = {
-    pdf: "PDF",
-    docx: "Word Document",
-    pptx: "PowerPoint",
-    xlsx: "Excel Spreadsheet",
-    other: "File",
-};
-
-// sets the file icon, we can probably find some svg's but for now I have it edit colors
-function FileIcon({type, className = ""}: { type: string; className?: string }) {
+function ContentIcon({isLink, className = ""}: { isLink: boolean; className?: string }) {
     const base = `shrink-0 ${className}`;
-    if (type === "pdf") return <FileText className={`${base} text-red-500`}/>;
-    if (type === "xlsx") return <FileSpreadsheet className={`${base} text-emerald-600`}/>;
-    if (type === "pptx") return <Presentation className={`${base} text-orange-500`}/>;
-    if (type === "docx") return <FileText className={`${base} text-blue-500`}/>;
+    if (isLink) return <Link className={`${base} text-violet-500`}/>;
     return <File className={`${base} text-muted-foreground`}/>;
 }
 
-// what gets showed to users for file types
-function TypeBadge({type}: { type: string }) {
-    const colors: Record<string, string> = {
-        pdf: "bg-red-100 text-red-700",
-        xlsx: "bg-emerald-100 text-emerald-700",
-        pptx: "bg-orange-100 text-orange-700",
-        docx: "bg-blue-100 text-blue-700",
-        other: "bg-secondary text-secondary-foreground",
-    };
+function TypeBadge({isLink}: { isLink: boolean }) {
+    const colorClass = isLink ? "bg-violet-100 text-violet-700" : "bg-secondary text-secondary-foreground";
+    const label = isLink ? "Link" : "File";
     return (
-        <span
-            className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${colors[type] ?? colors.other}`}
-        >
-            {TYPE_LABELS[type] ?? "File"}
+        <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${colorClass}`}>
+            {label}
         </span>
     );
 }
 
-// MAIN FUNCTION //
 function FilesPage() {
-    //tracking states
-    const [files, setFiles] = useState<FileItem[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [content, setContent] = useState<ContentItem[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const [expandedId, setExpandedId] = useState<number | null>(null);
+    const [bookmarks, setBookmarks] = useState<Set<number>>(new Set());
+    const [fileSizes, setFileSizes] = useState<Record<number, number | null>>({});
+    const [fileUrls, setFileUrls] = useState<Record<number, string>>({});
 
-    // for expanding rows when inline viewing
-    const [expandedId, setExpandedId] = useState<string | null>(null);
-
-    // not actually hooked up to the backend or finished rn but this will let people bookmark files in the future
-    const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
-
-    // Supabase file fetching (NEED HELP FROM BACKEND TO CHECK)
     useEffect(() => {
-        async function fetchFiles() {
-            setLoading(true);
-            setError(null);
-            try {
-                // Fetch from your backend API instead of Supabase directly
-                const response = await fetch('/api/files'); // Adjust the endpoint to match your backend route
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
-
-                const items: FileItem[] = data.map((file: FileItem) => ({
-                    id: file.id,
-                    name: file.name,
-                    fileType: getFileType(file.name),
-                    size: file.size,
-                    updatedAt: file.updatedAt,
-                    publicUrl: file.publicUrl,
-                }));
-
-                setFiles(items);
-            } catch (err: unknown) {
-                console.error('Fetch error:', err);
-                setError(err instanceof Error ? err.message : "Failed to load files.");
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        fetchFiles();
+        fetch("/api/content")
+            .then((res) => res.json())
+            .then(setContent)
+            .catch(() => setError("Failed to load content."));
     }, []);
 
-    function toggleExpand(id: string) {
+    function toggleExpand(id: number) {
         setExpandedId((prev) => (prev === id ? null : id));
+        if (!(id in fileSizes)) {
+            fetch(`/api/content/info/${id}`)
+                .then((res) => res.json())
+                .then((meta) => setFileSizes((prev) => ({...prev, [id]: meta?.size ?? null})))
+                .catch(() => setFileSizes((prev) => ({...prev, [id]: null})));
+        }
+        if (!(id in fileUrls)) {
+            fetch(`/api/content/download/${id}`)
+                .then((res) => res.blob())
+                .then((blob) => {
+                    const url = URL.createObjectURL(blob);
+                    setFileUrls((prev) => ({...prev, [id]: url}));
+                })
+                .catch(console.error);
+        }
     }
 
-    // add/remove bookmarks, the mouse event is so it doesn't expand the row when clicking the button
-    function toggleBookmark(id: string, e: React.MouseEvent) {
+    function toggleBookmark(id: number, e: React.MouseEvent) {
         e.stopPropagation();
         setBookmarks((prev) => {
             const next = new Set(prev);
@@ -170,15 +100,6 @@ function FilesPage() {
         });
     }
 
-    // loading and error screens
-    if (loading) {
-        return (
-            <div className="flex flex-col items-center justify-center py-24 gap-3 text-muted-foreground">
-                <Loader2 className="w-8 h-8 animate-spin text-primary"/>
-                <p className="text-sm">Loading files…</p>
-            </div>
-        );
-    }
     if (error) {
         return (
             <div className="flex flex-col items-center justify-center py-24 gap-3 text-destructive">
@@ -187,81 +108,86 @@ function FilesPage() {
             </div>
         );
     }
-
-    // if no files found
-    if (files.length === 0) {
+    if (content.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-24 gap-3 text-muted-foreground">
                 <FolderOpen className="w-10 h-10"/>
-                <p className="text-sm">No files found in this bucket.</p>
+                <p className="text-sm">No content found.</p>
             </div>
         );
     }
 
-    // file renderer, if you wanna add anything just check the npm page for @iamjariwala/react-doc-viewer, very well put together
     return (
         <div className="max-w-5xl mx-auto px-4 py-8">
-            {/* page header */}
             <div className="mb-6">
                 <h1 className="text-2xl font-semibold tracking-tight text-foreground font-serif">
                     Documents
                 </h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    {files.length} file{files.length !== 1 ? "s" : ""} in bucket
+                    {content.length} item{content.length !== 1 ? "s" : ""}
                 </p>
             </div>
 
             {/* column header */}
-            <div
-                className="grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-x-4 px-3 pb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground select-none">
-                <span className="w-5"/> {/* icon */}
+            <div className="grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-x-4 px-3 pb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground select-none">
+                <span className="w-5"/>
                 <span>Name</span>
                 <span className="hidden sm:block w-28 text-right">Type</span>
-                <span className="hidden md:block w-20 text-right">Size</span>
-                <span className="w-8"/> {/* bookmark */}
+                <span className="hidden md:block w-36 text-right">File / Link</span>
+                <span className="w-8"/>
             </div>
 
-            {/* file list */}
+            {/* content list */}
             <div className="rounded-lg border border-border overflow-hidden bg-card shadow-sm">
-                {files.map((file, idx) => {
-                    const isExpanded = expandedId === file.id;
-                    const isBookmarked = bookmarks.has(file.id);
-                    const canPreview = file.fileType !== "other";
+                {content.map((item, idx) => {
+                    const isFile = !!item.fileURI;
+                    const isLink = !!item.linkURL;
+                    const originalFilename = item.fileURI ? getOriginalFilename(item.fileURI) : null;
+                    const isExpanded = expandedId === item.id;
+                    const isBookmarked = bookmarks.has(item.id);
 
                     return (
-                        <div key={file.id}>
-                            {}
+                        <div key={item.id}>
                             {idx !== 0 && <div className="h-px bg-border mx-3"/>}
 
-                            {/* file rows */}
                             <div
                                 className={`
                                     grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-x-4
                                     px-3 py-3
                                     transition-colors duration-150
-                                    ${canPreview ? "cursor-pointer hover:bg-muted/60" : ""}
+                                    ${isFile ? "cursor-pointer hover:bg-muted/60" : ""}
                                     ${isExpanded ? "bg-muted/40" : ""}
                                 `}
-                                onClick={() => canPreview && toggleExpand(file.id)}
-                                role={canPreview ? "button" : undefined}
-                                aria-expanded={canPreview ? isExpanded : undefined}
-                                tabIndex={canPreview ? 0 : undefined}
+                                onClick={() => isFile && toggleExpand(item.id)}
+                                role={isFile ? "button" : undefined}
+                                aria-expanded={isFile ? isExpanded : undefined}
+                                tabIndex={isFile ? 0 : undefined}
                                 onKeyDown={(e) => {
-                                    if (canPreview && (e.key === "Enter" || e.key === " ")) {
+                                    if (isFile && (e.key === "Enter" || e.key === " ")) {
                                         e.preventDefault();
-                                        toggleExpand(file.id);
+                                        toggleExpand(item.id);
                                     }
                                 }}
                             >
-                                {/* file type icons */}
-                                <FileIcon type={file.fileType} className="w-5 h-5"/>
+                                <ContentIcon isLink={isLink} className="w-5 h-5"/>
 
-                                {/* file names + expand */}
                                 <div className="flex items-center gap-2 min-w-0">
-                                    <span className="truncate text-sm font-medium text-foreground">
-                                        {file.name}
-                                    </span>
-                                    {canPreview && (
+                                    {isLink ? (
+                                        <a
+                                            href={item.linkURL!}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="truncate text-sm font-medium text-primary hover:underline"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            {item.displayName}
+                                        </a>
+                                    ) : (
+                                        <span className="truncate text-sm font-medium text-foreground">
+                                            {item.displayName}
+                                        </span>
+                                    )}
+                                    {isFile && (
                                         <span className="text-muted-foreground shrink-0">
                                             {isExpanded
                                                 ? <ChevronDown className="w-4 h-4"/>
@@ -270,17 +196,20 @@ function FilesPage() {
                                     )}
                                 </div>
 
-                                {/* file badge */}
                                 <div className="hidden sm:flex justify-end w-28">
-                                    <TypeBadge type={file.fileType}/>
+                                    <TypeBadge isLink={isLink}/>
                                 </div>
 
-                                {/* file size */}
-                                <div className="hidden md:block w-20 text-right text-xs text-muted-foreground">
-                                    {formatBytes(file.size)}
+                                {/* File name or URL */}
+                                <div className="hidden md:block w-36 text-right text-xs text-muted-foreground truncate">
+                                    {isFile && originalFilename && (
+                                        <span title={originalFilename}>{originalFilename}</span>
+                                    )}
+                                    {isLink && (
+                                        <span title={item.linkURL!}>{item.linkURL}</span>
+                                    )}
                                 </div>
 
-                                {/* bookmark button */}
                                 <button
                                     className={`
                                         w-8 h-8 flex items-center justify-center rounded-md
@@ -290,8 +219,8 @@ function FilesPage() {
                                         : "text-muted-foreground hover:text-foreground"
                                     }
                                     `}
-                                    onClick={(e) => toggleBookmark(file.id, e)}
-                                    aria-label={isBookmarked ? "Remove bookmark" : "Bookmark file"}
+                                    onClick={(e) => toggleBookmark(item.id, e)}
+                                    aria-label={isBookmarked ? "Remove bookmark" : "Bookmark"}
                                     title={isBookmarked ? "Remove bookmark" : "Bookmark"}
                                 >
                                     {isBookmarked
@@ -300,17 +229,35 @@ function FilesPage() {
                                 </button>
                             </div>
 
-                            {/* inline viewer, mostly just done through the library */}
-                            {isExpanded && canPreview && (
+                            {/* Expanded: inline viewer + download */}
+                            {isExpanded && isFile && (
                                 <div className="border-t border-border bg-background">
-                                    <DocViewer
-                                        documents={[{uri: file.publicUrl, fileType: file.fileType}]}
-                                        pluginRenderers={DocViewerRenderers}
-                                        style={{minHeight: 520}}
-                                        config={{
-                                            header: {disableHeader: true},
-                                        }}
-                                    />
+                                    <div className="px-6 py-3 flex items-center gap-4">
+                                        <span className="text-sm font-medium text-foreground">{originalFilename}</span>
+                                        {fileSizes[item.id] != null && (
+                                            <span className="text-xs text-muted-foreground">
+                                                {formatBytes(fileSizes[item.id]!)}
+                                            </span>
+                                        )}
+                                        <a
+                                            href={`/api/content/download/${item.id}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                                        >
+                                            <Download className="w-4 h-4"/> Download
+                                        </a>
+                                    </div>
+                                    {fileUrls[item.id] ? (
+                                        <DocViewer
+                                            documents={[{uri: fileUrls[item.id]}]}
+                                            pluginRenderers={DocViewerRenderers}
+                                            style={{minHeight: 520}}
+                                            config={{header: {disableHeader: true}}}
+                                        />
+                                    ) : (
+                                        <p className="px-6 py-4 text-sm text-muted-foreground">Fetching...</p>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -318,12 +265,10 @@ function FilesPage() {
                 })}
             </div>
 
-            {/* bookmarks list */}
             {bookmarks.size > 0 && (
-                <div
-                    className="mt-4 px-3 py-2 rounded-md bg-primary/5 border border-primary/20 text-xs text-muted-foreground">
+                <div className="mt-4 px-3 py-2 rounded-md bg-primary/5 border border-primary/20 text-xs text-muted-foreground">
                     <span className="font-medium text-primary">{bookmarks.size}</span>{" "}
-                    file{bookmarks.size !== 1 ? "s" : ""} bookmarked
+                    item{bookmarks.size !== 1 ? "s" : ""} bookmarked
                 </div>
             )}
         </div>

@@ -77,6 +77,12 @@ export class Content {
         return prisma.content.findMany({})
     }
 
+    public static async queryContentById(id: number): Promise<p.Content | null> {
+        return prisma.content.findUnique({
+            where: {id: id}
+        })
+    }
+
     public static async queryContentByName(name: string): Promise<p.Content | null> {
         return prisma.content.findFirst({
             where: {displayName: name}

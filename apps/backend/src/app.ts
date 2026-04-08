@@ -4,6 +4,7 @@ import morgan from 'morgan';
 import cors from 'cors'
 import multer from "multer";
 import bcrypt from 'bcrypt';
+import mime from 'mime-types';
 import * as q from "@softeng-app/db";
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -130,6 +131,42 @@ app.put("/api/content", async (req, res) => {
             payload.targetPersona,
         );
         return res.status(200).json(result);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+});
+
+app.get("/api/content/info/:id", async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const content = await q.Content.queryContentById(id);
+        if (!content || !content.fileURI) {
+            return res.status(404).json({ message: "File not found" });
+        }
+        const metadata = await q.Bucket.getFileMetadata(content.fileURI);
+        return res.status(200).json(metadata);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+});
+
+app.get("/api/content/download/:id", async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const content = await q.Content.queryContentById(id);
+        if (!content || !content.fileURI) {
+            return res.status(404).json({ message: "File not found" });
+        }
+        const blob = await q.Bucket.downloadFile(content.fileURI);
+        const buffer = Buffer.from(await blob.arrayBuffer());
+        const filename = content.fileURI.split("/").pop() ?? "download";
+        const contentType = mime.lookup(filename) || "application/octet-stream";
+        res.setHeader("Content-Type", contentType);
+        res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+        res.setHeader("Content-Length", buffer.length);
+        return res.send(buffer);
     } catch (error) {
         console.error(error);
         return res.status(500).end();
