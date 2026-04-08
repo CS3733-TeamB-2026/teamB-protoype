@@ -269,16 +269,13 @@ function FilesPage() {
             </div>
 
             {/* column header */}
-            <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto_auto] items-center gap-x-4 px-3 pb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground select-none">
+            <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-x-4 px-3 pb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground select-none">
                 <span className="w-5" />
                 <span>Name</span>
-                <span className="hidden sm:block w-28 text-right">Owner</span>
-                <span className="hidden sm:block w-28 text-right">Persona</span>
+                <span className="hidden sm:block w-48 text-right">Owner</span>
                 <span className="hidden sm:block w-28 text-right">Type</span>
-                <span className="hidden md:block w-36 text-right">
-                    File / Link
-                </span>
                 <span className="w-8" />
+                <span className="w-9" />
             </div>
 
             {/* content list */}
@@ -308,7 +305,7 @@ function FilesPage() {
 
                             <div
                                 className={`
-                                    grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto_auto] items-center gap-x-4
+                                    grid grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-x-4
                                     px-3 py-3
                                     transition-colors duration-150
                                     cursor-pointer hover:bg-muted/60
@@ -352,15 +349,9 @@ function FilesPage() {
                                     </span>
                                 </div>
 
-                                <div className="hidden sm:flex justify-end w-28">
+                                <div className="hidden sm:flex justify-end w-48">
                                     <span className="truncate text-sm text-foreground">
                                         {item.owner ? `${item.owner.firstName} ${item.owner.lastName}` : ""}
-                                    </span>
-                                </div>
-
-                                <div className="hidden sm:flex justify-end w-28">
-                                    <span className="truncate text-sm text-foreground">
-                                        {item.targetPersona}
                                     </span>
                                 </div>
 
@@ -370,34 +361,6 @@ function FilesPage() {
                                         ext={ext}
                                         isLink={isLink}
                                     />
-                                </div>
-
-                                {/* File name or URL */}
-                                <div className="hidden md:block w-36 text-right text-xs text-muted-foreground truncate">
-                                    {isFile && originalFilename && (
-                                        <a
-                                            href={`/api/content/download/${item.id}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-primary hover:underline"
-                                            onClick={(e) => e.stopPropagation()}
-                                            title={originalFilename}
-                                        >
-                                            {originalFilename}
-                                        </a>
-                                    )}
-                                    {isLink && (
-                                        <a
-                                            href={item.linkURL!}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-primary hover:underline"
-                                            onClick={(e) => e.stopPropagation()}
-                                            title={item.linkURL!}
-                                        >
-                                            {item.linkURL}
-                                        </a>
-                                    )}
                                 </div>
 
                                 <button
