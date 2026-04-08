@@ -402,10 +402,6 @@ function FilesPage() {
                                 const preview = linkPreviews[item.id];
                                 const hasImage = !!preview?.image;
                                 const hasFavicon = !!preview?.favicon;
-                                const topLabel = preview?.siteName
-                                    ?? (preview && !preview.title && !preview.description && !preview.image
-                                        ? "Preview unavailable"
-                                        : null);
                                 return (
                                     <a
                                         href={item.linkURL!}
@@ -434,14 +430,19 @@ function FilesPage() {
                                             />
                                         ) : null}
                                         <div className="min-w-0">
-                                            {topLabel && (
+                                            <p className="text-xs text-muted-foreground truncate">
+                                                {item.linkURL}
+                                            </p>
+                                            {preview?.siteName && (
                                                 <p className="text-xs text-muted-foreground">
-                                                    {topLabel}
+                                                    {preview.siteName}
                                                 </p>
                                             )}
-                                            <p className="text-sm font-medium text-foreground truncate">
-                                                {preview?.title || item.linkURL}
-                                            </p>
+                                            {preview?.title && (
+                                                <p className="text-sm font-medium text-foreground truncate">
+                                                    {preview.title}
+                                                </p>
+                                            )}
                                             {preview?.description && (
                                                 <p className="text-xs text-muted-foreground line-clamp-2">
                                                     {preview.description}
