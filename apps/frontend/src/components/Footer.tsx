@@ -24,8 +24,8 @@ function Footer (){
                         </a>
                     </div>
                     <div className="text-center md:text-right justify-self-end">
-                        <h3 className="font-bold text-lg">This is a footer</h3>
-                        <p className="text-sm text-primary-foreground/70">Continued footer text</p>
+                        <h3 className="font-bold text-lg"></h3>
+                        <p className="text-sm text-primary-foreground/70"></p>
                     </div>
                 </div>
             </footer>

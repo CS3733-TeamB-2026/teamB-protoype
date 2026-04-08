@@ -59,7 +59,7 @@ function formatBytes(bytes: number): string {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function FilesPage() {
+function ViewContent() {
     const [content, setContent] = useState<ContentItem[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -218,8 +218,8 @@ function FilesPage() {
         <>
             <Hero
                 icon="content"
-                title="Content Management"
-                description="Add, update, view, and delete content."
+                title="View Content"
+                description="View, update, and delete content you have access to"
             />
 
             <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center">
@@ -569,4 +569,4 @@ function FilesPage() {
     );
 }
 
-export default FilesPage;
+export default ViewContent;
