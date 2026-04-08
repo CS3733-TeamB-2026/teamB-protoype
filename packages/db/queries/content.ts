@@ -15,7 +15,10 @@ export class Content {
         _expiration: Date | null,
         _targetPersona: string,
     ): Promise<void> {
-        const _personaTyped: p.Persona = Helper.personaHelper(_targetPersona)
+        const _personaTyped: p.Persona | null = Helper.personaHelper(_targetPersona)
+        if (_personaTyped === null) {
+            throw new Error("No persona type provided")
+        }
         const _statusTyped: p.Status = Helper.statusHelper(_status)
         const updatedContent = await prisma.content.update({
             where: {id: id},
@@ -50,7 +53,10 @@ export class Content {
         if (_linkURL && _fileURI) {
             throw new Error("Content cannot have both a linkURL and a fileURI")
         }
-        const _personaTyped: p.Persona = Helper.personaHelper(_targetPersona)
+        const _personaTyped: p.Persona | null = Helper.personaHelper(_targetPersona)
+        if (_personaTyped === null) {
+            throw new Error("No persona type provided")
+        }
         const _statusTyped: p.Status = Helper.statusHelper(_status)
         return prisma.content.create({
             data: {
@@ -75,6 +81,25 @@ export class Content {
 
     public static async queryAllContent(): Promise<p.Content[]> {
         return prisma.content.findMany({})
+    }
+
+    public static async queryContentByPersona(persona: string): Promise<p.Content[]> {
+        if (persona == "admin") {
+            return this.queryAllContent()
+        }
+        const _personaTyped: p.Persona | null = Helper.personaHelper(persona)
+        if (_personaTyped === null) {
+            throw new Error("No persona type provided")
+        }
+        return prisma.content.findMany({
+            where: {targetPersona: _personaTyped}
+        })
+    }
+
+    public static async queryContentById(id: number): Promise<p.Content | null> {
+        return prisma.content.findUnique({
+            where: {id: id}
+        })
     }
 
     public static async queryContentByName(name: string): Promise<p.Content | null> {

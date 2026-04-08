@@ -14,7 +14,17 @@ export class Bucket {
         return data;
     }
 
-    public static async deleteFile(path: string): Promise<void> {
+    public static async getFileMetadata(path: string) {
+        const parts = path.split("/");
+        const filename = parts.pop()!;
+        const folder = parts.join("/");
+        const {data, error} = await supabase.storage.from(bucket).list(folder, {search: filename});
+        if (error) throw error;
+        const file = data.find((f) => f.name === filename);
+        return file?.metadata ?? null;
+    }
+
+    public static async deleteFile(path: string) {
         const {error} = await supabase.storage.from(bucket).remove([path])
         if (error) throw error;
     }

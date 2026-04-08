@@ -4,6 +4,8 @@ import morgan from 'morgan';
 import cors from 'cors'
 import multer from "multer";
 import bcrypt from 'bcrypt';
+import mime from 'mime-types';
+import * as cheerio from 'cheerio';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -19,6 +21,17 @@ app.use(express.json());
 app.get("/api/employee", async (req, res) => {
     try {
         const employees = await q.Employee.queryAllEmployees();
+        return res.status(200).json(employees);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+});
+
+app.get("/api/employee/:id", async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const employees = await q.Employee.queryEmployeeById(id);
         return res.status(200).json(employees);
     } catch (error) {
         console.error(error);
@@ -80,6 +93,17 @@ app.get("/api/content", async (req, res) => {
     }
 });
 
+app.get("/api/content/:persona", async (req, res) => {
+    const persona = req.params.persona;
+    try {
+        const content = await q.Content.queryContentByPersona(persona);
+        return res.status(200).json(content);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+});
+
 app.post("/api/content", upload.single("file"), async (req, res) => {
     const payload = req.body;
     let fileURI: string | null = null;
@@ -133,6 +157,72 @@ app.put("/api/content", async (req, res) => {
             payload.targetPersona,
         );
         return res.status(200).json(result);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+});
+
+app.get("/api/content/info/:id", async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const content = await q.Content.queryContentById(id);
+        if (!content || !content.fileURI) {
+            return res.status(404).json({ message: "File not found" });
+        }
+        const metadata = await q.Bucket.getFileMetadata(content.fileURI);
+        return res.status(200).json(metadata);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+});
+
+app.get("/api/content/download/:id", async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const content = await q.Content.queryContentById(id);
+        if (!content || !content.fileURI) {
+            return res.status(404).json({ message: "File not found" });
+        }
+        const blob = await q.Bucket.downloadFile(content.fileURI);
+        const buffer = Buffer.from(await blob.arrayBuffer());
+        const filename = content.fileURI.split("/").pop() ?? "download";
+        const contentType = mime.lookup(filename) || "application/octet-stream";
+        res.setHeader("Content-Type", contentType);
+        res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+        res.setHeader("Content-Length", buffer.length);
+        return res.send(buffer);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+});
+
+app.get("/api/content/preview", async (req, res) => {
+    try {
+        const url = req.query.url as string;
+        if (!url) return res.status(400).json({ message: "Missing url parameter" });
+        const response = await fetch(url);
+        const html = await response.text();
+        const $ = cheerio.load(html);
+        const base = new URL(url);
+        const og = (prop: string) => $(`meta[property="og:${prop}"]`).attr("content") ?? null;
+        const meta = (name: string) => $(`meta[name="${name}"]`).attr("content") ?? null;
+        const resolve = (href: string | null) => {
+            if (!href) return null;
+            try { return new URL(href, base.origin).href; } catch { return null; }
+        };
+        const rawFavicon = $('link[rel="icon"]').attr("href")
+            ?? $('link[rel="shortcut icon"]').attr("href")
+            ?? null;
+        return res.status(200).json({
+            title: og("title") ?? $("title").text() ?? null,
+            description: og("description") ?? meta("description") ?? null,
+            image: resolve(og("image")),
+            siteName: og("site_name") ?? null,
+            favicon: resolve(rawFavicon) ?? `${base.origin}/favicon.ico`,
+        });
     } catch (error) {
         console.error(error);
         return res.status(500).end();

@@ -14,13 +14,16 @@ export class Employee {
     }
 
     public static async updateEmployee(id: number, _firstName: string, _lastName: string, _persona: string | null): Promise<void> {
-        const personaTyped: p.Persona | null = Helper.personaHelper(_persona)
+        const _personaTyped: p.Persona | null = Helper.personaHelper(_persona)
+        if (_personaTyped === null) {
+            throw new Error("No persona type provided")
+        }
         const updatedUser = await prisma.employee.update({
             where: {id: id},
             data: {
                 firstName: _firstName,
                 lastName: _lastName,
-                persona: personaTyped
+                persona: _personaTyped
             },
         })
     }
@@ -32,7 +35,10 @@ export class Employee {
     }
 
     public static async createEmployee(_id: number, _firstName: string, _lastName: string, _persona: string | null): Promise<void> {
-        const _personaTyped: p.Persona = Helper.personaHelper(_persona)
+        const _personaTyped: p.Persona | null = Helper.personaHelper(_persona)
+        if (_personaTyped === null) {
+            throw new Error("No persona type provided")
+        }
         await prisma.employee.create({
             data: {
                 id: _id,
