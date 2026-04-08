@@ -9,6 +9,7 @@ import {
     ChevronRight,
     Download,
     FolderOpen,
+    Loader2,
     Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -69,6 +70,7 @@ function formatBytes(bytes: number): string {
 
 function FilesPage() {
     const [content, setContent] = useState<ContentItem[]>([]);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [bookmarks, setBookmarks] = useState<Set<number>>(new Set());
@@ -100,6 +102,7 @@ function FilesPage() {
             .then((res) => res.json())
             .then((data: ContentItem[]) => {
                 setContent(data);
+                setLoading(false);
                 data.filter((item) => item.linkURL).forEach((item) => {
                     fetch(
                         `/api/preview?url=${encodeURIComponent(item.linkURL!)}`,
@@ -129,7 +132,7 @@ function FilesPage() {
                         );
                 });
             })
-            .catch(() => setError("Failed to load content."));
+            .catch(() => { setError("Failed to load content."); setLoading(false); });
     }, []);
 
     function toggleExpand(item: ContentItem, mimeType: string | null) {
@@ -193,22 +196,6 @@ function FilesPage() {
         });
     }
 
-    if (error) {
-        return (
-            <div className="flex flex-col items-center justify-center py-24 gap-3 text-destructive">
-                <AlertCircle className="w-8 h-8" />
-                <p className="text-sm font-medium">{error}</p>
-            </div>
-        );
-    }
-    if (content.length === 0) {
-        return (
-            <div className="flex flex-col items-center justify-center py-24 gap-3 text-muted-foreground">
-                <FolderOpen className="w-10 h-10" />
-                <p className="text-sm">No content found.</p>
-            </div>
-        );
-    }
     const handleDelete = async (id: number, e: React.MouseEvent) => {
         e.stopPropagation();
         const res = await fetch(`/api/content/${id}`, { method: "DELETE" });
@@ -241,7 +228,25 @@ function FilesPage() {
                         <Button className="my-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-60 mx-auto rounded-lg px-2 py-6 text-xl">Add Content</Button>
                     </Link>
 
-                    <Table className="text-left">
+                    {loading && (
+                        <div className="flex items-center justify-center py-16 gap-3 text-muted-foreground">
+                            <Loader2 className="w-6 h-6 animate-spin" />
+                            <p className="text-sm">Loading...</p>
+                        </div>
+                    )}
+                    {error && (
+                        <div className="flex flex-col items-center justify-center py-16 gap-3 text-destructive">
+                            <AlertCircle className="w-8 h-8" />
+                            <p className="text-sm font-medium">{error}</p>
+                        </div>
+                    )}
+                    {!loading && !error && content.length === 0 && (
+                        <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
+                            <FolderOpen className="w-10 h-10" />
+                            <p className="text-sm">No content found.</p>
+                        </div>
+                    )}
+                    {!loading && !error && content.length > 0 && <Table className="text-left">
                         <TableHeader>
                             <TableRow className="uppercase tracking-wider text-muted-foreground select-none hover:bg-transparent">
                                 <TableHead className="w-8" />
@@ -408,7 +413,7 @@ function FilesPage() {
                                 );
                             })}
                         </TableBody>
-                    </Table>
+                    </Table>}
 
                     {bookmarks.size > 0 && (
                         <div className="mt-4 px-3 py-2 rounded-md bg-primary/5 border border-primary/20 text-xs text-muted-foreground">

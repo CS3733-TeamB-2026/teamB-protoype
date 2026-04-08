@@ -1,7 +1,7 @@
 import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table.tsx";
 import {useEffect, useState} from "react";
-import { Pencil, Trash2 } from "lucide-react"
+import { Loader2, Pencil, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
     Dialog,
@@ -28,6 +28,7 @@ function UserManagement() {
     }
 
     const [employees, setEmployees] = useState<Employee[]>([]);
+    const [loading, setLoading] = useState(true);
     const [editOpen, setEditOpen] = useState<boolean>(false);
     const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
     const [error, setError] = useState<string>("");
@@ -37,8 +38,10 @@ function UserManagement() {
         fetch("/api/employee/all")
             .then(res => res.json())
             .then(data => {
-                setEmployees(data.sort((a: Employee, b: Employee) => a.id - b.id))
+                setEmployees(data.sort((a: Employee, b: Employee) => a.id - b.id));
+                setLoading(false);
             })
+            .catch(() => setLoading(false));
     }, [])
 
     const handleModify = async () => {
@@ -113,43 +116,50 @@ function UserManagement() {
                   <Button className="my-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-60 mx-auto rounded-lg px-2 py-6 text-xl">Add Employee</Button>
               </Link>
 
-              <Table className="text-left">
-                  <TableHeader>
-                      <TableRow className="uppercase tracking-wider text-muted-foreground select-none hover:bg-transparent">
-                          <TableHead>ID</TableHead>
-                          <TableHead>First Name</TableHead>
-                          <TableHead>Last Name</TableHead>
-                          <TableHead>Persona</TableHead>
-                          <TableHead>User Name</TableHead>
-                          <TableHead>Actions</TableHead>
-                      </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                      {employees.map((employee: Employee) => (
-                          <TableRow key={employee.id}>
-                              <TableCell>{employee.id}</TableCell>
-                              <TableCell>{employee.firstName}</TableCell>
-                              <TableCell>{employee.lastName}</TableCell>
-                              <TableCell className="capitalize">{employee.persona}</TableCell>
-                              <TableCell>{employee.login?.userName || "NA"}</TableCell>
-                              <TableCell>
-                                  <div className="flex justify-center gap-2">
-                                      <Button variant="outline" size="sm" onClick={ () => {
-                                          setEditOpen(true);
-                                          setEditingEmployee(employee);
-                                          setModifiedEmployee({...employee});
-                                      }}>
-                                          <Pencil className="w-4 h-4" />
-                                      </Button>
-                                      <Button variant="destructive" size="sm" onClick={() => handleDelete(employee)}>
-                                          <Trash2 className="w-4 h-4" />
-                                      </Button>
-                                  </div>
-                              </TableCell>
+              {loading ? (
+                  <div className="flex items-center justify-center py-16 gap-3 text-muted-foreground">
+                      <Loader2 className="w-6 h-6 animate-spin" />
+                      <p className="text-sm">Loading...</p>
+                  </div>
+              ) : (
+                  <Table className="text-left">
+                      <TableHeader>
+                          <TableRow className="uppercase tracking-wider text-muted-foreground select-none hover:bg-transparent">
+                              <TableHead>ID</TableHead>
+                              <TableHead>First Name</TableHead>
+                              <TableHead>Last Name</TableHead>
+                              <TableHead>Persona</TableHead>
+                              <TableHead>User Name</TableHead>
+                              <TableHead>Actions</TableHead>
                           </TableRow>
-                      ))}
-                  </TableBody>
-              </Table>
+                      </TableHeader>
+                      <TableBody>
+                          {employees.map((employee: Employee) => (
+                              <TableRow key={employee.id}>
+                                  <TableCell>{employee.id}</TableCell>
+                                  <TableCell>{employee.firstName}</TableCell>
+                                  <TableCell>{employee.lastName}</TableCell>
+                                  <TableCell className="capitalize">{employee.persona}</TableCell>
+                                  <TableCell>{employee.login?.userName || "—"}</TableCell>
+                                  <TableCell>
+                                      <div className="flex justify-center gap-2">
+                                          <Button variant="outline" size="sm" onClick={() => {
+                                              setEditOpen(true);
+                                              setEditingEmployee(employee);
+                                              setModifiedEmployee({...employee});
+                                          }}>
+                                              <Pencil className="w-4 h-4" />
+                                          </Button>
+                                          <Button variant="destructive" size="sm" onClick={() => handleDelete(employee)}>
+                                              <Trash2 className="w-4 h-4" />
+                                          </Button>
+                                      </div>
+                                  </TableCell>
+                              </TableRow>
+                          ))}
+                      </TableBody>
+                  </Table>
+              )}
 
           </CardContent>
       </Card>
