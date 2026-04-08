@@ -12,6 +12,7 @@ import {
     Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import {
     Card,
     CardContent,
@@ -217,8 +218,8 @@ function FilesPage() {
         <>
             <Hero
                 icon="content"
-                title="Hanover Insurance - Content Management Application"
-                description="CS3733 Team B D26"
+                title="Content Management"
+                description="Add, update, view, and delete content."
             />
 
             <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center">
@@ -227,11 +228,15 @@ function FilesPage() {
                         Content
                     </CardTitle>
                     <CardDescription>
-                        Total Users: {content.length}
+                        Total Content Items: {content.length}
                     </CardDescription>
                 </CardHeader>
 
                 <CardContent>
+                    <Link to="/manageform">
+                        <Button className="my-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-60 mx-auto rounded-lg px-2 py-6 text-xl">Add Content</Button>
+                    </Link>
+
                     {/* column header */}
                     <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto] items-center gap-x-4 px-3 pb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground select-none">
                         <span className="w-5" />
@@ -438,7 +443,7 @@ function FilesPage() {
                                                             }}
                                                         />
                                                     ) : null}
-                                                    <div className="min-w-0">
+                                                    <div className="min-w-0 text-left">
                                                         <p className="text-xs text-muted-foreground truncate">
                                                             {item.linkURL}
                                                         </p>
