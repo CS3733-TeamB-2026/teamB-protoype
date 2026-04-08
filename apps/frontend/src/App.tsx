@@ -12,6 +12,7 @@ import BusinessAnalyst from "@/components/BusinessAnalyst.tsx";
 import EmployeeHome from "@/components/EmployeeHome";
 import ViewEmployees from "@/components/ViewEmployees.tsx";
 import ViewContent from "@/components/ViewContent.tsx";
+import SidebarOverlay from "./components/SidebarOverlay";
 import { Route, Routes} from "react-router-dom";
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
 
             <SidebarProvider defaultOpen={false}>
                 <AppSidebar />
+                <SidebarOverlay />
                 <div className="flex flex-col flex-1 min-h-screen">
                     <Navbar />
                     <main className="flex-1 bg-secondary">
