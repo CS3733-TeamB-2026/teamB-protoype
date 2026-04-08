@@ -56,5 +56,5 @@ export function Hero(properties: { icon: HeroIcon | null, title: string, descrip
                 <LucideFolders className="w-8 h-8 drop-shadow-[0_0_20px_rgba(0,0,0,0.9)]" />
             )}
         </div>
-    );
+    )
 }

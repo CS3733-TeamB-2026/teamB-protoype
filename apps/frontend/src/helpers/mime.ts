@@ -213,6 +213,34 @@ export function getPreviewMode(
     return resolveAllowedType(mimeType, filename)?.previewMode ?? "none";
 }
 
+// ---------- File URI utilities ----------
+
+/** Extracts the original filename from a storage URI (last path segment). */
+export function getOriginalFilename(fileURI: string): string {
+    return fileURI.split("/").pop() ?? fileURI;
+}
+
+/** Returns the lowercased extension of a filename (without the dot). */
+export function getExtension(filename: string): string {
+    return filename.split(".").pop()?.toLowerCase() ?? "unknown";
+}
+
+// ---------- Colors ----------
+
+export const CATEGORY_COLORS: Record<
+    Category | "link",
+    { badge: string; icon: string }
+> = {
+    document: { badge: "bg-blue-100 text-blue-700",   icon: "text-blue-500" },
+    image:    { badge: "bg-pink-100 text-pink-700",   icon: "text-pink-500" },
+    video:    { badge: "bg-purple-100 text-purple-700", icon: "text-purple-500" },
+    audio:    { badge: "bg-amber-100 text-amber-700", icon: "text-amber-500" },
+    code:     { badge: "bg-cyan-100 text-cyan-700",   icon: "text-cyan-500" },
+    archive:  { badge: "bg-stone-100 text-stone-700", icon: "text-stone-500" },
+    other:    { badge: "bg-secondary text-secondary-foreground", icon: "text-muted-foreground" },
+    link:     { badge: "bg-violet-100 text-violet-700", icon: "text-violet-500" },
+};
+
 // ---------- Upload validation ----------
 
 export type UploadValidation =

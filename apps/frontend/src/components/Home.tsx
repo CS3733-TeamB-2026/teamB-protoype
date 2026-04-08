@@ -41,7 +41,7 @@ function Home() {
                 icon="home"
                 title="Hanover Insurance - Content Management Application"
                 description="CS3733 Team B D26"
-            />;
+            />
 
             {/*Main Paragraph*/}
             <Card className="shadow-lg max-w-5xl mx-auto mt-8 text-center">

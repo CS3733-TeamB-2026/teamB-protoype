@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import mime from "mime";
 import DocViewer, { DocViewerRenderers } from "@iamjariwala/react-doc-viewer";
 import "@iamjariwala/react-doc-viewer/dist/index.css";
 import {
@@ -22,13 +21,17 @@ import {
 } from "@/components/ui/card.tsx";
 import { Hero } from "@/components/shared/Hero.tsx";
 import {
-    type Category,
     ContentIcon,
     ExtBadge,
+} from "@/components/shared/Mime.tsx";
+import {
     getCategory,
     getExtension,
     getOriginalFilename,
-} from "@/components/shared/Mime.tsx";
+    getPreviewMode,
+    lookupByFilename,
+    type PreviewMode,
+} from "@/helpers/mime";
 
 // Matches the Content model from Prisma (with joined owner)
 interface ContentItem {
@@ -53,21 +56,6 @@ function formatBytes(bytes: number): string {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-// Preview mode determines what viewer to use when expanded
-type PreviewMode = "docviewer" | "image" | "text" | "none";
-
-function getPreviewMode(
-    category: Category,
-    mimeType: string | null,
-): PreviewMode {
-    if (category === "document") return "docviewer";
-    if (category === "image") return "image";
-    if (category === "code") return "text";
-    // text/plain and text/markdown are already "document", but catch any remaining text/*
-    if (mimeType?.startsWith("text/")) return "text";
-    return "none";
 }
 
 function FilesPage() {
@@ -141,8 +129,7 @@ function FilesPage() {
 
         if (!item.fileURI) return;
 
-        const category = getCategory(mimeType);
-        const preview = getPreviewMode(category, mimeType);
+        const preview = getPreviewMode(mimeType);
 
         // Fetch file size
         if (!(id in fileSizes)) {
@@ -233,7 +220,7 @@ function FilesPage() {
                 title="Hanover Insurance - Content Management Application"
                 description="CS3733 Team B D26"
             />
-            ;
+
             <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center">
                 <CardHeader>
                     <CardTitle className="text-3xl text-primary mt-4">
@@ -271,16 +258,13 @@ function FilesPage() {
                                 ? getOriginalFilename(item.fileURI!)
                                 : null;
                             const mimeType = originalFilename
-                                ? (mime.getType(originalFilename) ?? null)
+                                ? (lookupByFilename(originalFilename)?.mimeType ?? null)
                                 : null;
-                            const category = getCategory(mimeType);
+                            const category = getCategory(mimeType, originalFilename);
                             const ext = originalFilename
                                 ? getExtension(originalFilename)
                                 : null;
-                            const previewMode = getPreviewMode(
-                                category,
-                                mimeType,
-                            );
+                            const previewMode: PreviewMode = getPreviewMode(mimeType, originalFilename);
                             const isExpanded = expandedId === item.id;
                             const isBookmarked = bookmarks.has(item.id);
 

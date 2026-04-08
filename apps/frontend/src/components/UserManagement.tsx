@@ -100,7 +100,7 @@ function UserManagement() {
               icon="employees"
               title="Hanover Insurance - Content Management Application"
               description="CS3733 Team B D26"
-          />;
+          />
 
           <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center">
               <CardHeader>
