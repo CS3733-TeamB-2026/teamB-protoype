@@ -1,223 +1,140 @@
-import {Card, CardContent, CardDescription, CardHeader, CardTitle} from "@/components/ui/card.tsx";
-import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table.tsx";
-import {useEffect, useState} from "react";
-import { Loader2, Pencil, Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import {
-    Dialog,
-    DialogContent, DialogDescription,
-    DialogHeader,
-    DialogTitle
-} from "@/components/ui/dialog";
-import {Label} from "@/components/ui/label.tsx";
-import {Input} from "@/components/ui/input.tsx";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.tsx";
+import { useEffect, useState } from "react";
+import { Loader2, Pencil, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Hero } from "@/components/shared/Hero.tsx";
+import { EditEmployeeDialog } from "@/components/EditEmployeeDialog";
+
+export type Employee = {
+    firstName: string;
+    lastName: string;
+    id: number;
+    persona: string;
+    login?: {
+        userName: string;
+    };
+};
 
 function UserManagement() {
-
-    type Employee = {
-        firstName: string;
-        lastName: string;
-        id: number;
-        persona: string;
-        login?: {
-            userName: string;
-        }
-    }
-
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [loading, setLoading] = useState(true);
-    const [editOpen, setEditOpen] = useState<boolean>(false);
+    const [editOpen, setEditOpen] = useState(false);
     const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
-    const [error, setError] = useState<string>("");
-    const [modifiedEmployee, setModifiedEmployee] = useState<Employee | null>(null);
+    const currentUser = JSON.parse(localStorage.getItem("user") || "null");
 
     useEffect(() => {
         fetch("/api/employee/all")
-            .then(res => res.json())
-            .then(data => {
+            .then((res) => res.json())
+            .then((data) => {
                 setEmployees(data.sort((a: Employee, b: Employee) => a.id - b.id));
                 setLoading(false);
             })
             .catch(() => setLoading(false));
-    }, [])
-
-    const handleModify = async () => {
-
-        if (!modifiedEmployee) return;
-
-        if (!modifiedEmployee.firstName.trim() || !modifiedEmployee.lastName.trim() || !modifiedEmployee.persona.trim()) {
-            setError("Fields may not be empty.");
-            return
-        }
-
-        setError("")
-
-        const empRes = await fetch("/api/employee", {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                id: modifiedEmployee.id,
-                firstName: modifiedEmployee.firstName,
-                lastName: modifiedEmployee.lastName,
-                persona: modifiedEmployee.persona
-            })
-        })
-
-        if (modifiedEmployee.login?.userName) {
-            await fetch("/api/login", {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    userName: modifiedEmployee.login.userName,
-                    employeeID: modifiedEmployee.id
-                })
-            })
-        }
-
-        if (empRes.ok) {
-            setEmployees(employees.map(e => e.id === modifiedEmployee.id ? modifiedEmployee : e));
-            setEditOpen(false);
-        }
-
-    }
+    }, []);
 
     const handleDelete = async (employee: Employee) => {
-
-        const empRes = await fetch(`/api/employee`, {
+        const res = await fetch(`/api/employee`, {
             method: "DELETE",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({id: employee.id})
-        })
-
-        if (empRes.ok) {
-            setEmployees(employees.filter(e => e.id !== employee.id))
+            body: JSON.stringify({ id: employee.id }),
+        });
+        if (res.ok) {
+            setEmployees((prev) => prev.filter((e) => e.id !== employee.id));
         }
-    }
+    };
 
     return (
-    <>
-      <Hero
-          icon="employees"
-          title="User Management"
-          description="Add, update, and delete users."
-      />
+        <>
+            <Hero
+                icon="employees"
+                title="User Management"
+                description="Add, update, and delete users."
+            />
 
-      <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center">
-          <CardHeader>
-              <CardTitle className="text-3xl text-primary mt-4">All Users</CardTitle>
-              <CardDescription>Total Users: {employees.length}</CardDescription>
-          </CardHeader>
-          <CardContent>
+            <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center">
+                <CardHeader>
+                    <CardTitle className="text-3xl text-primary mt-4">All Users</CardTitle>
+                    <CardDescription>Total Users: {employees.length}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Link to="/employeeform">
+                        <Button className="my-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-60 mx-auto rounded-lg px-2 py-6 text-xl">
+                            Add Employee
+                        </Button>
+                    </Link>
 
-              <Link to="/employeeform">
-                  <Button className="my-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-60 mx-auto rounded-lg px-2 py-6 text-xl">Add Employee</Button>
-              </Link>
+                    {loading ? (
+                        <div className="flex items-center justify-center py-16 gap-3 text-muted-foreground">
+                            <Loader2 className="w-6 h-6 animate-spin" />
+                            <p className="text-sm">Loading...</p>
+                        </div>
+                    ) : (
+                        <Table className="text-left">
+                            <TableHeader>
+                                <TableRow className="uppercase tracking-wider text-muted-foreground select-none hover:bg-transparent">
+                                    <TableHead>ID</TableHead>
+                                    <TableHead>First Name</TableHead>
+                                    <TableHead>Last Name</TableHead>
+                                    <TableHead>Persona</TableHead>
+                                    <TableHead>User Name</TableHead>
+                                    <TableHead>Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {employees.map((employee) => (
+                                    <TableRow key={employee.id}>
+                                        <TableCell>{employee.id}</TableCell>
+                                        <TableCell>{employee.firstName}</TableCell>
+                                        <TableCell>{employee.lastName}</TableCell>
+                                        <TableCell className="capitalize">{employee.persona}</TableCell>
+                                        <TableCell>{employee.login?.userName || "—"}</TableCell>
+                                        <TableCell>
+                                            <div className="flex justify-center gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    disabled={employee.id === currentUser?.id}
+                                                    onClick={() => {
+                                                        setEditingEmployee(employee);
+                                                        setEditOpen(true);
+                                                    }}
+                                                >
+                                                    <Pencil className="w-4 h-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    disabled={employee.id === currentUser?.id}
+                                                    onClick={() => handleDelete(employee)}
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    )}
+                </CardContent>
+            </Card>
 
-              {loading ? (
-                  <div className="flex items-center justify-center py-16 gap-3 text-muted-foreground">
-                      <Loader2 className="w-6 h-6 animate-spin" />
-                      <p className="text-sm">Loading...</p>
-                  </div>
-              ) : (
-                  <Table className="text-left">
-                      <TableHeader>
-                          <TableRow className="uppercase tracking-wider text-muted-foreground select-none hover:bg-transparent">
-                              <TableHead>ID</TableHead>
-                              <TableHead>First Name</TableHead>
-                              <TableHead>Last Name</TableHead>
-                              <TableHead>Persona</TableHead>
-                              <TableHead>User Name</TableHead>
-                              <TableHead>Actions</TableHead>
-                          </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                          {employees.map((employee: Employee) => (
-                              <TableRow key={employee.id}>
-                                  <TableCell>{employee.id}</TableCell>
-                                  <TableCell>{employee.firstName}</TableCell>
-                                  <TableCell>{employee.lastName}</TableCell>
-                                  <TableCell className="capitalize">{employee.persona}</TableCell>
-                                  <TableCell>{employee.login?.userName || "—"}</TableCell>
-                                  <TableCell>
-                                      <div className="flex justify-center gap-2">
-                                          <Button variant="outline" size="sm" onClick={() => {
-                                              setEditOpen(true);
-                                              setEditingEmployee(employee);
-                                              setModifiedEmployee({...employee});
-                                          }}>
-                                              <Pencil className="w-4 h-4" />
-                                          </Button>
-                                          <Button variant="destructive" size="sm" onClick={() => handleDelete(employee)}>
-                                              <Trash2 className="w-4 h-4" />
-                                          </Button>
-                                      </div>
-                                  </TableCell>
-                              </TableRow>
-                          ))}
-                      </TableBody>
-                  </Table>
-              )}
-
-          </CardContent>
-      </Card>
-
-      { editingEmployee && (
-          <Dialog open={editOpen} onOpenChange={setEditOpen}>
-              <DialogContent>
-                  <DialogHeader>
-                      <DialogTitle>Modify User</DialogTitle>
-                      <DialogDescription className="text-md text-muted-foreground">Modify user values here.</DialogDescription>
-                  </DialogHeader>
-                  <div className="flex flex-col gap-2">
-                      {error && <p className="text-sm text-destructive">{error}</p>}
-                      <div>
-                          <Label className="my-2">Employee ID</Label>
-                          <Input defaultValue={editingEmployee?.id} className="bg-secondary" placeholder="Enter Employee ID" disabled />
-                      </div>
-                      <div>
-                          <Label className="my-2">First Name</Label>
-                          <Input defaultValue={editingEmployee?.firstName} className="bg-secondary" placeholder="Enter Employee First Name" onChange={(e) => {
-                              setModifiedEmployee(prev => prev ? {...prev, firstName: e.target.value} : null);
-                          }} />
-                      </div>
-                      <div>
-                          <Label className="my-2">Last Name</Label>
-                          <Input defaultValue={editingEmployee?.lastName} className="bg-secondary" placeholder="Enter Employee Last Name" onChange={(e) => {
-                              setModifiedEmployee(prev => prev ? {...prev, lastName: e.target.value} : null);
-                          }} />
-                      </div>
-                      <div>
-                          <Label className="my-2">Persona</Label>
-                          <Select defaultValue={modifiedEmployee?.persona} onValueChange={(value) => {
-                              setModifiedEmployee(prev => prev ? {...prev, persona: value} : null);
-                          }} >
-                              <SelectTrigger className="bg-secondary">
-                                  <SelectValue placeholder="Select Persona" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                  <SelectItem value="admin">Admin</SelectItem>
-                                  <SelectItem value="underwriter">Underwriter</SelectItem>
-                                  <SelectItem value="businessAnalyst">Business Analyst</SelectItem>
-                              </SelectContent>
-                          </Select>
-                      </div>
-                      <div>
-                          <Label className="my-2">Username</Label>
-                          <Input defaultValue={editingEmployee?.login?.userName} className="bg-secondary" placeholder="Enter Employee Username" onChange={(e) => {
-                              setModifiedEmployee(prev => prev ? {...prev, login: {...prev.login, userName: e.target.value}} : null);
-                          }} />
-                      </div>
-                      <Button className="mt-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-20 mx-auto rounded-lg px-2 py-1" onClick={() => handleModify()}>Apply</Button>
-                  </div>
-              </DialogContent>
-
-          </Dialog>
-      )}
-
-    </>
+            {editingEmployee && (
+                <EditEmployeeDialog
+                    key={editingEmployee.id}
+                    employee={editingEmployee}
+                    open={editOpen}
+                    onOpenChange={setEditOpen}
+                    onSave={(updated) =>
+                        setEmployees((prev) =>
+                            prev.map((e) => (e.id === updated.id ? updated : e))
+                        )
+                    }
+                />
+            )}
+        </>
     );
 }
 
