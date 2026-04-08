@@ -4,3 +4,4 @@ node_modules/
 .turbo/
 .idea/
 pnpm-lock.yaml
+generated/
