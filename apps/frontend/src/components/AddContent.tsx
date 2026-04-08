@@ -259,7 +259,7 @@ function AddContent() {
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="outline" className="bg-background justify-between">
-                                        {jobPosition}
+                                        {jobPosition === "underwriter" ? "Underwriter" : jobPosition === "businessAnalyst" ? "Business Analyst" : jobPosition === "admin" ? "Admin" : "Select job position"}
                                         <ChevronDown className="h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
@@ -476,7 +476,7 @@ function AddContent() {
                                             ? "New"
                                             : status === "inProgress"
                                                 ? "In Progress"
-                                                : "complete"}
+                                                : "Complete"}
                                         <ChevronDown className="h-4 w-4" />
 
                                     </Button>
