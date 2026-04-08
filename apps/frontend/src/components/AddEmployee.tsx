@@ -25,7 +25,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 
-function EmployeeForm() {
+function AddEmployee() {
     const [targetPersona, setTargetPersona] = useState("Select job position")
     const [firstName, setFirstName] = React.useState("")
     const [lastName, setLastName] = React.useState("")
@@ -88,7 +88,7 @@ function EmployeeForm() {
                     {/*//Title*/}
 
                     <div className="bg-background py-4 text-center">
-                        <h1 className="text-primary text-2xl font-semibold">Employee Management Form</h1>
+                        <h1 className="text-primary text-2xl font-semibold">Add Employees</h1>
                     </div>
                     <div className="bg-background py-2">
                         <Separator className="bg-primary" />
@@ -217,4 +217,4 @@ function EmployeeForm() {
     )
 }
 
-export default EmployeeForm;
+export default AddEmployee;

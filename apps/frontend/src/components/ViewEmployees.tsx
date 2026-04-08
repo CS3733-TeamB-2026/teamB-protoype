@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Link } from "react-router-dom";
 import { Hero } from "@/components/shared/Hero.tsx";
 
-function UserManagement() {
+function ViewEmployees() {
 
     type Employee = {
         firstName: string;
@@ -98,14 +98,14 @@ function UserManagement() {
       <>
           <Hero
               icon="employees"
-              title="User Management"
-              description="Add, update, and delete users."
+              title="View Employees"
+              description="View, update, and delete employees"
           />
 
           <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center">
               <CardHeader>
-                  <CardTitle className="text-3xl text-primary mt-4">All Users</CardTitle>
-                  <CardDescription>Total Users: {employees.length}</CardDescription>
+                  <CardTitle className="text-3xl text-primary mt-4">All Employees</CardTitle>
+                  <CardDescription>Total Employees: {employees.length}</CardDescription>
               </CardHeader>
               <CardContent>
 
@@ -213,4 +213,4 @@ function UserManagement() {
     );
 }
 
-export default UserManagement;
+export default ViewEmployees;
