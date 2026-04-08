@@ -60,11 +60,26 @@ function FilesPage() {
     const [bookmarks, setBookmarks] = useState<Set<number>>(new Set());
     const [fileSizes, setFileSizes] = useState<Record<number, number | null>>({});
     const [fileUrls, setFileUrls] = useState<Record<number, string>>({});
+    const [linkPreviews, setLinkPreviews] = useState<Record<number, {
+        title: string | null;
+        description: string | null;
+        image: string | null;
+        siteName: string | null;
+        favicon: string | null;
+    }>>({});
 
     useEffect(() => {
         fetch("/api/content")
             .then((res) => res.json())
-            .then(setContent)
+            .then((data: ContentItem[]) => {
+                setContent(data);
+                data.filter((item) => item.linkURL).forEach((item) => {
+                    fetch(`/api/content/preview?url=${encodeURIComponent(item.linkURL!)}`)
+                        .then((res) => res.json())
+                        .then((preview) => setLinkPreviews((prev) => ({...prev, [item.id]: preview})))
+                        .catch(console.error);
+                });
+            })
             .catch(() => setError("Failed to load content."));
     }, []);
 
@@ -155,45 +170,35 @@ function FilesPage() {
                                     grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-x-4
                                     px-3 py-3
                                     transition-colors duration-150
-                                    ${isFile ? "cursor-pointer hover:bg-muted/60" : ""}
+                                    cursor-pointer hover:bg-muted/60
                                     ${isExpanded ? "bg-muted/40" : ""}
                                 `}
-                                onClick={() => isFile && toggleExpand(item.id)}
-                                role={isFile ? "button" : undefined}
-                                aria-expanded={isFile ? isExpanded : undefined}
-                                tabIndex={isFile ? 0 : undefined}
+                                onClick={() => toggleExpand(item.id)}
+                                role="button"
+                                aria-expanded={isExpanded}
+                                tabIndex={0}
                                 onKeyDown={(e) => {
-                                    if (isFile && (e.key === "Enter" || e.key === " ")) {
+                                    if (e.key === "Enter" || e.key === " ") {
                                         e.preventDefault();
                                         toggleExpand(item.id);
                                     }
                                 }}
                             >
-                                <ContentIcon isLink={isLink} className="w-5 h-5"/>
+                                {isLink && linkPreviews[item.id]?.favicon ? (
+                                    <img src={linkPreviews[item.id].favicon!} alt="" className="w-5 h-5 shrink-0"/>
+                                ) : (
+                                    <ContentIcon isLink={isLink} className="w-5 h-5"/>
+                                )}
 
                                 <div className="flex items-center gap-2 min-w-0">
-                                    {isLink ? (
-                                        <a
-                                            href={item.linkURL!}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="truncate text-sm font-medium text-primary hover:underline"
-                                            onClick={(e) => e.stopPropagation()}
-                                        >
-                                            {item.displayName}
-                                        </a>
-                                    ) : (
-                                        <span className="truncate text-sm font-medium text-foreground">
-                                            {item.displayName}
-                                        </span>
-                                    )}
-                                    {isFile && (
-                                        <span className="text-muted-foreground shrink-0">
-                                            {isExpanded
-                                                ? <ChevronDown className="w-4 h-4"/>
-                                                : <ChevronRight className="w-4 h-4"/>}
-                                        </span>
-                                    )}
+                                    <span className="truncate text-sm font-medium text-foreground">
+                                        {item.displayName}
+                                    </span>
+                                    <span className="text-muted-foreground shrink-0">
+                                        {isExpanded
+                                            ? <ChevronDown className="w-4 h-4"/>
+                                            : <ChevronRight className="w-4 h-4"/>}
+                                    </span>
                                 </div>
 
                                 <div className="hidden sm:flex justify-end w-28">
@@ -203,10 +208,28 @@ function FilesPage() {
                                 {/* File name or URL */}
                                 <div className="hidden md:block w-36 text-right text-xs text-muted-foreground truncate">
                                     {isFile && originalFilename && (
-                                        <span title={originalFilename}>{originalFilename}</span>
+                                        <a
+                                            href={`/api/content/download/${item.id}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-primary hover:underline"
+                                            onClick={(e) => e.stopPropagation()}
+                                            title={originalFilename}
+                                        >
+                                            {originalFilename}
+                                        </a>
                                     )}
                                     {isLink && (
-                                        <span title={item.linkURL!}>{item.linkURL}</span>
+                                        <a
+                                            href={item.linkURL!}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-primary hover:underline"
+                                            onClick={(e) => e.stopPropagation()}
+                                            title={item.linkURL!}
+                                        >
+                                            {item.linkURL}
+                                        </a>
                                     )}
                                 </div>
 
@@ -228,6 +251,32 @@ function FilesPage() {
                                         : <Bookmark className="w-4 h-4"/>}
                                 </button>
                             </div>
+
+                            {/* Expanded: link preview */}
+                            {isExpanded && isLink && linkPreviews[item.id] && (
+                                <a
+                                    href={item.linkURL!}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="border-t border-border bg-muted/20 px-6 py-3 flex items-center gap-4 hover:bg-muted/40 transition-colors"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    {linkPreviews[item.id].image && (
+                                        <img src={linkPreviews[item.id].image!} alt="" className="w-16 h-16 rounded object-cover shrink-0"/>
+                                    )}
+                                    <div className="min-w-0">
+                                        {linkPreviews[item.id].siteName && (
+                                            <p className="text-xs text-muted-foreground">{linkPreviews[item.id].siteName}</p>
+                                        )}
+                                        {linkPreviews[item.id].title && (
+                                            <p className="text-sm font-medium text-foreground truncate">{linkPreviews[item.id].title}</p>
+                                        )}
+                                        {linkPreviews[item.id].description && (
+                                            <p className="text-xs text-muted-foreground line-clamp-2">{linkPreviews[item.id].description}</p>
+                                        )}
+                                    </div>
+                                </a>
+                            )}
 
                             {/* Expanded: inline viewer + download */}
                             {isExpanded && isFile && (
