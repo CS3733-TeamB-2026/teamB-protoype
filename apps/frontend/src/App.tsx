@@ -5,13 +5,13 @@ import {BrowserRouter} from 'react-router-dom';
 import { SidebarProvider } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/AppSidebar";
 import Home from "@/components/Home.tsx";
-import EmployeeForm from "@/components/EmployeeForm.tsx";
-import ManagementForm from "@/components/ManagementForm.tsx";
+import AddEmployee from "@/components/AddEmployee.tsx";
+import AddContent from "@/components/AddContent.tsx";
 import Underwriter from "@/components/Underwriter.tsx";
 import BusinessAnalyst from "@/components/BusinessAnalyst.tsx";
 import EmployeeHome from "@/components/EmployeeHome";
-import UserManagement from "@/components/UserManagement";
-import FilesPage from "@/components/FilesPage";
+import ViewEmployees from "@/components/ViewEmployees.tsx";
+import ViewContent from "@/components/ViewContent.tsx";
 import { Route, Routes} from "react-router-dom";
 
 function App() {
@@ -29,12 +29,12 @@ function App() {
                         <Routes>
                             {/*This is where Home gets loaded automatically when it detected we are on "/" page*/}
                             <Route path="/" element={<Home/>}/>
-                            <Route path="/employeeform" element={<EmployeeForm/>}/>
-                            <Route path="/manageform" element={<ManagementForm/>}/>
-                            <Route path="/usermanagement" element={<UserManagement/>}/>
+                            <Route path="/employeeform" element={<AddEmployee/>}/>
+                            <Route path="/manageform" element={<AddContent/>}/>
+                            <Route path="/usermanagement" element={<ViewEmployees/>}/>
                             <Route path="/underwriter" element={<Underwriter/>}/>
                             <Route path="/businessanalyst" element={<BusinessAnalyst/>}/>
-                            <Route path="/files" element={<FilesPage/>}/>
+                            <Route path="/files" element={<ViewContent/>}/>
                             <Route path="/employeehome" element={<EmployeeHome/>}/>
                         </Routes>
                     </main>

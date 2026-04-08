@@ -27,10 +27,10 @@ type NavItem = {
 //For dropdowns, add more items in children array, leave array empty for single item
 const navItems = [
     { title: "Home", icon: Home, href: "/", children: [], access: [] },
-    { title: "User Management", icon: Users, href: "/usermanagement", children: [], access: ["admin"] },
-    { title: "Content Management", icon: LucideFolders, href: "/files", children: [], access: ["admin", "underwriter", "businessAnalyst"] },
-    { title: "Add Employee Form", icon: ClipboardPenIcon, href: "/employeeform", children: [], access: ["admin"] },
-    { title: "Add Content Form", icon: FormInput, href: "/manageform", children: [], access: ["admin", "underwriter", "businessAnalyst"] },
+    { title: "View Content", icon: LucideFolders, href: "/files", children: [], access: ["admin", "underwriter", "businessAnalyst"] },
+    { title: "Add Content", icon: FormInput, href: "/manageform", children: [], access: ["admin", "underwriter", "businessAnalyst"] },
+    { title: "View Employees", icon: Users, href: "/usermanagement", children: [], access: ["admin"] },
+    { title: "Add Employees", icon: ClipboardPenIcon, href: "/employeeform", children: [], access: ["admin"] },
     { title: "Personas", icon: User, href: "/", children: [
             {title: "Underwriter", icon: User, href: "/underwriter", children: [], access: []},
             {title: "Business Analyst", icon: User, href: "/businessanalyst", children: [], access: []},

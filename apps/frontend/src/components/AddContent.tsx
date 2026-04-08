@@ -27,7 +27,7 @@ import {Label} from "@/components/ui/label";
 import {RadioGroup, RadioGroupItem} from "@/components/ui/radio-group";
 import {ChevronDown} from "lucide-react";
 
-function ManagementForm() {
+function AddContent() {
     const [name, setName] = useState("");
     const [linkUrl, setLinkUrl] = useState("");
     const [ownerID, setOwnerID] = useState("");
@@ -537,4 +537,4 @@ function ManagementForm() {
     );
 }
 
-export default ManagementForm;
+export default AddContent;
