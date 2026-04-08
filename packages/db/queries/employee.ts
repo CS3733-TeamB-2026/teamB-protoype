@@ -9,7 +9,7 @@ export class Employee {
 
     public static async queryEmployeeById(id: number): Promise<p.Employee | null> {
         return prisma.employee.findUnique({
-            where: {id: id}
+            where: {id}
         })
     }
 
@@ -48,4 +48,18 @@ export class Employee {
             }
         })
     }
+
+    public static async queryAllEmployeesWithLogin() {
+        return prisma.employee.findMany({
+            orderBy: { id: 'asc' },
+            include: {
+                login: {
+                    select: {
+                        userName: true
+                    }
+                }
+            }
+        })
+    }
+
 }

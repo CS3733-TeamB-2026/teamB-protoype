@@ -17,16 +17,23 @@ import {
     ChevronRight,
     AlertCircle,
     FolderOpen,
-    Download,
+    Download, Trash2,
 } from "lucide-react";
+import { Button } from "@/components/ui/button"
 
-// Matches the Content model from Prisma
+
+// Matches the Content model from Prisma (with joined owner)
 interface ContentItem {
     id: number;
     displayName: string;
     linkURL: string | null;
     fileURI: string | null;
     ownerID: number | null;
+    owner: {
+        id: number;
+        firstName: string;
+        lastName: string;
+    } | null;
     lastModified: string;
     expiration: string | null;
     contentType: string;
@@ -131,41 +138,41 @@ function FilesPage() {
         siteName: string | null;
         favicon: string | null;
     }>>({});
-    const [fileOwners, setFileOwners] = useState<Record<number, string>>({});
     const [user] = React.useState(() => {
         return JSON.parse(localStorage.getItem("user") || "null");
     })
 
     useEffect(() => {
-        fetch(`/api/content/${encodeURIComponent(user.persona)}`)
+        fetch(`/api/content?persona=${encodeURIComponent(user.persona)}`)
             .then((res) => res.json())
             .then((data: ContentItem[]) => {
                 setContent(data);
                 data.filter((item) => item.linkURL).forEach((item) => {
                     fetch(
-                        `/api/content/preview?url=${encodeURIComponent(item.linkURL!)}`,
+                        `/api/preview?url=${encodeURIComponent(item.linkURL!)}`,
                     )
-                        .then((res) => res.json())
+                        .then((res) => {
+                            if (!res.ok) throw new Error(`preview ${res.status}`);
+                            return res.json();
+                        })
                         .then((preview) =>
                             setLinkPreviews((prev) => ({
                                 ...prev,
                                 [item.id]: preview,
                             })),
                         )
-                        .catch(console.error);
-                });
-                data.forEach((item) => {
-                    fetch(
-                        `/api/employee/${encodeURIComponent(item.ownerID!)}`,
-                    )
-                        .then((res) => res.json())
-                        .then((owner) =>
-                            setFileOwners((prev) => ({
+                        .catch(() =>
+                            setLinkPreviews((prev) => ({
                                 ...prev,
-                                [item.id]: owner.firstName + " " + owner.lastName,
+                                [item.id]: {
+                                    title: null,
+                                    description: null,
+                                    image: null,
+                                    siteName: null,
+                                    favicon: null,
+                                },
                             })),
-                        )
-                        .catch(console.error);
+                        );
                 });
             })
             .catch(() => setError("Failed to load content."));
@@ -237,6 +244,18 @@ function FilesPage() {
             </div>
         );
     }
+    const handleDelete = async (id: number, e: React.MouseEvent) => {
+        e.stopPropagation()
+        const res = await fetch(`/api/content`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id })
+        })
+
+        if (res.ok) {
+            setContent(content.filter(item => item.id !== id))
+        }
+    }
 
     return (
         <div className="max-w-5xl mx-auto px-4 py-8">
@@ -250,16 +269,13 @@ function FilesPage() {
             </div>
 
             {/* column header */}
-            <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto] items-center gap-x-4 px-3 pb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground select-none">
+            <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-x-4 px-3 pb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground select-none">
                 <span className="w-5" />
                 <span>Name</span>
-                <span className="hidden sm:block w-28 text-right">Owner</span>
-                <span className="hidden sm:block w-28 text-right">Persona</span>
+                <span className="hidden sm:block w-48 text-right">Owner</span>
                 <span className="hidden sm:block w-28 text-right">Type</span>
-                <span className="hidden md:block w-36 text-right">
-                    File / Link
-                </span>
                 <span className="w-8" />
+                <span className="w-9" />
             </div>
 
             {/* content list */}
@@ -289,7 +305,7 @@ function FilesPage() {
 
                             <div
                                 className={`
-                                    grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto] items-center gap-x-4
+                                    grid grid-cols-[auto_1fr_auto_auto_auto_auto] items-center gap-x-4
                                     px-3 py-3
                                     transition-colors duration-150
                                     cursor-pointer hover:bg-muted/60
@@ -333,15 +349,9 @@ function FilesPage() {
                                     </span>
                                 </div>
 
-                                <div className="hidden sm:flex justify-end w-28">
+                                <div className="hidden sm:flex justify-end w-48">
                                     <span className="truncate text-sm text-foreground">
-                                        {fileOwners[item.id]}
-                                    </span>
-                                </div>
-
-                                <div className="hidden sm:flex justify-end w-28">
-                                    <span className="truncate text-sm text-foreground">
-                                        {item.targetPersona}
+                                        {item.owner ? `${item.owner.firstName} ${item.owner.lastName}` : ""}
                                     </span>
                                 </div>
 
@@ -351,34 +361,6 @@ function FilesPage() {
                                         ext={ext}
                                         isLink={isLink}
                                     />
-                                </div>
-
-                                {/* File name or URL */}
-                                <div className="hidden md:block w-36 text-right text-xs text-muted-foreground truncate">
-                                    {isFile && originalFilename && (
-                                        <a
-                                            href={`/api/content/download/${item.id}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-primary hover:underline"
-                                            onClick={(e) => e.stopPropagation()}
-                                            title={originalFilename}
-                                        >
-                                            {originalFilename}
-                                        </a>
-                                    )}
-                                    {isLink && (
-                                        <a
-                                            href={item.linkURL!}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-primary hover:underline"
-                                            onClick={(e) => e.stopPropagation()}
-                                            title={item.linkURL!}
-                                        >
-                                            {item.linkURL}
-                                        </a>
-                                    )}
                                 </div>
 
                                 <button
@@ -409,46 +391,66 @@ function FilesPage() {
                                         <Bookmark className="w-4 h-4" />
                                     )}
                                 </button>
+
+                                <Button variant="destructive" size="sm" onClick={(e) => handleDelete(item.id, e)}>
+                                    <Trash2 className="w-4 h-4" />
+                                </Button>
                             </div>
 
                             {/* Expanded: link preview */}
-                            {isExpanded && isLink && linkPreviews[item.id] && (
-                                <a
-                                    href={item.linkURL!}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="border-t border-border bg-muted/20 px-6 py-3 flex items-center gap-4 hover:bg-muted/40 transition-colors"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    {linkPreviews[item.id].image && (
-                                        <img
-                                            src={linkPreviews[item.id].image!}
-                                            alt=""
-                                            className="w-16 h-16 rounded object-cover shrink-0"
-                                        />
-                                    )}
-                                    <div className="min-w-0">
-                                        {linkPreviews[item.id].siteName && (
-                                            <p className="text-xs text-muted-foreground">
-                                                {linkPreviews[item.id].siteName}
-                                            </p>
-                                        )}
-                                        {linkPreviews[item.id].title && (
+                            {isExpanded && isLink && (() => {
+                                const preview = linkPreviews[item.id];
+                                const hasImage = !!preview?.image;
+                                const hasFavicon = !!preview?.favicon;
+                                const topLabel = preview?.siteName
+                                    ?? (preview && !preview.title && !preview.description && !preview.image
+                                        ? "Preview unavailable"
+                                        : null);
+                                return (
+                                    <a
+                                        href={item.linkURL!}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="border-t border-border bg-muted/20 px-6 py-3 flex items-center gap-4 hover:bg-muted/40 transition-colors"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        {hasImage ? (
+                                            <img
+                                                src={preview!.image!}
+                                                alt=""
+                                                className="w-16 h-16 rounded object-cover shrink-0"
+                                                onError={(e) => {
+                                                    (e.currentTarget as HTMLImageElement).style.display = "none";
+                                                }}
+                                            />
+                                        ) : hasFavicon ? (
+                                            <img
+                                                src={preview!.favicon!}
+                                                alt=""
+                                                className="w-8 h-8 rounded shrink-0"
+                                                onError={(e) => {
+                                                    (e.currentTarget as HTMLImageElement).style.display = "none";
+                                                }}
+                                            />
+                                        ) : null}
+                                        <div className="min-w-0">
+                                            {topLabel && (
+                                                <p className="text-xs text-muted-foreground">
+                                                    {topLabel}
+                                                </p>
+                                            )}
                                             <p className="text-sm font-medium text-foreground truncate">
-                                                {linkPreviews[item.id].title}
+                                                {preview?.title || item.linkURL}
                                             </p>
-                                        )}
-                                        {linkPreviews[item.id].description && (
-                                            <p className="text-xs text-muted-foreground line-clamp-2">
-                                                {
-                                                    linkPreviews[item.id]
-                                                        .description
-                                                }
-                                            </p>
-                                        )}
-                                    </div>
-                                </a>
-                            )}
+                                            {preview?.description && (
+                                                <p className="text-xs text-muted-foreground line-clamp-2">
+                                                    {preview.description}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </a>
+                                );
+                            })()}
 
                             {/* Expanded: file preview */}
                             {isExpanded && isFile && (

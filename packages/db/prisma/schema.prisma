@@ -17,8 +17,8 @@ model Login {
   userName String
   passwordHash String
 
-  employee Employee @relation(fields: [employeeID], references: [id])
-  employeeID  Int      @id
+  employee   Employee @relation(fields: [employeeID], references: [id], onDelete: Cascade)
+  employeeID Int      @id
 
   @@schema("public")
 }
@@ -32,19 +32,18 @@ model Employee {
   ownedContent     Content[]
   ownedRequests    ServiceRequest[] @relation("OwnedBy")
   assignedRequests ServiceRequest[] @relation("AssignedTo")
-  logins           Login[]
-  //TODO: make logins one-to-one
+  login            Login?
 
   @@schema("public")
 }
 
 model Content {
-  id            Int     @id @default(autoincrement())
-  displayName   String
-  linkURL       String? @unique()
-  fileURI       String? @unique()
+  id          Int     @id @default(autoincrement())
+  displayName String
+  linkURL     String? @unique()
+  fileURI     String? @unique()
 
-  owner   Employee? @relation(fields: [ownerID], references: [id])
+  owner   Employee? @relation(fields: [ownerID], references: [id], onDelete: SetNull)
   ownerID Int?
 
   lastModified DateTime
@@ -62,7 +61,7 @@ model ServiceRequest {
   owner   Employee @relation("OwnedBy", fields: [ownerID], references: [id])
   ownerID Int
 
-  assignee   Employee? @relation("AssignedTo", fields: [assigneeID], references: [id])
+  assignee   Employee? @relation("AssignedTo", fields: [assigneeID], references: [id], onDelete: SetNull)
   assigneeID Int?
 
   created  DateTime    @default(now())

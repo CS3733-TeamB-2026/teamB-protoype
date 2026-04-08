@@ -10,8 +10,9 @@ import ManagementForm from "@/components/ManagementForm.tsx";
 import Underwriter from "@/components/Underwriter.tsx";
 import BusinessAnalyst from "@/components/BusinessAnalyst.tsx";
 import EmployeeHome from "@/components/EmployeeHome";
+import UserManagement from "@/components/UserManagement";
+import FilesPage from "@/components/FilesPage";
 import { Route, Routes} from "react-router-dom";
-import FilesPage from "@/components/FilesPage.tsx";
 
 function App() {
     // Your application must be wrapped with the BrowserRouter component to enable routing
@@ -30,6 +31,7 @@ function App() {
                             <Route path="/" element={<Home/>}/>
                             <Route path="/employeeform" element={<EmployeeForm/>}/>
                             <Route path="/manageform" element={<ManagementForm/>}/>
+                            <Route path="/usermanagement" element={<UserManagement/>}/>
                             <Route path="/underwriter" element={<Underwriter/>}/>
                             <Route path="/businessanalyst" element={<BusinessAnalyst/>}/>
                             <Route path="/files" element={<FilesPage/>}/>
