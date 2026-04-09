@@ -42,7 +42,7 @@ function AddEmployee() {
             return
         }
             try {
-            const empRes =  await fetch('http://localhost:3000/api/employee', {
+            const empRes =  await fetch('/api/employee', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
@@ -56,7 +56,7 @@ function AddEmployee() {
 
 
 
-            const loginRes = await fetch('http://localhost:3000/api/login/create', {
+            const loginRes = await fetch('/api/login/create', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({

@@ -76,7 +76,7 @@ function AddContent() {
                 formData.append("file", file);
             }
 
-            const res = await fetch("http://localhost:3000/api/content", {
+            const res = await fetch("/api/content", {
                 method: "POST",
                 body: formData,
             });

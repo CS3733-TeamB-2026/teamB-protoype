@@ -1,6 +1,4 @@
 import * as q from "@softeng-app/db";
-import express from "express";
-const app = express();
 import {req, res} from "./types"
 
 export const getAllEmployeesWithLogin = async (req: req, res: res) => {
