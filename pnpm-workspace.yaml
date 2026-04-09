@@ -1,3 +1,11 @@
 packages:
-    - 'apps/*'
-    - 'packages/*'
+  - 'apps/*'
+  - 'packages/*'
+allowBuilds:
+  '@iamjariwala/react-doc-viewer': true
+  '@prisma/engines': true
+  bcrypt: true
+  canvas: true
+  esbuild: true
+  msw: true
+  prisma: true

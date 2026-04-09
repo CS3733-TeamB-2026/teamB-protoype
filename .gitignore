@@ -1,4 +1,8 @@
 node_modules/
+.claude
+.mcp.json
 .env
 .turbo/
 .idea/
+pnpm-lock.yaml
+generated/

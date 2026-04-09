@@ -1,0 +1,39 @@
+import { prisma } from "../lib/prisma"
+import bcrypt from "bcrypt"
+import * as p from "../generated/prisma/client";
+import {Helper} from "./helper";
+
+export class Login {
+    public static async queryLoginByUsername(userName: string):
+        Promise<{userName: string,
+            passwordHash: string,
+            employeeID: number} | null> {
+        return prisma.login.findFirst({
+            where: {userName}
+        })
+    }
+
+    public static async createLogin(userName: string, password: string, employeeID: number):
+        Promise<{userName: string,
+            passwordHash: string,
+            employeeID: number} | null> {
+        const hashed = await bcrypt.hash(password, 10);
+        return prisma.login.create({
+            data: {userName, passwordHash: hashed, employeeID}
+        })
+    }
+
+    public static async deleteLogin(id: number): Promise<void> {
+        const deletedUser = await prisma.login.delete({
+            where: {employeeID: id},
+        })
+    }
+
+    public static async updateLogin(userName: string, employeeID: number){
+        return prisma.login.update({
+            where: { employeeID },
+            data: { userName }
+        })
+    }
+
+}
