@@ -8,6 +8,12 @@ export class Bucket {
         return data;
     }
 
+    public static async updateFile(file: Buffer, path: string): Promise<{id: string, path: string, fullPath: string}> {
+        const {data, error} = await supabase.storage.from(bucket).update(path, file)
+        if (error) throw error;
+        return data;
+    }
+
     public static async downloadFile(path: string): Promise<Blob> {
         const {data, error} = await supabase.storage.from(bucket).download(path)
         if (error) throw error;
