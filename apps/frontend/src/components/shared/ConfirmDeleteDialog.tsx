@@ -31,6 +31,7 @@ export function ConfirmDeleteDialog({ open, onOpenChange, description, onConfirm
                     <AlertDialogAction
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         onClick={onConfirm}
+                        variant="destructive"
                     >
                         Delete
                     </AlertDialogAction>

@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import { Hero } from "@/components/shared/Hero.tsx";
 import { EditEmployeeDialog } from "@/components/EditEmployeeDialog";
 import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
+import { Users } from "lucide-react";
 
 export type Employee = {
     firstName: string;
@@ -51,7 +52,7 @@ function ViewEmployees() {
     return (
         <>
             <Hero
-                icon="employees"
+                icon={Users}
                 title="View Employees"
                 description="View, update, and delete employees."
             />
