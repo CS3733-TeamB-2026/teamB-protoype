@@ -15,6 +15,8 @@ import { Hero } from "@/components/shared/Hero.tsx";
 import { Home as HomeIcon } from "lucide-react";
 
 function Home() {
+
+    //team member data
     type ImageKey = keyof typeof teamPhotos;
     type TeamMember = {
         name: string;
@@ -23,6 +25,7 @@ function Home() {
         photo: ImageKey;
     }
 
+    //members list, for displaying cards
     const members: TeamMember[] = [
         { name: "Dylan Zickus", initials: "DZ", role: "Lead Software Engineer", photo: "dylan" },
         { name: "Oscar Stomberg", initials: "OS", role: "Assistant Lead Software Engineer", photo: "oscar" },
@@ -62,7 +65,7 @@ function Home() {
                 </CardContent>
             </Card>
 
-            {/*Team Avatars*/}
+            {/*team member cards*/}
             <section className="mt-12 max-w-7xl mx-auto mb-12">
                 <h1 className="text-2xl font-bold text-primary text-center mb-8" >Meet Our Team</h1>
                 <div className="flex flex-wrap md:grid-cols-5 gap-6 justify-center">

@@ -11,9 +11,11 @@ import {
     FolderOpen,
     Loader2,
     Trash2,
-    LucideFolders
+    LucideFolders,
+    Search
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import {
     Card,
@@ -33,9 +35,11 @@ import {
 import { Hero } from "@/components/shared/Hero.tsx";
 import {
     ContentIcon,
-    ExtBadge,
-} from "@/components/shared/Mime.tsx";
+
+} from "@/components/shared/ContentIcon.tsx";
 import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
+import { SortableHead } from "@/components/shared/SortableHead";
+import { useSortState, applySortState } from "@/helpers/useSortState.ts";
 import {
     getCategory,
     getExtension,
@@ -44,6 +48,9 @@ import {
     lookupByFilename,
     type PreviewMode,
 } from "@/helpers/mime";
+import { ContentExtBadge } from "@/components/shared/ContentExtBadge.tsx";
+import { ContentStatusBadge } from "@/components/shared/ContentStatusBadge.tsx";
+import { ContentTypeBadge } from "@/components/shared/ContentTypeBadge.tsx";
 
 // Matches the Content model from Prisma (with joined owner)
 interface ContentItem {
@@ -77,6 +84,7 @@ function ViewContent() {
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [bookmarks, setBookmarks] = useState<Set<number>>(new Set());
     const [deleteTarget, setDeleteTarget] = useState<ContentItem | null>(null);
+    const [sort, toggleSort] = useSortState<"name" | "owner" | "status" | "contentType">({column: "name", direction: "asc"});
     const [fileSizes, setFileSizes] = useState<Record<number, number | null>>(
         {},
     );
@@ -99,6 +107,10 @@ function ViewContent() {
     const [user] = React.useState(() => {
         return JSON.parse(localStorage.getItem("user") || "null");
     });
+    const [searchTerm, setSearchTerm] = React.useState("");
+    const filteredContent = content.filter((item) =>
+        item.displayName.toLowerCase().includes(searchTerm.toLowerCase())
+    )
 
     useEffect(() => {
         fetch(`/api/content?persona=${encodeURIComponent(user.persona)}`)
@@ -223,7 +235,9 @@ function ViewContent() {
                                 "All"} Content
                     </CardTitle>
                     <CardDescription>
-                        Total Content Items: {content.length}
+                        {filteredContent.length === content.length
+                            ? `${content.length} item${content.length !== 1 ? "s" : ""}`
+                            : `${filteredContent.length} of ${content.length} items`}
                     </CardDescription>
                 </CardHeader>
 
@@ -250,20 +264,37 @@ function ViewContent() {
                             <p className="text-sm">No content found.</p>
                         </div>
                     )}
-                    {!loading && !error && content.length > 0 && <Table className="text-left">
+                    {!loading && !error && content.length > 0 && <>
+                        <div className="flex items-center gap-1 mb-4 max-w-sm">
+                            <Search className="w-6 h-6" />
+                            <Input
+                                type="text"
+                                placeholder="Search by name..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="border border-gray-700 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                            />
+                        </div>
+                        <Table className="text-left">
                         <TableHeader>
-                            <TableRow className="uppercase tracking-wider text-muted-foreground select-none hover:bg-transparent">
+                            <TableRow className="hover:bg-transparent">
                                 <TableHead className="w-8" />
-                                <TableHead>Name</TableHead>
-                                <TableHead className="hidden sm:table-cell">Owner</TableHead>
-                                <TableHead className="hidden sm:table-cell">Status</TableHead>
-                                <TableHead className="hidden sm:table-cell text-center">Type</TableHead>
+                                <SortableHead column="name" label="Name" sort={sort} onSort={toggleSort} />
+                                <SortableHead column="owner" label="Owner" sort={sort} onSort={toggleSort} className="hidden sm:table-cell" />
+                                <SortableHead column="status" label="Status" sort={sort} onSort={toggleSort} className="hidden sm:table-cell" />
+                                <SortableHead column="contentType" label="Kind" sort={sort} onSort={toggleSort} className="hidden sm:table-cell" />
+                                <TableHead className="hidden sm:table-cell uppercase tracking-wider text-muted-foreground select-none text-center">Type</TableHead>
                                 <TableHead className="w-8" />
                                 <TableHead className="w-8" />
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {content.map((item) => {
+                            {applySortState(filteredContent, sort, (item, col) => {
+                                if (col === "name") return item.displayName;
+                                if (col === "owner") return item.owner ? `${item.owner.firstName} ${item.owner.lastName}` : "";
+                                if (col === "status") return item.status ?? "";
+                                if (col === "contentType") return item.contentType;
+                            }).map((item) => {
                                 const isFile = !!item.fileURI;
                                 const isLink = !!item.linkURL;
                                 const originalFilename = isFile
@@ -284,20 +315,42 @@ function ViewContent() {
                                     <React.Fragment key={item.id}>
                                         <TableRow
                                             className={`cursor-pointer ${isExpanded ? "bg-muted/40 hover:bg-muted/40" : ""}`}
-                                            onClick={() => toggleExpand(item, mimeType)}
+                                            onClick={() =>
+                                                toggleExpand(item, mimeType)
+                                            }
                                             tabIndex={0}
                                             onKeyDown={(e) => {
-                                                if (e.key === "Enter" || e.key === " ") {
+                                                if (
+                                                    e.key === "Enter" ||
+                                                    e.key === " "
+                                                ) {
                                                     e.preventDefault();
-                                                    toggleExpand(item, mimeType);
+                                                    toggleExpand(
+                                                        item,
+                                                        mimeType,
+                                                    );
                                                 }
                                             }}
                                         >
                                             <TableCell className="w-8 pr-0">
-                                                {isLink && linkPreviews[item.id]?.favicon ? (
-                                                    <img src={linkPreviews[item.id].favicon!} alt="" className="w-5 h-5 shrink-0" />
+                                                {isLink &&
+                                                linkPreviews[item.id]
+                                                    ?.favicon ? (
+                                                    <img
+                                                        src={
+                                                            linkPreviews[
+                                                                item.id
+                                                            ].favicon!
+                                                        }
+                                                        alt=""
+                                                        className="w-5 h-5 shrink-0"
+                                                    />
                                                 ) : (
-                                                    <ContentIcon category={category} isLink={isLink} className="w-5 h-5" />
+                                                    <ContentIcon
+                                                        category={category}
+                                                        isLink={isLink}
+                                                        className="w-5 h-5"
+                                                    />
                                                 )}
                                             </TableCell>
 
@@ -307,108 +360,314 @@ function ViewContent() {
                                                         {item.displayName}
                                                     </span>
                                                     <span className="text-muted-foreground shrink-0">
-                                                        {isExpanded
-                                                            ? <ChevronDown className="w-4 h-4" />
-                                                            : <ChevronRight className="w-4 h-4" />}
+                                                        {isExpanded ? (
+                                                            <ChevronDown className="w-4 h-4" />
+                                                        ) : (
+                                                            <ChevronRight className="w-4 h-4" />
+                                                        )}
                                                     </span>
                                                 </div>
                                             </TableCell>
 
                                             <TableCell className="hidden sm:table-cell text-foreground">
-                                                {item.owner ? `${item.owner.firstName} ${item.owner.lastName}` : ""}
+                                                {item.owner
+                                                    ? `${item.owner.firstName} ${item.owner.lastName}`
+                                                    : ""}
                                             </TableCell>
 
-                                            <TableCell className="hidden sm:table-cell text-foreground">
-                                                {item.status}
+                                            <TableCell className="hidden sm:table-cell">
+                                                <ContentStatusBadge
+                                                    status={item.status}
+                                                />
+                                            </TableCell>
+
+                                            <TableCell className="hidden sm:table-cell">
+                                                <ContentTypeBadge
+                                                    contentType={item.contentType}
+                                                />
                                             </TableCell>
 
                                             <TableCell className="hidden sm:table-cell text-center">
-                                                <ExtBadge category={category} ext={ext} isLink={isLink} />
+                                                <ContentExtBadge
+                                                    category={category}
+                                                    ext={ext}
+                                                    isLink={isLink}
+                                                />
                                             </TableCell>
 
                                             <TableCell className="w-8 px-1">
                                                 <button
                                                     className={`w-8 h-8 flex items-center justify-center rounded-md transition-colors ${isBookmarked ? "text-primary hover:text-primary/70" : "text-muted-foreground hover:text-foreground"}`}
-                                                    onClick={(e) => toggleBookmark(item.id, e)}
-                                                    aria-label={isBookmarked ? "Remove bookmark" : "Bookmark"}
+                                                    onClick={(e) =>
+                                                        toggleBookmark(
+                                                            item.id,
+                                                            e,
+                                                        )
+                                                    }
+                                                    aria-label={
+                                                        isBookmarked
+                                                            ? "Remove bookmark"
+                                                            : "Bookmark"
+                                                    }
                                                 >
-                                                    {isBookmarked ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
+                                                    {isBookmarked ? (
+                                                        <BookmarkCheck className="w-4 h-4" />
+                                                    ) : (
+                                                        <Bookmark className="w-4 h-4" />
+                                                    )}
                                                 </button>
                                             </TableCell>
 
                                             <TableCell className="w-8 px-1">
-                                                <Button variant="destructive" size="sm" onClick={(e) => { e.stopPropagation(); setDeleteTarget(item); }}>
+                                                <Button
+                                                    variant="destructive"
+                                                    disabled={item.ownerID !== user?.id}
+                                                    size="sm"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setDeleteTarget(item);
+                                                    }}
+                                                >
                                                     <Trash2 className="w-4 h-4" />
                                                 </Button>
                                             </TableCell>
                                         </TableRow>
 
+                                        {/* Expanded: dates */}
+                                        {isExpanded && (
+                                            <TableRow className="hover:bg-transparent">
+                                                <TableCell
+                                                    colSpan={8}
+                                                    className="px-6 py-2 bg-muted/10 border-t border-border"
+                                                >
+                                                    <div className="flex gap-6 text-xs text-muted-foreground">
+                                                        <span>
+                                                            <span className="font-medium text-foreground">
+                                                                Modified:{" "}
+                                                            </span>
+                                                            {new Date(
+                                                                item.lastModified,
+                                                            ).toLocaleString()}
+                                                        </span>
+                                                        {item.expiration && (
+                                                            <span>
+                                                                <span className="font-medium text-foreground">
+                                                                    Expires:{" "}
+                                                                </span>
+                                                                {new Date(
+                                                                    item.expiration,
+                                                                ).toLocaleString()}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+
                                         {/* Expanded: link preview */}
-                                        {isExpanded && isLink && (() => {
-                                            const preview = linkPreviews[item.id];
-                                            const hasImage = !!preview?.image;
-                                            const hasFavicon = !!preview?.favicon;
-                                            return (
-                                                <TableRow className="hover:bg-transparent">
-                                                    <TableCell colSpan={7} className="p-0">
-                                                        <a
-                                                            href={item.linkURL!}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="flex items-center gap-4 px-6 py-3 bg-muted/20 hover:bg-muted/40 transition-colors"
-                                                            onClick={(e) => e.stopPropagation()}
+                                        {isExpanded &&
+                                            isLink &&
+                                            (() => {
+                                                const preview =
+                                                    linkPreviews[item.id];
+                                                const hasImage =
+                                                    !!preview?.image;
+                                                const hasFavicon =
+                                                    !!preview?.favicon;
+                                                return (
+                                                    <TableRow className="hover:bg-transparent">
+                                                        <TableCell
+                                                            colSpan={8}
+                                                            className="p-0"
                                                         >
-                                                            {hasImage ? (
-                                                                <img src={preview!.image!} alt="" className="w-16 h-16 rounded object-cover shrink-0" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
-                                                            ) : hasFavicon ? (
-                                                                <img src={preview!.favicon!} alt="" className="w-8 h-8 rounded shrink-0" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
-                                                            ) : null}
-                                                            <div className="min-w-0 text-left">
-                                                                <p className="text-xs text-muted-foreground truncate">{item.linkURL}</p>
-                                                                {preview?.siteName && <p className="text-xs text-muted-foreground">{preview.siteName}</p>}
-                                                                {preview?.title && <p className="text-sm font-medium text-foreground truncate">{preview.title}</p>}
-                                                                {preview?.description && <p className="text-xs text-muted-foreground line-clamp-2">{preview.description}</p>}
-                                                            </div>
-                                                        </a>
-                                                    </TableCell>
-                                                </TableRow>
-                                            );
-                                        })()}
+                                                            <a
+                                                                href={
+                                                                    item.linkURL!
+                                                                }
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="flex items-center gap-4 px-6 py-3 bg-muted/20 hover:bg-muted/40 transition-colors"
+                                                                onClick={(e) =>
+                                                                    e.stopPropagation()
+                                                                }
+                                                            >
+                                                                {hasImage ? (
+                                                                    <img
+                                                                        src={
+                                                                            preview!
+                                                                                .image!
+                                                                        }
+                                                                        alt=""
+                                                                        className="w-16 h-16 rounded object-cover shrink-0"
+                                                                        onError={(
+                                                                            e,
+                                                                        ) => {
+                                                                            (
+                                                                                e.currentTarget as HTMLImageElement
+                                                                            ).style.display =
+                                                                                "none";
+                                                                        }}
+                                                                    />
+                                                                ) : hasFavicon ? (
+                                                                    <img
+                                                                        src={
+                                                                            preview!
+                                                                                .favicon!
+                                                                        }
+                                                                        alt=""
+                                                                        className="w-8 h-8 rounded shrink-0"
+                                                                        onError={(
+                                                                            e,
+                                                                        ) => {
+                                                                            (
+                                                                                e.currentTarget as HTMLImageElement
+                                                                            ).style.display =
+                                                                                "none";
+                                                                        }}
+                                                                    />
+                                                                ) : null}
+                                                                <div className="min-w-0 text-left">
+                                                                    <p className="text-xs text-muted-foreground truncate">
+                                                                        {
+                                                                            item.linkURL
+                                                                        }
+                                                                    </p>
+                                                                    {preview?.siteName && (
+                                                                        <p className="text-xs text-muted-foreground">
+                                                                            {
+                                                                                preview.siteName
+                                                                            }
+                                                                        </p>
+                                                                    )}
+                                                                    {preview?.title && (
+                                                                        <p className="text-sm font-medium text-foreground truncate">
+                                                                            {
+                                                                                preview.title
+                                                                            }
+                                                                        </p>
+                                                                    )}
+                                                                    {preview?.description && (
+                                                                        <p className="text-xs text-muted-foreground line-clamp-2">
+                                                                            {
+                                                                                preview.description
+                                                                            }
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                            </a>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                );
+                                            })()}
 
                                         {/* Expanded: file preview */}
                                         {isExpanded && isFile && (
                                             <TableRow className="hover:bg-transparent">
-                                                <TableCell colSpan={7} className="p-0">
+                                                <TableCell
+                                                    colSpan={8}
+                                                    className="p-0"
+                                                >
                                                     <div className="bg-background">
                                                         <div className="px-6 py-3 flex items-center gap-4">
-                                                            <span className="text-sm font-medium text-foreground">{originalFilename}</span>
-                                                            {fileSizes[item.id] != null && (
-                                                                <span className="text-xs text-muted-foreground">{formatBytes(fileSizes[item.id]!)}</span>
+                                                            <span className="text-sm font-medium text-foreground">
+                                                                {
+                                                                    originalFilename
+                                                                }
+                                                            </span>
+                                                            {fileSizes[
+                                                                item.id
+                                                            ] != null && (
+                                                                <span className="text-xs text-muted-foreground">
+                                                                    {formatBytes(
+                                                                        fileSizes[
+                                                                            item
+                                                                                .id
+                                                                        ]!,
+                                                                    )}
+                                                                </span>
                                                             )}
-                                                            <a href={`/api/content/download/${item.id}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
-                                                                <Download className="w-4 h-4" /> Download
+                                                            <a
+                                                                href={`/api/content/download/${item.id}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                                                            >
+                                                                <Download className="w-4 h-4" />{" "}
+                                                                Download
                                                             </a>
                                                         </div>
-                                                        {previewMode === "text" && (textContents[item.id] != null ? (
-                                                            <pre className="px-6 pb-4 text-sm text-foreground overflow-auto max-h-[520px] whitespace-pre-wrap">{textContents[item.id]}</pre>
-                                                        ) : (
-                                                            <p className="px-6 py-4 text-sm text-muted-foreground">Fetching...</p>
-                                                        ))}
-                                                        {previewMode === "image" && (fileUrls[item.id] ? (
-                                                            <img src={fileUrls[item.id]} alt={originalFilename ?? ""} className="max-w-full mx-auto px-6 pb-4" />
-                                                        ) : (
-                                                            <p className="px-6 py-4 text-sm text-muted-foreground">Fetching...</p>
-                                                        ))}
-                                                        {previewMode === "docviewer" && (fileUrls[item.id] ? (
-                                                            <DocViewer
-                                                                documents={[{ uri: fileUrls[item.id] }]}
-                                                                pluginRenderers={DocViewerRenderers}
-                                                                style={{ minHeight: 520 }}
-                                                                config={{ header: { disableHeader: true } }}
-                                                            />
-                                                        ) : (
-                                                            <p className="px-6 py-4 text-sm text-muted-foreground">Fetching...</p>
-                                                        ))}
+                                                        {previewMode ===
+                                                            "text" &&
+                                                            (textContents[
+                                                                item.id
+                                                            ] != null ? (
+                                                                <pre className="px-6 pb-4 text-sm text-foreground overflow-auto max-h-[520px] whitespace-pre-wrap">
+                                                                    {
+                                                                        textContents[
+                                                                            item
+                                                                                .id
+                                                                        ]
+                                                                    }
+                                                                </pre>
+                                                            ) : (
+                                                                <p className="px-6 py-4 text-sm text-muted-foreground">
+                                                                    Fetching...
+                                                                </p>
+                                                            ))}
+                                                        {previewMode ===
+                                                            "image" &&
+                                                            (fileUrls[
+                                                                item.id
+                                                            ] ? (
+                                                                <img
+                                                                    src={
+                                                                        fileUrls[
+                                                                            item
+                                                                                .id
+                                                                        ]
+                                                                    }
+                                                                    alt={
+                                                                        originalFilename ??
+                                                                        ""
+                                                                    }
+                                                                    className="max-w-full mx-auto px-6 pb-4"
+                                                                />
+                                                            ) : (
+                                                                <p className="px-6 py-4 text-sm text-muted-foreground">
+                                                                    Fetching...
+                                                                </p>
+                                                            ))}
+                                                        {previewMode ===
+                                                            "docviewer" &&
+                                                            (fileUrls[
+                                                                item.id
+                                                            ] ? (
+                                                                <DocViewer
+                                                                    documents={[
+                                                                        {
+                                                                            uri: fileUrls[
+                                                                                item
+                                                                                    .id
+                                                                            ],
+                                                                        },
+                                                                    ]}
+                                                                    pluginRenderers={
+                                                                        DocViewerRenderers
+                                                                    }
+                                                                    style={{
+                                                                        minHeight: 520,
+                                                                    }}
+                                                                    config={{
+                                                                        header: {
+                                                                            disableHeader: true,
+                                                                        },
+                                                                    }}
+                                                                />
+                                                            ) : (
+                                                                <p className="px-6 py-4 text-sm text-muted-foreground">
+                                                                    Fetching...
+                                                                </p>
+                                                            ))}
                                                     </div>
                                                 </TableCell>
                                             </TableRow>
@@ -417,7 +676,7 @@ function ViewContent() {
                                 );
                             })}
                         </TableBody>
-                    </Table>}
+                    </Table></>}
 
                     {bookmarks.size > 0 && (
                         <div className="mt-4 px-3 py-2 rounded-md bg-primary/5 border border-primary/20 text-xs text-muted-foreground">
@@ -433,8 +692,8 @@ function ViewContent() {
             <ConfirmDeleteDialog
                 open={!!deleteTarget}
                 onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
-                description={deleteTarget ? `This will permanently delete "${deleteTarget.displayName}".` : undefined}
-                onConfirm={() => deleteTarget && handleDelete(deleteTarget.id)}
+                description={deleteTarget ? <span>This will permanently delete <strong>"{deleteTarget.displayName}"</strong>.</span> : undefined}
+                onConfirm={() => handleDelete(deleteTarget!.id)}
             />
         </>
     );

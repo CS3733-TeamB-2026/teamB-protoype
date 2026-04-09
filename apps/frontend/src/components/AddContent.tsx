@@ -21,7 +21,6 @@ import {
     DropdownMenuRadioItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
 import {Button} from "@/components/ui/button";
 import {Separator} from "@/components/ui/separator";
 import {Card} from "@/components/ui/card";
@@ -270,7 +269,7 @@ function AddContent() {
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="outline" className="bg-background justify-between">
-                                            {jobPosition}
+                                            {jobPosition === "underwriter" ? "Underwriter" : jobPosition === "businessAnalyst" ? "Business Analyst" : jobPosition === "admin" ? "Admin" : "Select job position"}
                                             <ChevronDown className="h-4 w-4" />
                                         </Button>
                                     </DropdownMenuTrigger>
@@ -442,7 +441,7 @@ function AddContent() {
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button variant="outline" className="bg-background justify-between">
-                                        {contentType === "reference"
+                                            {contentType === "reference"
                                                 ? "Reference Content"
                                                 : "Workflow Content"}
                                             <ChevronDown className="h-4 w-4" />
@@ -456,11 +455,7 @@ function AddContent() {
                                             <DropdownMenuRadioGroup
                                                 value={contentType}
                                                 onValueChange={(v) =>
-                                                    setContentType(
-                                                        v as
-                                                            | "reference"
-                                                            | "workflow",
-                                                    )
+                                                    setContentType(v as "reference" | "workflow")
                                                 }
                                             >
                                                 <DropdownMenuRadioItem value="reference">
@@ -487,9 +482,8 @@ function AddContent() {
                                                 ? "New"
                                                 : status === "inProgress"
                                                     ? "In Progress"
-                                                    : "complete"}
+                                                    : "Complete"}
                                             <ChevronDown className="h-4 w-4" />
-
                                         </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent>
@@ -500,12 +494,7 @@ function AddContent() {
                                             <DropdownMenuRadioGroup
                                                 value={status}
                                                 onValueChange={(v) =>
-                                                    setStatus(
-                                                        v as
-                                                            | "new"
-                                                            | "inProgress"
-                                                            | "complete",
-                                                    )
+                                                    setStatus(v as "new" | "inProgress" | "complete")
                                                 }
                                             >
                                                 <DropdownMenuRadioItem value="new">
@@ -522,11 +511,11 @@ function AddContent() {
                                     </DropdownMenuContent>
                                 </DropdownMenu>
                             </Field>
-                            {submitResult === "success" && (
-                                <div className="mt-4 rounded-md bg-chart-1 border-chart-2 px-3 py-2">
-                                    Content created successfully!
-                                </div>
-                            )}
+                        {submitResult === "success" && (
+                            <div className="mt-4 rounded-md bg-chart-1 border-chart-2 px-3 py-2">
+                                Content created successfully!
+                            </div>
+                        )}
 
                             {submitResult === "error" && (
                                 <div className="mt-4 rounded-md bg-destructive border-destructive text-background px-3 py-2">
