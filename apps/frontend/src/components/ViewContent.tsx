@@ -11,6 +11,7 @@ import {
     FolderOpen,
     Loader2,
     Trash2,
+    Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -98,6 +99,10 @@ function ViewContent() {
     const [user] = React.useState(() => {
         return JSON.parse(localStorage.getItem("user") || "null");
     });
+    const [searchTerm, setSearchTerm] = React.useState("");
+    const filteredContent = content.filter((item) =>
+        item.displayName.toLowerCase().includes(searchTerm.toLowerCase())
+    )
 
     useEffect(() => {
         fetch(`/api/content?persona=${encodeURIComponent(user.persona)}`)
@@ -223,6 +228,7 @@ function ViewContent() {
                     </CardTitle>
                     <CardDescription>
                         Total Content Items: {content.length}
+                        <div>Filtered Content Items: {filteredContent.length}</div>
                     </CardDescription>
                 </CardHeader>
 
@@ -249,7 +255,18 @@ function ViewContent() {
                             <p className="text-sm">No content found.</p>
                         </div>
                     )}
-                    {!loading && !error && content.length > 0 && <Table className="text-left">
+                    {!loading && !error && content.length > 0 && <>
+                        <div className="flex justify-end mb-4">
+                            <Search className="w-8 h-8" />
+                            <input
+                                type="text"
+                                placeholder="Search Table"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="border-2 border-gray-700 rounded px-2 py-1 mb-4 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                            />
+                        </div>
+                        <Table className="text-left">
                         <TableHeader>
                             <TableRow className="uppercase tracking-wider text-muted-foreground select-none hover:bg-transparent">
                                 <TableHead className="w-8" />
@@ -262,7 +279,7 @@ function ViewContent() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {content.map((item) => {
+                            {filteredContent.map((item) => {
                                 const isFile = !!item.fileURI;
                                 const isLink = !!item.linkURL;
                                 const originalFilename = isFile
@@ -416,7 +433,7 @@ function ViewContent() {
                                 );
                             })}
                         </TableBody>
-                    </Table>}
+                    </Table></>}
 
                     {bookmarks.size > 0 && (
                         <div className="mt-4 px-3 py-2 rounded-md bg-primary/5 border border-primary/20 text-xs text-muted-foreground">
