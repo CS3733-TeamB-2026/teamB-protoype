@@ -252,7 +252,7 @@ function ViewContent() {
 
                 <CardContent>
                     <Link to="/manageform">
-                        <Button className="my-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-60 mx-auto rounded-lg px-2 py-6 text-xl">Add Content</Button>
+                        <Button className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-60 rounded-lg px-2 py-6 text-xl">Add Content +</Button>
                     </Link>
 
                     {loading && (
@@ -274,15 +274,19 @@ function ViewContent() {
                         </div>
                     )}
                     {!loading && !error && content.length > 0 && <>
-                        <div className="flex items-center gap-1 mb-4 max-w-sm">
-                            <Search className="w-6 h-6" />
-                            <Input
-                                type="text"
-                                placeholder="Search by name..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="border border-gray-700 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-gray-500"
-                            />
+                        <div className="flex justify-end mb-4">
+                            <div className="relative">
+                                <Search
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 pointer-events-none"
+                                />
+                                <Input
+                                    type="text"
+                                    placeholder="Search by name..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-64 pr-8 border border-gray-700 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                                />
+                            </div>
                         </div>
                         <Table className="text-left">
                         <TableHeader>
