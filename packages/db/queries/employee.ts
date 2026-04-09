@@ -13,26 +13,38 @@ export class Employee {
         })
     }
 
-    public static async queryEmployeesByName(_firstName: string | null, _lastName: string | null): Promise<p.Employee[] | null> {
-        if (_firstName === null && _lastName === null) {
-            throw new Error("No name provided");
-        }
-        else if (_lastName === null) {
+    public static async queryEmployeesByName(firstName: string | null, lastName: string | null): Promise<p.Employee[] | null> {
+        let _firstName
+        let _lastName
+        if (firstName !== null && lastName !== null) {
+            _firstName = firstName
+            _lastName = lastName
             return prisma.employee.findMany({
-                where: {firstName: _firstName}
+                where: {
+                    firstName: _firstName,
+                    lastName: _lastName
+                }
             })
         }
-        else if (_firstName === null) {
+        else if(firstName !== null && lastName === null) {
+            _firstName = firstName
             return prisma.employee.findMany({
-                where: {lastName: _lastName}
+                where: {
+                    firstName: _firstName
+                }
             })
         }
-        return prisma.employee.findMany({
-            where: {
-                firstName: _firstName,
-                lastName: _lastName
-            }
-        })
+        else if(firstName === null && lastName !== null) {
+            _lastName = lastName
+            return prisma.employee.findMany({
+                where: {
+                    lastName: _lastName
+                }
+            })
+        }
+        else{
+            throw new Error("No persona type provided")
+        }
     }
 
     public static async updateEmployee(id: number, _firstName: string, _lastName: string, _persona: string | null): Promise<void> {
