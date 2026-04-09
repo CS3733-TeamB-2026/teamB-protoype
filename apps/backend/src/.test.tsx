@@ -1,6 +1,9 @@
-import {convertToJSON, parseCSV} from "../src/bin/parser.ts";
+import 'dotenv/config'
 import { expect, test, describe} from "vitest";
+import {Content} from "@softeng-app/db";
+{/*import { Employee } from "./queries/employee"*/}
 
+{/*
 describe('Employee Queries', () => {
     const john = {
         id: "2",
@@ -18,10 +21,10 @@ describe('Employee Queries', () => {
         expect(result).toBe(3)
     })
 })
+*/}
 
 
-
-describe ("Content tests", () => {
+describe("Content tests", () => {
     const testContent = {
             name: "Test Document",
             linkURL: "https://example.com",
@@ -33,7 +36,23 @@ describe ("Content tests", () => {
             expiration: null,
             targetPersona: "underwriter"
         }
-        test("content should properly create"), async () => {
-        const created = await Cont
-    }
+        test("content should properly create", async () => {
+        const created = await Content.createContent(
+            testContent.name,
+                testContent.linkURL,
+                testContent.fileURI,
+                testContent.ownerID,
+                testContent.contentType,
+                testContent.status,
+                testContent.lastModified,
+                testContent.expiration,
+                testContent.targetPersona
+        )
+            expect(created.displayName).toBe(testContent.name)
+            expect(created.linkURL).toBe(testContent.linkURL)
+            expect(created.ownerID).toBe(testContent.ownerID)
+            expect(created.contentType).toBe(testContent.contentType)
+            expect(created.targetPersona).toBe(testContent.targetPersona)
+    await Content.deleteContent(created.id)
+    })
 })
