@@ -11,8 +11,10 @@ import {
     FolderOpen,
     Loader2,
     Trash2,
+    Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import {
     Card,
@@ -104,6 +106,10 @@ function ViewContent() {
     const [user] = React.useState(() => {
         return JSON.parse(localStorage.getItem("user") || "null");
     });
+    const [searchTerm, setSearchTerm] = React.useState("");
+    const filteredContent = content.filter((item) =>
+        item.displayName.toLowerCase().includes(searchTerm.toLowerCase())
+    )
 
     useEffect(() => {
         fetch(`/api/content?persona=${encodeURIComponent(user.persona)}`)
@@ -228,7 +234,9 @@ function ViewContent() {
                                 "All"} Content
                     </CardTitle>
                     <CardDescription>
-                        Total Content Items: {content.length}
+                        {filteredContent.length === content.length
+                            ? `${content.length} item${content.length !== 1 ? "s" : ""}`
+                            : `${filteredContent.length} of ${content.length} items`}
                     </CardDescription>
                 </CardHeader>
 
@@ -255,7 +263,17 @@ function ViewContent() {
                             <p className="text-sm">No content found.</p>
                         </div>
                     )}
-                    {!loading && !error && content.length > 0 && <Table className="text-left">
+                    {!loading && !error && content.length > 0 && <>
+                        <div className="flex items-center gap-2 mb-4 max-w-sm">
+                            <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+                            <Input
+                                type="text"
+                                placeholder="Search by name..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                        <Table className="text-left">
                         <TableHeader>
                             <TableRow className="hover:bg-transparent">
                                 <TableHead className="w-8" />
@@ -269,7 +287,7 @@ function ViewContent() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {applySortState(content, sort, (item, col) => {
+                            {applySortState(filteredContent, sort, (item, col) => {
                                 if (col === "name") return item.displayName;
                                 if (col === "owner") return item.owner ? `${item.owner.firstName} ${item.owner.lastName}` : "";
                                 if (col === "status") return item.status ?? "";
@@ -656,7 +674,7 @@ function ViewContent() {
                                 );
                             })}
                         </TableBody>
-                    </Table>}
+                    </Table></>}
 
                     {bookmarks.size > 0 && (
                         <div className="mt-4 px-3 py-2 rounded-md bg-primary/5 border border-primary/20 text-xs text-muted-foreground">

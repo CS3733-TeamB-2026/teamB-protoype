@@ -99,16 +99,22 @@ export class Content {
         })
     }
 
-    public static async queryContentById(id: number | null): Promise<p.Content | null> {
-        let _id
-        if (id === null){
-            _id = JSON.parse(localStorage.getItem("user")!).id
-        }
-        else{
-            _id = id
-        }
+    public static async queryContentById(_id: number): Promise<p.Content | null> {
         return prisma.content.findUnique({
             where: {id: _id}
+        })
+    }
+
+    public static async queryContentByOwnerId(ownerId: number | null): Promise<p.Content | null> {
+        let _ownerId
+        if (ownerId === null){
+            _ownerId = JSON.parse(localStorage.getItem("user")!).id
+        }
+        else{
+            _ownerId = ownerId
+        }
+        return prisma.content.findUnique({
+            where: {id: _ownerId}
         })
     }
 
