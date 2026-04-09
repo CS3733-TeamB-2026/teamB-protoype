@@ -9,6 +9,7 @@ import { EditEmployeeDialog } from "@/components/EditEmployeeDialog";
 import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
 import { SortableHead } from "@/components/shared/SortableHead";
 import { useSortState, applySortState } from "@/helpers/useSortState.ts";
+import {PersonaBadge} from "@/components/shared/PersonaBadge";
 
 export type Employee = {
     firstName: string;
@@ -83,8 +84,8 @@ function ViewEmployees() {
                                     <SortableHead column="id" label="ID" sort={sort} onSort={toggleSort} />
                                     <SortableHead column="firstName" label="First Name" sort={sort} onSort={toggleSort} />
                                     <SortableHead column="lastName" label="Last Name" sort={sort} onSort={toggleSort} />
+                                    <SortableHead column="userName" label="User Name" sort={sort} onSort={toggleSort} className="w-full" />
                                     <SortableHead column="persona" label="Persona" sort={sort} onSort={toggleSort} />
-                                    <SortableHead column="userName" label="User Name" sort={sort} onSort={toggleSort} />
                                     <TableHead className="uppercase tracking-wider text-muted-foreground select-none">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -97,11 +98,15 @@ function ViewEmployees() {
                                     if (col === "userName") return e.login?.userName ?? "";
                                 }).map((employee) => (
                                     <TableRow key={employee.id}>
-                                        <TableCell>{employee.id}</TableCell>
-                                        <TableCell>{employee.firstName}</TableCell>
-                                        <TableCell>{employee.lastName}</TableCell>
-                                        <TableCell className="capitalize">{employee.persona}</TableCell>
+                                        <TableCell className="text-right pr-4">{employee.id}</TableCell>
+                                        <TableCell className="font-medium">{employee.firstName}</TableCell>
+                                        <TableCell className="font-medium">{employee.lastName}</TableCell>
                                         <TableCell>{employee.login?.userName || "—"}</TableCell>
+                                        <TableCell  className="text-center">
+                                            <PersonaBadge
+                                                persona={employee.persona}
+                                            />
+                                        </TableCell>
                                         <TableCell>
                                             <div className="flex justify-center gap-2">
                                                 <Button
