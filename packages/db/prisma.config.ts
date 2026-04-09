@@ -9,8 +9,6 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["NEXT_PUBLIC_DATABASE_URL"],
+    url: process.env["DATABASE_URL"],
   },
 });
-
-//TODO: Figure out if this is used???

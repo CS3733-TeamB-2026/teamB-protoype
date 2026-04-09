@@ -2,6 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 // Get a free hosted Postgres database in seconds: `npx create-db`
+
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -9,96 +10,4 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["public"]
-}
-
-model Login {
-  //TODO: change userName to username
-  userName String
-  passwordHash String
-
-  employee   Employee @relation(fields: [employeeID], references: [id], onDelete: Cascade)
-  employeeID Int      @id
-
-  @@schema("public")
-}
-
-model Employee {
-  id        Int     @id
-  firstName String
-  lastName  String
-  persona   Persona
-
-  ownedContent     Content[]
-  ownedRequests    ServiceRequest[] @relation("OwnedBy")
-  assignedRequests ServiceRequest[] @relation("AssignedTo")
-  login            Login?
-
-  @@schema("public")
-}
-
-model Content {
-  id          Int     @id @default(autoincrement())
-  displayName String
-  linkURL     String? @unique()
-  fileURI     String? @unique()
-
-  owner   Employee? @relation(fields: [ownerID], references: [id], onDelete: SetNull)
-  ownerID Int?
-
-  lastModified DateTime
-  expiration   DateTime?
-
-  contentType   ContentType
-  targetPersona Persona
-  status        Status?
-
-  @@schema("public")
-}
-
-//TODO: delete once we know we aren't using this
-model ServiceRequest {
-  owner   Employee @relation("OwnedBy", fields: [ownerID], references: [id])
-  ownerID Int
-
-  assignee   Employee? @relation("AssignedTo", fields: [assigneeID], references: [id], onDelete: SetNull)
-  assigneeID Int?
-
-  created  DateTime    @default(now())
-  deadline DateTime?
-  type     RequestType
-
-  @@id([ownerID, created])
-  @@schema("public")
-}
-
-enum Persona {
-  underwriter
-  businessAnalyst
-  admin
-
-  @@schema("public")
-}
-
-enum Status {
-  new
-  inProgress
-  complete
-
-  @@schema("public")
-}
-
-enum ContentType {
-  reference
-  workflow
-
-  @@schema("public")
-}
-
-enum RequestType {
-  reviewClaim
-  requestAdjuster
-  checkClaim
-
-  @@schema("public")
 }
