@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { FolderOpen, Loader2 } from "lucide-react";
-import { ContentIcon } from "@/components/shared/Mime.tsx";
+import { ContentIcon } from "@/components/shared/ContentIcon.tsx";
 import { getCategory, getExtension, getOriginalFilename, lookupByFilename } from "@/helpers/mime.ts";
 
 interface ContentItem {
