@@ -81,7 +81,7 @@ function ViewContent() {
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [bookmarks, setBookmarks] = useState<Set<number>>(new Set());
     const [deleteTarget, setDeleteTarget] = useState<ContentItem | null>(null);
-    const [sort, toggleSort] = useSortState<"name" | "owner" | "status" | "contentType">();
+    const [sort, toggleSort] = useSortState<"name" | "owner" | "status" | "contentType">({column: "name", direction: "asc"});
     const [fileSizes, setFileSizes] = useState<Record<number, number | null>>(
         {},
     );

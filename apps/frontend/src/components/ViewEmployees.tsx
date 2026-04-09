@@ -27,13 +27,13 @@ function ViewEmployees() {
     const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<Employee | null>(null);
     const currentUser = JSON.parse(localStorage.getItem("user") || "null");
-    const [sort, toggleSort] = useSortState<"id" | "firstName" | "lastName" | "persona" | "userName">();
+    const [sort, toggleSort] = useSortState<"id" | "firstName" | "lastName" | "persona" | "userName">({column: "id", direction: "asc"});
 
     useEffect(() => {
         fetch("/api/employee/all")
             .then((res) => res.json())
             .then((data) => {
-                setEmployees(data.sort((a: Employee, b: Employee) => a.id - b.id));
+                setEmployees(data);
                 setLoading(false);
             })
             .catch(() => setLoading(false));

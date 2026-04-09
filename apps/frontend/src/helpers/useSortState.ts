@@ -7,8 +7,8 @@ export interface SortState<T extends string> {
     direction: SortDirection;
 }
 
-export function useSortState<T extends string>() {
-    const [sort, setSort] = useState<SortState<T>>({ column: null, direction: "asc" });
+export function useSortState<T extends string>(initial?: SortState<T>) {
+    const [sort, setSort] = useState<SortState<T>>(initial ?? { column: null, direction: "asc" });
 
     function toggle(column: T) {
         setSort((prev) =>
