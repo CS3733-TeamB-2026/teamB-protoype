@@ -7,6 +7,8 @@ import { Link } from "react-router-dom";
 import { Hero } from "@/components/shared/Hero.tsx";
 import { EditEmployeeDialog } from "@/components/EditEmployeeDialog";
 import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
+import { SortableHead } from "@/components/shared/SortableHead";
+import { useSortState, applySortState } from "@/helpers/useSortState.ts";
 
 export type Employee = {
     firstName: string;
@@ -25,12 +27,13 @@ function ViewEmployees() {
     const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<Employee | null>(null);
     const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+    const [sort, toggleSort] = useSortState<"id" | "firstName" | "lastName" | "persona" | "userName">({column: "id", direction: "asc"});
 
     useEffect(() => {
         fetch("/api/employee/all")
             .then((res) => res.json())
             .then((data) => {
-                setEmployees(data.sort((a: Employee, b: Employee) => a.id - b.id));
+                setEmployees(data);
                 setLoading(false);
             })
             .catch(() => setLoading(false));
@@ -76,17 +79,23 @@ function ViewEmployees() {
                     ) : (
                         <Table className="text-left">
                             <TableHeader>
-                                <TableRow className="uppercase tracking-wider text-muted-foreground select-none hover:bg-transparent">
-                                    <TableHead>ID</TableHead>
-                                    <TableHead>First Name</TableHead>
-                                    <TableHead>Last Name</TableHead>
-                                    <TableHead>Persona</TableHead>
-                                    <TableHead>User Name</TableHead>
-                                    <TableHead>Actions</TableHead>
+                                <TableRow className="hover:bg-transparent">
+                                    <SortableHead column="id" label="ID" sort={sort} onSort={toggleSort} />
+                                    <SortableHead column="firstName" label="First Name" sort={sort} onSort={toggleSort} />
+                                    <SortableHead column="lastName" label="Last Name" sort={sort} onSort={toggleSort} />
+                                    <SortableHead column="persona" label="Persona" sort={sort} onSort={toggleSort} />
+                                    <SortableHead column="userName" label="User Name" sort={sort} onSort={toggleSort} />
+                                    <TableHead className="uppercase tracking-wider text-muted-foreground select-none">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {employees.map((employee) => (
+                                {applySortState(employees, sort, (e, col) => {
+                                    if (col === "id") return e.id;
+                                    if (col === "firstName") return e.firstName;
+                                    if (col === "lastName") return e.lastName;
+                                    if (col === "persona") return e.persona;
+                                    if (col === "userName") return e.login?.userName ?? "";
+                                }).map((employee) => (
                                     <TableRow key={employee.id}>
                                         <TableCell>{employee.id}</TableCell>
                                         <TableCell>{employee.firstName}</TableCell>

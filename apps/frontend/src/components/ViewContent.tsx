@@ -14,6 +14,7 @@ import {
     Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import {
     Card,
@@ -36,6 +37,8 @@ import {
 
 } from "@/components/shared/ContentIcon.tsx";
 import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
+import { SortableHead } from "@/components/shared/SortableHead";
+import { useSortState, applySortState } from "@/helpers/useSortState.ts";
 import {
     getCategory,
     getExtension,
@@ -83,6 +86,7 @@ function ViewContent() {
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [bookmarks, setBookmarks] = useState<Set<number>>(new Set());
     const [deleteTarget, setDeleteTarget] = useState<ContentItem | null>(null);
+    const [sort, toggleSort] = useSortState<"name" | "owner" | "status" | "contentType">({column: "name", direction: "asc"});
     const [fileSizes, setFileSizes] = useState<Record<number, number | null>>(
         {},
     );
@@ -233,8 +237,9 @@ function ViewContent() {
                                 "All"} Content
                     </CardTitle>
                     <CardDescription>
-                        Total Content Items: {content.length}
-                        <div>Filtered Content Items: {filteredContent.length}</div>
+                        {filteredContent.length === content.length
+                            ? `${content.length} item${content.length !== 1 ? "s" : ""}`
+                            : `${filteredContent.length} of ${content.length} items`}
                     </CardDescription>
                 </CardHeader>
 
@@ -262,31 +267,36 @@ function ViewContent() {
                         </div>
                     )}
                     {!loading && !error && content.length > 0 && <>
-                        <div className="flex justify-end mb-4">
-                            <Search className="w-8 h-8" />
-                            <input
+                        <div className="flex items-center gap-1 mb-4 max-w-sm">
+                            <Search className="w-6 h-6" />
+                            <Input
                                 type="text"
-                                placeholder="Search Table"
+                                placeholder="Search by name..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="border-2 border-gray-700 rounded px-2 py-1 mb-4 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                                className="border border-gray-700 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-gray-500"
                             />
                         </div>
                         <Table className="text-left">
                         <TableHeader>
-                            <TableRow className="uppercase tracking-wider text-muted-foreground select-none hover:bg-transparent">
+                            <TableRow className="hover:bg-transparent">
                                 <TableHead className="w-8" />
-                                <TableHead>Name</TableHead>
-                                <TableHead className="hidden sm:table-cell">Owner</TableHead>
-                                <TableHead className="hidden sm:table-cell">Status</TableHead>
-                                <TableHead className="hidden sm:table-cell">Kind</TableHead>
-                                <TableHead className="hidden sm:table-cell text-center">Type</TableHead>
+                                <SortableHead column="name" label="Name" sort={sort} onSort={toggleSort} />
+                                <SortableHead column="owner" label="Owner" sort={sort} onSort={toggleSort} className="hidden sm:table-cell" />
+                                <SortableHead column="status" label="Status" sort={sort} onSort={toggleSort} className="hidden sm:table-cell" />
+                                <SortableHead column="contentType" label="Kind" sort={sort} onSort={toggleSort} className="hidden sm:table-cell" />
+                                <TableHead className="hidden sm:table-cell uppercase tracking-wider text-muted-foreground select-none text-center">Type</TableHead>
                                 <TableHead className="w-8" />
                                 <TableHead className="w-8" />
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filteredContent.map((item) => {
+                            {applySortState(filteredContent, sort, (item, col) => {
+                                if (col === "name") return item.displayName;
+                                if (col === "owner") return item.owner ? `${item.owner.firstName} ${item.owner.lastName}` : "";
+                                if (col === "status") return item.status ?? "";
+                                if (col === "contentType") return item.contentType;
+                            }).map((item) => {
                                 const isFile = !!item.fileURI;
                                 const isLink = !!item.linkURL;
                                 const originalFilename = isFile
