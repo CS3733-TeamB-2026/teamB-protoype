@@ -1,7 +1,5 @@
 import * as q from "@softeng-app/db";
 import mime from "mime-types";
-import express from "express";
-const app = express();
 import * as cheerio from 'cheerio';
 import {req, res} from "./types"
 
@@ -137,17 +135,26 @@ export const uploadFile = async (req: req, res: res) => {
 
 export const updateContent = async (req: req, res: res) => {
     const payload = req.body;
+    let fileURI: string | null = null;
     let uploaded = false;
     try {
+        let oldContent = await q.Content.queryContentById(payload.id);
         if (req.file) {
-            const uploadResult = await q.Bucket.updateFile(req.file.buffer, payload.fileURI);
+            fileURI =
+                (payload.ownerID as String) +
+                "/" +
+                crypto.randomUUID() +
+                "/" +
+                req.file.originalname;
+            const uploadResult = await q.Bucket.uploadFile(req.file.buffer, fileURI);
             uploaded = true;
+            fileURI = uploadResult.path;
         }
         const result = await q.Content.updateContent(
             payload.id,
             payload.name,
             payload.linkURL || null,
-            payload.fileURI,
+            fileURI,
             payload.ownerID ? parseInt(payload.ownerID) : null,
             payload.contentType,
             payload.status,
@@ -155,6 +162,10 @@ export const updateContent = async (req: req, res: res) => {
             payload.expiration ? new Date(payload.expiration) : null,
             payload.targetPersona,
         );
+        const oldURI: string | null = oldContent ? oldContent.fileURI : null;
+        if (oldURI && uploaded) {
+            await q.Bucket.deleteFile(oldURI).catch(console.error);
+        }
         return res.status(201).json(result);
     } catch (error) {
         if (uploaded && payload.fileURI) {
