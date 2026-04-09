@@ -6,7 +6,7 @@ Items are ordered by dependency. Features in the same phase can be worked in par
 - [x] Fix URL typo in `ViewContent.tsx:103` — `/api/content}` → `/api/content`
 - [x] Fix hardcoded `localhost:3000` URLs in `AddEmployee.tsx` and `AddContent.tsx`
 - [x] Fix route ordering in `app.ts` (`info/:id`, `download/:id` before `/:id`)
-- [ ] Extract `useUser()` hook (see REFACTOR.md) — JWT will change this shape; one place is better than six
+- [x] Extract `useUser()` hook (see REFACTOR.md) — JWT will change this shape; one place is better than six
 
 ## Phase 1 — Auth (JWT)
 JWT touches the login flow, localStorage, and every protected route. Do this before building more features on top of the current model.

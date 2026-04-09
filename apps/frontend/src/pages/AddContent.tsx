@@ -79,12 +79,14 @@ function AddContent() {
                 method: "POST",
                 body: formData,
             });
-            if (!res.ok) throw new Error()
-
+            if (!res.ok) {
+                setSubmitResult("error");
+                return
+            }
 
             if (res.status === 201) {
                 setSubmitResult("success")
-                setName("");z
+                setName("");
                 setLinkUrl("");
                 setOwnerID(user?.id ?? 0);
                 setContentType("reference");
@@ -97,9 +99,9 @@ function AddContent() {
                 setFileKey((prev) => prev + 1);
                 setFile(null);
             }
-        }catch {
-                setSubmitResult("error")
-            }
+        } catch {
+            setSubmitResult("error")
+        }
     };
 
     if (!user) return null;

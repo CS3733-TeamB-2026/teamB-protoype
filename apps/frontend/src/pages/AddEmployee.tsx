@@ -53,7 +53,10 @@ function AddEmployee() {
                     persona: targetPersona,
                 })
             })
-            if (!empRes.ok) throw new Error()
+            if (!empRes.ok) {
+                setSubmitResult("error");
+                return
+            }
 
             const loginRes = await fetch('/api/login/create', {
                 method: 'POST',
@@ -64,7 +67,10 @@ function AddEmployee() {
                     employeeID: parseInt(id),
                 })
             })
-            if (!loginRes.ok) throw new Error()
+            if (!loginRes.ok) {
+                setSubmitResult("error");
+                return
+            }
             setSubmitResult("success")
 
             setTargetPersona("Select job position")
@@ -73,7 +79,7 @@ function AddEmployee() {
             setUserName("")
             setPassword("")
             setID("")
-        }catch {
+        } catch {
             setSubmitResult("error")
         }
     }
