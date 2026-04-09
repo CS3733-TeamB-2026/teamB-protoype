@@ -210,6 +210,12 @@ function ViewContent() {
         });
     }
 
+    function formatName(item: ContentItem): string {
+        return item.owner
+            ? `${item.owner.lastName}, ${item.owner.firstName}`
+            : ""
+    }
+
     const handleDelete = async (id: number) => {
         const res = await fetch(`/api/content/${id}`, { method: "DELETE" });
         if (res.ok) {
@@ -289,7 +295,7 @@ function ViewContent() {
                         <TableBody>
                             {applySortState(filteredContent, sort, (item, col) => {
                                 if (col === "name") return item.displayName;
-                                if (col === "owner") return item.owner ? `${item.owner.firstName} ${item.owner.lastName}` : "";
+                                if (col === "owner") return formatName(item);
                                 if (col === "status") return item.status ?? "";
                                 if (col === "contentType") return item.contentType;
                             }).map((item) => {
@@ -368,18 +374,16 @@ function ViewContent() {
                                             </TableCell>
 
                                             <TableCell className="hidden sm:table-cell text-foreground">
-                                                {item.owner
-                                                    ? `${item.owner.firstName} ${item.owner.lastName}`
-                                                    : ""}
+                                                {formatName(item)}
                                             </TableCell>
 
-                                            <TableCell className="hidden sm:table-cell">
+                                            <TableCell className="hidden sm:table-cell text-center">
                                                 <ContentStatusBadge
                                                     status={item.status}
                                                 />
                                             </TableCell>
 
-                                            <TableCell className="hidden sm:table-cell">
+                                            <TableCell className="hidden sm:table-cell text-center">
                                                 <ContentTypeBadge
                                                     contentType={item.contentType}
                                                 />
