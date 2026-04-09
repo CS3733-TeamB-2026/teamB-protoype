@@ -2,8 +2,10 @@
 
 Items are ordered by dependency. Features in the same phase can be worked in parallel on separate branches.
 
-## Phase 0 — Immediate fixes (unblock everything else)
-- [ ] Fix URL typo in `ViewContent.tsx:103` — `` `/api/content}` `` → `/api/content`
+## Phase 0 — Immediate fixes ✓
+- [x] Fix URL typo in `ViewContent.tsx:103` — `/api/content}` → `/api/content`
+- [x] Fix hardcoded `localhost:3000` URLs in `AddEmployee.tsx` and `AddContent.tsx`
+- [x] Fix route ordering in `app.ts` (`info/:id`, `download/:id` before `/:id`)
 - [ ] Extract `useUser()` hook (see REFACTOR.md) — JWT will change this shape; one place is better than six
 
 ## Phase 1 — Auth (JWT)
@@ -16,14 +18,18 @@ JWT touches the login flow, localStorage, and every protected route. Do this bef
 
 ## Phase 2 — Quick refactors (parallel with Phase 1 or immediately after)
 These are self-contained and won't conflict with feature branches.
+- [x] Folder restructure: `src/pages/`, `src/layout/`, `src/dialogs/`
+- [x] Delete `FilesPage.tsx` (duplicate utilities, superseded by `ViewContent`)
+- [x] Move `useSortState` to `src/hooks/`
 - [ ] Merge `BusinessAnalyst` + `Underwriter` into shared `PersonaPage` component
-- [ ] Gut `FilesPage.tsx` — remove duplicate utilities, import from `mime.ts` and `shared/`
 - [ ] Simplify `EditContentDialog` conditionals (nested ternaries → flat `&&` checks)
 - [ ] Consolidate `AddContent` 18+ useState calls into a single form object
 
 ## Phase 3 — Content list features
 All touch `ViewContent` — coordinate to avoid conflicts.
-- [ ] Fetch all-persona content (remove persona filter from API call), use `canEdit()` to gate edit/delete buttons — view-only for other personas
+- [x] `canEdit()` permission logic — admin sees all editable; others gate by persona or ownership
+- [x] View-only for other personas' content
+- [ ] Fetch all-persona content (remove persona filter from API call)
 - [ ] Persist bookmarks: add `bookmarks` join table to Prisma, expose GET/POST/DELETE endpoints, update `toggleBookmark` to call API
 - [ ] Float bookmarked items to top of content list
 - [ ] Add filter panel: filter by `contentType`, `targetPersona`, `status` (pure frontend, filter the fetched array)
@@ -50,7 +56,6 @@ All touch `ViewContent` — coordinate to avoid conflicts.
 - [ ] Replace raw owner ID number input with employee search/select dropdown
 - [ ] Seed or add content to reach 30 items per position (underwriter + business analyst)
 
-## Phase 8 — Polish & restructure
+## Phase 8 — Polish
 - [ ] Add disclaimer to home page: "This website has been created for WPI's CS 3733 Software Engineering as a class project and is not in use by Hanover Insurance."
-- [ ] Folder restructure: `src/pages/`, `src/layout/`, `src/dialogs/` (see REFACTOR.md) — do last to minimize import-update conflicts
 - [ ] Remaining REFACTOR.md items not yet addressed
