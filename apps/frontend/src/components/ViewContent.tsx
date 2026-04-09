@@ -42,7 +42,6 @@ import {
     getCategory,
     getExtension,
     getOriginalFilename,
-    lookupByFilename,
 } from "@/helpers/mime";
 import { ContentExtBadge } from "@/components/shared/ContentExtBadge.tsx";
 import { ContentStatusBadge } from "@/components/shared/ContentStatusBadge.tsx";
@@ -263,10 +262,7 @@ function ViewContent() {
                                 const originalFilename = isFile
                                     ? getOriginalFilename(item.fileURI!)
                                     : null;
-                                const mimeType = originalFilename
-                                    ? (lookupByFilename(originalFilename)?.mimeType ?? null)
-                                    : null;
-                                const category = getCategory(mimeType, originalFilename);
+                                const category = getCategory(null, originalFilename);
                                 const ext = originalFilename
                                     ? getExtension(originalFilename)
                                     : null;
