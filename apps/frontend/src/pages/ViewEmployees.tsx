@@ -29,7 +29,7 @@ function ViewEmployees() {
     const [editOpen, setEditOpen] = useState(false);
     const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<Employee | null>(null);
-    const [currentUser] = useUser();
+    const [user] = useUser();
     const [sort, toggleSort] = useSortState<"id" | "firstName" | "lastName" | "persona" | "userName">({column: "id", direction: "asc"});
 
     useEffect(() => {
@@ -53,6 +53,8 @@ function ViewEmployees() {
         }
         setDeleteTarget(null);
     };
+
+    if (!user) return null;
 
     return (
         <>
@@ -114,7 +116,7 @@ function ViewEmployees() {
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
-                                                    disabled={employee.id === currentUser?.id}
+                                                    disabled={employee.id === user?.id}
                                                     onClick={() => {
                                                         setEditingEmployee(employee);
                                                         setEditOpen(true);
@@ -125,7 +127,7 @@ function ViewEmployees() {
                                                 <Button
                                                     variant="destructive"
                                                     size="sm"
-                                                    disabled={employee.id === currentUser?.id}
+                                                    disabled={employee.id === user?.id}
                                                     onClick={() => setDeleteTarget(employee)}
                                                 >
                                                     <Trash2 className="w-4 h-4" />

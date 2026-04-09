@@ -46,7 +46,7 @@ import { ContentStatusBadge } from "@/components/shared/ContentStatusBadge.tsx";
 import { ContentTypeBadge } from "@/components/shared/ContentTypeBadge.tsx";
 import { PersonaBadge } from "@/components/shared/PersonaBadge.tsx";
 import { EditContentDialog } from "@/dialogs/EditContentDialog.tsx";
-import { FilePreview } from "@/components/shared/FilePreview.tsx";
+import { FilePreview } from "@/components/FilePreview.tsx";
 
 // Matches the Content model from Prisma (with joined owner)
 export interface ContentItem {
@@ -170,6 +170,8 @@ function ViewContent() {
     };
 
     const NUM_COLS = 9;
+
+    if (!user) return null;
 
     return (
         <>

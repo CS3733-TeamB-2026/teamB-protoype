@@ -34,7 +34,7 @@ function AddContent() {
     const [user] = useUser();
     const [name, setName] = useState("");
     const [linkUrl, setLinkUrl] = useState("");
-    const [ownerID, setOwnerID] = useState(user.id);
+    const [ownerID, setOwnerID] = useState(user?.id ?? 0);
     const [contentType, setContentType] = useState<"reference" | "workflow">(
         "reference",
     );
@@ -64,7 +64,7 @@ function AddContent() {
             const formData = new FormData();
             formData.append("name", name);
             formData.append("linkURL", uploadMode === "url" ? linkUrl : "");
-            formData.append("ownerID", ownerID);
+            formData.append("ownerID", ownerID.toString());
             formData.append("contentType", contentType);
             formData.append("status", status);
             formData.append("lastModified", date?.toISOString() ?? "");
@@ -84,9 +84,9 @@ function AddContent() {
 
             if (res.status === 201) {
                 setSubmitResult("success")
-                setName("");
+                setName("");z
                 setLinkUrl("");
-                setOwnerID(user.id);
+                setOwnerID(user?.id ?? 0);
                 setContentType("reference");
                 setStatus("new");
                 setJobPosition("Select job position");
@@ -101,6 +101,8 @@ function AddContent() {
                 setSubmitResult("error")
             }
     };
+
+    if (!user) return null;
 
     return (
 

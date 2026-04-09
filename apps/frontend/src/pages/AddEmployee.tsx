@@ -35,6 +35,7 @@ function AddEmployee() {
     const [password, setPassword] = React.useState("")
     const [id, setID] = React.useState("")
     const [submitResult, setSubmitResult] = useState<"success" | "error" | null>(null)
+
     const handleSubmit = async () => {
         {/*TODO: This forces the user to enter all the fields, should probably do this on backend later */}
         if (!firstName || !lastName || !id || !userName || !password || targetPersona === "Select job position") {
@@ -53,8 +54,6 @@ function AddEmployee() {
                 })
             })
             if (!empRes.ok) throw new Error()
-
-
 
             const loginRes = await fetch('/api/login/create', {
                 method: 'POST',

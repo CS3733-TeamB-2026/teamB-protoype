@@ -34,6 +34,8 @@ function EmployeeHome() {
         return () => clearInterval(interval);
     }, []);
 
+    if (!user) return null;
+
     return (
         <>
             {/*Main Page*/}

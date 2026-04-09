@@ -20,6 +20,7 @@ function RecentFiles() {
     const [user] = useUser();
 
     useEffect(() => {
+        if (!user) return;
         fetch(`/api/content?persona=${encodeURIComponent(user.persona)}`)
             .then((res) => res.json())
             .then((data: ContentItem[]) => {
@@ -30,7 +31,7 @@ function RecentFiles() {
                 setError("Failed to load content.");
                 setLoading(false);
             });
-    }, [user.persona]);
+    }, [user]);
 
     //sort by lastModified (newest first) and take top 5
     const recentFiles = [...content]

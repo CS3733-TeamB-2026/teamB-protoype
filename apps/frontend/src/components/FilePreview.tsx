@@ -8,7 +8,7 @@ import Fullscreen from "yet-another-react-lightbox/plugins/fullscreen";
 import ReactMarkdown from "react-markdown";
 import DocViewer, { DocViewerRenderers } from "@iamjariwala/react-doc-viewer";
 import "@iamjariwala/react-doc-viewer/dist/index.css";
-import { getPreviewMode } from "@/helpers/mime";
+import { getPreviewMode } from "@/helpers/mime.ts";
 
 function formatBytes(bytes: number): string {
     if (bytes < 1024) return `${bytes} B`;
