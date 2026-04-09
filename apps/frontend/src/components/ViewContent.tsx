@@ -1,18 +1,16 @@
 import React, { useEffect, useState } from "react";
-import DocViewer, { DocViewerRenderers } from "@iamjariwala/react-doc-viewer";
-import "@iamjariwala/react-doc-viewer/dist/index.css";
 import {
     AlertCircle,
     Bookmark,
     BookmarkCheck,
     ChevronDown,
     ChevronRight,
-    Download,
     FolderOpen,
-    Loader2, Pencil,
+    Loader2,
+    Pencil,
     Trash2,
     LucideFolders,
-    Search
+    Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,14 +42,13 @@ import {
     getCategory,
     getExtension,
     getOriginalFilename,
-    getPreviewMode,
     lookupByFilename,
-    type PreviewMode,
 } from "@/helpers/mime";
 import { ContentExtBadge } from "@/components/shared/ContentExtBadge.tsx";
 import { ContentStatusBadge } from "@/components/shared/ContentStatusBadge.tsx";
 import { ContentTypeBadge } from "@/components/shared/ContentTypeBadge.tsx";
-import {EditContentDialog} from "@/components/EditContentDialog.tsx";
+import { EditContentDialog } from "@/components/EditContentDialog.tsx";
+import { FilePreview } from "@/components/shared/FilePreview";
 
 // Matches the Content model from Prisma (with joined owner)
 export interface ContentItem {
@@ -72,12 +69,6 @@ export interface ContentItem {
     status: string | null;
 }
 
-function formatBytes(bytes: number): string {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
 function ViewContent() {
     const [content, setContent] = useState<ContentItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -88,13 +79,6 @@ function ViewContent() {
     const [bookmarks, setBookmarks] = useState<Set<number>>(new Set());
     const [deleteTarget, setDeleteTarget] = useState<ContentItem | null>(null);
     const [sort, toggleSort] = useSortState<"name" | "owner" | "status" | "contentType">({column: "name", direction: "asc"});
-    const [fileSizes, setFileSizes] = useState<Record<number, number | null>>(
-        {},
-    );
-    const [fileUrls, setFileUrls] = useState<Record<number, string>>({});
-    const [textContents, setTextContents] = useState<Record<number, string>>(
-        {},
-    );
     const [linkPreviews, setLinkPreviews] = useState<
         Record<
             number,
@@ -153,52 +137,8 @@ function ViewContent() {
             .catch(() => { setError("Failed to load content."); setLoading(false); });
     }, []);
 
-    function toggleExpand(item: ContentItem, mimeType: string | null) {
-        const id = item.id;
+    function toggleExpand(id: number) {
         setExpandedId((prev) => (prev === id ? null : id));
-
-        if (!item.fileURI) return;
-
-        const preview = getPreviewMode(mimeType);
-
-        // Fetch file size
-        if (!(id in fileSizes)) {
-            fetch(`/api/content/info/${id}`)
-                .then((res) => res.json())
-                .then((meta) =>
-                    setFileSizes((prev) => ({
-                        ...prev,
-                        [id]: meta?.size ?? null,
-                    })),
-                )
-                .catch(() => setFileSizes((prev) => ({ ...prev, [id]: null })));
-        }
-
-        // Only fetch content if previewable
-        if (preview === "none") return;
-
-        if (preview === "text") {
-            if (!(id in textContents)) {
-                fetch(`/api/content/download/${id}`)
-                    .then((res) => res.text())
-                    .then((text) =>
-                        setTextContents((prev) => ({ ...prev, [id]: text })),
-                    )
-                    .catch(console.error);
-            }
-        } else {
-            if (!(id in fileUrls)) {
-                fetch(`/api/content/download/${id}`)
-                    .then((res) => res.blob())
-                    .then((blob) =>
-                        setFileUrls((prev) => ({
-                            ...prev,
-                            [id]: URL.createObjectURL(blob),
-                        })),
-                    )
-                    .catch(console.error);
-            }
-        }
     }
 
     function toggleBookmark(id: number, e: React.MouseEvent) {
@@ -320,7 +260,6 @@ function ViewContent() {
                                 const ext = originalFilename
                                     ? getExtension(originalFilename)
                                     : null;
-                                const previewMode: PreviewMode = getPreviewMode(mimeType, originalFilename);
                                 const isExpanded = expandedId === item.id;
                                 const isBookmarked = bookmarks.has(item.id);
 
@@ -328,20 +267,12 @@ function ViewContent() {
                                     <React.Fragment key={item.id}>
                                         <TableRow
                                             className={`cursor-pointer ${isExpanded ? "bg-muted/40 hover:bg-muted/40" : ""}`}
-                                            onClick={() =>
-                                                toggleExpand(item, mimeType)
-                                            }
+                                            onClick={() => toggleExpand(item.id)}
                                             tabIndex={0}
                                             onKeyDown={(e) => {
-                                                if (
-                                                    e.key === "Enter" ||
-                                                    e.key === " "
-                                                ) {
+                                                if (e.key === "Enter" || e.key === " ") {
                                                     e.preventDefault();
-                                                    toggleExpand(
-                                                        item,
-                                                        mimeType,
-                                                    );
+                                                    toggleExpand(item.id);
                                                 }
                                             }}
                                         >
@@ -578,112 +509,12 @@ function ViewContent() {
                                         {/* Expanded: file preview */}
                                         {isExpanded && isFile && (
                                             <TableRow className="hover:bg-transparent">
-                                                <TableCell
-                                                    colSpan={8}
-                                                    className="p-0"
-                                                >
-                                                    <div className="bg-background">
-                                                        <div className="px-6 py-3 flex items-center gap-4">
-                                                            <span className="text-sm font-medium text-foreground">
-                                                                {
-                                                                    originalFilename
-                                                                }
-                                                            </span>
-                                                            {fileSizes[
-                                                                item.id
-                                                            ] != null && (
-                                                                <span className="text-xs text-muted-foreground">
-                                                                    {formatBytes(
-                                                                        fileSizes[
-                                                                            item
-                                                                                .id
-                                                                        ]!,
-                                                                    )}
-                                                                </span>
-                                                            )}
-                                                            <a
-                                                                href={`/api/content/download/${item.id}`}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
-                                                            >
-                                                                <Download className="w-4 h-4" />{" "}
-                                                                Download
-                                                            </a>
-                                                        </div>
-                                                        {previewMode ===
-                                                            "text" &&
-                                                            (textContents[
-                                                                item.id
-                                                            ] != null ? (
-                                                                <pre className="px-6 pb-4 text-sm text-foreground overflow-auto max-h-[520px] whitespace-pre-wrap">
-                                                                    {
-                                                                        textContents[
-                                                                            item
-                                                                                .id
-                                                                        ]
-                                                                    }
-                                                                </pre>
-                                                            ) : (
-                                                                <p className="px-6 py-4 text-sm text-muted-foreground">
-                                                                    Fetching...
-                                                                </p>
-                                                            ))}
-                                                        {previewMode ===
-                                                            "image" &&
-                                                            (fileUrls[
-                                                                item.id
-                                                            ] ? (
-                                                                <img
-                                                                    src={
-                                                                        fileUrls[
-                                                                            item
-                                                                                .id
-                                                                        ]
-                                                                    }
-                                                                    alt={
-                                                                        originalFilename ??
-                                                                        ""
-                                                                    }
-                                                                    className="max-w-full mx-auto px-6 pb-4"
-                                                                />
-                                                            ) : (
-                                                                <p className="px-6 py-4 text-sm text-muted-foreground">
-                                                                    Fetching...
-                                                                </p>
-                                                            ))}
-                                                        {previewMode ===
-                                                            "docviewer" &&
-                                                            (fileUrls[
-                                                                item.id
-                                                            ] ? (
-                                                                <DocViewer
-                                                                    documents={[
-                                                                        {
-                                                                            uri: fileUrls[
-                                                                                item
-                                                                                    .id
-                                                                            ],
-                                                                        },
-                                                                    ]}
-                                                                    pluginRenderers={
-                                                                        DocViewerRenderers
-                                                                    }
-                                                                    style={{
-                                                                        minHeight: 520,
-                                                                    }}
-                                                                    config={{
-                                                                        header: {
-                                                                            disableHeader: true,
-                                                                        },
-                                                                    }}
-                                                                />
-                                                            ) : (
-                                                                <p className="px-6 py-4 text-sm text-muted-foreground">
-                                                                    Fetching...
-                                                                </p>
-                                                            ))}
-                                                    </div>
+                                                <TableCell colSpan={8} className="p-0 max-w-0 overflow-hidden">
+                                                    <FilePreview
+                                                        filename={originalFilename!}
+                                                        src={`/api/content/download/${item.id}`}
+                                                        infoSrc={`/api/content/info/${item.id}`}
+                                                    />
                                                 </TableCell>
                                             </TableRow>
                                         )}

@@ -14,15 +14,14 @@
 //   3. Make sure its `previewMode` has a working renderer in FilesPage.
 
 export type Category =
+    | "pdf"
     | "document"
+    | "spreadsheet"
     | "image"
-    | "video"
-    | "audio"
-    | "code"
     | "archive"
     | "other";
 
-export type PreviewMode = "docviewer" | "image" | "text" | "none";
+export type PreviewMode = "docviewer" | "image" | "text" | "markdown" | "table" | "none";
 
 export interface AllowedType {
     /** Canonical MIME type. Lowercase. */
@@ -42,7 +41,7 @@ export const ALLOWED_TYPES: readonly AllowedType[] = [
     {
         mimeType: "application/pdf",
         extensions: ["pdf"],
-        category: "document",
+        category: "pdf",
         previewMode: "docviewer",
         label: "PDF",
     },
@@ -50,7 +49,7 @@ export const ALLOWED_TYPES: readonly AllowedType[] = [
         mimeType: "application/msword",
         extensions: ["doc"],
         category: "document",
-        previewMode: "docviewer",
+        previewMode: "none",
         label: "Word (legacy)",
     },
     {
@@ -64,38 +63,38 @@ export const ALLOWED_TYPES: readonly AllowedType[] = [
     {
         mimeType: "application/vnd.ms-excel",
         extensions: ["xls"],
-        category: "document",
-        previewMode: "docviewer",
+        category: "spreadsheet",
+        previewMode: "table",
         label: "Excel (legacy)",
     },
     {
         mimeType:
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         extensions: ["xlsx"],
-        category: "document",
-        previewMode: "docviewer",
+        category: "spreadsheet",
+        previewMode: "table",
         label: "Excel",
     },
     {
         mimeType: "application/vnd.ms-powerpoint",
         extensions: ["ppt"],
-        category: "document",
-        previewMode: "docviewer",
+        category: "other",
+        previewMode: "none",
         label: "PowerPoint (legacy)",
     },
     {
         mimeType:
             "application/vnd.openxmlformats-officedocument.presentationml.presentation",
         extensions: ["pptx"],
-        category: "document",
-        previewMode: "docviewer",
+        category: "other",
+        previewMode: "none",
         label: "PowerPoint",
     },
     {
         mimeType: "text/markdown",
         extensions: ["md", "markdown"],
         category: "document",
-        previewMode: "docviewer",
+        previewMode: "markdown",
         label: "Markdown",
     },
 
@@ -110,9 +109,53 @@ export const ALLOWED_TYPES: readonly AllowedType[] = [
     {
         mimeType: "text/csv",
         extensions: ["csv"],
-        category: "document",
-        previewMode: "text",
+        category: "spreadsheet",
+        previewMode: "table",
         label: "CSV",
+    },
+
+    // --- Archives (no preview, download only) ---
+    {
+        mimeType: "application/zip",
+        extensions: ["zip"],
+        category: "archive",
+        previewMode: "none",
+        label: "ZIP",
+    },
+    {
+        mimeType: "application/x-tar",
+        extensions: ["tar"],
+        category: "archive",
+        previewMode: "none",
+        label: "TAR",
+    },
+    {
+        mimeType: "application/gzip",
+        extensions: ["gz", "tgz"],
+        category: "archive",
+        previewMode: "none",
+        label: "GZIP",
+    },
+    {
+        mimeType: "application/x-bzip2",
+        extensions: ["bz2"],
+        category: "archive",
+        previewMode: "none",
+        label: "BZIP2",
+    },
+    {
+        mimeType: "application/x-7z-compressed",
+        extensions: ["7z"],
+        category: "archive",
+        previewMode: "none",
+        label: "7-Zip",
+    },
+    {
+        mimeType: "application/vnd.rar",
+        extensions: ["rar"],
+        category: "archive",
+        previewMode: "none",
+        label: "RAR",
     },
 
     // --- Images (rendered with an <img> tag) ---
@@ -231,12 +274,12 @@ export const CATEGORY_COLORS: Record<
     Category | "link",
     { badge: string; icon: string }
 > = {
-    document: { badge: "bg-blue-100 text-blue-700",   icon: "text-blue-500" },
+    pdf:          { badge: "bg-red-100 text-red-700",         icon: "text-red-500" },
+    document:     { badge: "bg-blue-100 text-blue-700",      icon: "text-blue-500" },
+    spreadsheet:  { badge: "bg-emerald-100 text-emerald-700", icon: "text-emerald-500" },
+
     image:    { badge: "bg-pink-100 text-pink-700",   icon: "text-pink-500" },
-    video:    { badge: "bg-purple-100 text-purple-700", icon: "text-purple-500" },
-    audio:    { badge: "bg-amber-100 text-amber-700", icon: "text-amber-500" },
-    code:     { badge: "bg-cyan-100 text-cyan-700",   icon: "text-cyan-500" },
-    archive:  { badge: "bg-stone-100 text-stone-700", icon: "text-stone-500" },
+    archive:  { badge: "bg-yellow-100 text-yellow-700", icon: "text-yellow-500" },
     other:    { badge: "bg-secondary text-secondary-foreground", icon: "text-muted-foreground" },
     link:     { badge: "bg-violet-100 text-violet-700", icon: "text-violet-500" },
 };

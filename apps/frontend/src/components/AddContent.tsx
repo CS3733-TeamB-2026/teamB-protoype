@@ -87,7 +87,7 @@ function AddContent() {
                 setSubmitResult("success")
                 setName("");
                 setLinkUrl("");
-                setOwnerID("");
+                setOwnerID(user.id);
                 setContentType("reference");
                 setStatus("new");
                 setJobPosition("Select job position");
