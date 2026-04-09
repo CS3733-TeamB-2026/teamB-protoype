@@ -1,10 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@plugin "@tailwindcss/typography";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/roboto-slab";
 @import "@fontsource-variable/merriweather";
 @import "@fontsource-variable/roboto";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
