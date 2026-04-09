@@ -264,13 +264,14 @@ function ViewContent() {
                         </div>
                     )}
                     {!loading && !error && content.length > 0 && <>
-                        <div className="flex items-center gap-2 mb-4 max-w-sm">
-                            <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <div className="flex items-center gap-1 mb-4 max-w-sm">
+                            <Search className="w-6 h-6" />
                             <Input
                                 type="text"
                                 placeholder="Search by name..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
+                                className="border border-gray-700 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-gray-500"
                             />
                         </div>
                         <Table className="text-left">
