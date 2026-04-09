@@ -12,15 +12,14 @@ import { Separator } from "@/components/ui/separator.tsx"
 import LoginDialog from "@/dialogs/LoginDialog.tsx"
 import { User } from "lucide-react"
 import { Link } from "react-router-dom"
+import { useUser } from "@/hooks/use-user.ts"
 
 
 function Navbar() {
 
     const { toggleSidebar } = useSidebar();
     const [loginOpen, setLoginOpen] = React.useState(false);
-    const [user, setUser] = React.useState(() => {
-        return JSON.parse(localStorage.getItem("user") || "null");
-    })
+    const [user, setUser] = useUser();
 
     return (
         <>

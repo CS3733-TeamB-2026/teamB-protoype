@@ -22,6 +22,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 import {Button} from "@/components/ui/button.tsx";
+import { useUser } from "@/hooks/use-user.ts";
 import {Separator} from "@/components/ui/separator.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import {Label} from "@/components/ui/label.tsx";
@@ -30,9 +31,7 @@ import {ChevronDown} from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
 
 function AddContent() {
-    const [user] = React.useState(() => {
-        return JSON.parse(localStorage.getItem("user") || "null");
-    });
+    const [user] = useUser();
     const [name, setName] = useState("");
     const [linkUrl, setLinkUrl] = useState("");
     const [ownerID, setOwnerID] = useState(user.id);

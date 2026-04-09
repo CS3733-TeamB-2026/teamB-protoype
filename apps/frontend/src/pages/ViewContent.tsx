@@ -35,6 +35,7 @@ import { ContentIcon } from "@/components/shared/ContentIcon.tsx";
 import { ConfirmDeleteDialog } from "@/dialogs/ConfirmDeleteDialog.tsx";
 import { SortableHead } from "@/components/shared/SortableHead.tsx";
 import { useSortState, applySortState } from "@/hooks/use-sort-state.ts";
+import { useUser } from "@/hooks/use-user.ts";
 import {
     getCategory,
     getExtension,
@@ -88,9 +89,7 @@ function ViewContent() {
             }
         >
     >({});
-    const [user] = React.useState(() => {
-        return JSON.parse(localStorage.getItem("user") || "null");
-    });
+    const [user] = useUser();
     const [searchTerm, setSearchTerm] = React.useState("");
     const filteredContent = content.filter((item) =>
         item.displayName.toLowerCase().includes(searchTerm.toLowerCase())

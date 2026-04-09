@@ -5,7 +5,8 @@ import {
     CardDescription,
     CardContent
 } from "@/components/ui/card.tsx"
-import React, {useEffect, useState} from "react";
+import {useEffect, useState} from "react";
+import { useUser } from "@/hooks/use-user.ts";
 import {Link} from "react-router-dom";
 import RecentFiles from "@/components/RecentFiles.tsx";
 import {Button} from "@/components/ui/button.tsx";
@@ -14,9 +15,7 @@ import {LayoutDashboard, User, Clock} from "lucide-react"
 import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx";
 
 function EmployeeHome() {
-    const [user] = React.useState(() => {
-        return JSON.parse(localStorage.getItem("user") || "null");
-    })
+    const [user] = useUser();
 
     const [currentDateTime, setCurrentDateTime] = useState({
         day: new Date().toLocaleDateString('en-US', { weekday: 'long' }),

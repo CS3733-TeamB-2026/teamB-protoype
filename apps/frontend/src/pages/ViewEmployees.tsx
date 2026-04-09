@@ -11,6 +11,7 @@ import { Users } from "lucide-react";
 import { SortableHead } from "@/components/shared/SortableHead.tsx";
 import { useSortState, applySortState } from "@/hooks/use-sort-state.ts";
 import {PersonaBadge} from "@/components/shared/PersonaBadge.tsx";
+import { useUser } from "@/hooks/use-user.ts";
 
 export type Employee = {
     firstName: string;
@@ -28,7 +29,7 @@ function ViewEmployees() {
     const [editOpen, setEditOpen] = useState(false);
     const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<Employee | null>(null);
-    const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+    const [currentUser] = useUser();
     const [sort, toggleSort] = useSortState<"id" | "firstName" | "lastName" | "persona" | "userName">({column: "id", direction: "asc"});
 
     useEffect(() => {
