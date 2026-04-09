@@ -35,6 +35,8 @@ import {
 
 } from "@/components/shared/ContentIcon.tsx";
 import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
+import { SortableHead } from "@/components/shared/SortableHead";
+import { useSortState, applySortState } from "@/helpers/useSortState.ts";
 import {
     getCategory,
     getExtension,
@@ -79,6 +81,7 @@ function ViewContent() {
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [bookmarks, setBookmarks] = useState<Set<number>>(new Set());
     const [deleteTarget, setDeleteTarget] = useState<ContentItem | null>(null);
+    const [sort, toggleSort] = useSortState<"name" | "owner" | "status" | "contentType">();
     const [fileSizes, setFileSizes] = useState<Record<number, number | null>>(
         {},
     );
@@ -254,19 +257,24 @@ function ViewContent() {
                     )}
                     {!loading && !error && content.length > 0 && <Table className="text-left">
                         <TableHeader>
-                            <TableRow className="uppercase tracking-wider text-muted-foreground select-none hover:bg-transparent">
+                            <TableRow className="hover:bg-transparent">
                                 <TableHead className="w-8" />
-                                <TableHead>Name</TableHead>
-                                <TableHead className="hidden sm:table-cell">Owner</TableHead>
-                                <TableHead className="hidden sm:table-cell">Status</TableHead>
-                                <TableHead className="hidden sm:table-cell">Kind</TableHead>
-                                <TableHead className="hidden sm:table-cell text-center">Type</TableHead>
+                                <SortableHead column="name" label="Name" sort={sort} onSort={toggleSort} />
+                                <SortableHead column="owner" label="Owner" sort={sort} onSort={toggleSort} className="hidden sm:table-cell" />
+                                <SortableHead column="status" label="Status" sort={sort} onSort={toggleSort} className="hidden sm:table-cell" />
+                                <SortableHead column="contentType" label="Kind" sort={sort} onSort={toggleSort} className="hidden sm:table-cell" />
+                                <TableHead className="hidden sm:table-cell uppercase tracking-wider text-muted-foreground select-none text-center">Type</TableHead>
                                 <TableHead className="w-8" />
                                 <TableHead className="w-8" />
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {content.map((item) => {
+                            {applySortState(content, sort, (item, col) => {
+                                if (col === "name") return item.displayName;
+                                if (col === "owner") return item.owner ? `${item.owner.firstName} ${item.owner.lastName}` : "";
+                                if (col === "status") return item.status ?? "";
+                                if (col === "contentType") return item.contentType;
+                            }).map((item) => {
                                 const isFile = !!item.fileURI;
                                 const isLink = !!item.linkURL;
                                 const originalFilename = isFile
