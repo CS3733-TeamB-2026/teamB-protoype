@@ -40,7 +40,7 @@ const navItems = [
     { title: "Manage Employees", icon: UserCog, href: "/", children: [
             { title: "View Employees", icon: Users, href: "/usermanagement", children: [], access: ["admin"] },
             { title: "Add Employees", icon: UserPlus, href: "/employeeform", children: [], access: ["admin"] },
-        ], access: ["admin", "underwriter", "businessAnalyst"] },
+        ], access: ["admin"] },
     { title: "Personas", icon: User, href: "/", children: [
             {title: "Underwriter", icon: User, href: "/underwriter", children: [], access: []},
             {title: "Business Analyst", icon: User, href: "/businessanalyst", children: [], access: []},
@@ -92,7 +92,9 @@ function AppSidebar() {
                                     <CollapsibleContent>
                                         <SidebarMenu className="pl-6">
 
-                                            {item.children.map( (childItem: NavItem) => (
+                                            {item.children
+                                                .filter((childItem : NavItem)=> childItem.access.length === 0 || (user && childItem.access.includes(user.persona)))
+                                                .map( (childItem: NavItem) => (
                                                 //Collapsible Children
                                                 <SidebarMenuItem key={childItem.title}>
                                                     <SidebarMenuButton onClick={ () => toggleSidebar() } className= "active:scale-[0.98] shrink-0 px-2 py-4 my-1 text-md transition-all duration-200 hover:opacity-80" asChild>

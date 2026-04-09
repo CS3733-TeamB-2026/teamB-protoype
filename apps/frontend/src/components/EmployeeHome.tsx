@@ -10,6 +10,8 @@ import {Link} from "react-router-dom";
 import RecentFiles from "@/components/RecentFiles.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {Hero} from "@/components/shared/Hero.tsx";
+import {LayoutDashboard, User, Clock} from "lucide-react"
+import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx";
 
 function EmployeeHome() {
     const [user] = React.useState(() => {
@@ -37,63 +39,94 @@ function EmployeeHome() {
         <>
             {/*Main Page*/}
             <Hero
-                icon="home"
+                icon={LayoutDashboard}
+                description="Find all your tools here."
                 title="Dashboard"
             />
-            <Card className="shadow-lg max-w-5xl mx-auto mt-8 mb-8 text-center p-10">
-                <CardHeader>
-                    <div className="flex justify-between items-baseline">
-                        <CardTitle className="text-xl text-left">Welcome back, {user.firstName} {user.lastName}.</CardTitle>
-                        <CardDescription className="text-left text-black font-bold"> It is {currentDateTime.time} on {currentDateTime.day}.</CardDescription>
-                    </div>
-                    <CardDescription className="text-left">Let's pick up where you left off.</CardDescription>
-                </CardHeader>
-                {/*past the intro, main files and links, description*/}
-                <CardContent className="">
-                    {/*recent file and quick links*/}
-                    <div className="columns-2">
-                        <div>
-                            <Card>
-                                <CardHeader className="text-left text-lg">Recent Files: </CardHeader>
-                                <CardContent>
-                                    <RecentFiles />
-                                    <Link to="/files">
-                                        <Button className="my-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-40 mx-auto rounded-lg px-2 py-5 text-base">View All Content</Button>
-                                    </Link>
-                                </CardContent>
-                            </Card>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-8 mx-20 my-5">
+
+                {/* Hello Card */}
+                <Card className="md:col-span-2 py-8 px-4 shadow-lg hover:scale-101 transition-transform">
+                    <CardHeader>
+                        <div className="flex justify-between items-center">
+                            <div className="flex flex-row gap-5 items-center">
+                                <Avatar className="w-15 h-15 ">
+                                    <AvatarFallback className="bg-primary text-primary-foreground">{user ? user.firstName[0] + user.lastName[0] : <User />}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <CardTitle className="text-3xl text-left">Welcome back, {user.firstName} {user.lastName}.</CardTitle>
+                                    <CardDescription className="text-lg text-left">Let's pick up where you left off.</CardDescription>
+                                </div>
+                            </div>
+                            <LayoutDashboard className="w-15! h-15!"/>
                         </div>
-                        <div className="text-right">
-                            <Card>
-                                <CardHeader className="text-lg">Quick Links: </CardHeader>
-                                <CardContent>
-                                    {/*recent links go here*/}
-                                    <Link to="/usermanagement">
-                                        <Button className="bg-primary text-background hover:bg-black hover:text-background" variant="outline" size="lg">
-                                            View Users
-                                        </Button>
-                                    </Link>
-                                    <Link to="/files">
-                                        <Button className="bg-primary text-background hover:bg-black hover:text-background" variant="outline" size="lg">
-                                            View Files
-                                        </Button>
-                                    </Link>
-                                    <Link to="/manageform">
-                                        <Button className="bg-primary text-background hover:bg-black hover:text-background" variant="outline" size="lg">
-                                            Manage Content Form
-                                        </Button>
-                                    </Link>
-                                    <Link to="/employeeform">
-                                        <Button className="bg-primary text-background hover:bg-black hover:text-background" variant="outline" size="lg">
-                                            Add Employee Form
-                                        </Button>
-                                    </Link>
-                                </CardContent>
-                            </Card>
+
+                    </CardHeader>
+                </Card>
+
+                {/* Clock Card */}
+                <Card className="shadow-lg hover:scale-101 transition-transform px-4 py-4 flex flex-row justify-center items-center">
+                    <CardContent className="p-0">
+                        <div className="flex flex-row items-center gap-5 justify-center">
+                            <Clock className="w-15! h-15!"/>
+                            <p className="text-lg font-semibold">It is {currentDateTime.time} on {currentDateTime.day}.</p>
                         </div>
-                    </div>
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
+
+                {/* Quick Links Card */}
+                <Card className="shadow-lg hover:scale-101 transition-transform">
+                    <CardHeader>
+                        <CardTitle className="capitalize text-3xl mb-4 font-semibold px-4 py-3 text-center">User Access: {user.persona}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-center mb-2 text-2xl">Quick Links:</p>
+                        <div className="flex flex-col items-center gap-2 gap-y-5 justify-center h-full">
+                            { user.persona === "admin" ?
+                                <Link to="/usermanagement">
+                                    <Button className="text-2xl px-8 py-6 bg-primary text-background hover:bg-secondary hover:text-secondary-foreground" variant="outline">
+                                        View Users
+                                    </Button>
+                                </Link>
+                                :
+                                null
+                            }
+                            { user.persona === "admin" ?
+                                <Link to="/employeeform">
+                                    <Button className=" text-2xl px-8 py-6 bg-primary text-background hover:bg-secondary hover:text-secondary-foreground" variant="outline">
+                                        Add Employee Form
+                                    </Button>
+                                </Link>
+                                :
+                                null
+                            }
+                            <Link to="/files">
+                                <Button className="text-2xl px-8 py-6 bg-primary text-background hover:bg-secondary hover:text-secondary-foreground" variant="outline">
+                                    View Files
+                                </Button>
+                            </Link>
+                            <Link to="/manageform">
+                                <Button className="text-2xl px-8 py-6 bg-primary text-background hover:bg-secondary hover:text-secondary-foreground" variant="outline">
+                                    Manage Content Form
+                                </Button>
+                            </Link>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Recent Files Card */}
+                <Card className="shadow-lg hover:scale-101 transition-transform md:col-span-2 px-4 py-8">
+                    <CardHeader className="text-left text-2xl! font-semibold">Recent Files: </CardHeader>
+                    <CardContent>
+                        <RecentFiles />
+                        <Link to="/files">
+                            <Button className="my-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-40 mx-auto rounded-lg px-2 py-5 text-base">View All Content</Button>
+                        </Link>
+                    </CardContent>
+                </Card>
+            </div>
+
         </>
     )
 }
