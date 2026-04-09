@@ -247,7 +247,7 @@ function ViewContent() {
                                 <SortableHead column="persona" label="Persona" sort={sort} onSort={toggleSort} className="hidden sm:table-cell" />
                                 <TableHead className="hidden sm:table-cell uppercase tracking-wider text-muted-foreground select-none text-center">Type</TableHead>
                                 <TableHead className="w-8" />
-                                <TableHead className="w-8" />
+                                <TableHead className="uppercase tracking-wider text-muted-foreground select-none text-center">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -374,24 +374,28 @@ function ViewContent() {
                                                 </button>
                                             </TableCell>
 
-                                            <TableCell className="w-8 px-1">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    disabled={!canEdit(item)}
-                                                    onClick={() => {
-                                                        setEditingContent(item);
-                                                        setEditOpen(true);
-                                                    }}
-                                                >
-                                                    <Pencil className="w-4 h-4" />
-                                                </Button>
-                                                <Button variant="destructive"
+                                            <TableCell>
+                                                <div className="flex justify-center gap-2">
+                                                    <Button
+                                                        variant="outline"
                                                         size="sm"
                                                         disabled={!canEdit(item)}
-                                                        onClick={(e) => { e.stopPropagation(); setDeleteTarget(item); }}>
-                                                    <Trash2 className="w-4 h-4" />
-                                                </Button>
+                                                        onClick={() => {
+                                                            setEditingContent(item);
+                                                            setEditOpen(true);
+                                                        }}
+                                                    >
+                                                        <Pencil className="w-4 h-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="destructive"
+                                                        size="sm"
+                                                        disabled={!canEdit(item)}
+                                                        onClick={(e) => { e.stopPropagation(); setDeleteTarget(item); }}
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
                                             </TableCell>
                                         </TableRow>
 
