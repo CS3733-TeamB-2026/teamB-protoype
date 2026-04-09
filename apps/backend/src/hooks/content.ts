@@ -135,26 +135,27 @@ export const uploadFile = async (req: req, res: res) => {
 
 export const updateContent = async (req: req, res: res) => {
     const payload = req.body;
-    let fileURI: string | null = null;
+    let newFileURI: string | null = null;
     let uploaded = false;
     try {
-        let oldContent = await q.Content.queryContentById(parseInt(payload.id));
+        const oldContent = await q.Content.queryContentById(parseInt(payload.id));
+        const oldURI: string | null = oldContent?.fileURI ?? null;
         if (req.file) {
-            fileURI =
+            newFileURI =
                 (payload.ownerID as String) +
                 "/" +
                 crypto.randomUUID() +
                 "/" +
                 req.file.originalname;
-            const uploadResult = await q.Bucket.uploadFile(req.file.buffer, fileURI);
+            const uploadResult = await q.Bucket.uploadFile(req.file.buffer, newFileURI);
             uploaded = true;
-            fileURI = uploadResult.path;
+            newFileURI = uploadResult.path;
         }
         const result = await q.Content.updateContent(
             parseInt(payload.id),
             payload.name,
             payload.linkURL || null,
-            fileURI,
+            uploaded ? newFileURI : oldURI,
             payload.ownerID ? parseInt(payload.ownerID) : null,
             payload.contentType,
             payload.status,
@@ -162,14 +163,13 @@ export const updateContent = async (req: req, res: res) => {
             payload.expiration ? new Date(payload.expiration) : null,
             payload.targetPersona,
         );
-        const oldURI: string | null = oldContent ? oldContent.fileURI : null;
         if (oldURI && uploaded) {
             await q.Bucket.deleteFile(oldURI).catch(console.error);
         }
         return res.status(201).json(result);
     } catch (error) {
-        if (uploaded && payload.fileURI) {
-            await q.Bucket.deleteFile(payload.fileURI).catch(console.error);
+        if (uploaded && newFileURI) {
+            await q.Bucket.deleteFile(newFileURI).catch(console.error);
         }
         console.error(error);
         return res.status(500).end();

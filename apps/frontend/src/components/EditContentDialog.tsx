@@ -35,7 +35,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
         if (!modified.displayName.trim()
             || !modified.contentType.trim()
             || !modified.targetPersona.trim()
-            || (modified.fileURI == null && modified.linkURL == null)
+            || (content.fileURI == null && modified.linkURL == null)
         ) {
             setError("Fields may not be empty.");
             return;
@@ -45,7 +45,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
         const formData = new FormData();
         formData.append("id", modified.id.toString());
         formData.append("name", modified.displayName);
-        formData.append("linkURL", content.linkURL ?? "");
+        formData.append("linkURL", modified.linkURL ?? "");
         formData.append("ownerID", modified.ownerID ? modified.ownerID.toString() : "");
         formData.append("contentType", modified.contentType);
         formData.append("status", modified.status ?? "");
@@ -146,7 +146,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                         <Label className="my-2">Job Position</Label>
                         <Select
                             defaultValue={content.targetPersona}
-                            onValueChange={(value) => setModified((prev) => ({ ...prev, targetPersona: value }))}
+                            onValueChange={(value) => setModified((prev) => ({ ...prev, targetPersona: value as ContentItem["targetPersona"] }))}
                         >
                             <SelectTrigger className="bg-secondary">
                                 <SelectValue placeholder="Select Persona" />
@@ -186,7 +186,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                         <Label className="my-2">Type</Label>
                         <Select
                             defaultValue={content.contentType}
-                            onValueChange={(value) => setModified((prev) => ({ ...prev, contentType: value }))}
+                            onValueChange={(value) => setModified((prev) => ({ ...prev, contentType: value as ContentItem["contentType"] }))}
                         >
                             <SelectTrigger className="bg-secondary">
                                 <SelectValue placeholder="Select Type" />
@@ -202,7 +202,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                             <Label className="my-2">Status</Label>
                             <Select
                                 defaultValue={content.status}
-                                onValueChange={(value) => setModified((prev) => ({ ...prev, status: value }))}
+                                onValueChange={(value) => setModified((prev) => ({ ...prev, status: value as ContentItem["status"] }))}
                             >
                                 <SelectTrigger className="bg-secondary">
                                     <SelectValue placeholder="Select Status" />
@@ -218,7 +218,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                         <div>
                             <Label className="my-2">Status</Label>
                             <Select
-                                onValueChange={(value) => setModified((prev) => ({ ...prev, status: value }))}
+                                onValueChange={(value) => setModified((prev) => ({ ...prev, status: value as ContentItem["status"] }))}
                             >
                                 <SelectTrigger className="bg-secondary">
                                     <SelectValue placeholder="Select Status" />
