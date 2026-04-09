@@ -23,8 +23,10 @@ type NavItem = {
     access: string[];
 }
 
-//Add pages here, icons imported from lucide react
-//For dropdowns, add more items in children array, leave array empty for single item
+/*
+Add pages here, icons imported from lucide react
+For dropdowns, add more items in children array, leave the array empty for single items
+ */
 const navItems = [
     { title: "Home", icon: Home, href: "/", children: [], access: [] },
     { title: "User Management", icon: Users, href: "/usermanagement", children: [], access: ["admin"] },
@@ -39,6 +41,7 @@ const navItems = [
 
 function AppSidebar() {
 
+    //grabs the user type so that we only display the pages that user role can access
     const user = JSON.parse(localStorage.getItem("user") || "null");
 
     return (
@@ -59,7 +62,7 @@ function AppSidebar() {
                         .map((item: NavItem) => (
 
                         item.children.length > 0 ? (
-                            //Collapsible
+                            //makes the sidebar collapsable
                             <Collapsible key={item.title}>
                                 <SidebarMenuItem>
                                     <CollapsibleTrigger asChild>

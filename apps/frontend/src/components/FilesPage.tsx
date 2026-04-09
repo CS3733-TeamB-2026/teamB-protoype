@@ -20,7 +20,7 @@ import {
     Download,
 } from "lucide-react";
 
-// Matches the Content model from Prisma
+//specifies what metadata is stored for each file
 interface ContentItem {
     id: number;
     displayName: string;
@@ -34,19 +34,28 @@ interface ContentItem {
     status: string | null;
 }
 
+//formats the file name to just grab the original name
 function getOriginalFilename(fileURI: string): string {
     return fileURI.split("/").pop() ?? fileURI;
 }
 
+//formats the file name to just grab the extension
+function getExtension(filename: string): string {
+    const ext = filename.split(".").pop()?.toLowerCase();
+    return ext ?? "unknown";
+}
+
+//formats the file size display
 function formatBytes(bytes: number): string {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-// Category determines icon choice
+//category decides the displayed icon
 type Category = "document" | "image" | "video" | "audio" | "code" | "archive" | "other";
 
+//maps a file type to a category type
 function getCategory(mimeType: string | null): Category {
     if (!mimeType) return "other";
     if (mimeType === "application/pdf") return "document";
@@ -62,7 +71,7 @@ function getCategory(mimeType: string | null): Category {
     return "other";
 }
 
-// Color is driven by category
+//maps a badge color to a category
 const CATEGORY_COLORS: Record<Category | "link", { badge: string; icon: string }> = {
     document: { badge: "bg-blue-100 text-blue-700",       icon: "text-blue-500" },
     image:    { badge: "bg-pink-100 text-pink-700",       icon: "text-pink-500" },
@@ -74,23 +83,19 @@ const CATEGORY_COLORS: Record<Category | "link", { badge: string; icon: string }
     link:     { badge: "bg-violet-100 text-violet-700",   icon: "text-violet-500" },
 };
 
-function getExtension(filename: string): string {
-    const ext = filename.split(".").pop()?.toLowerCase();
-    return ext ?? "unknown";
-}
-
-// Preview mode determines what viewer to use when expanded
+//preview mode just determines how they are rendered when expanded
 type PreviewMode = "docviewer" | "image" | "text" | "none";
 
+//maps a category to a PreviewMode
 function getPreviewMode(category: Category, mimeType: string | null): PreviewMode {
     if (category === "document") return "docviewer";
     if (category === "image") return "image";
     if (category === "code") return "text";
-    // text/plain and text/markdown are already "document", but catch any remaining text/*
     if (mimeType?.startsWith("text/")) return "text";
     return "none";
 }
 
+//maps an icon to a category
 function ContentIcon({category, isLink, className = ""}: { category: Category; isLink: boolean; className?: string }) {
     const colors = CATEGORY_COLORS[isLink ? "link" : category];
     const cls = `shrink-0 ${className} ${colors.icon}`;
@@ -106,6 +111,7 @@ function ContentIcon({category, isLink, className = ""}: { category: Category; i
     }
 }
 
+//determines what badge is displayed for each file
 function ExtBadge({category, ext, isLink}: { category: Category; ext: string | null; isLink: boolean }) {
     const colors = CATEGORY_COLORS[isLink ? "link" : category];
     const label = isLink ? "Link" : (ext ?? "unknown").toUpperCase();
@@ -116,6 +122,7 @@ function ExtBadge({category, ext, isLink}: { category: Category; ext: string | n
     );
 }
 
+//main frontend function
 function FilesPage() {
     const [content, setContent] = useState<ContentItem[]>([]);
     const [error, setError] = useState<string | null>(null);
@@ -124,6 +131,8 @@ function FilesPage() {
     const [fileSizes, setFileSizes] = useState<Record<number, number | null>>({});
     const [fileUrls, setFileUrls] = useState<Record<number, string>>({});
     const [textContents, setTextContents] = useState<Record<number, string>>({});
+
+    //this just sets what information is displayed for link previews
     const [linkPreviews, setLinkPreviews] = useState<Record<number, {
         title: string | null;
         description: string | null;
@@ -131,11 +140,13 @@ function FilesPage() {
         siteName: string | null;
         favicon: string | null;
     }>>({});
+
     const [fileOwners, setFileOwners] = useState<Record<number, string>>({});
     const [user] = React.useState(() => {
         return JSON.parse(localStorage.getItem("user") || "null");
     })
 
+    //fetches all the files from the database
     useEffect(() => {
         fetch(`/api/content/${encodeURIComponent(user.persona)}`)
             .then((res) => res.json())
@@ -171,6 +182,7 @@ function FilesPage() {
             .catch(() => setError("Failed to load content."));
     }, []);
 
+    //expands the file tab to render the inline viewing
     function toggleExpand(item: ContentItem, mimeType: string | null) {
         const id = item.id;
         setExpandedId((prev) => (prev === id ? null : id));
@@ -180,7 +192,7 @@ function FilesPage() {
         const category = getCategory(mimeType);
         const preview = getPreviewMode(category, mimeType);
 
-        // Fetch file size
+        //fetches the file sizes to format later
         if (!(id in fileSizes)) {
             fetch(`/api/content/info/${id}`)
                 .then((res) => res.json())
@@ -188,9 +200,10 @@ function FilesPage() {
                 .catch(() => setFileSizes((prev) => ({...prev, [id]: null})));
         }
 
-        // Only fetch content if previewable
+        //only grabs content that actually has stuff in it
         if (preview === "none") return;
 
+        //text preview rendering
         if (preview === "text") {
             if (!(id in textContents)) {
                 fetch(`/api/content/download/${id}`)
@@ -208,6 +221,7 @@ function FilesPage() {
         }
     }
 
+    //bookmark feature, currently not linked to the backend but will be soon
     function toggleBookmark(id: number, e: React.MouseEvent) {
         e.stopPropagation();
         setBookmarks((prev) => {
@@ -221,6 +235,7 @@ function FilesPage() {
         });
     }
 
+    //error message when files either cant load or if there is no files
     if (error) {
         return (
             <div className="flex flex-col items-center justify-center py-24 gap-3 text-destructive">
@@ -238,6 +253,7 @@ function FilesPage() {
         );
     }
 
+    //the actual frontend view
     return (
         <div className="max-w-5xl mx-auto px-4 py-8">
             <div className="mb-6">
@@ -353,7 +369,7 @@ function FilesPage() {
                                     />
                                 </div>
 
-                                {/* File name or URL */}
+                                {/* file name / url */}
                                 <div className="hidden md:block w-36 text-right text-xs text-muted-foreground truncate">
                                     {isFile && originalFilename && (
                                         <a
@@ -411,7 +427,7 @@ function FilesPage() {
                                 </button>
                             </div>
 
-                            {/* Expanded: link preview */}
+                            {/* expanded link preview */}
                             {isExpanded && isLink && linkPreviews[item.id] && (
                                 <a
                                     href={item.linkURL!}
@@ -450,7 +466,7 @@ function FilesPage() {
                                 </a>
                             )}
 
-                            {/* Expanded: file preview */}
+                            {/* document renderer */}
                             {isExpanded && isFile && (
                                 <div className="border-t border-border bg-background">
                                     <div className="px-6 py-3 flex items-center gap-4">
@@ -523,7 +539,7 @@ function FilesPage() {
                     );
                 })}
             </div>
-
+            
             {bookmarks.size > 0 && (
                 <div className="mt-4 px-3 py-2 rounded-md bg-primary/5 border border-primary/20 text-xs text-muted-foreground">
                     <span className="font-medium text-primary">

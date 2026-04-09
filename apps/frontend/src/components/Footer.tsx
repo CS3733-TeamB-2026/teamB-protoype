@@ -2,10 +2,11 @@ import FacebookIcon from "@/assets/facebook-logo.png";
 import InstagramIcon from "@/assets/instagram-icon.png";
 import TwitterIcon from "@/assets/twitter-icon.png";
 
+//Global footer, this displays across ALL pages.
 function Footer (){
     return (
         <>
-            {/*Footer (Appears on all pages)*/}
+            {}
             <footer className="shrink-0 bg-primary text-primary-foreground mt-auto py-8 px-6">
                 <div className="w-full mx-auto grid grid-cols-1 md:grid-cols-3 items-center gap-6">
                     <div className="text-center md:text-left justify-self-start">
