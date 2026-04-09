@@ -14,6 +14,8 @@ import { teamPhotos } from "@/components/ui/team-photos";
 import { Hero } from "@/components/shared/Hero.tsx";
 
 function Home() {
+
+    //team member data
     type ImageKey = keyof typeof teamPhotos;
     type TeamMember = {
         name: string;
@@ -22,6 +24,7 @@ function Home() {
         photo: ImageKey;
     }
 
+    //members list, for displaying cards
     const members: TeamMember[] = [
         { name: "Dylan Zickus", initials: "DZ", role: "Lead Software Engineer", photo: "dylan" },
         { name: "Oscar Stomberg", initials: "OS", role: "Assistant Lead Software Engineer", photo: "oscar" },
@@ -43,7 +46,7 @@ function Home() {
                 description="CS3733 Team B D26"
             />
 
-            {/*Main Paragraph*/}
+            {/*main text*/}
             <Card className="shadow-lg max-w-5xl mx-auto mt-8 text-center">
                 <CardHeader>
                     <CardTitle className="text-xl">Welcome to Our App.</CardTitle>
@@ -61,7 +64,7 @@ function Home() {
                 </CardContent>
             </Card>
 
-            {/*Team Avatars*/}
+            {/*team member cards*/}
             <section className="mt-12 max-w-7xl mx-auto mb-12">
                 <h1 className="text-2xl font-bold text-primary text-center mb-8">Meet Our Team</h1>
                 <div className="flex flex-wrap md:grid-cols-5 gap-6 justify-center">
