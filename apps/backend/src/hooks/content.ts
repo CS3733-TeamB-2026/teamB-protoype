@@ -34,7 +34,7 @@ export const previewContent = async (req: req, res: res) => {
 };
 
 export const getAllContent = async (req: req, res: res) => {
-    const persona = req.query.persona as string | undefined;
+    const persona = req.query.persona as string | null;
     try {
         const content = persona
             ? await q.Content.queryContentByPersona(persona)

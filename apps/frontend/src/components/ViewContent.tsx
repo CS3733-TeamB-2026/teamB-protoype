@@ -47,6 +47,7 @@ import {
 import { ContentExtBadge } from "@/components/shared/ContentExtBadge.tsx";
 import { ContentStatusBadge } from "@/components/shared/ContentStatusBadge.tsx";
 import { ContentTypeBadge } from "@/components/shared/ContentTypeBadge.tsx";
+import { PersonaBadge } from "@/components/shared/PersonaBadge.tsx";
 import { EditContentDialog } from "@/components/EditContentDialog.tsx";
 import { FilePreview } from "@/components/shared/FilePreview";
 
@@ -78,7 +79,7 @@ function ViewContent() {
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [bookmarks, setBookmarks] = useState<Set<number>>(new Set());
     const [deleteTarget, setDeleteTarget] = useState<ContentItem | null>(null);
-    const [sort, toggleSort] = useSortState<"name" | "owner" | "status" | "contentType">({column: "name", direction: "asc"});
+    const [sort, toggleSort] = useSortState<"name" | "owner" | "status" | "contentType" | "persona">({column: "name", direction: "asc"});
     const [linkPreviews, setLinkPreviews] = useState<
         Record<
             number,
@@ -100,7 +101,7 @@ function ViewContent() {
     )
 
     useEffect(() => {
-        fetch(`/api/content?persona=${encodeURIComponent(user.persona)}`)
+        fetch(`/api/content`)
             .then((res) => res.json())
             .then((data: ContentItem[]) => {
                 setContent(data);
@@ -154,6 +155,11 @@ function ViewContent() {
         });
     }
 
+    function canEdit(item: ContentItem): boolean {
+        if (user!.persona === "admin") return true;
+        return item.targetPersona === user!.persona || item.ownerID === user!.id;
+    }
+
     function formatName(item: ContentItem): string {
         return item.owner
             ? `${item.owner.lastName}, ${item.owner.firstName}`
@@ -167,6 +173,8 @@ function ViewContent() {
         }
         setDeleteTarget(null);
     };
+
+    const NUM_COLS = 9;
 
     return (
         <>
@@ -236,6 +244,7 @@ function ViewContent() {
                                 <SortableHead column="owner" label="Owner" sort={sort} onSort={toggleSort} className="hidden sm:table-cell" />
                                 <SortableHead column="status" label="Status" sort={sort} onSort={toggleSort} className="hidden sm:table-cell" />
                                 <SortableHead column="contentType" label="Kind" sort={sort} onSort={toggleSort} className="hidden sm:table-cell" />
+                                <SortableHead column="persona" label="Persona" sort={sort} onSort={toggleSort} className="hidden sm:table-cell" />
                                 <TableHead className="hidden sm:table-cell uppercase tracking-wider text-muted-foreground select-none text-center">Type</TableHead>
                                 <TableHead className="w-8" />
                                 <TableHead className="w-8" />
@@ -247,6 +256,7 @@ function ViewContent() {
                                 if (col === "owner") return formatName(item);
                                 if (col === "status") return item.status ?? "";
                                 if (col === "contentType") return item.contentType;
+                                if (col === "persona") return item.targetPersona;
                             }).map((item) => {
                                 const isFile = !!item.fileURI;
                                 const isLink = !!item.linkURL;
@@ -330,6 +340,10 @@ function ViewContent() {
                                             </TableCell>
 
                                             <TableCell className="hidden sm:table-cell text-center">
+                                                <PersonaBadge persona={item.targetPersona} />
+                                            </TableCell>
+
+                                            <TableCell className="hidden sm:table-cell text-center">
                                                 <ContentExtBadge
                                                     category={category}
                                                     ext={ext}
@@ -364,6 +378,7 @@ function ViewContent() {
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
+                                                    disabled={!canEdit(item)}
                                                     onClick={() => {
                                                         setEditingContent(item);
                                                         setEditOpen(true);
@@ -373,6 +388,7 @@ function ViewContent() {
                                                 </Button>
                                                 <Button variant="destructive"
                                                         size="sm"
+                                                        disabled={!canEdit(item)}
                                                         onClick={(e) => { e.stopPropagation(); setDeleteTarget(item); }}>
                                                     <Trash2 className="w-4 h-4" />
                                                 </Button>
@@ -383,7 +399,7 @@ function ViewContent() {
                                         {isExpanded && (
                                             <TableRow className="hover:bg-transparent">
                                                 <TableCell
-                                                    colSpan={8}
+                                                    colSpan={NUM_COLS}
                                                     className="px-6 py-2 bg-muted/10 border-t border-border"
                                                 >
                                                     <div className="flex gap-6 text-xs text-muted-foreground">
@@ -423,7 +439,7 @@ function ViewContent() {
                                                 return (
                                                     <TableRow className="hover:bg-transparent">
                                                         <TableCell
-                                                            colSpan={8}
+                                                            colSpan={NUM_COLS}
                                                             className="p-0"
                                                         >
                                                             <a
@@ -509,7 +525,7 @@ function ViewContent() {
                                         {/* Expanded: file preview */}
                                         {isExpanded && isFile && (
                                             <TableRow className="hover:bg-transparent">
-                                                <TableCell colSpan={8} className="p-0 max-w-0 overflow-hidden">
+                                                <TableCell colSpan={NUM_COLS} className="p-0 max-w-0 overflow-hidden">
                                                     <FilePreview
                                                         filename={originalFilename!}
                                                         src={`/api/content/download/${item.id}`}
