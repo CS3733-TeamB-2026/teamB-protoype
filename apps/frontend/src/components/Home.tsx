@@ -12,8 +12,11 @@ import {
 } from "@/components/ui/avatar"
 import { teamPhotos } from "@/components/ui/team-photos";
 import { Hero } from "@/components/shared/Hero.tsx";
+import { Home as HomeIcon } from "lucide-react";
 
 function Home() {
+
+    //team member data
     type ImageKey = keyof typeof teamPhotos;
     type TeamMember = {
         name: string;
@@ -22,6 +25,7 @@ function Home() {
         photo: ImageKey;
     }
 
+    //members list, for displaying cards
     const members: TeamMember[] = [
         { name: "Dylan Zickus", initials: "DZ", role: "Lead Software Engineer", photo: "dylan" },
         { name: "Oscar Stomberg", initials: "OS", role: "Assistant Lead Software Engineer", photo: "oscar" },
@@ -38,13 +42,13 @@ function Home() {
     return (
         <>
             <Hero
-                icon="home"
+                icon={HomeIcon}
                 title="Hanover Insurance - Content Management Application"
                 description="CS3733 Team B D26"
             />
 
             {/*Main Paragraph*/}
-            <Card className="shadow-lg max-w-5xl mx-auto mt-8 text-center">
+            <Card id="content" className="scroll-mt-25 shadow-lg max-w-5xl mx-auto mt-8 text-center">
                 <CardHeader>
                     <CardTitle className="text-xl">Welcome to Our App.</CardTitle>
                     <CardDescription>One place to manage your files.</CardDescription>
@@ -61,9 +65,9 @@ function Home() {
                 </CardContent>
             </Card>
 
-            {/*Team Avatars*/}
+            {/*team member cards*/}
             <section className="mt-12 max-w-7xl mx-auto mb-12">
-                <h1 className="text-2xl font-bold text-primary text-center mb-8">Meet Our Team</h1>
+                <h1 className="text-2xl font-bold text-primary text-center mb-8" >Meet Our Team</h1>
                 <div className="flex flex-wrap md:grid-cols-5 gap-6 justify-center">
 
                     {members.map((member: TeamMember) => (

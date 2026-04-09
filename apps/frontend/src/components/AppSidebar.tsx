@@ -1,4 +1,4 @@
-import { Home, FormInput, User, ChevronDown, LucideFolders, Users, ClipboardPenIcon, X } from "lucide-react"
+import { Home, FilePlus, User, ChevronDown, LucideFolders, Users, UserPlus, X, Library, UserCog, LayoutDashboard } from "lucide-react"
 import React from "react"
 import {Link} from "react-router-dom";
 import {
@@ -26,14 +26,21 @@ type NavItem = {
     access: string[];
 }
 
-//Add pages here, icons imported from lucide react
-//For dropdowns, add more items in children array, leave array empty for single item
+/*
+Add pages here, icons imported from lucide react
+For dropdowns, add more items in children array, leave the array empty for single items
+ */
 const navItems = [
     { title: "Home", icon: Home, href: "/", children: [], access: [] },
-    { title: "View Content", icon: LucideFolders, href: "/files", children: [], access: ["admin", "underwriter", "businessAnalyst"] },
-    { title: "Add Content", icon: FormInput, href: "/manageform", children: [], access: ["admin", "underwriter", "businessAnalyst"] },
-    { title: "View Employees", icon: Users, href: "/usermanagement", children: [], access: ["admin"] },
-    { title: "Add Employees", icon: ClipboardPenIcon, href: "/employeeform", children: [], access: ["admin"] },
+    { title: "Dashboard", icon: LayoutDashboard, href: "/employeehome", children: [], access: ["admin", "underwriter", "businessAnalyst"] },
+    { title: "Manage Content", icon: Library, href: "/", children: [
+            { title: "View Content", icon: LucideFolders, href: "/files", children: [], access: ["admin", "underwriter", "businessAnalyst"] },
+            { title: "Add Content", icon: FilePlus, href: "/manageform", children: [], access: ["admin", "underwriter", "businessAnalyst"] },
+        ], access: ["admin", "underwriter", "businessAnalyst"] },
+    { title: "Manage Employees", icon: UserCog, href: "/", children: [
+            { title: "View Employees", icon: Users, href: "/usermanagement", children: [], access: ["admin"] },
+            { title: "Add Employees", icon: UserPlus, href: "/employeeform", children: [], access: ["admin"] },
+        ], access: ["admin", "underwriter", "businessAnalyst"] },
     { title: "Personas", icon: User, href: "/", children: [
             {title: "Underwriter", icon: User, href: "/underwriter", children: [], access: []},
             {title: "Business Analyst", icon: User, href: "/businessanalyst", children: [], access: []},
@@ -42,6 +49,7 @@ const navItems = [
 
 function AppSidebar() {
 
+    //grabs the user type so that we only display the pages that user role can access
     const user = JSON.parse(localStorage.getItem("user") || "null");
     const {toggleSidebar} = useSidebar();
 
@@ -71,7 +79,7 @@ function AppSidebar() {
                         .map((item: NavItem) => (
 
                         item.children.length > 0 ? (
-                            //Collapsible
+                            //makes the sidebar collapsable
                             <Collapsible key={item.title}>
                                 <SidebarMenuItem>
                                     <CollapsibleTrigger asChild>
@@ -89,7 +97,7 @@ function AppSidebar() {
                                                 <SidebarMenuItem key={childItem.title}>
                                                     <SidebarMenuButton onClick={ () => toggleSidebar() } className= "active:scale-[0.98] shrink-0 px-2 py-4 my-1 text-md transition-all duration-200 hover:opacity-80" asChild>
                                                         <Link to={childItem.href}>
-                                                            <item.icon />
+                                                            <childItem.icon />
                                                             <span>{childItem.title}</span>
                                                         </Link>
                                                     </SidebarMenuButton>

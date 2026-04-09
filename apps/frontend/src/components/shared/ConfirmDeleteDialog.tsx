@@ -46,6 +46,7 @@ export function ConfirmDeleteDialog({ open, onOpenChange, description, onConfirm
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         disabled={loading}
                         onClick={handleConfirm}
+                        variant="destructive"
                     >
                         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Delete"}
                     </AlertDialogAction>

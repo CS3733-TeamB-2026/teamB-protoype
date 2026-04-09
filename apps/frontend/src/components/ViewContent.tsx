@@ -9,9 +9,10 @@ import {
     ChevronRight,
     Download,
     FolderOpen,
-    Loader2,
+    Loader2, Pencil,
     Trash2,
-    Search,
+    LucideFolders,
+    Search
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,9 +51,10 @@ import {
 import { ContentExtBadge } from "@/components/shared/ContentExtBadge.tsx";
 import { ContentStatusBadge } from "@/components/shared/ContentStatusBadge.tsx";
 import { ContentTypeBadge } from "@/components/shared/ContentTypeBadge.tsx";
+import {EditContentDialog} from "@/components/EditContentDialog.tsx";
 
 // Matches the Content model from Prisma (with joined owner)
-interface ContentItem {
+export interface ContentItem {
     id: number;
     displayName: string;
     linkURL: string | null;
@@ -79,6 +81,8 @@ function formatBytes(bytes: number): string {
 function ViewContent() {
     const [content, setContent] = useState<ContentItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const [editOpen, setEditOpen] = useState(false);
+    const [editingContent, setEditingContent] = useState<ContentItem | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [bookmarks, setBookmarks] = useState<Set<number>>(new Set());
@@ -210,6 +214,12 @@ function ViewContent() {
         });
     }
 
+    function formatName(item: ContentItem): string {
+        return item.owner
+            ? `${item.owner.lastName}, ${item.owner.firstName}`
+            : ""
+    }
+
     const handleDelete = async (id: number) => {
         const res = await fetch(`/api/content/${id}`, { method: "DELETE" });
         if (res.ok) {
@@ -221,7 +231,7 @@ function ViewContent() {
     return (
         <>
             <Hero
-                icon="content"
+                icon={ LucideFolders }
                 title="View Content"
                 description="View, update, and delete content you have access to"
             />
@@ -294,7 +304,7 @@ function ViewContent() {
                         <TableBody>
                             {applySortState(filteredContent, sort, (item, col) => {
                                 if (col === "name") return item.displayName;
-                                if (col === "owner") return item.owner ? `${item.owner.firstName} ${item.owner.lastName}` : "";
+                                if (col === "owner") return formatName(item);
                                 if (col === "status") return item.status ?? "";
                                 if (col === "contentType") return item.contentType;
                             }).map((item) => {
@@ -373,18 +383,16 @@ function ViewContent() {
                                             </TableCell>
 
                                             <TableCell className="hidden sm:table-cell text-foreground">
-                                                {item.owner
-                                                    ? `${item.owner.firstName} ${item.owner.lastName}`
-                                                    : ""}
+                                                {formatName(item)}
                                             </TableCell>
 
-                                            <TableCell className="hidden sm:table-cell">
+                                            <TableCell className="hidden sm:table-cell text-center">
                                                 <ContentStatusBadge
                                                     status={item.status}
                                                 />
                                             </TableCell>
 
-                                            <TableCell className="hidden sm:table-cell">
+                                            <TableCell className="hidden sm:table-cell text-center">
                                                 <ContentTypeBadge
                                                     contentType={item.contentType}
                                                 />
@@ -423,14 +431,18 @@ function ViewContent() {
 
                                             <TableCell className="w-8 px-1">
                                                 <Button
-                                                    variant="destructive"
-                                                    disabled={item.ownerID !== user?.id}
+                                                    variant="outline"
                                                     size="sm"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setDeleteTarget(item);
+                                                    onClick={() => {
+                                                        setEditingContent(item);
+                                                        setEditOpen(true);
                                                     }}
                                                 >
+                                                    <Pencil className="w-4 h-4" />
+                                                </Button>
+                                                <Button variant="destructive"
+                                                        size="sm"
+                                                        onClick={(e) => { e.stopPropagation(); setDeleteTarget(item); }}>
                                                     <Trash2 className="w-4 h-4" />
                                                 </Button>
                                             </TableCell>
@@ -698,6 +710,21 @@ function ViewContent() {
                 description={deleteTarget ? <span>This will permanently delete <strong>"{deleteTarget.displayName}"</strong>.</span> : undefined}
                 onConfirm={() => handleDelete(deleteTarget!.id)}
             />
+
+            {editingContent && (
+                <EditContentDialog
+                    key={editingContent.id}
+                    content={editingContent}
+                    open={editOpen}
+                    onOpenChange={setEditOpen}
+                    onSave={(updated) =>
+                        setContent((prev) =>
+                            prev.map((e) => (e.id === updated.id ? updated : e))
+                        )
+                    }
+                />
+            )}
+
         </>
     );
 }

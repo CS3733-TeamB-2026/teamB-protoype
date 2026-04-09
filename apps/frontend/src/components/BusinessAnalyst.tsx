@@ -22,14 +22,14 @@ function BusinessAnalyst() {
 
     return (
         <>
-            {/*Header/Hero Section (includes links)*/}
+            {/*hero header*/}
             <div className="flex flex-col items-center justify-center pt-15 pb-4 px-8 bg-secondary-foreground text-primary-foreground">
                 <h1 className="text-4xl font-bold mb-4">Persona - Business Analyst</h1>
                 <p className="text-lg mb-8 text-primary-foreground/80">Persona Page</p>
 
                 <h2 className="text-2xl font-bold mb-1">Helpful Links:</h2>
 
-                {/*Links*/}
+                {/*links*/}
                 <div className="flex flex-wrap justify-center gap-3 mx-auto max-w-5xl my-4">
 
                     {links.map((link : PersonaLink) => (
@@ -45,7 +45,7 @@ function BusinessAnalyst() {
                 </div>
             </div>
 
-            {/*Persona Section*/}
+            {/*persona section*/}
             <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center">
                 <CardHeader>
                     <CardTitle className="text-2xl">My Persona</CardTitle>

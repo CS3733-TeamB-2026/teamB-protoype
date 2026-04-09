@@ -24,10 +24,10 @@ function Navbar() {
 
     return (
         <>
-            {/* TOP BAR/HEADER */}
+            {/* header */}
             <nav className="flex items-center bg-primary text-primary-foreground p-4 w-full shrink-0 sticky top-0 z-50">
                 <div className="flex items-center gap-2 min-w-fit z-10">
-                    {/* Sidebar Trigger */}
+                    {/* AppSidebar dropdown */}
                     <button onClick={toggleSidebar} className="group cursor-pointer active:scale-[0.96] shrink-0 px-2 py-2 text-xl flex items-center gap-3 transition-all duration-200 hover:opacity-80">
                         <Menu size={28} />
                         <span className="text-xl font-semibold relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-current after:transition-all group-hover:after:w-full group-hover:after:opacity-80">Menu</span>
@@ -41,7 +41,7 @@ function Navbar() {
 
                 <div className="flex-1" />
 
-                {/* User Avatar/Dropdown Popover */}
+                {/* user avatar popover */}
                 <Popover>
                     <PopoverTrigger asChild>
                         <button className="rounded-full flex items-center gap-2 hover:opacity-80 active:scale-[0.96] group">
@@ -55,7 +55,7 @@ function Navbar() {
                     </PopoverTrigger>
                     <PopoverContent className="w-60">
                         {
-                            //Check if logged in
+                            //login check
                             user ?
                                 <div className="flex flex-col gap-3">
                                     <div className="flex items-center gap-3">
@@ -68,12 +68,6 @@ function Navbar() {
                                         </div>
                                     </div>
                                     <Separator className="bg-primary" />
-                                    {/*employee home button*/}
-                                    <Link to={"/employeehome"}>
-                                        <button className="w-full active:scale-97 bg-secondary rounded-lg px-2 py-2 transition-colors hover:bg-primary hover:text-primary-foreground">
-                                            Employee Home
-                                        </button>
-                                    </Link>
                                     {/*log out button*/}
                                     <button className="w-full active:scale-97 bg-secondary rounded-lg px-2 py-2 transition-colors hover:bg-primary hover:text-primary-foreground" onClick={() => {
                                         localStorage.removeItem("user");
@@ -104,7 +98,7 @@ function Navbar() {
                     </PopoverContent>
                 </Popover>
 
-                {/* Login Dialog*/}
+                {/* login dialog */}
                 <LoginDialog
                     open={loginOpen}
                     onOpenChange={setLoginOpen}

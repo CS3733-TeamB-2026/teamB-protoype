@@ -7,8 +7,10 @@ import { Link } from "react-router-dom";
 import { Hero } from "@/components/shared/Hero.tsx";
 import { EditEmployeeDialog } from "@/components/EditEmployeeDialog";
 import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
+import { Users } from "lucide-react";
 import { SortableHead } from "@/components/shared/SortableHead";
 import { useSortState, applySortState } from "@/helpers/useSortState.ts";
+import {PersonaBadge} from "@/components/shared/PersonaBadge";
 
 export type Employee = {
     firstName: string;
@@ -54,7 +56,7 @@ function ViewEmployees() {
     return (
         <>
             <Hero
-                icon="employees"
+                icon={Users}
                 title="View Employees"
                 description="View, update, and delete employees."
             />
@@ -83,8 +85,8 @@ function ViewEmployees() {
                                     <SortableHead column="id" label="ID" sort={sort} onSort={toggleSort} />
                                     <SortableHead column="firstName" label="First Name" sort={sort} onSort={toggleSort} />
                                     <SortableHead column="lastName" label="Last Name" sort={sort} onSort={toggleSort} />
+                                    <SortableHead column="userName" label="User Name" sort={sort} onSort={toggleSort} className="w-full" />
                                     <SortableHead column="persona" label="Persona" sort={sort} onSort={toggleSort} />
-                                    <SortableHead column="userName" label="User Name" sort={sort} onSort={toggleSort} />
                                     <TableHead className="uppercase tracking-wider text-muted-foreground select-none">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -97,11 +99,15 @@ function ViewEmployees() {
                                     if (col === "userName") return e.login?.userName ?? "";
                                 }).map((employee) => (
                                     <TableRow key={employee.id}>
-                                        <TableCell>{employee.id}</TableCell>
-                                        <TableCell>{employee.firstName}</TableCell>
-                                        <TableCell>{employee.lastName}</TableCell>
-                                        <TableCell className="capitalize">{employee.persona}</TableCell>
+                                        <TableCell className="text-right pr-4">{employee.id}</TableCell>
+                                        <TableCell className="font-medium">{employee.firstName}</TableCell>
+                                        <TableCell className="font-medium">{employee.lastName}</TableCell>
                                         <TableCell>{employee.login?.userName || "—"}</TableCell>
+                                        <TableCell  className="text-center">
+                                            <PersonaBadge
+                                                persona={employee.persona}
+                                            />
+                                        </TableCell>
                                         <TableCell>
                                             <div className="flex justify-center gap-2">
                                                 <Button
@@ -143,7 +149,7 @@ function ViewEmployees() {
             {editingEmployee && (
                 <EditEmployeeDialog
                     key={editingEmployee.id}
-                    employee={editingEmployee}
+                    content={editingEmployee}
                     open={editOpen}
                     onOpenChange={setEditOpen}
                     onSave={(updated) =>
