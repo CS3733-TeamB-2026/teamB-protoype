@@ -4,6 +4,7 @@ import {
     FileAudio,
     FileCode,
     FileImage,
+    FileSpreadsheet,
     FileText,
     FileVideo,
     Link,
@@ -23,8 +24,12 @@ export function ContentIcon({
     const cls = `shrink-0 ${className} ${colors.icon}`;
     if (isLink) return <Link className={cls} />;
     switch (category) {
+        case "pdf":
+            return <FileText className={cls} />;
         case "document":
             return <FileText className={cls} />;
+        case "spreadsheet":
+            return <FileSpreadsheet className={cls} />;
         case "image":
             return <FileImage className={cls} />;
         case "video":
