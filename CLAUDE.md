@@ -59,3 +59,16 @@ packages/
 - **Employee** — has a `persona`: `underwriter | businessAnalyst | admin`
 - **Content** — either a `linkURL` (external link) or a `fileURI` (bucket file), never both. `contentType`: `reference | workflow`. `status`: `new | inProgress | complete`.
 - **ServiceRequest** — `type`: `reviewClaim | requestAdjuster | checkClaim`
+
+### Known issues / work in progress
+- `FilesPage.tsx` duplicates utilities from `mime.ts` and `src/components/shared/` — don't use as a reference; tracked for removal in REFACTOR.md.
+- Bookmarks (`ViewContent.tsx`) are client-side only (`Set<number>`, lost on refresh) — not yet persisted to the DB.
+- Auth is pre-JWT: login returns a raw employee object stored in localStorage. This will change — see ROADMAP.md Phase 1.
+- `useSortState` is in `src/helpers/` but belongs in `src/hooks/` — tracked in REFACTOR.md.
+
+### Permissions
+- `canEdit()` in `ViewContent.tsx` is the source of truth for edit access: admin can edit anything; others can edit content where `targetPersona` matches their persona or they are the owner.
+
+### Planning docs
+- `ROADMAP.md` — feature phases and ordering rationale
+- `REFACTOR.md` — code quality tasks with checkboxes
