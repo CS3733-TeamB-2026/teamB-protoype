@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from "react";
 import DocViewer, { DocViewerRenderers } from "@iamjariwala/react-doc-viewer";
 import "@iamjariwala/react-doc-viewer/dist/index.css";
+import * as XLSX from "xlsx";
+import Lightbox from "yet-another-react-lightbox";
+import "yet-another-react-lightbox/styles.css";
+import Zoom from "yet-another-react-lightbox/plugins/zoom";
+import Fullscreen from "yet-another-react-lightbox/plugins/fullscreen";
+import ReactMarkdown from "react-markdown";
 import {
     AlertCircle,
     Bookmark,
@@ -87,6 +93,8 @@ function ViewContent() {
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [bookmarks, setBookmarks] = useState<Set<number>>(new Set());
     const [deleteTarget, setDeleteTarget] = useState<ContentItem | null>(null);
+    const [lightboxItem, setLightboxItem] = useState<{ src: string; alt: string } | null>(null);
+    const [tableData, setTableData] = useState<Record<number, string[][] | null>>({});
     const [sort, toggleSort] = useSortState<"name" | "owner" | "status" | "contentType">({column: "name", direction: "asc"});
     const [fileSizes, setFileSizes] = useState<Record<number, number | null>>(
         {},
@@ -177,7 +185,7 @@ function ViewContent() {
         // Only fetch content if previewable
         if (preview === "none") return;
 
-        if (preview === "text") {
+        if (preview === "text" || preview === "markdown") {
             if (!(id in textContents)) {
                 fetch(`/api/content/download/${id}`)
                     .then((res) => res.text())
@@ -185,6 +193,18 @@ function ViewContent() {
                         setTextContents((prev) => ({ ...prev, [id]: text })),
                     )
                     .catch(console.error);
+            }
+        } else if (preview === "table") {
+            if (!(id in tableData)) {
+                fetch(`/api/content/download/${id}`)
+                    .then((res) => res.arrayBuffer())
+                    .then((buf) => {
+                        const wb = XLSX.read(buf, { type: "array" });
+                        const ws = wb.Sheets[wb.SheetNames[0]];
+                        const rows = XLSX.utils.sheet_to_json<string[]>(ws, { header: 1, defval: "" });
+                        setTableData((prev) => ({ ...prev, [id]: rows as string[][] }));
+                    })
+                    .catch(() => setTableData((prev) => ({ ...prev, [id]: null })));
             }
         } else {
             if (!(id in fileUrls)) {
@@ -625,28 +645,57 @@ function ViewContent() {
                                                                     Fetching...
                                                                 </p>
                                                             ))}
-                                                        {previewMode ===
-                                                            "image" &&
-                                                            (fileUrls[
-                                                                item.id
-                                                            ] ? (
-                                                                <img
-                                                                    src={
-                                                                        fileUrls[
-                                                                            item
-                                                                                .id
-                                                                        ]
-                                                                    }
-                                                                    alt={
-                                                                        originalFilename ??
-                                                                        ""
-                                                                    }
-                                                                    className="max-w-full mx-auto px-6 pb-4"
-                                                                />
+                                                        {previewMode === "image" &&
+                                                            (fileUrls[item.id] ? (
+                                                                <div className="px-6 pb-4">
+                                                                    <img
+                                                                        src={fileUrls[item.id]}
+                                                                        alt={originalFilename ?? ""}
+                                                                        className="max-h-64 mx-auto rounded cursor-zoom-in object-contain"
+                                                                        onClick={() => setLightboxItem({ src: fileUrls[item.id], alt: originalFilename ?? "" })}
+                                                                    />
+                                                                </div>
                                                             ) : (
-                                                                <p className="px-6 py-4 text-sm text-muted-foreground">
-                                                                    Fetching...
-                                                                </p>
+                                                                <p className="px-6 py-4 text-sm text-muted-foreground">Fetching...</p>
+                                                            ))}
+                                                        {previewMode === "markdown" &&
+                                                            (textContents[item.id] != null ? (
+                                                                <div className="px-6 pb-4 text-left prose prose-sm max-w-none">
+                                                                    <ReactMarkdown>{textContents[item.id]}</ReactMarkdown>
+                                                                </div>
+                                                            ) : (
+                                                                <p className="px-6 py-4 text-sm text-muted-foreground">Fetching...</p>
+                                                            ))}
+                                                        {previewMode === "table" &&
+                                                            (tableData[item.id] != null ? (
+                                                                <div className="overflow-auto max-h-[520px] px-6 pb-4">
+                                                                    <table className="text-sm border-collapse w-full">
+                                                                        <thead>
+                                                                            <tr>
+                                                                                {(tableData[item.id]![0] ?? []).map((cell, i) => (
+                                                                                    <th key={i} className="border border-border px-3 py-1.5 bg-muted text-left font-medium whitespace-nowrap">
+                                                                                        {cell}
+                                                                                    </th>
+                                                                                ))}
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            {tableData[item.id]!.slice(1).map((row, ri) => (
+                                                                                <tr key={ri} className="even:bg-muted/30">
+                                                                                    {row.map((cell, ci) => (
+                                                                                        <td key={ci} className="border border-border px-3 py-1.5 whitespace-nowrap">
+                                                                                            {cell}
+                                                                                        </td>
+                                                                                    ))}
+                                                                                </tr>
+                                                                            ))}
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            ) : tableData[item.id] === null ? (
+                                                                <p className="px-6 py-4 text-sm text-destructive">Failed to parse file.</p>
+                                                            ) : (
+                                                                <p className="px-6 py-4 text-sm text-muted-foreground">Fetching...</p>
                                                             ))}
                                                         {previewMode ===
                                                             "docviewer" &&
@@ -656,10 +705,7 @@ function ViewContent() {
                                                                 <DocViewer
                                                                     documents={[
                                                                         {
-                                                                            uri: fileUrls[
-                                                                                item
-                                                                                    .id
-                                                                            ],
+                                                                            uri: fileUrls[item.id],
                                                                         },
                                                                     ]}
                                                                     pluginRenderers={
@@ -699,6 +745,13 @@ function ViewContent() {
                     )}
                 </CardContent>
             </Card>
+
+            <Lightbox
+                open={!!lightboxItem}
+                close={() => setLightboxItem(null)}
+                slides={lightboxItem ? [{ src: lightboxItem.src, alt: lightboxItem.alt }] : []}
+                plugins={[Zoom, Fullscreen]}
+            />
 
             <ConfirmDeleteDialog
                 open={!!deleteTarget}

@@ -22,7 +22,7 @@ export type Category =
     | "archive"
     | "other";
 
-export type PreviewMode = "docviewer" | "image" | "text" | "none";
+export type PreviewMode = "docviewer" | "image" | "text" | "markdown" | "table" | "none";
 
 export interface AllowedType {
     /** Canonical MIME type. Lowercase. */
@@ -50,7 +50,7 @@ export const ALLOWED_TYPES: readonly AllowedType[] = [
         mimeType: "application/msword",
         extensions: ["doc"],
         category: "document",
-        previewMode: "docviewer",
+        previewMode: "none",
         label: "Word (legacy)",
     },
     {
@@ -65,7 +65,7 @@ export const ALLOWED_TYPES: readonly AllowedType[] = [
         mimeType: "application/vnd.ms-excel",
         extensions: ["xls"],
         category: "document",
-        previewMode: "docviewer",
+        previewMode: "table",
         label: "Excel (legacy)",
     },
     {
@@ -73,14 +73,14 @@ export const ALLOWED_TYPES: readonly AllowedType[] = [
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         extensions: ["xlsx"],
         category: "document",
-        previewMode: "docviewer",
+        previewMode: "table",
         label: "Excel",
     },
     {
         mimeType: "application/vnd.ms-powerpoint",
         extensions: ["ppt"],
         category: "document",
-        previewMode: "docviewer",
+        previewMode: "none",
         label: "PowerPoint (legacy)",
     },
     {
@@ -88,14 +88,14 @@ export const ALLOWED_TYPES: readonly AllowedType[] = [
             "application/vnd.openxmlformats-officedocument.presentationml.presentation",
         extensions: ["pptx"],
         category: "document",
-        previewMode: "docviewer",
+        previewMode: "none",
         label: "PowerPoint",
     },
     {
         mimeType: "text/markdown",
         extensions: ["md", "markdown"],
         category: "document",
-        previewMode: "docviewer",
+        previewMode: "markdown",
         label: "Markdown",
     },
 
@@ -111,7 +111,7 @@ export const ALLOWED_TYPES: readonly AllowedType[] = [
         mimeType: "text/csv",
         extensions: ["csv"],
         category: "document",
-        previewMode: "text",
+        previewMode: "table",
         label: "CSV",
     },
 
