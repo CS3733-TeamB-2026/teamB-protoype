@@ -134,7 +134,7 @@ function ViewEmployees() {
             {editingEmployee && (
                 <EditEmployeeDialog
                     key={editingEmployee.id}
-                    employee={editingEmployee}
+                    content={editingEmployee}
                     open={editOpen}
                     onOpenChange={setEditOpen}
                     onSave={(updated) =>

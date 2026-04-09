@@ -19,14 +19,14 @@ import {
 import type { Employee } from "@/components/ViewEmployees";
 
 interface Props {
-    employee: Employee;
+    content: Employee;
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSave: (updated: Employee) => void;
 }
 
-export function EditEmployeeDialog({ employee, open, onOpenChange, onSave }: Props) {
-    const [modified, setModified] = useState<Employee>(employee);
+export function EditEmployeeDialog({ content, open, onOpenChange, onSave }: Props) {
+    const [modified, setModified] = useState<Employee>(content);
     const [error, setError] = useState("");
 
     async function handleApply() {
@@ -77,12 +77,12 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSave }: Pro
                     {error && <p className="text-sm text-destructive">{error}</p>}
                     <div>
                         <Label className="my-2">Employee ID</Label>
-                        <Input defaultValue={employee.id} className="bg-secondary" disabled />
+                        <Input defaultValue={content.id} className="bg-secondary" disabled />
                     </div>
                     <div>
                         <Label className="my-2">First Name</Label>
                         <Input
-                            defaultValue={employee.firstName}
+                            defaultValue={content.firstName}
                             className="bg-secondary"
                             placeholder="Enter Employee First Name"
                             onChange={(e) => setModified((prev) => ({ ...prev, firstName: e.target.value }))}
@@ -91,7 +91,7 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSave }: Pro
                     <div>
                         <Label className="my-2">Last Name</Label>
                         <Input
-                            defaultValue={employee.lastName}
+                            defaultValue={content.lastName}
                             className="bg-secondary"
                             placeholder="Enter Employee Last Name"
                             onChange={(e) => setModified((prev) => ({ ...prev, lastName: e.target.value }))}
@@ -100,7 +100,7 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSave }: Pro
                     <div>
                         <Label className="my-2">Persona</Label>
                         <Select
-                            defaultValue={employee.persona}
+                            defaultValue={content.persona}
                             onValueChange={(value) => setModified((prev) => ({ ...prev, persona: value }))}
                         >
                             <SelectTrigger className="bg-secondary">
@@ -116,7 +116,7 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, onSave }: Pro
                     <div>
                         <Label className="my-2">Username</Label>
                         <Input
-                            defaultValue={employee.login?.userName}
+                            defaultValue={content.login?.userName}
                             className="bg-secondary"
                             placeholder="Enter Employee Username"
                             onChange={(e) =>

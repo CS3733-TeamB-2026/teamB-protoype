@@ -9,7 +9,7 @@ import {
     ChevronRight,
     Download,
     FolderOpen,
-    Loader2,
+    Loader2, Pencil,
     Trash2,
     Search,
 } from "lucide-react";
@@ -47,9 +47,10 @@ import {
 import { ContentExtBadge } from "@/components/shared/ContentExtBadge.tsx";
 import { ContentStatusBadge } from "@/components/shared/ContentStatusBadge.tsx";
 import { ContentTypeBadge } from "@/components/shared/ContentTypeBadge.tsx";
+import {EditContentDialog} from "@/components/EditContentDialog.tsx";
 
 // Matches the Content model from Prisma (with joined owner)
-interface ContentItem {
+export interface ContentItem {
     id: number;
     displayName: string;
     linkURL: string | null;
@@ -74,8 +75,10 @@ function formatBytes(bytes: number): string {
 }
 
 function ViewContent() {
-    const [content, setContent] = useState<ContentItem[]>([]);
+    const [contentList, setContent] = useState<ContentItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const [editOpen, setEditOpen] = useState(false);
+    const [editingContent, setEditingContent] = useState<ContentItem | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [bookmarks, setBookmarks] = useState<Set<number>>(new Set());
@@ -230,7 +233,7 @@ function ViewContent() {
                                 "All"} Content
                     </CardTitle>
                     <CardDescription>
-                        Total Content Items: {content.length}
+                        Total Content Items: {contentList.length}
                         <div>Filtered Content Items: {filteredContent.length}</div>
                     </CardDescription>
                 </CardHeader>
@@ -252,7 +255,7 @@ function ViewContent() {
                             <p className="text-sm font-medium">{error}</p>
                         </div>
                     )}
-                    {!loading && !error && content.length === 0 && (
+                    {!loading && !error && contentList.length === 0 && (
                         <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
                             <FolderOpen className="w-10 h-10" />
                             <p className="text-sm">No content found.</p>
@@ -409,14 +412,18 @@ function ViewContent() {
 
                                             <TableCell className="w-8 px-1">
                                                 <Button
-                                                    variant="destructive"
-                                                    disabled={item.ownerID !== user?.id}
+                                                    variant="outline"
                                                     size="sm"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setDeleteTarget(item);
+                                                    onClick={() => {
+                                                        setEditingContent(item);
+                                                        setEditOpen(true);
                                                     }}
                                                 >
+                                                    <Pencil className="w-4 h-4" />
+                                                </Button>
+                                                <Button variant="destructive"
+                                                        size="sm"
+                                                        onClick={(e) => { e.stopPropagation(); setDeleteTarget(item); }}>
                                                     <Trash2 className="w-4 h-4" />
                                                 </Button>
                                             </TableCell>
@@ -684,6 +691,21 @@ function ViewContent() {
                 description={deleteTarget ? <span>This will permanently delete <strong>"{deleteTarget.displayName}"</strong>.</span> : undefined}
                 onConfirm={() => handleDelete(deleteTarget!.id)}
             />
+
+            {editingContent && (
+                <EditContentDialog
+                    key={editingContent.id}
+                    content={editingContent}
+                    open={editOpen}
+                    onOpenChange={setEditOpen}
+                    onSave={(updated) =>
+                        setContent((prev) =>
+                            prev.map((e) => (e.id === updated.id ? updated : e))
+                        )
+                    }
+                />
+            )}
+
         </>
     );
 }
