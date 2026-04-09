@@ -138,7 +138,7 @@ export const updateContent = async (req: req, res: res) => {
     let fileURI: string | null = null;
     let uploaded = false;
     try {
-        let oldContent = await q.Content.queryContentById(payload.id);
+        let oldContent = await q.Content.queryContentById(parseInt(payload.id));
         if (req.file) {
             fileURI =
                 (payload.ownerID as String) +
@@ -151,7 +151,7 @@ export const updateContent = async (req: req, res: res) => {
             fileURI = uploadResult.path;
         }
         const result = await q.Content.updateContent(
-            payload.id,
+            parseInt(payload.id),
             payload.name,
             payload.linkURL || null,
             fileURI,
