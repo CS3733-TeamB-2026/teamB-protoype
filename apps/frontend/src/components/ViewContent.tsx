@@ -75,7 +75,7 @@ function formatBytes(bytes: number): string {
 }
 
 function ViewContent() {
-    const [contentList, setContent] = useState<ContentItem[]>([]);
+    const [content, setContent] = useState<ContentItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [editOpen, setEditOpen] = useState(false);
     const [editingContent, setEditingContent] = useState<ContentItem | null>(null);
@@ -233,7 +233,7 @@ function ViewContent() {
                                 "All"} Content
                     </CardTitle>
                     <CardDescription>
-                        Total Content Items: {contentList.length}
+                        Total Content Items: {content.length}
                         <div>Filtered Content Items: {filteredContent.length}</div>
                     </CardDescription>
                 </CardHeader>
@@ -255,7 +255,7 @@ function ViewContent() {
                             <p className="text-sm font-medium">{error}</p>
                         </div>
                     )}
-                    {!loading && !error && contentList.length === 0 && (
+                    {!loading && !error && content.length === 0 && (
                         <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
                             <FolderOpen className="w-10 h-10" />
                             <p className="text-sm">No content found.</p>
