@@ -11,7 +11,8 @@ import {
     FolderOpen,
     Loader2, Pencil,
     Trash2,
-    Search,
+    LucideFolders,
+    Search
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -230,7 +231,7 @@ function ViewContent() {
     return (
         <>
             <Hero
-                icon="content"
+                icon={ LucideFolders }
                 title="View Content"
                 description="View, update, and delete content you have access to"
             />

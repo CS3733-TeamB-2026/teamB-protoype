@@ -68,12 +68,6 @@ function Navbar() {
                                         </div>
                                     </div>
                                     <Separator className="bg-primary" />
-                                    {/*employee home button*/}
-                                    <Link to={"/employeehome"}>
-                                        <button className="w-full active:scale-97 bg-secondary rounded-lg px-2 py-2 transition-colors hover:bg-primary hover:text-primary-foreground">
-                                            Employee Home
-                                        </button>
-                                    </Link>
                                     {/*log out button*/}
                                     <button className="w-full active:scale-97 bg-secondary rounded-lg px-2 py-2 transition-colors hover:bg-primary hover:text-primary-foreground" onClick={() => {
                                         localStorage.removeItem("user");

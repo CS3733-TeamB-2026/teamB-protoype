@@ -1,9 +1,9 @@
 import banner from "@/assets/hanover_banner.webp";
-import { HomeIcon, LucideFolders, Users } from "lucide-react";
+import { type LucideIcon } from "lucide-react";
 
 export type HeroIcon = "home" | "employees" | "content";
 
-export function Hero(properties: { icon: HeroIcon | null, title: string, description?: string }) {
+export function Hero(properties: { icon?: LucideIcon | null, title: string, description?: string }) {
     return (
         <div className="relative flex flex-col items-center justify-center py-20 px-8 text-primary-foreground shadow-xl overflow-hidden">
             <div
@@ -46,15 +46,13 @@ export function Hero(properties: { icon: HeroIcon | null, title: string, descrip
                     {properties.description}
                 </p>
             </div>
-            {properties.icon === "home" && (
-                <HomeIcon className="w-8 h-8 drop-shadow-[0_0_20px_rgba(0,0,0,0.9)]" />
-            )}
-            {properties.icon === "employees" && (
-                <Users className="w-8 h-8 drop-shadow-[0_0_20px_rgba(0,0,0,0.9)]" />
-            )}
-            {properties.icon === "content" && (
-                <LucideFolders className="w-8 h-8 drop-shadow-[0_0_20px_rgba(0,0,0,0.9)]" />
-            )}
+
+            { properties.icon ?
+                <properties.icon className="w-8 h-8 drop-shadow-[0_0_20px_rgba(0,0,0,0.9)]"/>
+                :
+                null
+            }
+
         </div>
     )
 }
