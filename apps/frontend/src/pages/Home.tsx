@@ -4,13 +4,13 @@ import {
     CardTitle,
     CardDescription,
     CardContent
-} from "@/components/ui/card"
+} from "@/components/ui/card.tsx"
 import {
     Avatar,
     AvatarFallback,
     AvatarImage,
-} from "@/components/ui/avatar"
-import { teamPhotos } from "@/components/ui/team-photos";
+} from "@/components/ui/avatar.tsx"
+import { teamPhotos } from "@/components/ui/team-photos.tsx";
 import { Hero } from "@/components/shared/Hero.tsx";
 import { Home as HomeIcon, LucideFolder, User, GraduationCap } from "lucide-react";
 

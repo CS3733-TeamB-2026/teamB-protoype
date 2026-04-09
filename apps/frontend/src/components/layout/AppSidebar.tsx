@@ -10,13 +10,13 @@ import {
     SidebarHeader,
     SidebarFooter,
     useSidebar,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar.tsx"
 import {
     Collapsible,
     CollapsibleTrigger,
     CollapsibleContent,
-} from "@/components/ui/collapsible"
-import { Button } from "@/components/ui/button"
+} from "@/components/ui/collapsible.tsx"
+import { Button } from "@/components/ui/button.tsx"
 
 type NavItem = {
     title: string;

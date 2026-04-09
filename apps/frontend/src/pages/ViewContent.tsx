@@ -12,8 +12,8 @@ import {
     LucideFolders,
     Search,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button.tsx";
+import { Input } from "@/components/ui/input.tsx";
 import { Link } from "react-router-dom";
 import {
     Card,
@@ -29,26 +29,23 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table";
+} from "@/components/ui/table.tsx";
 import { Hero } from "@/components/shared/Hero.tsx";
-import {
-    ContentIcon,
-
-} from "@/components/shared/ContentIcon.tsx";
-import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
-import { SortableHead } from "@/components/shared/SortableHead";
-import { useSortState, applySortState } from "@/helpers/useSortState.ts";
+import { ContentIcon } from "@/components/shared/ContentIcon.tsx";
+import { ConfirmDeleteDialog } from "@/dialogs/ConfirmDeleteDialog.tsx";
+import { SortableHead } from "@/components/shared/SortableHead.tsx";
+import { useSortState, applySortState } from "@/hooks/use-sort-state.ts";
 import {
     getCategory,
     getExtension,
     getOriginalFilename,
-} from "@/helpers/mime";
+} from "@/helpers/mime.ts";
 import { ContentExtBadge } from "@/components/shared/ContentExtBadge.tsx";
 import { ContentStatusBadge } from "@/components/shared/ContentStatusBadge.tsx";
 import { ContentTypeBadge } from "@/components/shared/ContentTypeBadge.tsx";
 import { PersonaBadge } from "@/components/shared/PersonaBadge.tsx";
-import { EditContentDialog } from "@/components/EditContentDialog.tsx";
-import { FilePreview } from "@/components/shared/FilePreview";
+import { EditContentDialog } from "@/dialogs/EditContentDialog.tsx";
+import { FilePreview } from "@/components/shared/FilePreview.tsx";
 
 // Matches the Content model from Prisma (with joined owner)
 export interface ContentItem {

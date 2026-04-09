@@ -2,15 +2,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.tsx";
 import { useEffect, useState } from "react";
 import { Loader2, Pencil, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button.tsx";
 import { Link } from "react-router-dom";
 import { Hero } from "@/components/shared/Hero.tsx";
-import { EditEmployeeDialog } from "@/components/EditEmployeeDialog";
-import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
+import { EditEmployeeDialog } from "@/dialogs/EditEmployeeDialog.tsx";
+import { ConfirmDeleteDialog } from "@/dialogs/ConfirmDeleteDialog.tsx";
 import { Users } from "lucide-react";
-import { SortableHead } from "@/components/shared/SortableHead";
-import { useSortState, applySortState } from "@/helpers/useSortState.ts";
-import {PersonaBadge} from "@/components/shared/PersonaBadge";
+import { SortableHead } from "@/components/shared/SortableHead.tsx";
+import { useSortState, applySortState } from "@/hooks/use-sort-state.ts";
+import {PersonaBadge} from "@/components/shared/PersonaBadge.tsx";
 
 export type Employee = {
     firstName: string;

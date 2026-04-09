@@ -16,7 +16,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select.tsx";
-import type { ContentItem } from "@/components/ViewContent";
+import type { ContentItem } from "@/pages/ViewContent.tsx";
 import * as React from "react";
 
 interface Props {

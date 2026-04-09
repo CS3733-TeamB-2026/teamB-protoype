@@ -4,7 +4,7 @@ import {
     CardTitle,
     CardDescription,
     CardContent
-} from "@/components/ui/card"
+} from "@/components/ui/card.tsx"
 import React, {useEffect, useState} from "react";
 import {Link} from "react-router-dom";
 import RecentFiles from "@/components/RecentFiles.tsx";

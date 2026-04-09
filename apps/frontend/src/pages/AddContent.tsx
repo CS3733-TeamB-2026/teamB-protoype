@@ -1,15 +1,15 @@
 "use client";
 import * as React from "react";
 import {useState} from "react";
-import {Field, FieldLabel, FieldDescription} from "@/components/ui/field";
-import {Input} from "@/components/ui/input";
+import {Field, FieldLabel, FieldDescription} from "@/components/ui/field.tsx";
+import {Input} from "@/components/ui/input.tsx";
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from "@/components/ui/popover";
-import {Calendar} from "@/components/ui/calendar";
-import { Hero } from "@/components/shared/Hero"
+} from "@/components/ui/popover.tsx";
+import {Calendar} from "@/components/ui/calendar.tsx";
+import { Hero } from "@/components/shared/Hero.tsx"
 import { FilePlus } from "lucide-react"
 
 import {
@@ -20,12 +20,12 @@ import {
     DropdownMenuRadioGroup,
     DropdownMenuRadioItem,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {Button} from "@/components/ui/button";
-import {Separator} from "@/components/ui/separator";
-import { Card } from "@/components/ui/card";
-import {Label} from "@/components/ui/label";
-import {RadioGroup, RadioGroupItem} from "@/components/ui/radio-group";
+} from "@/components/ui/dropdown-menu.tsx";
+import {Button} from "@/components/ui/button.tsx";
+import {Separator} from "@/components/ui/separator.tsx";
+import { Card } from "@/components/ui/card.tsx";
+import {Label} from "@/components/ui/label.tsx";
+import {RadioGroup, RadioGroupItem} from "@/components/ui/radio-group.tsx";
 import {ChevronDown} from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
 
