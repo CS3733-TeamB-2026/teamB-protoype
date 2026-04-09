@@ -17,6 +17,7 @@ import {
     SelectValue,
 } from "@/components/ui/select.tsx";
 import type { ContentItem } from "@/components/ViewContent";
+import * as React from "react";
 
 interface Props {
     content: ContentItem;
@@ -28,6 +29,7 @@ interface Props {
 export function EditContentDialog({ content, open, onOpenChange, onSave }: Props) {
     const [modified, setModified] = useState<ContentItem>(content);
     const [error, setError] = useState("");
+    const [file, setFile] = React.useState<File | null>(null);
 
     async function handleApply() {
         if (!modified.displayName.trim()
@@ -40,21 +42,23 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
         }
         setError("");
 
+        const formData = new FormData();
+        formData.append("id", modified.id.toString());
+        formData.append("name", modified.displayName);
+        formData.append("linkURL", content.linkURL ?? "");
+        formData.append("ownerID", modified.ownerID ? modified.ownerID.toString() : "");
+        formData.append("contentType", modified.contentType);
+        formData.append("status", modified.status ?? "");
+        formData.append("expiration", modified.expiration ?? "");
+        formData.append("targetPersona", modified.targetPersona);
+
+        if (content.fileURI && file) {
+            formData.append("file", file);
+        }
+
         const contentRes = await fetch("/api/content", {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                id: modified.id,
-                name: modified.displayName,
-                linkURL: modified.linkURL,
-                fileURI: modified.fileURI,
-                ownerID: modified.ownerID,
-                contentType: modified.contentType,
-                status: modified.status,
-                lastModified: modified.lastModified,
-                expiration: modified.expiration,
-                targetPersona: modified.targetPersona,
-            }),
+            body: formData
         });
 
         if (contentRes.ok) {
@@ -89,7 +93,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                     </div>
                     {/*Only show the field that exists between URL and URI
                         need weird nested ternary to prevent TS yelling about null values
-                        TODO make file upload work*/}
+                        TODO change null catchers to use ?? syntax*/}
                     {content.linkURL ? (
                     <div>
                         <Label className="my-2">URL</Label>
@@ -102,17 +106,17 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                     </div>
                     ): ( content.fileURI ? (
                         <div>
-                            <Label className="my-2">URL</Label>
+                            <Label className="my-2">Upload File</Label>
                             <Input
-                                defaultValue={content.fileURI}
+                                type="file"
                                 className="bg-secondary"
-                                placeholder="Enter File URI"
-                                onChange={(e) => setModified((prev) => ({ ...prev, fileURI: e.target.value }))}
+                                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
                             />
                         </div>
                     ):
-                        <div></div>
+                        <div>ERROR</div>
                         )
+
                     }
                     {/*TODO make it throw an error instead of showing nothing if there is neither a link or a file*/}
                     {content.ownerID ? (
@@ -177,6 +181,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                         </div>
                     )
                     }
+                    {/*TODO make this use the same datepicker UI as the other stuff*/}
                     <div>
                         <Label className="my-2">Type</Label>
                         <Select

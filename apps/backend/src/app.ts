@@ -33,7 +33,7 @@ app.get("/api/content/:id", content.getContentById)
 app.get("/api/content/info/:id", content.getContentInfo)
 app.get("/api/content/download/:id", content.downloadContent)
 app.post("/api/content", upload.single("file"), content.uploadFile)
-app.put("/api/content", content.updateContent)
+app.put("/api/content", upload.single("file"), content.updateContent)
 app.delete("/api/content/:id", content.deleteContent)
 // Employee
 app.get("/api/employee/all", employee.getAllEmployeesWithLogin)
