@@ -3,28 +3,30 @@ import { expect, test, describe} from "vitest";
 import * as login from './hooks/login'
 import * as content from './hooks/content'
 import * as employee from './hooks/employee'
-import {Content} from "@softeng-app/db";
+import { Content, Employee } from "@softeng-app/db";
 {/*import { Employee } from "./queries/employee"*/}
 
-/*
-describe('Employee Queries', () => {
-    const john = {
-        id: "2",
-        firstName: "John",
-        lastName: "Admin",
-        targetPersona: "admin"
+describe("Employee tests", () => {
+    const testEmployee = {
+        id: 101010 as const,
+        firstName: "January" as const,
+        lastName: "February" as const,
+        persona: "underwriter"
     }
-    test('Employee John Admin Exists', () => {
-        const result = 1+2
-        expect(result).toBe(3)
-    })
-
-    test('Employee should properly intialize', () => {
-        const result = 1+2
-        expect(result).toBe(3)
+    test("employee should properly create", async () => {
+        const created: { id: number; firstName: string; lastName: string; persona: string} = await Employee.createEmployee(
+            testEmployee.id,
+            testEmployee.firstName,
+            testEmployee.lastName,
+            testEmployee.persona,
+        )
+            expect(created.id).toBe(testEmployee.id)
+            expect(created.firstName).toBe(testEmployee.firstName)
+            expect(created.lastName).toBe(testEmployee.lastName,)
+            expect(created.persona).toBe(testEmployee.persona)
+        await Employee.deleteEmployee(created.id)
     })
 })
-*/
 
 
 describe("Content tests", () => {
