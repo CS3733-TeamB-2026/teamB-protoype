@@ -59,3 +59,9 @@ All touch `ViewContent` — coordinate to avoid conflicts.
 ## Phase 8 — Polish
 - [ ] Add disclaimer to home page: "This website has been created for WPI's CS 3733 Software Engineering as a class project and is not in use by Hanover Insurance."
 - [ ] Remaining REFACTOR.md items not yet addressed
+
+## Dependency vulnerabilities
+- [x] Vite 8.0.x → 8.0.5+ (high — dev server file read bypass + `fs.deny` bypass). Fixed.
+- [ ] `xlsx` — 2 high vulns (prototype pollution, ReDoS). **No npm patch exists** — SheetJS stopped publishing fixes to npm. Options: replace with `exceljs`, or accept risk (client-side only, internal users). Deferred.
+- [ ] `defu` (high — prototype pollution) — transitive: `prisma → @prisma/config → c12 → defu`. May resolve itself on a future Prisma update. Low real-world risk. Monitor.
+- [ ] `hono` + `@hono/node-server` (5 moderate) — transitive via `shadcn CLI → @modelcontextprotocol/sdk`. **Dev tooling only, not in production bundle.** Ignore unless shadcn releases an update.
