@@ -23,15 +23,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {Button} from "@/components/ui/button";
 import {Separator} from "@/components/ui/separator";
-import {Card} from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import {Label} from "@/components/ui/label";
 import {RadioGroup, RadioGroupItem} from "@/components/ui/radio-group";
 import {ChevronDown} from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
 
 function AddContent() {
+    const [user] = React.useState(() => {
+        return JSON.parse(localStorage.getItem("user") || "null");
+    });
     const [name, setName] = useState("");
     const [linkUrl, setLinkUrl] = useState("");
-    const [ownerID, setOwnerID] = useState("");
+    const [ownerID, setOwnerID] = useState(user.id);
     const [contentType, setContentType] = useState<"reference" | "workflow">(
         "reference",
     );
@@ -237,23 +241,35 @@ function AddContent() {
 
                             {/*Employee ID Field*/}
                             {/*Only allows ints*/}
+                            {/*<Field className="bg-background">*/}
+                            {/*    <Input*/}
+                            {/*        id="input-employee-id"*/}
+                            {/*        type="number"*/}
+                            {/*        placeholder="000000"*/}
+                            {/*        value={ownerID}*/}
+                            {/*        onChange={(e) => setOwnerID(e.target.value)}*/}
+                            {/*    />*/}
+                            {/*    <FieldDescription>*/}
+                            {/*        /!* TODO: Enter the employee ID of the content owner*!/*/}
+                            {/*    </FieldDescription>*/}
+                            {/*</Field>*/}
                             <Field className="bg-background">
-                                <FieldLabel
-                                    className="text-primary"
-                                    htmlFor="input-employee-id"
-                                >
-                                    Owner Employee ID
+                                <FieldLabel className="text-primary">
+                                    Owner Employee
                                 </FieldLabel>
-                                <Input
-                                    id="input-employee-id"
-                                    type="number"
-                                    placeholder="000000"
-                                    value={ownerID}
-                                    onChange={(e) => setOwnerID(e.target.value)}
-                                />
-                                <FieldDescription>
-                                    {/* TODO: Enter the employee ID of the content owner*/}
-                                </FieldDescription>
+                                <Card className="text-left p-4">
+                                    <div className="flex items-center gap-3">
+                                        <Avatar className="w-10 h-10">
+                                            <AvatarFallback className="bg-primary text-primary-foreground">
+                                                {user.firstName[0] + user.lastName[0]}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                            <p className="font-semibold">{user.firstName} {user.lastName}</p>
+                                            <p className="text-sm text-muted-foreground capitalize">{user.persona}</p>
+                                        </div>
+                                    </div>
+                                </Card>
                             </Field>
 
                             {/*Separator*/}
