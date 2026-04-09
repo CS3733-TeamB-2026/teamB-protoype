@@ -25,8 +25,8 @@ function Footer (){
                         </a>
                     </div>
                     <div className="text-center md:text-right justify-self-end">
-                        <h3 className="font-bold text-lg"></h3>
-                        <p className="text-sm text-primary-foreground/70"></p>
+                        <h3 className="font-bold text-lg">Not an official Hanover website</h3>
+                        <p className="text-sm text-primary-foreground/70">CS3733 at Worcester Polytechnic Institute</p>
                     </div>
                 </div>
             </footer>

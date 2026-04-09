@@ -1,4 +1,5 @@
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
+import banner from "@/assets/hanover_banner.webp";
 
 function BusinessAnalyst() {
 
@@ -23,24 +24,59 @@ function BusinessAnalyst() {
     return (
         <>
             {/*hero header*/}
-            <div className="flex flex-col items-center justify-center pt-15 pb-4 px-8 bg-secondary-foreground text-primary-foreground">
-                <h1 className="text-4xl font-bold mb-4">Persona - Business Analyst</h1>
-                <p className="text-lg mb-8 text-primary-foreground/80">Persona Page</p>
+            <div className="relative flex flex-col items-center justify-center py-20 px-8 text-primary-foreground shadow-xl overflow-hidden">
+                <div
+                    className="absolute inset-0 bg-cover bg-center"
+                    style={{
+                        backgroundImage: `url(${banner})`,
+                        backgroundPosition: "center 38%",
+                        backgroundSize: "cover",
+                        minWidth: "100vw",
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                    }}
+                />
+                <div className="absolute inset-0 bg-linear-to-b from-white/50 via-transparent to-white/50" />
 
-                <h2 className="text-2xl font-bold mb-1">Helpful Links:</h2>
+                <div
+                    className="relative z-10 text-center flex flex-col items-center rounded-lg py-6 px-8"
+                    style={{
+                        background:
+                            "radial-gradient(ellipse, rgba(0,0,0,.9) 0%, transparent 70%)",
+                        backgroundSize: "105% 105%",
+                        backgroundPosition: "center",
+                    }}
+                >
+                    <h1
+                        className="text-5xl font-bold text-primary-foreground "
+                        style={{
+                            textShadow:
+                                "0 0 30px rgba(0,0,0,.9), 0 0 50px rgba(0,0,0,.6)",
+                        }}
+                    >Persona - Business Analyst</h1>
 
-                {/*links*/}
-                <div className="flex flex-wrap justify-center gap-3 mx-auto max-w-5xl my-4">
+                    <p
+                        className="text-lg mb-8 mt-4 text-primary-foreground"
+                        style={{
+                            textShadow:
+                                "0 0 30px rgba(0,0,0,1), 0 0 50px rgba(0,0,0,1)",
+                        }}
+                    >Persona Page</p>
 
-                    {links.map((link : PersonaLink) => (
-                        <a href={link.url}>
-                            <Card className="bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
-                                <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
-                                    {link.name}
-                                </CardContent>
-                            </Card>
-                        </a>
-                    ))}
+                    <h2 className="text-2xl font-bold mb-1">Helpful Links:</h2>
+
+                    {/*Links*/}
+                    <div className="flex flex-wrap justify-center gap-3 mx-auto max-w-5xl">
+                        {links.map((link : PersonaLink) => (
+                            <a href={link.url}>
+                                <Card className="bg-primary shadow-lg hover:bg-secondary hover:text-secondary-foreground transition-all cursor-pointer active:scale-[0.98] text-primary-foreground">
+                                    <CardContent className="px-4 py-1/2 text-center font-semibold text-shadow-xs">
+                                        {link.name}
+                                    </CardContent>
+                                </Card>
+                            </a>
+                        ))}
+                    </div>
 
                 </div>
             </div>
