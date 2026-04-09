@@ -18,9 +18,6 @@ export type Category =
     | "document"
     | "spreadsheet"
     | "image"
-    | "video"
-    | "audio"
-    | "code"
     | "archive"
     | "other";
 
@@ -282,9 +279,6 @@ export const CATEGORY_COLORS: Record<
     spreadsheet:  { badge: "bg-emerald-100 text-emerald-700", icon: "text-emerald-500" },
 
     image:    { badge: "bg-pink-100 text-pink-700",   icon: "text-pink-500" },
-    video:    { badge: "bg-purple-100 text-purple-700", icon: "text-purple-500" },
-    audio:    { badge: "bg-amber-100 text-amber-700", icon: "text-amber-500" },
-    code:     { badge: "bg-cyan-100 text-cyan-700",   icon: "text-cyan-500" },
     archive:  { badge: "bg-yellow-100 text-yellow-700", icon: "text-yellow-500" },
     other:    { badge: "bg-secondary text-secondary-foreground", icon: "text-muted-foreground" },
     link:     { badge: "bg-violet-100 text-violet-700", icon: "text-violet-500" },
