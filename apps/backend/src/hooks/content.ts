@@ -137,21 +137,29 @@ export const uploadFile = async (req: req, res: res) => {
 
 export const updateContent = async (req: req, res: res) => {
     const payload = req.body;
+    let uploaded = false;
     try {
+        if (req.file) {
+            const uploadResult = await q.Bucket.updateFile(req.file.buffer, payload.fileURI);
+            uploaded = true;
+        }
         const result = await q.Content.updateContent(
             payload.id,
             payload.name,
-            payload.linkURL,
+            payload.linkURL || null,
             payload.fileURI,
-            payload.ownerID,
+            payload.ownerID ? parseInt(payload.ownerID) : null,
             payload.contentType,
             payload.status,
-            payload.lastModified,
-            payload.expiration,
+            new Date(),
+            payload.expiration ? new Date(payload.expiration) : null,
             payload.targetPersona,
         );
-        return res.status(200).json(result);
+        return res.status(201).json(result);
     } catch (error) {
+        if (uploaded && payload.fileURI) {
+            await q.Bucket.deleteFile(payload.fileURI).catch(console.error);
+        }
         console.error(error);
         return res.status(500).end();
     }

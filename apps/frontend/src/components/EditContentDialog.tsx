@@ -44,6 +44,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
+                id: modified.id,
                 name: modified.displayName,
                 linkURL: modified.linkURL,
                 fileURI: modified.fileURI,
@@ -55,18 +56,6 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                 targetPersona: modified.targetPersona,
             }),
         });
-
-        /*if (modified.login?.userName) {
-            await fetch("/api/login", {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    userName: modified.login.userName,
-                    employeeID: modified.id,
-                }),
-            });
-        }*/
-        //TODO do something like this for Supabase bucket
 
         if (contentRes.ok) {
             onSave(modified);
@@ -85,7 +74,6 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                 </DialogHeader>
                 <div className="flex flex-col gap-2">
                     {error && <p className="text-sm text-destructive">{error}</p>}
-                    /*
                     <div>
                         <Label className="my-2">Content ID</Label>
                         <Input defaultValue={content.id} className="bg-secondary" disabled />
@@ -99,11 +87,62 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                             onChange={(e) => setModified((prev) => ({ ...prev, displayName: e.target.value }))}
                         />
                     </div>
+                    {/*Only show the field that exists between URL and URI
+                        need weird nested ternary to prevent TS yelling about null values
+                        TODO make file upload work*/}
+                    {content.linkURL ? (
                     <div>
-                        <Label className="my-2">Persona</Label>
+                        <Label className="my-2">URL</Label>
+                        <Input
+                            defaultValue={content.linkURL}
+                            className="bg-secondary"
+                            placeholder="Enter Link URL"
+                            onChange={(e) => setModified((prev) => ({ ...prev, linkURL: e.target.value }))}
+                        />
+                    </div>
+                    ): ( content.fileURI ? (
+                        <div>
+                            <Label className="my-2">URL</Label>
+                            <Input
+                                defaultValue={content.fileURI}
+                                className="bg-secondary"
+                                placeholder="Enter File URI"
+                                onChange={(e) => setModified((prev) => ({ ...prev, fileURI: e.target.value }))}
+                            />
+                        </div>
+                    ):
+                        <div></div>
+                        )
+                    }
+                    {/*TODO make it throw an error instead of showing nothing if there is neither a link or a file*/}
+                    {content.ownerID ? (
+                        <div>
+                            <Label className="my-2">Owner ID</Label>
+                            <Input
+                                defaultValue={content.ownerID}
+                                type="number"
+                                className="bg-secondary"
+                                placeholder="Enter Owner ID"
+                                onChange={(e) => setModified((prev) => ({ ...prev, ownerID: parseInt(e.target.value) }))}
+                            />
+                        </div>
+                    ) : (
+                        <div>
+                            <Label className="my-2">Owner ID</Label>
+                            <Input
+                                type="number"
+                                className="bg-secondary"
+                                placeholder="Enter Owner ID"
+                                onChange={(e) => setModified((prev) => ({ ...prev, ownerID: parseInt(e.target.value) }))}
+                            />
+                        </div>
+                    )
+                    }
+                    <div>
+                        <Label className="my-2">Job Position</Label>
                         <Select
                             defaultValue={content.targetPersona}
-                            onValueChange={(value) => setModified((prev) => ({ ...prev, persona: value }))}
+                            onValueChange={(value) => setModified((prev) => ({ ...prev, targetPersona: value }))}
                         >
                             <SelectTrigger className="bg-secondary">
                                 <SelectValue placeholder="Select Persona" />
@@ -115,6 +154,80 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                             </SelectContent>
                         </Select>
                     </div>
+                    { content.expiration? (
+                        <div>
+                            <Label className="my-2">Expiration</Label>
+                            <Input
+                                defaultValue={content.expiration}
+                                type="date"
+                                className="bg-secondary"
+                                placeholder="Enter Expiration Date"
+                                onChange={(e) => setModified((prev) => ({ ...prev, expiration: e.target.value }))}
+                            />
+                        </div>
+                    ): (
+                        <div>
+                            <Label className="my-2">Expiration</Label>
+                            <Input
+                                type="date"
+                                className="bg-secondary"
+                                placeholder="Enter Expiration Date"
+                                onChange={(e) => setModified((prev) => ({ ...prev, expiration: e.target.value }))}
+                            />
+                        </div>
+                    )
+                    }
+                    <div>
+                        <Label className="my-2">Type</Label>
+                        <Select
+                            defaultValue={content.contentType}
+                            onValueChange={(value) => setModified((prev) => ({ ...prev, contentType: value }))}
+                        >
+                            <SelectTrigger className="bg-secondary">
+                                <SelectValue placeholder="Select Type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="workflow">Workflow</SelectItem>
+                                <SelectItem value="reference">Reference</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    { content.status? (
+                        <div>
+                            <Label className="my-2">Status</Label>
+                            <Select
+                                defaultValue={content.status}
+                                onValueChange={(value) => setModified((prev) => ({ ...prev, status: value }))}
+                            >
+                                <SelectTrigger className="bg-secondary">
+                                    <SelectValue placeholder="Select Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="new">New</SelectItem>
+                                    <SelectItem value="inProgress">In Progress</SelectItem>
+                                    <SelectItem value="complete">Complete</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    ) : (
+                        <div>
+                            <Label className="my-2">Status</Label>
+                            <Select
+                                onValueChange={(value) => setModified((prev) => ({ ...prev, status: value }))}
+                            >
+                                <SelectTrigger className="bg-secondary">
+                                    <SelectValue placeholder="Select Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="new">New</SelectItem>
+                                    <SelectItem value="inProgress">In Progress</SelectItem>
+                                    <SelectItem value="complete">Complete</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )
+
+                    }
                     <Button
                         className="mt-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-20 mx-auto rounded-lg px-2 py-1"
                         onClick={handleApply}
