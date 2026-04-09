@@ -78,14 +78,14 @@ function EmployeeHome() {
                 {/* Quick Links Card */}
                 <Card className="shadow-lg hover:scale-101 transition-transform">
                     <CardHeader>
-                        <CardTitle className="capitalize text-3xl mb-4 font-semibold px-4 py-3 text-center">User Access: {user.persona}</CardTitle>
+                        <CardTitle className="capitalize text-2xl mb-4 font-semibold px-4 py-3 text-center">User Access: {user.persona}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-center mb-2 text-2xl">Quick Links:</p>
+                        <p className="text-center mb-4 text-xl">Quick Links:</p>
                         <div className="flex flex-col items-center gap-2 gap-y-5 justify-center h-full">
                             { user.persona === "admin" ?
                                 <Link to="/usermanagement">
-                                    <Button className="text-2xl px-8 py-6 bg-primary text-background hover:bg-secondary hover:text-secondary-foreground" variant="outline">
+                                    <Button className="shadow-xl text-xl px-6 py-5 bg-primary text-background hover:bg-secondary hover:text-secondary-foreground" variant="outline">
                                         View Users
                                     </Button>
                                 </Link>
@@ -94,7 +94,7 @@ function EmployeeHome() {
                             }
                             { user.persona === "admin" ?
                                 <Link to="/employeeform">
-                                    <Button className=" text-2xl px-8 py-6 bg-primary text-background hover:bg-secondary hover:text-secondary-foreground" variant="outline">
+                                    <Button className="shadow-xl text-xl px-6 py-5 bg-primary text-background hover:bg-secondary hover:text-secondary-foreground" variant="outline">
                                         Add Employee Form
                                     </Button>
                                 </Link>
@@ -102,12 +102,12 @@ function EmployeeHome() {
                                 null
                             }
                             <Link to="/files">
-                                <Button className="text-2xl px-8 py-6 bg-primary text-background hover:bg-secondary hover:text-secondary-foreground" variant="outline">
+                                <Button className="shadow-xl text-xl px-6 py-5 bg-primary text-background hover:bg-secondary hover:text-secondary-foreground" variant="outline">
                                     View Files
                                 </Button>
                             </Link>
                             <Link to="/manageform">
-                                <Button className="text-2xl px-8 py-6 bg-primary text-background hover:bg-secondary hover:text-secondary-foreground" variant="outline">
+                                <Button className="shadow-xl text-xl px-6 py-5 bg-primary text-background hover:bg-secondary hover:text-secondary-foreground" variant="outline">
                                     Manage Content Form
                                 </Button>
                             </Link>

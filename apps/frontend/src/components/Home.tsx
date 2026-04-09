@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/avatar"
 import { teamPhotos } from "@/components/ui/team-photos";
 import { Hero } from "@/components/shared/Hero.tsx";
-import { Home as HomeIcon } from "lucide-react";
+import { Home as HomeIcon, LucideFolder, User, GraduationCap } from "lucide-react";
 
 function Home() {
 
@@ -48,17 +48,31 @@ function Home() {
             />
 
             {/*Main Paragraph*/}
-            <Card id="content" className="scroll-mt-25 shadow-lg max-w-5xl mx-auto mt-8 text-center">
+            <Card id="content" className="scroll-mt-25 shadow-lg max-w-5xl mx-auto mt-8 text-center py-8">
                 <CardHeader>
-                    <CardTitle className="text-xl">Welcome to Our App.</CardTitle>
-                    <CardDescription>One place to manage your files.</CardDescription>
+                    <CardTitle className="text-4xl text-primary">Welcome to iBank.</CardTitle>
+                    <CardDescription className="text-lg">One place to manage your files.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p>
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                        Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo. Quisque sit amet est et sapien ullamcorper pharetra. Vestibulum erat wisi, condimentum sed, commodo vitae, ornare sit amet, wisi. Aenean fermentum, elit eget tincidunt condimentum, eros ipsum rutrum orci, sagittis tempus lacus enim ac dui.
-                        Cras mattis consectetur purus sit amet fermentum. Donec sed odio dui. Maecenas faucibus mollis interdum. Nullam quis risus eget urna mollis ornare vel eu leo. Praesent commodo cursus magna, vel scelerisque nisl consectetur et. Vivamus sagittis lacus vel augue laoreet rutrum faucibus dolor auctor. Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Integer posuere erat a ante venenatis dapibus posuere velit aliquet. Etiam porta sem malesuada magna mollis euismod. Cras justo odio, dapibus ut facilisis et, egestas nunc sed. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Sed posuere consectetur est at lobortis.
-                    </p>
+
+                    <div className="flex flex-row items-center justify-center gap-3 h-50">
+                        <div className="flex flex-col items-center justify-center gap-5 w-60">
+                            <h1 className="text-2xl text-shadow-lg">Manage all your files.</h1>
+                            <LucideFolder className="w-15! h-15! text-shadow-lg"/>
+                        </div>
+                        <div className="self-stretch bg-primary w-px mx-4 my-4" />
+                        <div className="flex flex-col items-center justify-center gap-5 w-60">
+                            <h1 className="text-2xl text-shadow-lg">Log in to begin.</h1>
+                            <User className="w-15! h-15! text-shadow-lg"/>
+                        </div>
+                        <div className="self-stretch bg-primary w-px mx-4 my-4" />
+                        <div className="flex flex-col items-center justify-center gap-5 w-60">
+                            <h1 className="text-2xl text-shadow-lg">This is a student project.</h1>
+                            <GraduationCap className="w-15! h-15! text-shadow-lg"/>
+                        </div>
+                    </div>
+
+                    <p className="text-md mt-8">This site created by Team B for CS3733 at Worcester Polytechnic Institute, D-Term 2026.</p>
 
                     <br />
 
