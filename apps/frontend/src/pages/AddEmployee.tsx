@@ -3,14 +3,14 @@ import { ChevronDown, UserPlus } from "lucide-react"
 import * as React from "react"
 import {
     Card,
-} from "@/components/ui/card"
+} from "@/components/ui/card.tsx"
 import { useState } from "react"
 import {
     Field,
     FieldLabel,
     FieldDescription,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/field.tsx"
+import { Input } from "@/components/ui/input.tsx"
 
 import {
     DropdownMenu,
@@ -20,12 +20,12 @@ import {
     DropdownMenuRadioGroup,
     DropdownMenuRadioItem,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu.tsx"
 
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
+import { Button } from "@/components/ui/button.tsx"
+import { Separator } from "@/components/ui/separator.tsx"
 
-import { Hero } from "@/components/shared/Hero"
+import { Hero } from "@/components/shared/Hero.tsx"
 
 function AddEmployee() {
     const [targetPersona, setTargetPersona] = useState("Select job position")
@@ -35,6 +35,7 @@ function AddEmployee() {
     const [password, setPassword] = React.useState("")
     const [id, setID] = React.useState("")
     const [submitResult, setSubmitResult] = useState<"success" | "error" | null>(null)
+
     const handleSubmit = async () => {
         {/*TODO: This forces the user to enter all the fields, should probably do this on backend later */}
         if (!firstName || !lastName || !id || !userName || !password || targetPersona === "Select job position") {
@@ -42,7 +43,7 @@ function AddEmployee() {
             return
         }
             try {
-            const empRes =  await fetch('http://localhost:3000/api/employee', {
+            const empRes =  await fetch('/api/employee', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
@@ -52,11 +53,12 @@ function AddEmployee() {
                     persona: targetPersona,
                 })
             })
-            if (!empRes.ok) throw new Error()
+            if (!empRes.ok) {
+                setSubmitResult("error");
+                return
+            }
 
-
-
-            const loginRes = await fetch('http://localhost:3000/api/login/create', {
+            const loginRes = await fetch('/api/login/create', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
@@ -65,7 +67,10 @@ function AddEmployee() {
                     employeeID: parseInt(id),
                 })
             })
-            if (!loginRes.ok) throw new Error()
+            if (!loginRes.ok) {
+                setSubmitResult("error");
+                return
+            }
             setSubmitResult("success")
 
             setTargetPersona("Select job position")
@@ -74,7 +79,7 @@ function AddEmployee() {
             setUserName("")
             setPassword("")
             setID("")
-        }catch {
+        } catch {
             setSubmitResult("error")
         }
     }

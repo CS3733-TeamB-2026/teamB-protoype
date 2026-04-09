@@ -1,6 +1,6 @@
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { TableHead } from "@/components/ui/table";
-import type { SortState } from "@/helpers/useSortState.ts";
+import type { SortState } from "@/hooks/use-sort-state.ts";
 
 interface Props<T extends string> {
     column: T;

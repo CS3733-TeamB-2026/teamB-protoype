@@ -8,7 +8,7 @@ import Fullscreen from "yet-another-react-lightbox/plugins/fullscreen";
 import ReactMarkdown from "react-markdown";
 import DocViewer, { DocViewerRenderers } from "@iamjariwala/react-doc-viewer";
 import "@iamjariwala/react-doc-viewer/dist/index.css";
-import { getPreviewMode } from "@/helpers/mime";
+import { getPreviewMode } from "@/helpers/mime.ts";
 
 function formatBytes(bytes: number): string {
     if (bytes < 1024) return `${bytes} B`;
@@ -76,7 +76,7 @@ export function FilePreview({ filename, src, infoSrc }: Props) {
         return () => {
             if (localUrl) URL.revokeObjectURL(localUrl);
         };
-    }, [src]);
+    }, [infoSrc, previewMode, src]);
 
     return (
         <div className="bg-background overflow-hidden">
@@ -109,7 +109,7 @@ export function FilePreview({ filename, src, infoSrc }: Props) {
                 <p className="px-6 py-4 text-sm text-muted-foreground">No preview available for this file type.</p>
             )}
             {status === "ready" && previewMode === "text" && (
-                <pre className="px-6 pb-4 text-sm text-foreground overflow-auto max-h-[520px] whitespace-pre-wrap">
+                <pre className="px-6 pb-4 text-sm text-foreground overflow-auto max-h-130 whitespace-pre-wrap">
                     {content}
                 </pre>
             )}
@@ -135,7 +135,7 @@ export function FilePreview({ filename, src, infoSrc }: Props) {
                 </div>
             )}
             {status === "ready" && previewMode === "table" && tableData != null && (
-                <div className="overflow-x-auto max-h-[520px] px-6 pb-4">
+                <div className="overflow-x-auto max-h-130 px-6 pb-4">
                     <table className="text-sm border-collapse">
                         <thead>
                             <tr>

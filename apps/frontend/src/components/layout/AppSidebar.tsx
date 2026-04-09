@@ -10,13 +10,14 @@ import {
     SidebarHeader,
     SidebarFooter,
     useSidebar,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar.tsx"
 import {
     Collapsible,
     CollapsibleTrigger,
     CollapsibleContent,
-} from "@/components/ui/collapsible"
-import { Button } from "@/components/ui/button"
+} from "@/components/ui/collapsible.tsx"
+import { Button } from "@/components/ui/button.tsx"
+import { useUser } from "@/hooks/use-user.ts"
 
 type NavItem = {
     title: string;
@@ -49,8 +50,7 @@ const navItems = [
 
 function AppSidebar() {
 
-    //grabs the user type so that we only display the pages that user role can access
-    const user = JSON.parse(localStorage.getItem("user") || "null");
+    const [user] = useUser();
     const {toggleSidebar} = useSidebar();
 
     return (

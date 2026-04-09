@@ -1,15 +1,15 @@
 "use client";
 import * as React from "react";
 import {useState} from "react";
-import {Field, FieldLabel, FieldDescription} from "@/components/ui/field";
-import {Input} from "@/components/ui/input";
+import {Field, FieldLabel, FieldDescription} from "@/components/ui/field.tsx";
+import {Input} from "@/components/ui/input.tsx";
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from "@/components/ui/popover";
-import {Calendar} from "@/components/ui/calendar";
-import { Hero } from "@/components/shared/Hero"
+} from "@/components/ui/popover.tsx";
+import {Calendar} from "@/components/ui/calendar.tsx";
+import { Hero } from "@/components/shared/Hero.tsx"
 import { FilePlus } from "lucide-react"
 
 import {
@@ -20,22 +20,21 @@ import {
     DropdownMenuRadioGroup,
     DropdownMenuRadioItem,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {Button} from "@/components/ui/button";
-import {Separator} from "@/components/ui/separator";
-import { Card } from "@/components/ui/card";
-import {Label} from "@/components/ui/label";
-import {RadioGroup, RadioGroupItem} from "@/components/ui/radio-group";
+} from "@/components/ui/dropdown-menu.tsx";
+import {Button} from "@/components/ui/button.tsx";
+import { useUser } from "@/hooks/use-user.ts";
+import {Separator} from "@/components/ui/separator.tsx";
+import { Card } from "@/components/ui/card.tsx";
+import {Label} from "@/components/ui/label.tsx";
+import {RadioGroup, RadioGroupItem} from "@/components/ui/radio-group.tsx";
 import {ChevronDown} from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
 
 function AddContent() {
-    const [user] = React.useState(() => {
-        return JSON.parse(localStorage.getItem("user") || "null");
-    });
+    const [user] = useUser();
     const [name, setName] = useState("");
     const [linkUrl, setLinkUrl] = useState("");
-    const [ownerID, setOwnerID] = useState(user.id);
+    const [ownerID, setOwnerID] = useState(user?.id ?? 0);
     const [contentType, setContentType] = useState<"reference" | "workflow">(
         "reference",
     );
@@ -65,7 +64,7 @@ function AddContent() {
             const formData = new FormData();
             formData.append("name", name);
             formData.append("linkURL", uploadMode === "url" ? linkUrl : "");
-            formData.append("ownerID", ownerID);
+            formData.append("ownerID", ownerID.toString());
             formData.append("contentType", contentType);
             formData.append("status", status);
             formData.append("lastModified", date?.toISOString() ?? "");
@@ -76,18 +75,20 @@ function AddContent() {
                 formData.append("file", file);
             }
 
-            const res = await fetch("http://localhost:3000/api/content", {
+            const res = await fetch("/api/content", {
                 method: "POST",
                 body: formData,
             });
-            if (!res.ok) throw new Error()
-
+            if (!res.ok) {
+                setSubmitResult("error");
+                return
+            }
 
             if (res.status === 201) {
                 setSubmitResult("success")
                 setName("");
                 setLinkUrl("");
-                setOwnerID(user.id);
+                setOwnerID(user?.id ?? 0);
                 setContentType("reference");
                 setStatus("new");
                 setJobPosition("Select job position");
@@ -98,10 +99,12 @@ function AddContent() {
                 setFileKey((prev) => prev + 1);
                 setFile(null);
             }
-        }catch {
-                setSubmitResult("error")
-            }
+        } catch {
+            setSubmitResult("error")
+        }
     };
+
+    if (!user) return null;
 
     return (
 

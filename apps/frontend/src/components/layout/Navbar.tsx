@@ -1,26 +1,25 @@
 import React from "react";
-import { useSidebar } from "@/components/ui/sidebar";
+import { useSidebar } from "@/components/ui/sidebar.tsx";
 import { Menu } from "lucide-react";
-import logo from "../assets/hanover_logo.svg"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import logo from "../../assets/hanover_logo.svg"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
 import {
     Popover,
     PopoverContent,
     PopoverTrigger
-} from "@/components/ui/popover"
-import { Separator } from "@/components/ui/separator"
-import LoginDialog from "@/components/LoginDialog"
+} from "@/components/ui/popover.tsx"
+import { Separator } from "@/components/ui/separator.tsx"
+import LoginDialog from "@/dialogs/LoginDialog.tsx"
 import { User } from "lucide-react"
 import { Link } from "react-router-dom"
+import { useUser } from "@/hooks/use-user.ts"
 
 
 function Navbar() {
 
     const { toggleSidebar } = useSidebar();
     const [loginOpen, setLoginOpen] = React.useState(false);
-    const [user, setUser] = React.useState(() => {
-        return JSON.parse(localStorage.getItem("user") || "null");
-    })
+    const [user, setUser] = useUser();
 
     return (
         <>

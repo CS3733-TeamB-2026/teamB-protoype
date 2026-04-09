@@ -1,18 +1,18 @@
 import './App.css'
-import Navbar from './components/Navbar'
-import Footer from './components/Footer'
+import Navbar from './components/layout/Navbar.tsx'
+import Footer from './components/layout/Footer.tsx'
 import {BrowserRouter} from 'react-router-dom';
 import { SidebarProvider } from "@/components/ui/sidebar";
-import AppSidebar from "@/components/AppSidebar";
-import Home from "@/components/Home.tsx";
-import AddEmployee from "@/components/AddEmployee.tsx";
-import AddContent from "@/components/AddContent.tsx";
-import Underwriter from "@/components/Underwriter.tsx";
-import BusinessAnalyst from "@/components/BusinessAnalyst.tsx";
-import EmployeeHome from "@/components/EmployeeHome";
-import ViewEmployees from "@/components/ViewEmployees.tsx";
-import ViewContent from "@/components/ViewContent.tsx";
-import SidebarOverlay from "./components/SidebarOverlay";
+import AppSidebar from "@/components/layout/AppSidebar.tsx";
+import Home from "@/pages/Home.tsx";
+import AddEmployee from "@/pages/AddEmployee.tsx";
+import AddContent from "@/pages/AddContent.tsx";
+import Underwriter from "@/pages/Underwriter.tsx";
+import BusinessAnalyst from "@/pages/BusinessAnalyst.tsx";
+import EmployeeHome from "@/pages/EmployeeHome.tsx";
+import ViewEmployees from "@/pages/ViewEmployees.tsx";
+import ViewContent from "@/pages/ViewContent.tsx";
+import SidebarOverlay from "./components/layout/SidebarOverlay.tsx";
 import { Route, Routes} from "react-router-dom";
 
 function App() {

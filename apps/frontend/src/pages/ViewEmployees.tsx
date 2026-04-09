@@ -2,15 +2,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.tsx";
 import { useEffect, useState } from "react";
 import { Loader2, Pencil, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button.tsx";
 import { Link } from "react-router-dom";
 import { Hero } from "@/components/shared/Hero.tsx";
-import { EditEmployeeDialog } from "@/components/EditEmployeeDialog";
-import { ConfirmDeleteDialog } from "@/components/shared/ConfirmDeleteDialog";
+import { EditEmployeeDialog } from "@/dialogs/EditEmployeeDialog.tsx";
+import { ConfirmDeleteDialog } from "@/dialogs/ConfirmDeleteDialog.tsx";
 import { Users } from "lucide-react";
-import { SortableHead } from "@/components/shared/SortableHead";
-import { useSortState, applySortState } from "@/helpers/useSortState.ts";
-import {PersonaBadge} from "@/components/shared/PersonaBadge";
+import { SortableHead } from "@/components/shared/SortableHead.tsx";
+import { useSortState, applySortState } from "@/hooks/use-sort-state.ts";
+import {PersonaBadge} from "@/components/shared/PersonaBadge.tsx";
+import { useUser } from "@/hooks/use-user.ts";
 
 export type Employee = {
     firstName: string;
@@ -28,7 +29,7 @@ function ViewEmployees() {
     const [editOpen, setEditOpen] = useState(false);
     const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<Employee | null>(null);
-    const currentUser = JSON.parse(localStorage.getItem("user") || "null");
+    const [user] = useUser();
     const [sort, toggleSort] = useSortState<"id" | "firstName" | "lastName" | "persona" | "userName">({column: "id", direction: "asc"});
 
     useEffect(() => {
@@ -52,6 +53,8 @@ function ViewEmployees() {
         }
         setDeleteTarget(null);
     };
+
+    if (!user) return null;
 
     return (
         <>
@@ -113,7 +116,7 @@ function ViewEmployees() {
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
-                                                    disabled={employee.id === currentUser?.id}
+                                                    disabled={employee.id === user?.id}
                                                     onClick={() => {
                                                         setEditingEmployee(employee);
                                                         setEditOpen(true);
@@ -124,7 +127,7 @@ function ViewEmployees() {
                                                 <Button
                                                     variant="destructive"
                                                     size="sm"
-                                                    disabled={employee.id === currentUser?.id}
+                                                    disabled={employee.id === user?.id}
                                                     onClick={() => setDeleteTarget(employee)}
                                                 >
                                                     <Trash2 className="w-4 h-4" />

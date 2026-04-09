@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useUser } from "@/hooks/use-user.ts";
 import { FolderOpen, Loader2 } from "lucide-react";
 import { ContentIcon } from "@/components/shared/ContentIcon.tsx";
 import { getCategory, getExtension, getOriginalFilename, lookupByFilename } from "@/helpers/mime.ts";
@@ -16,11 +17,10 @@ function RecentFiles() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const [user] = React.useState(() => {
-        return JSON.parse(localStorage.getItem("user") || "null");
-    });
+    const [user] = useUser();
 
     useEffect(() => {
+        if (!user) return;
         fetch(`/api/content?persona=${encodeURIComponent(user.persona)}`)
             .then((res) => res.json())
             .then((data: ContentItem[]) => {
@@ -31,7 +31,7 @@ function RecentFiles() {
                 setError("Failed to load content.");
                 setLoading(false);
             });
-    }, [user.persona]);
+    }, [user]);
 
     //sort by lastModified (newest first) and take top 5
     const recentFiles = [...content]

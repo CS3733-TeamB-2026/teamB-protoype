@@ -34,7 +34,7 @@ export const previewContent = async (req: req, res: res) => {
 };
 
 export const getAllContent = async (req: req, res: res) => {
-    const persona = req.query.persona as string | undefined;
+    const persona = req.query.persona as string | null;
     try {
         const content = persona
             ? await q.Content.queryContentByPersona(persona)
@@ -96,18 +96,17 @@ export const downloadContent = async (req: req, res: res) => {
     }
 };
 
+function buildFileURI(ownerID: string, filename: string): string {
+    return `${ownerID}/${crypto.randomUUID()}/${filename}`;
+}
+
 export const uploadFile = async (req: req, res: res) => {
     const payload = req.body;
     let fileURI: string | null = null;
     let uploaded = false;
     try {
         if (req.file) {
-            fileURI =
-                (payload.ownerID as String) +
-                "/" +
-                crypto.randomUUID() +
-                "/" +
-                req.file.originalname;
+            fileURI = buildFileURI(payload.ownerID, req.file.originalname);
             const uploadResult = await q.Bucket.uploadFile(req.file.buffer, fileURI);
             uploaded = true;
             fileURI = uploadResult.path;
@@ -141,12 +140,7 @@ export const updateContent = async (req: req, res: res) => {
         const oldContent = await q.Content.queryContentById(parseInt(payload.id));
         const oldURI: string | null = oldContent?.fileURI ?? null;
         if (req.file) {
-            newFileURI =
-                (payload.ownerID as String) +
-                "/" +
-                crypto.randomUUID() +
-                "/" +
-                req.file.originalname;
+            newFileURI = buildFileURI(payload.ownerID, req.file.originalname);
             const uploadResult = await q.Bucket.uploadFile(req.file.buffer, newFileURI);
             uploaded = true;
             newFileURI = uploadResult.path;
@@ -183,7 +177,7 @@ export const deleteContent = async (req: req, res: res) => {
         if (!content) {
             return res.status(404).json({ message: "File not found" });
         }
-        if (!!content.fileURI) {
+        if (content.fileURI) {
             await q.Bucket.deleteFile(content.fileURI)
         }
         await q.Content.deleteContent(id);

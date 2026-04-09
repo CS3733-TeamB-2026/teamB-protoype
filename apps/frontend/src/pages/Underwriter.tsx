@@ -3,7 +3,7 @@ import {
     CardHeader,
     CardTitle,
     CardContent
-} from "@/components/ui/card"
+} from "@/components/ui/card.tsx"
 import banner from "@/assets/hanover_banner.webp";
 
 function Underwriter() {
