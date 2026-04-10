@@ -223,9 +223,9 @@ function ViewContent() {
                         <div className="flex flex-row justify-between items-baseline mb-8">
                             <div>
                                 <Link to="/manageform">
-                                    <Button className="group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-45 hover:bg-primary-dark hover:text-primary-foreground active:brightness-80 transition-all bg-primary text-primary-foreground w-12 h-12 text-lg p-0 justify-start">
+                                    <Button className="p-0! gap-0! border-0! group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-45 hover:bg-primary-dark hover:text-primary-foreground active:brightness-80 transition-all bg-primary text-primary-foreground w-12 h-12 text-lg justify-start">
                                         <span className="flex items-center justify-center min-w-12 h-12">
-                                            <Plus className="w-8! h-8! text-primary-foreground" />
+                                            <Plus className="w-8! h-8! text-primary-foreground " />
                                         </span>
                                         <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Add Content</span>
                                     </Button>
@@ -240,7 +240,7 @@ function ViewContent() {
                                     placeholder="Search by name..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-64 h-10 text-lg! pl-4! pr-8 border border-gray-700 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                                    className="w-64 h-10 text-lg! pl-2! pr-8 border border-gray-700 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-gray-500"
                                 />
                             </div>
                         </div>
