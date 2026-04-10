@@ -11,6 +11,7 @@ import {
     Trash2,
     LucideFolders,
     Search,
+    Plus
 } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -181,7 +182,7 @@ function ViewContent() {
                 description="View, update, and delete content you have access to"
             />
 
-            <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center">
+            <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center px-4">
                 <CardHeader>
                     <CardTitle className="text-3xl text-primary mt-4">
                         {user.persona === "underwriter" ? "Underwriter" :
@@ -196,9 +197,6 @@ function ViewContent() {
                 </CardHeader>
 
                 <CardContent>
-                    <Link to="/manageform">
-                        <Button className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-60 rounded-lg px-2 py-6 text-xl">Add Content +</Button>
-                    </Link>
 
                     {loading && (
                         <div className="flex items-center justify-center py-16 gap-3 text-muted-foreground">
@@ -216,10 +214,23 @@ function ViewContent() {
                         <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
                             <FolderOpen className="w-10 h-10" />
                             <p className="text-sm">No content found.</p>
+                            <Link to="/manageform">
+                                <Button className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-60 rounded-lg px-2 py-6 text-xl">Add Content +</Button>
+                            </Link>
                         </div>
                     )}
                     {!loading && !error && content.length > 0 && <>
-                        <div className="flex justify-end mb-4">
+                        <div className="flex flex-row justify-between items-baseline mb-8">
+                            <div>
+                                <Link to="/manageform">
+                                    <Button className="group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-45 hover:bg-primary-dark hover:text-primary-foreground active:brightness-80 transition-all bg-primary text-primary-foreground w-12 h-12 text-lg p-0 justify-start">
+                                        <span className="flex items-center justify-center min-w-12 h-12">
+                                            <Plus className="w-8! h-8! text-primary-foreground" />
+                                        </span>
+                                        <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Add Content</span>
+                                    </Button>
+                                </Link>
+                            </div>
                             <div className="relative">
                                 <Search
                                     className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 pointer-events-none"
@@ -229,7 +240,7 @@ function ViewContent() {
                                     placeholder="Search by name..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-64 pr-8 border border-gray-700 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                                    className="w-64 h-10 text-lg! pl-4! pr-8 border border-gray-700 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-gray-500"
                                 />
                             </div>
                         </div>
