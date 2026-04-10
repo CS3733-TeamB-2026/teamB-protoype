@@ -7,7 +7,7 @@ import {
 import {Hero} from "@/components/shared/Hero.tsx";
 import { User } from "lucide-react";
 
-function Underwriter() {
+function UnderwriterPersona() {
 
     return (
         <>
@@ -73,4 +73,4 @@ function Underwriter() {
     );
 }
 
-export default Underwriter;
+export default UnderwriterPersona;

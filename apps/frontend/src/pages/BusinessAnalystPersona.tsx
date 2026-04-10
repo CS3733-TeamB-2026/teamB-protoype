@@ -1,7 +1,8 @@
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import {Hero} from "@/components/shared/Hero.tsx";
 import {User} from "lucide-react";
-function BusinessAnalyst() {
+
+function BusinessAnalystPersona() {
 
     return (
         <>
@@ -71,4 +72,4 @@ function BusinessAnalyst() {
     );
 }
 
-export default BusinessAnalyst;
+export default BusinessAnalystPersona;
