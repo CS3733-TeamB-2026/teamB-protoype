@@ -89,11 +89,66 @@ function ViewContent() {
             }
         >
     >({});
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+
+    const [advancedFilters, setAdvancedFilters] = useState({
+        status: [] as Array<"new" | "inProgress" | "complete">,
+        contentType: [] as Array<"reference" | "workflow">,
+        persona: [] as Array<"underwriter" | "businessAnalyst" | "admin">,
+        bookmarkedOnly: false,
+        ownedByMe: false,
+    });
+
     const [user] = useUser();
     const [searchTerm, setSearchTerm] = React.useState("");
-    const filteredContent = content.filter((item) =>
+    const searchedContent = content.filter((item) =>
         item.displayName.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    );
+
+
+
+    const advancedFilteredContent = searchedContent.filter((item) => {
+        const matchesStatus =
+            advancedFilters.status.length === 0 ||
+            (item.status !== null && advancedFilters.status.includes(item.status));
+
+        const matchesContentType =
+            advancedFilters.contentType.length === 0 ||
+            advancedFilters.contentType.includes(item.contentType);
+
+        const matchesPersona =
+            advancedFilters.persona.length === 0 ||
+            advancedFilters.persona.includes(item.targetPersona);
+
+        const matchesBookmark =
+            !advancedFilters.bookmarkedOnly || bookmarks.has(item.id);
+
+        const matchesOwner =
+            !advancedFilters.ownedByMe || item.ownerID === user.id;
+
+        return (
+            matchesStatus &&
+            matchesContentType &&
+            matchesPersona &&
+            matchesBookmark &&
+            matchesOwner
+        );
+    });
+
+    const activeFilterCount =
+        advancedFilters.status.length +
+        advancedFilters.contentType.length +
+        advancedFilters.persona.length +
+        (advancedFilters.bookmarkedOnly ? 1 : 0) +
+        (advancedFilters.ownedByMe ? 1 : 0);
+
+
+
+
+
+
+
+
 
     useEffect(() => {
         fetch(`/api/content`)
@@ -189,9 +244,9 @@ function ViewContent() {
                                 "All"} Content
                     </CardTitle>
                     <CardDescription>
-                        {filteredContent.length === content.length
+                        {advancedFilteredContent.length === content.length
                             ? `${content.length} item${content.length !== 1 ? "s" : ""}`
-                            : `${filteredContent.length} of ${content.length} items`}
+                            : `${advancedFilteredContent.length} of ${content.length} items`}
                     </CardDescription>
                 </CardHeader>
 
@@ -220,6 +275,18 @@ function ViewContent() {
                     )}
                     {!loading && !error && content.length > 0 && <>
                         <div className="flex justify-end mb-4">
+                            <Button
+                                variant="outline"
+                                onClick={() => setShowAdvancedFilters((prev) => !prev)}
+                                className="hover:bg-secondary hover:text-secondary-foreground"
+                            >
+                                {showAdvancedFilters
+                                    ? "Hide Advanced Filters"
+                                    : activeFilterCount > 0
+                                        ? `Advanced Filters (${activeFilterCount})`
+                                        : "Advanced Filters"}
+                            </Button>
+
                             <div className="relative">
                                 <Search
                                     className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 pointer-events-none"
@@ -233,6 +300,132 @@ function ViewContent() {
                                 />
                             </div>
                         </div>
+                        {showAdvancedFilters && (
+                            <div className="mb-4 rounded-lg border p-4 bg-muted/20 text-left">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                                    <div>
+                                        <p className="font-medium mb-2">Status</p>
+                                        <div className="flex flex-col gap-2">
+                                            {["new", "inProgress", "complete"].map((status) => (
+                                                <label key={status} className="flex items-center gap-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={advancedFilters.status.includes(status as "new" | "inProgress" | "complete")}
+                                                        onChange={(e) => {
+                                                            setAdvancedFilters((prev) => ({
+                                                                ...prev,
+                                                                status: e.target.checked
+                                                                    ? [...prev.status, status as "new" | "inProgress" | "complete"]
+                                                                    : prev.status.filter((s) => s !== status),
+                                                            }));
+                                                        }}
+                                                    />
+                                                    <span>{status}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <p className="font-medium mb-2">Kind</p>
+                                        <div className="flex flex-col gap-2">
+                                            {["reference", "workflow"].map((type) => (
+                                                <label key={type} className="flex items-center gap-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={advancedFilters.contentType.includes(type as "reference" | "workflow")}
+                                                        onChange={(e) => {
+                                                            setAdvancedFilters((prev) => ({
+                                                                ...prev,
+                                                                contentType: e.target.checked
+                                                                    ? [...prev.contentType, type as "reference" | "workflow"]
+                                                                    : prev.contentType.filter((t) => t !== type),
+                                                            }));
+                                                        }}
+                                                    />
+                                                    <span>{type}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <p className="font-medium mb-2">Persona</p>
+                                        <div className="flex flex-col gap-2">
+                                            {["underwriter", "businessAnalyst", "admin"].map((persona) => (
+                                                <label key={persona} className="flex items-center gap-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={advancedFilters.persona.includes(persona as "underwriter" | "businessAnalyst" | "admin")}
+                                                        onChange={(e) => {
+                                                            setAdvancedFilters((prev) => ({
+                                                                ...prev,
+                                                                persona: e.target.checked
+                                                                    ? [...prev.persona, persona as "underwriter" | "businessAnalyst" | "admin"]
+                                                                    : prev.persona.filter((p) => p !== persona),
+                                                            }));
+                                                        }}
+                                                    />
+                                                    <span>{persona}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <p className="font-medium mb-2">Other</p>
+                                        <div className="flex flex-col gap-2">
+                                            <label className="flex items-center gap-2">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={advancedFilters.bookmarkedOnly}
+                                                    onChange={(e) =>
+                                                        setAdvancedFilters((prev) => ({
+                                                            ...prev,
+                                                            bookmarkedOnly: e.target.checked,
+                                                        }))
+                                                    }
+                                                />
+                                                <span>Bookmarked only</span>
+                                            </label>
+
+                                            <label className="flex items-center gap-2">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={advancedFilters.ownedByMe}
+                                                    onChange={(e) =>
+                                                        setAdvancedFilters((prev) => ({
+                                                            ...prev,
+                                                            ownedByMe: e.target.checked,
+                                                        }))
+                                                    }
+                                                />
+                                                <span>Owned by me</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="mt-4">
+                                    <Button
+                                        variant="secondary"
+                                        onClick={() =>
+                                            setAdvancedFilters({
+                                                status: [],
+                                                contentType: [],
+                                                persona: [],
+                                                bookmarkedOnly: false,
+                                                ownedByMe: false,
+                                            })
+                                        }
+                                    >
+                                        Clear Filters
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+
                         <Table className="text-left">
                         <TableHeader>
                             <TableRow className="hover:bg-transparent">
@@ -248,7 +441,7 @@ function ViewContent() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {applySortState(filteredContent, sort, (item, col) => {
+                            {applySortState(advancedFilteredContent, sort, (item, col) => {
                                 if (col === "name") return item.displayName;
                                 if (col === "owner") return formatName(item);
                                 if (col === "status") return item.status ?? "";
