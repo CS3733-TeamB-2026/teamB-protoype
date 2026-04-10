@@ -20,10 +20,10 @@
 - [x] Replace inline pattern in `EmployeeHome.tsx`
 - [x] Replace inline pattern in `RecentFiles.tsx`
 
-### Merge `BusinessAnalyst` + `Underwriter` into shared `PersonaPage`
+### Merge `BusinessAnalystPersona` + `Underwriter` into shared `PersonaPage`
 - [ ] Create `src/pages/PersonaPage.tsx` accepting a typed `links` prop
-- [ ] Replace `BusinessAnalyst.tsx` body with `<PersonaPage links={...} />`
-- [ ] Replace `Underwriter.tsx` body with `<PersonaPage links={...} />`
+- [ ] Replace `BusinessAnalystPersona.tsx` body with `<PersonaPage links={...} />`
+- [ ] Replace `UnderwriterPersona.tsx` body with `<PersonaPage links={...} />`
 
 ### Folder restructure ✓
 - [x] Create `src/layout/` — moved `Navbar`, `Footer`, `AppSidebar`, `SidebarOverlay`

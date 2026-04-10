@@ -21,7 +21,7 @@ These are self-contained and won't conflict with feature branches.
 - [x] Folder restructure: `src/pages/`, `src/layout/`, `src/dialogs/`
 - [x] Delete `FilesPage.tsx` (duplicate utilities, superseded by `ViewContent`)
 - [x] Move `useSortState` to `src/hooks/`
-- [ ] Merge `BusinessAnalyst` + `Underwriter` into shared `PersonaPage` component
+- [ ] Merge `BusinessAnalystPersona` + `Underwriter` into shared `PersonaPage` component
 - [ ] Simplify `EditContentDialog` conditionals (nested ternaries → flat `&&` checks)
 - [ ] Consolidate `AddContent` 18+ useState calls into a single form object
 
@@ -59,6 +59,11 @@ All touch `ViewContent` — coordinate to avoid conflicts.
 ## Phase 8 — Polish
 - [ ] Add disclaimer to home page: "This website has been created for WPI's CS 3733 Software Engineering as a class project and is not in use by Hanover Insurance."
 - [ ] Remaining REFACTOR.md items not yet addressed
+
+## Phase 9 — File preview improvements
+- [ ] Swap DocViewer PDF renderer for a plain `<iframe src={objectUrl}>` — zero deps, uses the browser's native renderer, simpler and more reliable
+- [ ] Evaluate replacing DocViewer DOCX renderer with mammoth.js directly for more control
+- [ ] Investigate Google Docs Viewer (`https://docs.google.com/viewer?url=<signed_url>`) for `.doc` and `.pptx` — requires Supabase signed URLs passed through a backend endpoint so the file is publicly reachable
 
 ## Dependency vulnerabilities
 - [x] Vite 8.0.x → 8.0.5+ (high — dev server file read bypass + `fs.deny` bypass). Fixed.

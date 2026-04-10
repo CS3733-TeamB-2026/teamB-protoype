@@ -55,8 +55,8 @@ pages/              Full route-level views
   AddContent.tsx      Upload file or add link URL
   ViewEmployees.tsx   Admin user management table
   AddEmployee.tsx     Create employee + login account
-  Underwriter.tsx     Underwriter persona landing page
-  BusinessAnalyst.tsx Business analyst persona landing page
+  UnderwriterPersona.tsx     Underwriter persona landing page
+  BusinessAnalystPersona.tsx Business analyst persona landing page
 dialogs/            Modal dialogs
   LoginDialog.tsx
   EditContentDialog.tsx
