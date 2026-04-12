@@ -158,6 +158,7 @@ export const updateContent = async (req: req, res: res) => {
             new Date(),
             payload.expiration ? new Date(payload.expiration) : null,
             payload.targetPersona,
+            parseInt(payload.employeeID),
         );
         if (oldURI && (uploaded || linkURL)) {
             await q.Bucket.deleteFile(oldURI).catch(console.error);
@@ -189,3 +190,14 @@ export const deleteContent = async (req: req, res: res) => {
         return res.status(500).end();
     }
 };
+
+export const checkoutContent = async (req: req, res: res) => {
+    try {
+        const {id, employeeID} = req.body;
+        const result = await q.Content.checkoutContent(parseInt(id), parseInt(employeeID));
+        return res.status(200).json(result);
+    } catch (error: any) {
+        console.error(error);
+        return res.status(500).end();
+    }
+}
