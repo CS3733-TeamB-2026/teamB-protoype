@@ -16,6 +16,7 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
   --primary: oklch(0.343 0.07 252.435);
+  --primary-dark: oklch(0.283 0.061 256.007);
   --primary-foreground: oklch(0.977 0.013 236.62);
   --secondary: oklch(0.882 0 89.876);
   --secondary-foreground: oklch(0.21 0.006 285.885);
@@ -105,6 +106,7 @@
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  --color-primary-dark:  var(--primary-dark);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);

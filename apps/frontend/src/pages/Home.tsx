@@ -30,10 +30,10 @@ function Home() {
         { name: "Dylan Zickus", initials: "DZ", role: "Lead Software Engineer", photo: "dylan" },
         { name: "Oscar Stomberg", initials: "OS", role: "Assistant Lead Software Engineer", photo: "oscar" },
         { name: "Jake Swanson", initials: "JS", role: "Assistant Lead Software Engineer", photo: "jake" },
+        { name: "Hayden Schultz", initials: "HS", role: "Assistant Lead Software Engineer & Scrum Master", photo: "hayden" },
         { name: "Luke Ciarletta", initials: "LC", role: "Full Time Software Engineer", photo: "luke" },
         { name: "Nick Houghton", initials: "NH", role: "Full Time Software Engineer", photo: "nicholas" },
         { name: "Cameron Pietraski", initials: "CP", role: "Full Time Software Engineer", photo: "cameron" },
-        { name: "Hayden Schultz", initials: "HS", role: "FT Software Engineer & Scrum Master", photo: "hayden" },
         { name: "Philip Ostrowski", initials: "PO", role: "PT Software Engineer & Project Manager", photo: "philip" },
         { name: "Joseph Hemmerle", initials: "JH", role: "PT Software Engineer & Project Owner", photo: "joey" },
         { name: "Ricardo Guzman Volpe", initials: "RG", role: "PT Software Engineer & Documentation Analyst", photo: "ricardo" }
@@ -54,25 +54,25 @@ function Home() {
                     <CardDescription className="text-lg">One place to manage your files.</CardDescription>
                 </CardHeader>
                 <CardContent>
-
+                    <p className="text-md mt-4">Disclaimer: This website has been created for WPI’s CS 3733 Software Engineering as a class project and is not in use by Hanover Insurance.</p>
                     <div className="flex flex-row items-center justify-center gap-3 h-50">
                         <div className="flex flex-col items-center justify-center gap-5 w-60">
-                            <h1 className="text-2xl text-shadow-lg">Manage all your files.</h1>
-                            <LucideFolder className="w-15! h-15! text-shadow-lg"/>
+                            <h1 className="text-2xl">Manage all your files.</h1>
+                            <LucideFolder className="w-15! h-15!"/>
                         </div>
                         <div className="self-stretch bg-primary w-px mx-4 my-4" />
                         <div className="flex flex-col items-center justify-center gap-5 w-60">
-                            <h1 className="text-2xl text-shadow-lg">Log in to begin.</h1>
-                            <User className="w-15! h-15! text-shadow-lg"/>
+                            <h1 className="text-2xl">Log in to begin.</h1>
+                            <User className="w-15! h-15!"/>
                         </div>
                         <div className="self-stretch bg-primary w-px mx-4 my-4" />
                         <div className="flex flex-col items-center justify-center gap-5 w-60">
-                            <h1 className="text-2xl text-shadow-lg">This is a student project.</h1>
-                            <GraduationCap className="w-15! h-15! text-shadow-lg"/>
+                            <h1 className="text-2xl ">This is a student project.</h1>
+                            <GraduationCap className="w-15! h-15!"/>
                         </div>
                     </div>
 
-                    <p className="text-md mt-8">This site created by Team B for CS3733 at Worcester Polytechnic Institute, D-Term 2026.</p>
+                    <p className="text-md mt-4">This application created by Team B, D26.</p>
 
                     <br />
 
