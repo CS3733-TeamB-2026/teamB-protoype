@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button.tsx";
+import { useUser } from "@/hooks/use-user.ts";
 import {
     Dialog,
     DialogContent,
@@ -34,6 +35,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
     const [uploadMode, setUploadMode] = React.useState<"url" | "file">(
         content.linkURL ? "url" : "file"
     );
+    const [user] = useUser();
 
     async function handleApply() {
         if (
@@ -56,6 +58,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
         formData.append("status", modified.status ?? "");
         formData.append("expiration", modified.expiration ?? "");
         formData.append("targetPersona", modified.targetPersona);
+        formData.append("employeeID", String(user!.id));
 
         if (uploadMode === "file" && file) {
             formData.append("file", file);
@@ -67,7 +70,8 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
         });
 
         if (contentRes.ok) {
-            onSave(modified);
+            const updated = await contentRes.json();
+            onSave(updated);
             onOpenChange(false);
         }
     }
