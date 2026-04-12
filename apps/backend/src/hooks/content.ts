@@ -145,11 +145,13 @@ export const updateContent = async (req: req, res: res) => {
             uploaded = true;
             newFileURI = uploadResult.path;
         }
+        const linkURL = payload.linkURL || null;
+        const fileURIForUpdate = uploaded ? newFileURI : (linkURL ? null : oldURI);
         const result = await q.Content.updateContent(
             parseInt(payload.id),
             payload.name,
-            payload.linkURL || null,
-            uploaded ? newFileURI : oldURI,
+            linkURL,
+            fileURIForUpdate,
             payload.ownerID ? parseInt(payload.ownerID) : null,
             payload.contentType,
             payload.status,
@@ -157,7 +159,7 @@ export const updateContent = async (req: req, res: res) => {
             payload.expiration ? new Date(payload.expiration) : null,
             payload.targetPersona,
         );
-        if (oldURI && uploaded) {
+        if (oldURI && (uploaded || linkURL)) {
             await q.Bucket.deleteFile(oldURI).catch(console.error);
         }
         return res.status(201).json(result);
