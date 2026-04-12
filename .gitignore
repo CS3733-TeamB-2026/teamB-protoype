@@ -6,3 +6,4 @@ node_modules/
 .idea/
 pnpm-lock.yaml
 generated/
+*.md

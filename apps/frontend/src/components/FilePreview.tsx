@@ -162,7 +162,7 @@ export function FilePreview({ filename, src, infoSrc }: Props) {
             )}
             {status === "ready" && previewMode === "docviewer" && objectUrl && (
                 <DocViewer
-                    documents={[{ uri: objectUrl }]}
+                    documents={[{ uri: objectUrl, fileName: filename }]}
                     pluginRenderers={DocViewerRenderers}
                     style={{ minHeight: 520 }}
                     config={{ header: { disableHeader: true } }}

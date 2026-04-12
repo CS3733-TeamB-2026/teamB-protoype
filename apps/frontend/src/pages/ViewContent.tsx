@@ -15,6 +15,8 @@ import {
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Link } from "react-router-dom";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { LinkSquare01Icon } from "@hugeicons/core-free-icons";
 import {
     Card,
     CardContent,
@@ -169,7 +171,7 @@ function ViewContent() {
         setDeleteTarget(null);
     };
 
-    const NUM_COLS = 9;
+    const NUM_COLS = 8;
 
     if (!user) return null;
 
@@ -243,7 +245,6 @@ function ViewContent() {
                                 <SortableHead column="contentType" label="Kind" sort={sort} onSort={toggleSort} className="hidden sm:table-cell" />
                                 <SortableHead column="persona" label="Persona" sort={sort} onSort={toggleSort} className="hidden sm:table-cell" />
                                 <TableHead className="hidden sm:table-cell uppercase tracking-wider text-muted-foreground select-none text-center">Type</TableHead>
-                                <TableHead className="w-8" />
                                 <TableHead className="uppercase tracking-wider text-muted-foreground select-none text-center">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -345,31 +346,34 @@ function ViewContent() {
                                                 />
                                             </TableCell>
 
-                                            <TableCell className="w-8 px-1">
-                                                <button
-                                                    className={`w-8 h-8 flex items-center justify-center rounded-md transition-colors ${isBookmarked ? "text-primary hover:text-primary/70" : "text-muted-foreground hover:text-foreground"}`}
-                                                    onClick={(e) =>
-                                                        toggleBookmark(
-                                                            item.id,
-                                                            e,
-                                                        )
-                                                    }
-                                                    aria-label={
-                                                        isBookmarked
-                                                            ? "Remove bookmark"
-                                                            : "Bookmark"
-                                                    }
-                                                >
-                                                    {isBookmarked ? (
-                                                        <BookmarkCheck className="w-4 h-4" />
-                                                    ) : (
-                                                        <Bookmark className="w-4 h-4" />
-                                                    )}
-                                                </button>
-                                            </TableCell>
-
                                             <TableCell>
-                                                <div className="flex justify-center gap-2">
+                                                <div className="flex justify-end gap-1">
+                                                    {(() => {
+                                                        const icon = <HugeiconsIcon icon={LinkSquare01Icon} className="w-4 h-4" />;
+                                                        const btnClass = "w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground";
+                                                        if (item.fileURI) return (
+                                                            <Link to={`/file/${item.id}`} onClick={(e) => e.stopPropagation()}>
+                                                                <button className={btnClass} title="View file">{icon}</button>
+                                                            </Link>
+                                                        );
+                                                        if (item.linkURL) return (
+                                                            <a href={item.linkURL} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
+                                                                <button className={btnClass} title="Open link">{icon}</button>
+                                                            </a>
+                                                        );
+                                                        return <button className="w-8 h-8 flex items-center justify-center rounded-md opacity-30 cursor-not-allowed text-muted-foreground" title="No file or link" disabled>{icon}</button>;
+                                                    })()}
+                                                    <button
+                                                        className={`w-8 h-8 flex items-center justify-center rounded-md transition-colors ${isBookmarked ? "text-primary hover:text-primary/70" : "text-muted-foreground hover:text-foreground"}`}
+                                                        onClick={(e) => toggleBookmark(item.id, e)}
+                                                        aria-label={isBookmarked ? "Remove bookmark" : "Bookmark"}
+                                                    >
+                                                        {isBookmarked ? (
+                                                            <BookmarkCheck className="w-4 h-4" />
+                                                        ) : (
+                                                            <Bookmark className="w-4 h-4" />
+                                                        )}
+                                                    </button>
                                                     <Button
                                                         variant="outline"
                                                         size="sm"

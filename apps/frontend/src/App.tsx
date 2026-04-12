@@ -7,11 +7,12 @@ import AppSidebar from "@/components/layout/AppSidebar.tsx";
 import Home from "@/pages/Home.tsx";
 import AddEmployee from "@/pages/AddEmployee.tsx";
 import AddContent from "@/pages/AddContent.tsx";
-import Underwriter from "@/pages/Underwriter.tsx";
-import BusinessAnalyst from "@/pages/BusinessAnalyst.tsx";
+import UnderwriterPersona from "@/pages/UnderwriterPersona.tsx";
+import BusinessAnalystPersona from "@/pages/BusinessAnalystPersona.tsx";
 import EmployeeHome from "@/pages/EmployeeHome.tsx";
 import ViewEmployees from "@/pages/ViewEmployees.tsx";
 import ViewContent from "@/pages/ViewContent.tsx";
+import { ViewSingleFile } from "@/pages/VIewSingleFile.tsx";
 import SidebarOverlay from "./components/layout/SidebarOverlay.tsx";
 import { Route, Routes} from "react-router-dom";
 
@@ -34,10 +35,11 @@ function App() {
                             <Route path="/employeeform" element={<AddEmployee/>}/>
                             <Route path="/manageform" element={<AddContent/>}/>
                             <Route path="/usermanagement" element={<ViewEmployees/>}/>
-                            <Route path="/underwriter" element={<Underwriter/>}/>
-                            <Route path="/businessanalyst" element={<BusinessAnalyst/>}/>
+                            <Route path="/underwriter" element={<UnderwriterPersona/>}/>
+                            <Route path="/businessanalyst" element={<BusinessAnalystPersona/>}/>
                             <Route path="/files" element={<ViewContent/>}/>
                             <Route path="/employeehome" element={<EmployeeHome/>}/>
+                            <Route path="/file/:id" element={<ViewSingleFile/>}/>
                         </Routes>
                     </main>
                     <Footer />
