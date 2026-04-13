@@ -2,7 +2,7 @@ import * as p from "../generated/prisma/client";
 import {prisma} from "../lib/prisma";
 import {Helper} from "./helper";
 
-const LOCK_TIMEOUT_MS = 10 * 1000;
+const LOCK_TIMEOUT_MS = 2 * 60 * 1000;
 
 export class Content {
     public static async updateContent(
@@ -125,7 +125,8 @@ export class Content {
 
     public static async queryContentById(_id: number): Promise<p.Content | null> {
         return prisma.content.findUnique({
-            where: {id: _id}
+            where: {id: _id},
+            include: { owner: true, checkedOutByEmployee: true }
         })
     }
 

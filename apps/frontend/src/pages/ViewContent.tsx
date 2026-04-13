@@ -261,7 +261,7 @@ function ViewContent() {
             });
             const data = await res.json();
             if(!res.ok) {
-                setError(data.message || "Can't edit");
+                setError(data.message || "Someone else is editing");
                 return;
             }
             setContent ((prev) =>
@@ -269,7 +269,7 @@ function ViewContent() {
             setEditingContent({ ...item, ...data });
             setEditOpen(true);
         } catch {
-            setError("Could not start editing.");
+            setError("Someone else is editing");
         }
 
         }
@@ -824,7 +824,7 @@ function ViewContent() {
 
             {editingContent && (
                 <EditContentDialog
-                    key={editingContent.id}
+                    key={`${editingContent.id}-${editOpen}`}
                     content={editingContent}
                     open={editOpen}
                     onOpenChange={setEditOpen}
