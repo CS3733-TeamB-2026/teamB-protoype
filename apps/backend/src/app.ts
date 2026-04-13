@@ -9,8 +9,6 @@ import * as login from './hooks/login'
 import * as servicereqs from './hooks/servicereqs'
 import * as content from './hooks/content'
 import * as employee from './hooks/employee'
-import * as q from "@softeng-app/db";
-
 
 
 const app = express();
@@ -18,7 +16,7 @@ app.use(cors());
 app.use(morgan("dev"));
 app.use(express.json());
 const upload = multer({ storage: multer.memoryStorage() });
-const LOCK_TIMEOUT_MS = 10 * 1000;
+const LOCK_TIMEOUT_MS = 2 * 60 * 1000;
 
 
 
@@ -34,10 +32,10 @@ app.get("/api/assigned", servicereqs.allAssignedReqs)
 app.get("/api/preview", content.previewContent)
 app.get("/api/content", content.getAllContent)
 app.post("/api/content/checkin", content.checkinContent)
+app.post("/api/content/checkout", content.checkoutContent)
 app.get("/api/content/info/:id", content.getContentInfo)
 app.get("/api/content/download/:id", content.downloadContent)
 app.get("/api/content/:id", content.getContentById)
-app.post("/api/content/checkout", content.checkoutContent)
 app.post("/api/content", upload.single("file"), content.uploadFile)
 app.put("/api/content", upload.single("file"), content.updateContent)
 app.delete("/api/content/:id", content.deleteContent)
@@ -63,6 +61,5 @@ app.listen(3000, '0.0.0.0', () => {
 })
 
 setInterval(async () => {
-    const expiredCutoff = new Date(Date.now() - LOCK_TIMEOUT_MS);
-    await q.Content.clearExpiredLocks(expiredCutoff);
+    await content.clearExpiredLocks();
 }, 30 * 1000);

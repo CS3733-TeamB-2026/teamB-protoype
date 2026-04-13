@@ -43,18 +43,22 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
     useEffect(() => {
         if (!open) return;
         const interval = setInterval(async () => {
-            const res = await fetch(`/api/content/${content.id}`);
+            const res = await fetch(`/api/content/${content.id}`, {
+                cache: "no-store"
+            });
             const data = await res.json();
-            if (data.checkedOutBy !== user!.id) {
+            if (String(data.checkedOutBy) !== String(user!.id)) {
                 setExpired(true);
                 setTimeout(() => onOpenChange(false), 2000);
                 return;
             }
         }, 5 * 1000);
         return () => clearInterval(interval);
-    }, [open]);
+    }, [open, content.id, onOpenChange, user]);
+
 
     async function handleApply() {
+        setExpired(false);
         if (
             !modified.displayName.trim() ||
             !modified.contentType.trim() ||
@@ -94,16 +98,22 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
     }
 
     return (
-        <Dialog open={open} onOpenChange={async (isOpen) => {
-            if (!isOpen) {
-                await fetch("/api/content/checkin", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ id: content.id, employeeID: user!.id })
-                });
-            }
-            onOpenChange(isOpen);
-        }}>
+        <Dialog
+            open={open}
+            onOpenChange={async (nextOpen) => {
+                if (!nextOpen && user && !expired) {
+                    await fetch("/api/content/checkin", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            id: content.id,
+                            employeeID: user.id,
+                        }),
+                    });
+                }
+                onOpenChange(nextOpen);
+            }}
+        >
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Modify Content</DialogTitle>
@@ -226,7 +236,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                     </div>
                     {expired && (
                         <div className="rounded-md bg-destructive text-background px-2 py-1 text-sm text-center">
-                            Your editing time has expired.
+                            Your editing time has expired, please try again.
                         </div>
                     )}
                     <Button
