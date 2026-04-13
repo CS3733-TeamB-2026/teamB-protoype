@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button.tsx";
+import { useUser } from "@/hooks/use-user.ts";
 import {
     Dialog,
     DialogContent,
@@ -34,8 +35,30 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
     const [uploadMode, setUploadMode] = React.useState<"url" | "file">(
         content.linkURL ? "url" : "file"
     );
+    const [user] = useUser();
+
+    const [expired, setExpired] = useState(false);
+
+    {/*This is the thing that kicks the user out if editing time is up*/}
+    useEffect(() => {
+        if (!open) return;
+        const interval = setInterval(async () => {
+            const res = await fetch(`/api/content/${content.id}`, {
+                cache: "no-store"
+            });
+            const data = await res.json();
+            if (String(data.checkedOutBy) !== String(user!.id)) {
+                setExpired(true);
+                setTimeout(() => onOpenChange(false), 2000);
+                return;
+            }
+        }, 5 * 1000);
+        return () => clearInterval(interval);
+    }, [open, content.id, onOpenChange, user]);
+
 
     async function handleApply() {
+        setExpired(false);
         if (
             !modified.displayName.trim() ||
             !modified.contentType.trim() ||
@@ -56,6 +79,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
         formData.append("status", modified.status ?? "");
         formData.append("expiration", modified.expiration ?? "");
         formData.append("targetPersona", modified.targetPersona);
+        formData.append("employeeID", String(user!.id));
 
         if (uploadMode === "file" && file) {
             formData.append("file", file);
@@ -67,13 +91,29 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
         });
 
         if (contentRes.ok) {
-            onSave(modified);
+            const updated = await contentRes.json();
+            onSave(updated);
             onOpenChange(false);
         }
     }
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog
+            open={open}
+            onOpenChange={async (nextOpen) => {
+                if (!nextOpen && user && !expired) {
+                    await fetch("/api/content/checkin", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            id: content.id,
+                            employeeID: user.id,
+                        }),
+                    });
+                }
+                onOpenChange(nextOpen);
+            }}
+        >
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Modify Content</DialogTitle>
@@ -194,6 +234,11 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                             </SelectContent>
                         </Select>
                     </div>
+                    {expired && (
+                        <div className="rounded-md bg-destructive text-background px-2 py-1 text-sm text-center">
+                            Your editing time has expired, please try again.
+                        </div>
+                    )}
                     <Button
                         className="mt-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-20 mx-auto rounded-lg px-2 py-1"
                         onClick={handleApply}

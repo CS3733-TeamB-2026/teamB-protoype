@@ -11,7 +11,8 @@ import {
     Trash2,
     LucideFolders,
     Search,
-    Plus
+    Plus,
+    Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
@@ -59,6 +60,13 @@ export interface ContentItem {
     fileURI: string | null;
     ownerID: number | null;
     owner: {
+        id: number;
+        firstName: string;
+        lastName: string;
+    } | null;
+    checkedOutBy: number | null;
+    checkedOutAt: string | null;
+    checkedOutByEmployee: {
         id: number;
         firstName: string;
         lastName: string;
@@ -213,6 +221,18 @@ function ViewContent() {
         return item.targetPersona === user!.persona || item.ownerID === user!.id;
     }
 
+    function isCheckedOut(item: ContentItem): boolean {
+        if (item.checkedOutBy === null) return false;
+        return item.checkedOutBy !== user!.id;
+    }
+
+    function lockLabel(item: ContentItem): string {
+        if (!item.checkedOutByEmployee) {
+            return "This content is currently being modified.";
+        }
+        return `${item.checkedOutByEmployee.firstName} ${item.checkedOutByEmployee.lastName} is currently modifying this content.`;
+    }
+
     function formatName(item: ContentItem): string {
         return item.owner
             ? `${item.owner.lastName}, ${item.owner.firstName}`
@@ -226,6 +246,34 @@ function ViewContent() {
         }
         setDeleteTarget(null);
     };
+
+    const handleStartEdit = async (item: ContentItem, e:React.MouseEvent) => {
+        e.stopPropagation();
+        if (!canEdit(item)) { return;}
+        try {
+            const res = await fetch(`/api/content/checkout`, {
+                method: 'POST',
+                headers: {"Content-Type": "application/json" },
+            body: JSON.stringify({
+                id: item.id,
+                employeeID: user!.id,
+            }),
+            });
+            const data = await res.json();
+            if(!res.ok) {
+                setError(data.message || "Someone else is editing");
+                return;
+            }
+            setContent ((prev) =>
+            prev.map((c) => (c.id === item.id ? {...c, ...data}: c)));
+            setEditingContent({ ...item, ...data });
+            setEditOpen(true);
+        } catch {
+            setError("Someone else is editing");
+        }
+
+        }
+
 
     const NUM_COLS = 8;
 
@@ -583,13 +631,15 @@ function ViewContent() {
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
-                                                            disabled={!canEdit(item)}
-                                                            onClick={() => {
-                                                                setEditingContent(item);
-                                                                setEditOpen(true);
-                                                            }}
+                                                            disabled={!canEdit(item) || isCheckedOut(item)}
+                                                            title={isCheckedOut(item) ? lockLabel(item) : "Edit content"}
+                                                            onClick={(e) => handleStartEdit(item, e)}
                                                         >
-                                                            <Pencil className="w-4 h-4" />
+                                                            {isCheckedOut(item) ? (
+                                                                <Lock className="w-4 h-4" />
+                                                            ) : (
+                                                                <Pencil className="w-4 h-4" />
+                                                            )}
                                                         </Button>
                                                         <Button
                                                             variant="destructive"
@@ -611,6 +661,12 @@ function ViewContent() {
                                                         className="px-6 py-2 bg-muted/10 border-t border-border"
                                                     >
                                                         <div className="flex gap-6 text-xs text-muted-foreground">
+                                                            {item.checkedOutByEmployee && (
+                                                                <span>
+                                                                    <span className = "font-medium text-foreground">Editing </span>
+                                                                    {item.checkedOutByEmployee.firstName} {item.checkedOutByEmployee.lastName}
+                                                                </span>
+                                                            )}
                                                         <span>
                                                             <span className="font-medium text-foreground">
                                                                 Modified:{" "}
@@ -768,7 +824,7 @@ function ViewContent() {
 
             {editingContent && (
                 <EditContentDialog
-                    key={editingContent.id}
+                    key={`${editingContent.id}-${editOpen}`}
                     content={editingContent}
                     open={editOpen}
                     onOpenChange={setEditOpen}

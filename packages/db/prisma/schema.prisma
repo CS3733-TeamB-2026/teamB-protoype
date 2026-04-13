@@ -14,7 +14,7 @@ datasource db {
 
 model Login {
   //TODO: change userName to username
-  userName String
+  userName     String
   passwordHash String
 
   employee   Employee @relation(fields: [employeeID], references: [id], onDelete: Cascade)
@@ -29,10 +29,11 @@ model Employee {
   lastName  String
   persona   Persona
 
-  ownedContent     Content[]
-  ownedRequests    ServiceRequest[] @relation("OwnedBy")
-  assignedRequests ServiceRequest[] @relation("AssignedTo")
-  login            Login?
+  ownedContent      Content[]        @relation("Owns")
+  checkedOutContent Content[]        @relation("CheckedOut")
+  ownedRequests     ServiceRequest[] @relation("OwnedBy")
+  assignedRequests  ServiceRequest[] @relation("AssignedTo")
+  login             Login?
 
   @@schema("public")
 }
@@ -43,8 +44,12 @@ model Content {
   linkURL     String? @unique()
   fileURI     String? @unique()
 
-  owner   Employee? @relation(fields: [ownerID], references: [id], onDelete: SetNull)
+  owner   Employee? @relation("Owns", fields: [ownerID], references: [id], onDelete: SetNull)
   ownerID Int?
+
+  checkedOutBy         Int?
+  checkedOutAt         DateTime?
+  checkedOutByEmployee Employee? @relation("CheckedOut", fields: [checkedOutBy], references: [id], onDelete: SetNull)
 
   lastModified DateTime
   expiration   DateTime?

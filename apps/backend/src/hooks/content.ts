@@ -50,8 +50,9 @@ export const getContentById = async (req: req, res: res) => {
     try {
         const id = parseInt(req.params.id);
         const content = await q.Content.queryContentById(id);
-        if (!content || !content.fileURI) {
-            return res.status(404).json({ message: "File not found" });
+
+        if (!content) {
+            return res.status(404).json({ message: "Content not found" });
         }
         return res.status(200).json(content);
     } catch (error) {
@@ -158,6 +159,7 @@ export const updateContent = async (req: req, res: res) => {
             new Date(),
             payload.expiration ? new Date(payload.expiration) : null,
             payload.targetPersona,
+            parseInt(payload.employeeID),
         );
         if (oldURI && (uploaded || linkURL)) {
             await q.Bucket.deleteFile(oldURI).catch(console.error);
@@ -188,4 +190,33 @@ export const deleteContent = async (req: req, res: res) => {
         console.error(error);
         return res.status(500).end();
     }
+};
+
+export const checkoutContent = async (req: req, res: res) => {
+    try {
+
+        const {id, employeeID} = req.body;
+        const result = await q.Content.checkoutContent(parseInt(id), parseInt(employeeID));
+
+        return res.status(200).json(result);
+    } catch (error: any) {
+        console.error(error);
+        return res.status(500).end();
+    }
+}
+
+export const checkinContent = async (req: req, res: res) => {
+    try {
+        const { id, employeeID } = req.body;
+        await q.Content.checkinContent(parseInt(id), parseInt(employeeID));
+        return res.status(200).json({ message: "Checked in" });
+    } catch (error: any) {
+        console.error(error);
+        return res.status(500).end();
+    }
+}
+
+export const clearExpiredLocks = async () => {
+    const expiredCutoff = new Date(Date.now() - 2 * 60 * 1000);
+    await q.Content.clearExpiredLocks(expiredCutoff);
 };
