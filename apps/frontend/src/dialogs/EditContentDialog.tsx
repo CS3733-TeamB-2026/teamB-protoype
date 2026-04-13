@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button.tsx";
 import { useUser } from "@/hooks/use-user.ts";
 import {
@@ -36,6 +36,23 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
         content.linkURL ? "url" : "file"
     );
     const [user] = useUser();
+
+    const [expired, setExpired] = useState(false);
+
+    {/*This is the thing that kicks the user out if editing time is up*/}
+    useEffect(() => {
+        if (!open) return;
+        const interval = setInterval(async () => {
+            const res = await fetch(`/api/content/${content.id}`);
+            const data = await res.json();
+            if (data.checkedOutBy !== user!.id) {
+                setExpired(true);
+                setTimeout(() => onOpenChange(false), 2000);
+                return;
+            }
+        }, 5 * 1000);
+        return () => clearInterval(interval);
+    }, [open]);
 
     async function handleApply() {
         if (
@@ -77,7 +94,16 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
     }
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={async (isOpen) => {
+            if (!isOpen) {
+                await fetch("/api/content/checkin", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: content.id, employeeID: user!.id })
+                });
+            }
+            onOpenChange(isOpen);
+        }}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Modify Content</DialogTitle>
@@ -198,6 +224,11 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                             </SelectContent>
                         </Select>
                     </div>
+                    {expired && (
+                        <div className="rounded-md bg-destructive text-background px-2 py-1 text-sm text-center">
+                            Your editing time has expired.
+                        </div>
+                    )}
                     <Button
                         className="mt-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-20 mx-auto rounded-lg px-2 py-1"
                         onClick={handleApply}
