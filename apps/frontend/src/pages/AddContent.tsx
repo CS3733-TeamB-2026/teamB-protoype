@@ -545,7 +545,7 @@ function AddContent() {
                             <div className="flex justify-center bg-background py-4">
                                 <Button
                                     onClick={handleSubmit}
-                                    className="bg-primary text-background hover:bg-black hover:text-background"
+                                    className="bg-accent text-background hover:bg-accent-dark hover:text-background"
                                     variant="outline"
                                     size="lg"
                                 >
