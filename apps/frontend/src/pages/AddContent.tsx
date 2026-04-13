@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import { useUser } from "@/hooks/use-user.ts";
+import { ALLOWED_ACCEPT_STRING, validateFileForUpload } from "@/helpers/mime.ts";
+
 import {Separator} from "@/components/ui/separator.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import {Label} from "@/components/ui/label.tsx";
@@ -55,7 +57,26 @@ function AddContent() {
     const [fileKey, setFileKey] = useState(0);
     const [uploadMode, setUploadMode] = React.useState<"url" | "file">("url");
     const [file, setFile] = React.useState<File | null>(null);
+    const [fileError, setFileError] = useState<string | null>(null);
     const [submitResult, setSubmitResult] = useState<"success" | "error" | null>(null)
+
+    const handleFileChange = (file: File | null) => {
+        setFileError(null);
+        if (!file) {
+            setFile(null);
+            return;
+        }
+
+        const validation = validateFileForUpload(file);
+        if (!validation.ok) {
+            setFileError(validation.reason);
+            setFile(null);
+            return;
+        }
+
+        setFile(file);
+        setName(file.name)
+    }
 
     // Function to handle post requests to backend
     const handleSubmit = async () => {
@@ -226,13 +247,20 @@ function AddContent() {
                                             key={fileKey}
                                             id="file"
                                             type="file"
+                                            accept={ALLOWED_ACCEPT_STRING}
                                             onChange={(e) =>
-                                                setFile(e.target.files?.[0] ?? null)
+                                                handleFileChange(e.target.files?.[0] ?? null)
                                             }
                                         />
-                                        <FieldDescription>
-                                            Select a file to upload.
-                                        </FieldDescription>
+                                        {fileError ? (
+                                            <FieldDescription className="text-destructive">
+                                                {fileError}
+                                            </FieldDescription>
+                                        ) : (
+                                            <FieldDescription>
+                                                Select a file to upload.
+                                            </FieldDescription>
+                                        )}
                                     </Field>
                                 )}
                             </div>
