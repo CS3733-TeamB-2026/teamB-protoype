@@ -26,6 +26,7 @@ import { Card } from "@/components/ui/card.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { Loader2, TriangleAlert } from "lucide-react";
+import { toast } from "sonner";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
 import { ContentIcon } from "@/components/shared/ContentIcon.tsx";
 
@@ -51,6 +52,14 @@ type ContentFormValues = {
     dateExpiration: Date | undefined;
 };
 
+function nowTimeString(): string {
+    return new Date().toTimeString().substring(0, 8);
+}
+
+function isValidUrl(url: string): boolean {
+    try { new URL(url); return true; } catch { return false; }
+}
+
 function initialValues(userId: number): ContentFormValues {
     return {
         name: "",
@@ -62,7 +71,7 @@ function initialValues(userId: number): ContentFormValues {
         uploadMode: "url",
         file: null,
         dateModified: new Date(),
-        lastModifiedTime: new Date().toTimeString().substring(0, 8),
+        lastModifiedTime: nowTimeString(),
         dateExpiration: undefined,
     };
 }
@@ -82,11 +91,6 @@ function AddContent() {
     const [ogImageError, setOgImageError] = useState(false);
     const [faviconError, setFaviconError] = useState(false);
     const [submitted, setSubmitted] = useState(false);
-    const [submitResult, setSubmitResult] = useState<"success" | "error" | null>(null);
-
-    function isValidUrl(url: string): boolean {
-        try { new URL(url); return true; } catch { return false; }
-    }
 
     function getErrors() {
         const e: Record<string, string> = {};
@@ -101,7 +105,7 @@ function AddContent() {
         return e;
     }
 
-    const handleUrlBlur = async () => {
+    const fetchUrlPreview = async () => {
         if (!values.linkUrl.trim() || !isValidUrl(values.linkUrl)) return;
         setUrlStatus("loading");
         try {
@@ -110,7 +114,11 @@ function AddContent() {
             const data: UrlPreview = await res.json();
             setUrlPreview(data);
             setUrlStatus("ok");
-            if (data.title) patch({ name: data.title });
+            patch({
+                ...(data.title ? { name: data.title } : {}),
+                dateModified: new Date(),
+                lastModifiedTime: nowTimeString(),
+            });
         } catch {
             setUrlStatus("unreachable");
         }
@@ -168,16 +176,19 @@ function AddContent() {
             }
 
             const res = await fetch("/api/content", { method: "POST", body: formData });
-            if (!res.ok) { setSubmitResult("error"); return; }
+            if (!res.ok) { toast.error("Error creating content."); return; }
 
-            if (res.status === 201) {
-                setSubmitResult("success");
-                setValues(initialValues(user!.id));
-                setFileKey(prev => prev + 1);
-                setSubmitted(false);
-            }
+            toast.success("Content created successfully!");
+            setValues(initialValues(user!.id));
+            setFileKey(prev => prev + 1);
+            setSubmitted(false);
+            setUrlStatus("idle");
+            setUrlPreview(null);
+            setOgImageError(false);
+            setFaviconError(false);
+            setFilePickError(null);
         } catch {
-            setSubmitResult("error");
+            toast.error("Error creating content.");
         }
     };
 
@@ -229,7 +240,14 @@ function AddContent() {
                                 </FieldLabel>
                                 <RadioGroup
                                     value={values.uploadMode}
-                                    onValueChange={(v) => patch({ uploadMode: v as "url" | "file" })}
+                                    onValueChange={(v) => {
+                                        const mode = v as "url" | "file";
+                                        patch({ uploadMode: mode });
+                                        if (mode === "url") void fetchUrlPreview();
+                                        if (mode === "file" && values.file) {
+                                            handleFileChange(values.file);
+                                        }
+                                    }}
                                     className="flex gap-6"
                                 >
                                     <div className="flex items-center gap-2">
@@ -256,7 +274,7 @@ function AddContent() {
                                                 setOgImageError(false);
                                                 setFaviconError(false);
                                             }}
-                                            onBlur={handleUrlBlur}
+                                            onBlur={fetchUrlPreview}
                                         />
                                         {errors.source && <FieldDescription className="text-destructive">{errors.source}</FieldDescription>}
                                         {urlStatus === "loading" && (
@@ -376,7 +394,7 @@ function AddContent() {
                                     </FieldLabel>
                                     <Popover open={openModified} onOpenChange={setOpenModified}>
                                         <PopoverTrigger asChild>
-                                            <Button variant="outline" id="date" className="justify-start font-normal">
+                                            <Button variant="outline" id="date" className="justify-start font-normal" disabled={values.uploadMode === "file" && values.file !== null}>
                                                 {values.dateModified ? values.dateModified.toLocaleDateString() : "Select date"}
                                             </Button>
                                         </PopoverTrigger>
@@ -402,6 +420,7 @@ function AddContent() {
                                         step="1"
                                         value={values.lastModifiedTime}
                                         onChange={(e) => patch({ lastModifiedTime: e.target.value })}
+                                        disabled={values.uploadMode === "file" && values.file !== null}
                                         className="appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
                                     />
                                 </Field>
@@ -466,17 +485,6 @@ function AddContent() {
                                     </SelectContent>
                                 </Select>
                             </Field>
-
-                            {submitResult === "success" && (
-                                <div className="mt-4 rounded-md bg-chart-1 border-chart-2 px-3 py-2">
-                                    Content created successfully!
-                                </div>
-                            )}
-                            {submitResult === "error" && (
-                                <div className="mt-4 rounded-md bg-destructive border-destructive text-background px-3 py-2">
-                                    Error creating content.
-                                </div>
-                            )}
 
                             <div className="flex justify-center bg-background py-4">
                                 <Button
