@@ -43,9 +43,6 @@ function AddContent() {
     const [status, setStatus] = useState<"new" | "inProgress" | "complete">(
         "new",
     );
-    const [expirationTime, setExpirationTime] = useState(() =>
-        new Date().toTimeString().substring(0, 8),
-    );
     const [jobPosition, setJobPosition] = useState("Select job position");
     const [open, setOpen] = React.useState(false);
     const [date, setDate] = React.useState<Date | undefined>(new Date());
@@ -57,11 +54,23 @@ function AddContent() {
     const [fileKey, setFileKey] = useState(0);
     const [uploadMode, setUploadMode] = React.useState<"url" | "file">("url");
     const [file, setFile] = React.useState<File | null>(null);
-    const [fileError, setFileError] = useState<string | null>(null);
+    const [filePickError, setFilePickError] = useState<string | null>(null);
+    const [submitted, setSubmitted] = useState(false);
     const [submitResult, setSubmitResult] = useState<"success" | "error" | null>(null)
 
+    function getErrors() {
+        const e: Record<string, string> = {};
+        if (!name.trim()) e.name = "Name is required.";
+        if (uploadMode === "url" && !linkUrl.trim()) e.source = "URL is required.";
+        if (uploadMode === "file" && !file) e.source = "Please select a file.";
+        if (jobPosition === "Select job position") e.persona = "Please select a job position.";
+        return e;
+    }
+
+    const errors = submitted ? getErrors() : {};
+
     const handleFileChange = (file: File | null) => {
-        setFileError(null);
+        setFilePickError(null);
         if (!file) {
             setFile(null);
             return;
@@ -69,17 +78,24 @@ function AddContent() {
 
         const validation = validateFileForUpload(file);
         if (!validation.ok) {
-            setFileError(validation.reason);
+            setFilePickError(validation.reason);
             setFile(null);
             return;
         }
 
         setFile(file);
-        setName(file.name)
+        setName(file.name);
+        const lastMod = new Date(file.lastModified);
+        setDate(lastMod);
+        setLastModifiedTime(lastMod.toTimeString().substring(0, 8));
     }
 
     // Function to handle post requests to backend
     const handleSubmit = async () => {
+        setSubmitted(true);
+        if (Object.keys(getErrors()).length > 0) return;
+
+
         try {
 
             const formData = new FormData();
@@ -88,8 +104,17 @@ function AddContent() {
             formData.append("ownerID", ownerID.toString());
             formData.append("contentType", contentType);
             formData.append("status", status);
-            formData.append("lastModified", date?.toISOString() ?? "");
-            formData.append("expiration", date2?.toISOString() ?? "");
+            const lastModifiedDate = date ? new Date(date) : new Date();
+            const [lmh, lmm, lms] = lastModifiedTime.split(":").map(Number);
+            lastModifiedDate.setHours(lmh, lmm, lms ?? 0, 0);
+            formData.append("lastModified", lastModifiedDate.toISOString());
+            if (date2) {
+                const expDate = new Date(date2);
+                expDate.setHours(0, 0, 0, 0);
+                formData.append("expiration", expDate.toISOString());
+            } else {
+                formData.append("expiration", "");
+            }
             formData.append("jobPosition", jobPosition);
 
             if (uploadMode === "file" && file) {
@@ -116,9 +141,9 @@ function AddContent() {
                 setDate(new Date());
                 setDate2(undefined);
                 setLastModifiedTime(new Date().toTimeString().substring(0, 8));
-                setExpirationTime(new Date().toTimeString().substring(0, 8));
                 setFileKey((prev) => prev + 1);
                 setFile(null);
+                setSubmitted(false);
             }
         } catch {
             setSubmitResult("error")
@@ -163,7 +188,7 @@ function AddContent() {
                                     className="text-primary"
                                     htmlFor="input-field-name"
                                 >
-                                    Name
+                                    Name <span className="text-destructive">*</span>
                                 </FieldLabel>
                                 <Input
                                     id="input-field-name"
@@ -172,6 +197,7 @@ function AddContent() {
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                 />
+                                {errors.name && <FieldDescription className="text-destructive">{errors.name}</FieldDescription>}
                             </Field>
 
                             {/*Separator*/}
@@ -183,13 +209,11 @@ function AddContent() {
                             <div className="flex gap-4">
                                 <Field className="bg-background">
                                     <FieldLabel className="text-primary">
-                                        Content Source
+                                        Content Source <span className="text-destructive">*</span>
                                     </FieldLabel>
                                     <RadioGroup
                                         value={uploadMode}
-                                        onValueChange={(v) =>
-                                            setUploadMode(v as "url" | "file")
-                                        }
+                                        onValueChange={(v) => setUploadMode(v as "url" | "file")}
                                     >
                                         <div className="flex items-center gap-2">
                                             <RadioGroupItem
@@ -229,10 +253,9 @@ function AddContent() {
                                             type="text"
                                             placeholder="Enter the URL of the link"
                                             value={linkUrl}
-                                            onChange={(e) =>
-                                                setLinkUrl(e.target.value)
-                                            }
+                                            onChange={(e) => setLinkUrl(e.target.value)}
                                         />
+                                        {errors.source && <FieldDescription className="text-destructive">{errors.source}</FieldDescription>}
                                     </Field>
                                 ) : (
                                     <Field className="bg-background">
@@ -252,9 +275,9 @@ function AddContent() {
                                                 handleFileChange(e.target.files?.[0] ?? null)
                                             }
                                         />
-                                        {fileError ? (
+                                        {(filePickError || errors.source) ? (
                                             <FieldDescription className="text-destructive">
-                                                {fileError}
+                                                {filePickError ?? errors.source}
                                             </FieldDescription>
                                         ) : (
                                             <FieldDescription>
@@ -311,7 +334,7 @@ function AddContent() {
                             {/*Job position dropdown, this needs to be updated*/}
                             <Field className="bg-background">
                                 <FieldLabel className="text-primary">
-                                    Select job position
+                                    Target Persona <span className="text-destructive">*</span>
                                 </FieldLabel>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
@@ -342,6 +365,7 @@ function AddContent() {
                                         </DropdownMenuGroup>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
+                                {errors.persona && <FieldDescription className="text-destructive">{errors.persona}</FieldDescription>}
                             </Field>
 
                             {/*Separator*/}
@@ -453,26 +477,6 @@ function AddContent() {
                                     </Popover>
                                 </Field>
 
-                                {/*Time Picker Expiration Date*/}
-                                <Field className="w-32">
-                                    <FieldLabel
-                                        className="text-primary"
-                                        htmlFor="time-picker-expirationdate"
-                                    >
-                                        Time
-                                    </FieldLabel>
-                                    <Input
-                                        type="time"
-                                        id="time-picker-expirationdate"
-                                        step="1"
-                                        value={expirationTime}
-                                        onChange={(e) =>
-                                            setExpirationTime(e.target.value)
-                                        }
-
-                                        className="appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-                                    />
-                                </Field>
                             </div>
 
                             {/*Separator*/}
