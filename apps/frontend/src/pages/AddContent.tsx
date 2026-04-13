@@ -25,18 +25,9 @@ import { Separator } from "@/components/ui/separator.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
-import { Loader2, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
-import { ContentIcon } from "@/components/shared/ContentIcon.tsx";
-
-type UrlPreview = {
-    title: string | null;
-    description: string | null;
-    image: string | null;
-    siteName: string | null;
-    favicon: string | null;
-};
+import { UrlPreviewCard, type UrlPreview } from "@/components/shared/UrlPreviewCard.tsx";
 
 type ContentFormValues = {
     name: string;
@@ -88,8 +79,6 @@ function AddContent() {
     const [filePickError, setFilePickError] = useState<string | null>(null);
     const [urlStatus, setUrlStatus] = useState<"idle" | "loading" | "unreachable" | "ok">("idle");
     const [urlPreview, setUrlPreview] = useState<UrlPreview | null>(null);
-    const [ogImageError, setOgImageError] = useState(false);
-    const [faviconError, setFaviconError] = useState(false);
     const [submitted, setSubmitted] = useState(false);
 
     function getErrors() {
@@ -184,8 +173,6 @@ function AddContent() {
             setSubmitted(false);
             setUrlStatus("idle");
             setUrlPreview(null);
-            setOgImageError(false);
-            setFaviconError(false);
             setFilePickError(null);
         } catch {
             toast.error("Error creating content.");
@@ -271,52 +258,11 @@ function AddContent() {
                                                 patch({ linkUrl: e.target.value });
                                                 setUrlStatus("idle");
                                                 setUrlPreview(null);
-                                                setOgImageError(false);
-                                                setFaviconError(false);
                                             }}
                                             onBlur={fetchUrlPreview}
                                         />
                                         {errors.source && <FieldDescription className="text-destructive">{errors.source}</FieldDescription>}
-                                        {urlStatus === "loading" && (
-                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                                Fetching preview...
-                                            </div>
-                                        )}
-                                        {urlStatus === "unreachable" && (
-                                            <div className="flex items-center gap-2 rounded-md bg-yellow-50 border border-yellow-200 px-3 py-2 text-sm text-yellow-800">
-                                                <TriangleAlert className="h-4 w-4 shrink-0" />
-                                                URL may be unreachable or doesn't support previews.
-                                            </div>
-                                        )}
-                                        {urlStatus === "ok" && urlPreview && (
-                                            <Card className="text-left p-4">
-                                                <div className="flex items-center gap-4">
-                                                    {urlPreview.image && !ogImageError ? (
-                                                        <img
-                                                            src={urlPreview.image}
-                                                            alt=""
-                                                            className="w-16 h-16 rounded object-cover shrink-0"
-                                                            onError={() => setOgImageError(true)}
-                                                        />
-                                                    ) : urlPreview.favicon && !faviconError ? (
-                                                        <img
-                                                            src={urlPreview.favicon}
-                                                            alt=""
-                                                            className="w-8 h-8 rounded shrink-0"
-                                                            onError={() => setFaviconError(true)}
-                                                        />
-                                                    ) : (
-                                                        <ContentIcon category="other" isLink={true} className="w-8 h-8" />
-                                                    )}
-                                                    <div className="min-w-0">
-                                                        {urlPreview.siteName && <p className="text-xs text-muted-foreground">{urlPreview.siteName}</p>}
-                                                        {urlPreview.title && <p className="text-sm font-medium text-foreground truncate">{urlPreview.title}</p>}
-                                                        {urlPreview.description && <p className="text-xs text-muted-foreground line-clamp-2">{urlPreview.description}</p>}
-                                                    </div>
-                                                </div>
-                                            </Card>
-                                        )}
+                                        <UrlPreviewCard status={urlStatus} preview={urlPreview} />
                                     </>
                                 ) : (
                                     <>
@@ -489,7 +435,7 @@ function AddContent() {
                             <div className="flex justify-center bg-background py-4">
                                 <Button
                                     onClick={handleSubmit}
-                                    disabled={submitted && Object.keys(getErrors()).length > 0}
+                                    disabled={Object.keys(getErrors()).length > 0}
                                     className="bg-primary text-background hover:bg-black hover:text-background"
                                     variant="outline"
                                     size="lg"
