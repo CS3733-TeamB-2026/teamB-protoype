@@ -34,6 +34,7 @@ model Employee {
   ownedRequests     ServiceRequest[] @relation("OwnedBy")
   assignedRequests  ServiceRequest[] @relation("AssignedTo")
   login             Login?
+  contents          Content[]
 
   @@schema("public")
 }
@@ -57,6 +58,8 @@ model Content {
   contentType   ContentType
   targetPersona Persona
   status        Status?
+  employee      Employee?   @relation(fields: [employeeId], references: [id])
+  employeeId    Int?
 
   @@schema("public")
 }
