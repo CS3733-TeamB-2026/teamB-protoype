@@ -29,8 +29,17 @@ import {Separator} from "@/components/ui/separator.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import {Label} from "@/components/ui/label.tsx";
 import {RadioGroup, RadioGroupItem} from "@/components/ui/radio-group.tsx";
-import {ChevronDown} from "lucide-react";
+import {ChevronDown, Loader2, TriangleAlert} from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
+import { ContentIcon } from "@/components/shared/ContentIcon.tsx";
+
+type UrlPreview = {
+    title: string | null;
+    description: string | null;
+    image: string | null;
+    siteName: string | null;
+    favicon: string | null;
+};
 
 function AddContent() {
     const [user] = useUser();
@@ -55,17 +64,46 @@ function AddContent() {
     const [uploadMode, setUploadMode] = React.useState<"url" | "file">("url");
     const [file, setFile] = React.useState<File | null>(null);
     const [filePickError, setFilePickError] = useState<string | null>(null);
+    const [urlStatus, setUrlStatus] = useState<"idle" | "loading" | "unreachable" | "ok">("idle");
+    const [urlPreview, setUrlPreview] = useState<UrlPreview | null>(null);
+    const [ogImageError, setOgImageError] = useState(false);
+    const [faviconError, setFaviconError] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [submitResult, setSubmitResult] = useState<"success" | "error" | null>(null)
+
+    function isValidUrl(url: string): boolean {
+        try { new URL(url); return true; } catch { return false; }
+    }
 
     function getErrors() {
         const e: Record<string, string> = {};
         if (!name.trim()) e.name = "Name is required.";
-        if (uploadMode === "url" && !linkUrl.trim()) e.source = "URL is required.";
+        if (uploadMode === "url") {
+            if (!linkUrl.trim()) e.source = "URL is required.";
+            else if (!isValidUrl(linkUrl)) e.source = "Please enter a valid URL.";
+        }
         if (uploadMode === "file" && !file) e.source = "Please select a file.";
         if (jobPosition === "Select job position") e.persona = "Please select a job position.";
         return e;
     }
+
+    const handleUrlBlur = async () => {
+        if (!linkUrl.trim() || !isValidUrl(linkUrl)) return;
+        setUrlStatus("loading");
+        try {
+            const res = await fetch(`/api/preview?url=${encodeURIComponent(linkUrl)}`);
+            if (!res.ok) {
+                setUrlStatus("unreachable");
+                return;
+            }
+            const data: UrlPreview = await res.json();
+            setUrlPreview(data);
+            setUrlStatus("ok");
+            if (data.title) setName(data.title);
+        } catch {
+            setUrlStatus("unreachable");
+        }
+    };
 
     const errors = submitted ? getErrors() : {};
 
@@ -206,66 +244,85 @@ function AddContent() {
                             </div>
 
                             {/*Content source selector*/}
-                            <div className="flex gap-4">
-                                <Field className="bg-background">
-                                    <FieldLabel className="text-primary">
-                                        Content Source <span className="text-destructive">*</span>
-                                    </FieldLabel>
-                                    <RadioGroup
-                                        value={uploadMode}
-                                        onValueChange={(v) => setUploadMode(v as "url" | "file")}
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <RadioGroupItem
-                                                value="url"
-                                                id="mode-url"
-                                            />
-                                            <Label htmlFor="mode-url">URL</Label>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <RadioGroupItem
-                                                value="file"
-                                                id="mode-file"
-                                            />
-                                            <Label htmlFor="mode-file">
-                                                File Upload
-                                            </Label>
-                                        </div>
-                                    </RadioGroup>
-                                </Field>
-
-                                <Separator
-                                    className="bg-primary"
-                                    orientation="vertical"
-                                />
+                            <Field className="bg-background">
+                                <FieldLabel className="text-primary">
+                                    Content Source <span className="text-destructive">*</span>
+                                </FieldLabel>
+                                <RadioGroup
+                                    value={uploadMode}
+                                    onValueChange={(v) => setUploadMode(v as "url" | "file")}
+                                    className="flex gap-6"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <RadioGroupItem value="url" id="mode-url" />
+                                        <Label htmlFor="mode-url">URL</Label>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <RadioGroupItem value="file" id="mode-file" />
+                                        <Label htmlFor="mode-file">File Upload</Label>
+                                    </div>
+                                </RadioGroup>
 
                                 {uploadMode === "url" ? (
-                                    <Field className="bg-background ">
-                                        {/*Input Url Field*/}
-                                        <FieldLabel
-                                            className="text-primary"
-                                            htmlFor="input-field-url"
-                                        >
-                                            URL
-                                        </FieldLabel>
+                                    <>
                                         <Input
                                             id="input-field-url"
                                             type="text"
                                             placeholder="Enter the URL of the link"
                                             value={linkUrl}
-                                            onChange={(e) => setLinkUrl(e.target.value)}
+                                            onChange={(e) => {
+                                                setLinkUrl(e.target.value);
+                                                setUrlStatus("idle");
+                                                setUrlPreview(null);
+                                                setOgImageError(false);
+                                                setFaviconError(false);
+                                            }}
+                                            onBlur={handleUrlBlur}
                                         />
                                         {errors.source && <FieldDescription className="text-destructive">{errors.source}</FieldDescription>}
-                                    </Field>
+                                        {urlStatus === "loading" && (
+                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                Fetching preview...
+                                            </div>
+                                        )}
+                                        {urlStatus === "unreachable" && (
+                                            <div className="flex items-center gap-2 rounded-md bg-yellow-50 border border-yellow-200 px-3 py-2 text-sm text-yellow-800">
+                                                <TriangleAlert className="h-4 w-4 shrink-0" />
+                                                URL may be unreachable or doesn't support previews.
+                                            </div>
+                                        )}
+                                        {urlStatus === "ok" && urlPreview && (
+                                            <Card className="text-left p-4">
+                                                <div className="flex items-center gap-4">
+                                                    {urlPreview.image && !ogImageError ? (
+                                                        <img
+                                                            src={urlPreview.image}
+                                                            alt=""
+                                                            className="w-16 h-16 rounded object-cover shrink-0"
+                                                            onError={() => setOgImageError(true)}
+                                                        />
+                                                    ) : urlPreview.favicon && !faviconError ? (
+                                                        <img
+                                                            src={urlPreview.favicon}
+                                                            alt=""
+                                                            className="w-8 h-8 rounded shrink-0"
+                                                            onError={() => setFaviconError(true)}
+                                                        />
+                                                    ) : (
+                                                        <ContentIcon category="other" isLink={true} className="w-8 h-8" />
+                                                    )}
+                                                    <div className="min-w-0">
+                                                        {urlPreview.siteName && <p className="text-xs text-muted-foreground">{urlPreview.siteName}</p>}
+                                                        {urlPreview.title && <p className="text-sm font-medium text-foreground truncate">{urlPreview.title}</p>}
+                                                        {urlPreview.description && <p className="text-xs text-muted-foreground line-clamp-2">{urlPreview.description}</p>}
+                                                    </div>
+                                                </div>
+                                            </Card>
+                                        )}
+                                    </>
                                 ) : (
-                                    <Field className="bg-background">
-                                        {/*File upload field*/}
-                                        <FieldLabel
-                                            className="text-primary"
-                                            htmlFor="file"
-                                        >
-                                            File Upload
-                                        </FieldLabel>
+                                    <>
                                         <Input
                                             key={fileKey}
                                             id="file"
@@ -284,9 +341,9 @@ function AddContent() {
                                                 Select a file to upload.
                                             </FieldDescription>
                                         )}
-                                    </Field>
+                                    </>
                                 )}
-                            </div>
+                            </Field>
 
                             {/*Separator*/}
                             <div className="bg-background py-2">
@@ -577,6 +634,7 @@ function AddContent() {
                             <div className="flex justify-center bg-background py-4">
                                 <Button
                                     onClick={handleSubmit}
+                                    disabled={submitted && Object.keys(getErrors()).length > 0}
                                     className="bg-primary text-background hover:bg-black hover:text-background"
                                     variant="outline"
                                     size="lg"

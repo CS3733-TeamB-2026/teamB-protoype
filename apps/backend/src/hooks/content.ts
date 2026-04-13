@@ -17,15 +17,22 @@ export const previewContent = async (req: req, res: res) => {
             if (!href) return null;
             try { return new URL(href, base.origin).href; } catch { return null; }
         };
-        const rawFavicon = $('link[rel="icon"]').attr("href")
-            ?? $('link[rel="shortcut icon"]').attr("href")
-            ?? null;
+        // Try favicon sources in priority order: high-res first, then smaller, then Apple touch icon
+        const rawFavicon =
+            $('link[rel="icon"][sizes="32x32"]').attr("href") ??
+            $('link[rel="icon"][sizes="16x16"]').attr("href") ??
+            $('link[rel="icon"]').attr("href") ??
+            $('link[rel="shortcut icon"]').attr("href") ??
+            $('link[rel="apple-touch-icon"]').attr("href") ??
+            null;
+        // Fall back to Google's favicon service, which is highly reliable
+        const favicon = resolve(rawFavicon) ?? `https://www.google.com/s2/favicons?domain=${base.hostname}&sz=32`;
         return res.status(200).json({
             title: og("title") ?? $("title").text() ?? null,
             description: og("description") ?? meta("description") ?? null,
             image: resolve(og("image")),
             siteName: og("site_name") ?? null,
-            favicon: resolve(rawFavicon) ?? `${base.origin}/favicon.ico`,
+            favicon,
         });
     } catch (error) {
         console.error(error);
