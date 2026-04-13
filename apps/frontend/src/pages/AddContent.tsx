@@ -13,23 +13,21 @@ import { Hero } from "@/components/shared/Hero.tsx"
 import { FilePlus } from "lucide-react"
 
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuGroup,
-    DropdownMenuLabel,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import { useUser } from "@/hooks/use-user.ts";
-import { ALLOWED_ACCEPT_STRING, validateFileForUpload } from "@/helpers/mime.ts";
+import { ALLOWED_ACCEPT_STRING, validateFileForUpload, stripExtension } from "@/helpers/mime.ts";
 
 import {Separator} from "@/components/ui/separator.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import {Label} from "@/components/ui/label.tsx";
 import {RadioGroup, RadioGroupItem} from "@/components/ui/radio-group.tsx";
-import {ChevronDown, Loader2, TriangleAlert} from "lucide-react";
+import {Loader2, TriangleAlert} from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
 import { ContentIcon } from "@/components/shared/ContentIcon.tsx";
 
@@ -46,13 +44,9 @@ function AddContent() {
     const [name, setName] = useState("");
     const [linkUrl, setLinkUrl] = useState("");
     const [ownerID, setOwnerID] = useState(user?.id ?? 0);
-    const [contentType, setContentType] = useState<"reference" | "workflow">(
-        "reference",
-    );
-    const [status, setStatus] = useState<"new" | "inProgress" | "complete">(
-        "new",
-    );
-    const [jobPosition, setJobPosition] = useState("Select job position");
+    const [contentType, setContentType] = useState<"reference" | "workflow" | "">("");
+    const [status, setStatus] = useState<"new" | "inProgress" | "complete">("new");
+    const [jobPosition, setJobPosition] = useState("");
     const [open, setOpen] = React.useState(false);
     const [date, setDate] = React.useState<Date | undefined>(new Date());
     const [open2, setOpen2] = React.useState(false);
@@ -83,7 +77,8 @@ function AddContent() {
             else if (!isValidUrl(linkUrl)) e.source = "Please enter a valid URL.";
         }
         if (uploadMode === "file" && !file) e.source = "Please select a file.";
-        if (jobPosition === "Select job position") e.persona = "Please select a job position.";
+        if (!jobPosition) e.persona = "Please select a job position.";
+        if (!contentType) e.contentType = "Please select a document type.";
         return e;
     }
 
@@ -122,7 +117,7 @@ function AddContent() {
         }
 
         setFile(file);
-        setName(file.name);
+        setName(stripExtension(file.name));
         const lastMod = new Date(file.lastModified);
         setDate(lastMod);
         setLastModifiedTime(lastMod.toTimeString().substring(0, 8));
@@ -173,9 +168,9 @@ function AddContent() {
                 setName("");
                 setLinkUrl("");
                 setOwnerID(user?.id ?? 0);
-                setContentType("reference");
+                setContentType("");
                 setStatus("new");
-                setJobPosition("Select job position");
+                setJobPosition("");
                 setDate(new Date());
                 setDate2(undefined);
                 setLastModifiedTime(new Date().toTimeString().substring(0, 8));
@@ -351,19 +346,6 @@ function AddContent() {
                             </div>
 
                             {/*Employee ID Field*/}
-                            {/*Only allows ints*/}
-                            {/*<Field className="bg-background">*/}
-                            {/*    <Input*/}
-                            {/*        id="input-employee-id"*/}
-                            {/*        type="number"*/}
-                            {/*        placeholder="000000"*/}
-                            {/*        value={ownerID}*/}
-                            {/*        onChange={(e) => setOwnerID(e.target.value)}*/}
-                            {/*    />*/}
-                            {/*    <FieldDescription>*/}
-                            {/*        /!* TODO: Enter the employee ID of the content owner*!/*/}
-                            {/*    </FieldDescription>*/}
-                            {/*</Field>*/}
                             <Field className="bg-background">
                                 <FieldLabel className="text-primary">
                                     Owner Employee
@@ -393,35 +375,16 @@ function AddContent() {
                                 <FieldLabel className="text-primary">
                                     Target Persona <span className="text-destructive">*</span>
                                 </FieldLabel>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="bg-background justify-between">
-                                            {jobPosition === "underwriter" ? "Underwriter" : jobPosition === "businessAnalyst" ? "Business Analyst" : jobPosition === "admin" ? "Admin" : "Select job position"}
-                                            <ChevronDown className="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                        <DropdownMenuGroup>
-                                            <DropdownMenuLabel>
-                                                Job Position
-                                            </DropdownMenuLabel>
-                                            <DropdownMenuRadioGroup
-                                                value={jobPosition}
-                                                onValueChange={setJobPosition}
-                                            >
-                                                <DropdownMenuRadioItem value="underwriter">
-                                                    Underwriter
-                                                </DropdownMenuRadioItem>
-                                                <DropdownMenuRadioItem value="businessAnalyst">
-                                                    Business Analyst
-                                                </DropdownMenuRadioItem>
-                                                <DropdownMenuRadioItem value="admin">
-                                                    Admin
-                                                </DropdownMenuRadioItem>
-                                            </DropdownMenuRadioGroup>
-                                        </DropdownMenuGroup>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                <Select value={jobPosition} onValueChange={setJobPosition}>
+                                    <SelectTrigger className="bg-background">
+                                        <SelectValue placeholder="Select job position" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="underwriter">Underwriter</SelectItem>
+                                        <SelectItem value="businessAnalyst">Business Analyst</SelectItem>
+                                        <SelectItem value="admin">Admin</SelectItem>
+                                    </SelectContent>
+                                </Select>
                                 {errors.persona && <FieldDescription className="text-destructive">{errors.persona}</FieldDescription>}
                             </Field>
 
@@ -544,38 +507,18 @@ function AddContent() {
                             {/*Type of document dropdown*/}
                             <Field className="bg-background">
                                 <FieldLabel className="text-primary">
-                                    Type of Document
+                                    Type of Document <span className="text-destructive">*</span>
                                 </FieldLabel>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="bg-background justify-between">
-                                            {contentType === "reference"
-                                                ? "Reference Content"
-                                                : "Workflow Content"}
-                                            <ChevronDown className="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                        <DropdownMenuGroup>
-                                            <DropdownMenuLabel>
-                                                Document Type
-                                            </DropdownMenuLabel>
-                                            <DropdownMenuRadioGroup
-                                                value={contentType}
-                                                onValueChange={(v) =>
-                                                    setContentType(v as "reference" | "workflow")
-                                                }
-                                            >
-                                                <DropdownMenuRadioItem value="reference">
-                                                    Reference Content
-                                                </DropdownMenuRadioItem>
-                                                <DropdownMenuRadioItem value="workflow">
-                                                    Workflow Content
-                                                </DropdownMenuRadioItem>
-                                            </DropdownMenuRadioGroup>
-                                        </DropdownMenuGroup>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                <Select value={contentType} onValueChange={(v) => setContentType(v as "reference" | "workflow" | "")}>
+                                    <SelectTrigger className="bg-background">
+                                        <SelectValue placeholder="Select document type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="reference">Reference Content</SelectItem>
+                                        <SelectItem value="workflow">Workflow Content</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {errors.contentType && <FieldDescription className="text-destructive">{errors.contentType}</FieldDescription>}
                             </Field>
 
                             {/*Document Status dropdown*/}
@@ -583,41 +526,16 @@ function AddContent() {
                                 <FieldLabel className="text-primary">
                                     Document Status
                                 </FieldLabel>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="bg-background justify-between">
-                                            {status === "new"
-                                                ? "New"
-                                                : status === "inProgress"
-                                                    ? "In Progress"
-                                                    : "Complete"}
-                                            <ChevronDown className="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                        <DropdownMenuGroup>
-                                            <DropdownMenuLabel>
-                                                Document Status
-                                            </DropdownMenuLabel>
-                                            <DropdownMenuRadioGroup
-                                                value={status}
-                                                onValueChange={(v) =>
-                                                    setStatus(v as "new" | "inProgress" | "complete")
-                                                }
-                                            >
-                                                <DropdownMenuRadioItem value="new">
-                                                    New
-                                                </DropdownMenuRadioItem>
-                                                <DropdownMenuRadioItem value="inProgress">
-                                                    In Progress
-                                                </DropdownMenuRadioItem>
-                                                <DropdownMenuRadioItem value="complete">
-                                                    Complete
-                                                </DropdownMenuRadioItem>
-                                            </DropdownMenuRadioGroup>
-                                        </DropdownMenuGroup>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                <Select value={status} onValueChange={(v) => setStatus(v as "new" | "inProgress" | "complete")}>
+                                    <SelectTrigger className="bg-background">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="new">New</SelectItem>
+                                        <SelectItem value="inProgress">In Progress</SelectItem>
+                                        <SelectItem value="complete">Complete</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </Field>
                         {submitResult === "success" && (
                             <div className="mt-4 rounded-md bg-chart-1 border-chart-2 px-3 py-2">

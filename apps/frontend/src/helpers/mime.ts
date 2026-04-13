@@ -268,6 +268,12 @@ export function getExtension(filename: string): string {
     return filename.split(".").pop()?.toLowerCase() ?? "unknown";
 }
 
+/** Returns the filename with its extension removed. */
+export function stripExtension(filename: string): string {
+    const lastDot = filename.lastIndexOf(".");
+    return lastDot > 0 ? filename.slice(0, lastDot) : filename;
+}
+
 // ---------- Colors ----------
 
 export const CATEGORY_COLORS: Record<
