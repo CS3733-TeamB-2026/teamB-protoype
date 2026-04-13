@@ -10,13 +10,13 @@ export class Content {
         _name: string,
         _linkURL: string | null,
         _fileURI: string | null,
-        _ownerID: number | null,
+        _ownerId: number | null,
         _contentType: p.ContentType,
         _status: p.Status | null,
         _lastModified: Date,
         _expiration: Date | null,
         _targetPersona: string,
-        _employeeID: number,
+        _checkedOutById: number,
     ): Promise<p.Content> {
         const _personaTyped: p.Persona | null = Helper.personaHelper(_targetPersona)
         if (_personaTyped === null) {
@@ -31,7 +31,7 @@ export class Content {
             throw new Error("Content not found")
         }
 
-        if (content.checkedOutBy !== _employeeID) {
+        if (content.checkedOutById !== _checkedOutById) {
             throw new Error("You do not have this content checked out.")
         }
 
@@ -44,7 +44,7 @@ export class Content {
                 displayName: _name,
                 linkURL: _linkURL,
                 fileURI: _fileURI,
-                ownerID: _ownerID,
+                ownerId: _ownerId,
                 contentType: _contentType,
                 status: _statusTyped,
                 lastModified: _lastModified,
@@ -60,7 +60,7 @@ export class Content {
         _name: string,
         _linkURL: string | null,
         _fileURI: string | null,
-        _ownerID: number | null,
+        _ownerId: number | null,
         _contentType: p.ContentType,
         _status: p.Status | null,
         _lastModified: Date,
@@ -83,7 +83,7 @@ export class Content {
                 displayName: _name,
                 linkURL: _linkURL,
                 fileURI: _fileURI,
-                ownerID: _ownerID,
+                ownerId: _ownerId,
                 contentType: _contentType,
                 status: _statusTyped,
                 lastModified: _lastModified,
