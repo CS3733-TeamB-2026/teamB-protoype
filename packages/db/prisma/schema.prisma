@@ -25,6 +25,7 @@ model Login {
 
 model Employee {
   id        Int     @id
+  auth0Id   String? @unique
   firstName String
   lastName  String
   persona   Persona
