@@ -2,7 +2,7 @@ import * as p from "../generated/prisma/client";
 import {prisma} from "../lib/prisma";
 import {Helper} from "./helper";
 
-const LOCK_TIMEOUT_MS = 2 * 60 * 1000;
+const LOCK_TIMEOUT_MS = 10 * 1000;
 
 export class Content {
     public static async updateContent(
@@ -17,7 +17,7 @@ export class Content {
         _expiration: Date | null,
         _targetPersona: string,
         _employeeID: number,
-    ): Promise<void> {
+    ): Promise<p.Content> {
         const _personaTyped: p.Persona | null = Helper.personaHelper(_targetPersona)
         if (_personaTyped === null) {
             throw new Error("No persona type provided")
@@ -38,7 +38,7 @@ export class Content {
         if (Content.isLockExpired(content.checkedOutAt)) {
             throw new Error("Your editing lock expired. Please close and try again.")
         }
-        const updatedContent = await prisma.content.update({
+        return await prisma.content.update({
             where: {id: id},
             data: {
                 displayName: _name,
@@ -182,5 +182,23 @@ export class Content {
     private static isLockExpired(checkedOutAt: Date | null): boolean {
         if (!checkedOutAt) return true;
         return Date.now() - new Date(checkedOutAt).getTime() > LOCK_TIMEOUT_MS;
+    }
+    public static async checkinContent(id: number, employeeID: number): Promise<void> {
+        await prisma.content.update({
+            where: { id },
+            data: { checkedOutBy: null, checkedOutAt: null }
+        })
+    }
+    public static async clearExpiredLocks(before: Date): Promise<void> {
+        await prisma.content.updateMany({
+            where: {
+                checkedOutAt: { lt: before },
+                checkedOutBy: { not: null }
+            },
+            data: {
+                checkedOutBy: null,
+                checkedOutAt: null,
+            }
+        })
     }
 }

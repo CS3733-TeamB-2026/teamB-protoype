@@ -201,3 +201,14 @@ export const checkoutContent = async (req: req, res: res) => {
         return res.status(500).end();
     }
 }
+
+export const checkinContent = async (req: req, res: res) => {
+    try {
+        const { id, employeeID } = req.body;
+        await q.Content.checkinContent(parseInt(id), parseInt(employeeID));
+        return res.status(200).json({ message: "Checked in" });
+    } catch (error: any) {
+        console.error(error);
+        return res.status(500).end();
+    }
+}
