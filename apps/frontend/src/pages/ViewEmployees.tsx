@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.tsx";
 import { useEffect, useState } from "react";
-import { Loader2, Pencil, Trash2, Search } from "lucide-react";
+import {Loader2, Pencil, Trash2, Search, Plus} from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { Link } from "react-router-dom";
 import { Hero } from "@/components/shared/Hero.tsx";
@@ -108,11 +108,16 @@ function ViewEmployees() {
                 </CardHeader>
                 <CardContent>
                     <div className="flex items-center justify-between mb-4">
-                        <Link to="/employeeform">
-                            <Button className="my-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-60 mr-auto rounded-lg px-2 py-6 text-xl">
-                                Add Employee
-                            </Button>
-                        </Link>
+                        <div>
+                            <Link to="/employeeform">
+                                <Button className="cursor-pointer p-0! gap-0! border-0! group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-48 hover:bg-primary-dark hover:text-primary-foreground active:brightness-80 transition-all bg-primary text-primary-foreground w-12 h-12 text-lg justify-start">
+                                <span className="flex items-center justify-center min-w-12 h-12">
+                                    <Plus className="w-8! h-8! text-primary-foreground " />
+                                </span>
+                                    <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Add Employees</span>
+                                </Button>
+                            </Link>
+                        </div>
                         <div className="relative">
                             <Search
                                 className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 pointer-events-none"
