@@ -145,7 +145,7 @@ export class Content {
         })
     }
 
-    public static async queryContentByBookmarkerId(bookmarkerId: number | null): Promise<p.ContentWithBookmarks | null> {
+    public static async queryContentByBookmarkerId(bookmarkerId: number | null): Promise<ContentWithBookmarks | null> {
         return prisma.content.findMany({
             include: {
                 bookmark: {

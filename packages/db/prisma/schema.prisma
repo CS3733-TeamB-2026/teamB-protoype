@@ -32,7 +32,7 @@ model Employee {
 
   ownedContent      Content[]        @relation("Owned")
   checkedOutContent Content[]        @relation("CheckedOut")
-  bookmarkedContent Bookmarks[]
+  bookmarkedContent Bookmark[]
 
   ownedRequests     ServiceRequest[] @relation("OwnedBy")
   assignedRequests  ServiceRequest[] @relation("AssignedTo")
@@ -86,9 +86,11 @@ model ServiceRequest {
 model Bookmark {
   bookmarker Employee @relation(fields: [bookmarkerId], references: [id])
   bookmarkerId Int
-  bookmarkedContent Content @relation(fields: [bookmarkedContentId], referenes: [id])
+  bookmarkedContent Content @relation(fields: [bookmarkedContentId], references: [id])
   bookmarkedContentId Int
   @@id([bookmarkerId, bookmarkedContentId])
+
+  @@schema("public")
 }
 
 enum Persona {
