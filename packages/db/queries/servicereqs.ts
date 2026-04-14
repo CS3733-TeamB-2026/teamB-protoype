@@ -8,13 +8,13 @@ export class ServiceReqs {
 
     public static async queryAssignedServiceReqs(): Promise<p.ServiceRequest[]> {
         return prisma.serviceRequest.findMany({
-            where: {assigneeID: {not: null}}
+            where: {assigneeId: {not: null}}
         })
     }
 
     public static async queryServiceReqsByAssigned(id: number): Promise<p.ServiceRequest[]> {
         return prisma.serviceRequest.findMany({
-            where: {assigneeID: id}
+            where: {assigneeId: id}
         })
     }
 }
