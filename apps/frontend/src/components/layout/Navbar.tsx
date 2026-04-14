@@ -12,7 +12,6 @@ import { Separator } from "@/components/ui/separator.tsx"
 //import LoginDialog from "@/dialogs/LoginDialog.tsx"
 import { User as UserIcon } from "lucide-react"
 import { Link } from "react-router-dom"
-//import { useUser } from "@/hooks/use-user.ts"
 import { useAuth0 } from "@auth0/auth0-react"
 import { useUser } from "@/hooks/use-user.ts"
 

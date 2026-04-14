@@ -43,8 +43,7 @@ function EmployeeHome() {
                 title="Dashboard"
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-8 mx-20 my-5">
-
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-8 mx-20">
                 {/* Hello Card */}
                 <Card className="md:col-span-2 py-8 px-4 shadow-lg hover:scale-101 transition-transform">
                     <CardHeader>
@@ -79,8 +78,8 @@ function EmployeeHome() {
                     <CardHeader>
                         <CardTitle className="capitalize text-2xl mb-4 font-semibold px-4 py-3 text-center">User Access: {user?.persona}</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <p className="text-center mb-4 text-xl">Quick Links:</p>
+                    <CardContent className="pb-5">
+                        <p className="text-center text-xl">Quick Links:</p>
                         <div className="flex flex-col items-center gap-2 gap-y-5 justify-center h-full">
                             { user?.persona === "admin" ?
                                 <Link to="/usermanagement">
@@ -107,7 +106,7 @@ function EmployeeHome() {
                             </Link>
                             <Link to="/manageform">
                                 <Button className="rounded-sm shadow-xl text-lg px-6 py-5 bg-primary text-background hover:bg-primary-dark transition-colors hover:text-primary-foreground active:brightness-80" variant="outline">
-                                    Manage Content Form
+                                    Add Content Form
                                 </Button>
                             </Link>
                         </div>

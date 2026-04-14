@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Link } from "react-router-dom";
+import { highlight } from "@/helpers/highlight.tsx";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { LinkSquare01Icon } from "@hugeicons/core-free-icons";
 import {
@@ -65,9 +66,9 @@ export interface ContentItem {
         firstName: string;
         lastName: string;
     } | null;
-    checkedOutBy: number | null;
+    checkedOutById: number | null;
     checkedOutAt: string | null;
-    checkedOutByEmployee: {
+    checkedOutBy: {
         id: number;
         firstName: string;
         lastName: string;
@@ -116,8 +117,6 @@ function ViewContent() {
     const searchedContent = content.filter((item) =>
         item.displayName.toLowerCase().includes(searchTerm.toLowerCase())
     );
-
-
 
     const advancedFilteredContent = searchedContent.filter((item) => {
         const matchesStatus =
@@ -267,15 +266,15 @@ function ViewContent() {
     }
 
     function isCheckedOut(item: ContentItem): boolean {
-        if (item.checkedOutBy === null) return false;
-        return item.checkedOutBy !== user!.id;
+        if (item.checkedOutById === null) return false;
+        return item.checkedOutById !== user!.id;
     }
 
     function lockLabel(item: ContentItem): string {
-        if (!item.checkedOutByEmployee) {
+        if (!item.checkedOutBy) {
             return "This content is currently being modified.";
         }
-        return `${item.checkedOutByEmployee.firstName} ${item.checkedOutByEmployee.lastName} is currently modifying this content.`;
+        return `${item.checkedOutBy.firstName} ${item.checkedOutBy.lastName} is currently modifying this content.`;
     }
 
     function formatName(item: ContentItem): string {
@@ -605,7 +604,7 @@ function ViewContent() {
                                                 <TableCell className="w-full max-w-0">
                                                     <div className="flex items-center gap-2">
                                                     <span className="truncate font-medium text-foreground">
-                                                        {item.displayName}
+                                                        {highlight(item.displayName, searchTerm)}
                                                     </span>
                                                         <span className="text-muted-foreground shrink-0">
                                                         {isExpanded ? (
@@ -706,10 +705,10 @@ function ViewContent() {
                                                         className="px-6 py-2 bg-muted/10 border-t border-border"
                                                     >
                                                         <div className="flex gap-6 text-xs text-muted-foreground">
-                                                            {item.checkedOutByEmployee && (
+                                                            {item.checkedOutBy && (
                                                                 <span>
                                                                     <span className = "font-medium text-foreground">Editing </span>
-                                                                    {item.checkedOutByEmployee.firstName} {item.checkedOutByEmployee.lastName}
+                                                                    {item.checkedOutBy.firstName} {item.checkedOutBy.lastName}
                                                                 </span>
                                                             )}
                                                         <span>
