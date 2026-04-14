@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { useUser } from "@/hooks/use-user.ts";
 import { Separator } from "@/components/ui/separator.tsx";
 import { Card } from "@/components/ui/card.tsx";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { ContentFormFields } from "@/components/shared/ContentFormFields.tsx";
 import { type ContentFormValues, initialValues, getErrors } from "@/lib/content-form.ts";
@@ -16,7 +17,14 @@ function AddContent() {
     const patch = (p: Partial<ContentFormValues>) => setValues(prev => ({ ...prev, ...p }));
 
     const [submitted, setSubmitted] = useState(false);
+    const [formKey, setFormKey] = useState(0);
     const errors = submitted ? getErrors(values) : {};
+
+    const handleReset = () => {
+        setValues(initialValues(user!.id));
+        setSubmitted(false);
+        setFormKey(k => k + 1);
+    };
 
     const handleSubmit = async () => {
         setSubmitted(true);
@@ -78,13 +86,24 @@ function AddContent() {
                         <Separator className="bg-primary" />
 
                         <ContentFormFields
+                            key={formKey}
                             values={values}
                             patch={patch}
                             errors={errors}
                             showLastModified
                         />
 
-                        <div className="flex justify-center bg-background py-4">
+                        <div className="flex justify-center gap-4 bg-background py-4">
+                            <Button asChild variant="outline" size="lg">
+                                <Link to="/files">View Files</Link>
+                            </Button>
+                            <Button
+                                onClick={handleReset}
+                                variant="outline"
+                                size="lg"
+                            >
+                                Reset
+                            </Button>
                             <Button
                                 onClick={handleSubmit}
                                 disabled={Object.keys(getErrors(values)).length > 0}

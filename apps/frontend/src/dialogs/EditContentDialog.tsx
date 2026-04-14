@@ -28,7 +28,14 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
     const patch = (p: Partial<ContentFormValues>) => setValues(prev => ({ ...prev, ...p }));
 
     const [submitted, setSubmitted] = useState(false);
+    const [formKey, setFormKey] = useState(0);
     const errors = submitted ? getErrors(values) : {};
+
+    const handleReset = () => {
+        setValues(fromContentItem(content));
+        setSubmitted(false);
+        setFormKey(k => k + 1);
+    };
 
     const [expired, setExpired] = useState(false);
     const [user] = useUser();
@@ -58,20 +65,33 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
         formData.append("ownerID", values.ownerID.toString());
         formData.append("contentType", values.contentType);
         formData.append("status", values.status ?? "");
-        formData.append("expiration", values.dateExpiration ? new Date(values.dateExpiration).toISOString() : "");
+
+        const lastModifiedDate = values.dateModified ? new Date(values.dateModified) : new Date();
+        const [lmh, lmm, lms] = values.lastModifiedTime.split(":").map(Number);
+        lastModifiedDate.setHours(lmh, lmm, lms ?? 0, 0);
+        formData.append("lastModified", lastModifiedDate.toISOString());
+
+        if (values.dateExpiration) {
+            const expDate = new Date(values.dateExpiration);
+            expDate.setHours(0, 0, 0, 0);
+            formData.append("expiration", expDate.toISOString());
+        } else {
+            formData.append("expiration", "");
+        }
         formData.append("targetPersona", values.jobPosition);
         formData.append("employeeID", String(user!.id));
         if (values.uploadMode === "file" && values.file) {
             formData.append("file", values.file);
         }
 
-        const res = await fetch("/api/content", { method: "PUT", body: formData });
-        if (res.ok) {
+        try {
+            const res = await fetch("/api/content", { method: "PUT", body: formData });
+            if (!res.ok) { toast.error("Error updating content."); return; }
             const updated = await res.json();
             onSave(updated);
             onOpenChange(false);
             toast.success("Content updated successfully!");
-        } else {
+        } catch {
             toast.error("Error updating content.");
         }
     };
@@ -108,9 +128,11 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                     <Separator />
 
                     <ContentFormFields
+                        key={formKey}
                         values={values}
                         patch={patch}
                         errors={errors}
+                        showLastModified
                     />
 
                     {expired && (
@@ -119,13 +141,21 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                         </div>
                     )}
 
-                    <Button
-                        className="mt-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-20 mx-auto rounded-lg px-2 py-1"
-                        onClick={handleApply}
-                        disabled={submitted && Object.keys(getErrors(values)).length > 0}
-                    >
-                        Apply
-                    </Button>
+                    <div className="flex justify-center gap-4 mt-5">
+                        <Button
+                            variant="outline"
+                            onClick={handleReset}
+                        >
+                            Reset
+                        </Button>
+                        <Button
+                            className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground rounded-lg px-4 py-1"
+                            onClick={handleApply}
+                            disabled={Object.keys(getErrors(values)).length > 0}
+                        >
+                            Apply
+                        </Button>
+                    </div>
                 </div>
             </DialogContent>
         </Dialog>
