@@ -59,6 +59,10 @@ import { PersonaBadge } from "@/components/shared/PersonaBadge.tsx";
 import { EditContentDialog } from "@/dialogs/EditContentDialog.tsx";
 import { AddContentDialog } from "@/dialogs/AddContentDialog.tsx";
 import { FilePreview } from "@/components/FilePreview.tsx";
+import { UrlPreviewLink } from "@/components/shared/UrlPreviewLink.tsx";
+import { type UrlPreview } from "@/components/shared/UrlPreviewCard.tsx";
+import { getCachedPreview, setCachedPreview } from "@/lib/preview-cache.ts";
+import { invalidateFileCacheById } from "@/lib/file-cache.ts";
 import { useAuth0 } from "@auth0/auth0-react"
 import {highlight} from "@/lib/highlight.tsx";
 import { toast } from "sonner";
@@ -105,18 +109,7 @@ function ViewContent() {
     const [bookmarks, setBookmarks] = useState<BookmarkRecord[]>([]);
     const [deleteTarget, setDeleteTarget] = useState<ContentItem | null>(null);
     const [sort, toggleSort] = useSortState<"name" | "owner" | "status" | "contentType" | "persona">({column: "name", direction: "asc"});
-    const [linkPreviews, setLinkPreviews] = useState<
-        Record<
-            number,
-            {
-                title: string | null;
-                description: string | null;
-                image: string | null;
-                siteName: string | null;
-                favicon: string | null;
-            }
-        >
-    >({});
+    const [linkPreviews, setLinkPreviews] = useState<Record<number, UrlPreview | null>>({});
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
     const [advancedFilters, setAdvancedFilters] = useState({
@@ -171,16 +164,34 @@ function ViewContent() {
     const { getAccessTokenSilently } = useAuth0();
 
     const fetchPreviews = useCallback((data: ContentItem[]) => {
-        data.filter((item) => item.linkURL).forEach((item) => {
+        const linkItems = data.filter((item) => item.linkURL);
+
+        // Populate synchronously from cache — no loading state for already-seen URLs.
+        const fromCache: Record<number, UrlPreview | null> = {};
+        const uncached: typeof linkItems = [];
+        for (const item of linkItems) {
+            const cached = getCachedPreview(item.linkURL!);
+            if (cached !== undefined) {
+                fromCache[item.id] = cached;
+            } else {
+                uncached.push(item);
+            }
+        }
+        if (Object.keys(fromCache).length > 0) {
+            setLinkPreviews((prev) => ({ ...prev, ...fromCache }));
+        }
+
+        uncached.forEach((item) => {
             fetch(`/api/preview?url=${encodeURIComponent(item.linkURL!)}`)
                 .then((res) => (res.ok ? res.json() : Promise.reject()))
-                .then((preview) => setLinkPreviews((prev) => ({ ...prev, [item.id]: preview })))
-                .catch(() =>
-                    setLinkPreviews((prev) => ({
-                        ...prev,
-                        [item.id]: { title: null, description: null, image: null, siteName: null, favicon: null },
-                    }))
-                );
+                .then((preview: UrlPreview) => {
+                    setCachedPreview(item.linkURL!, preview);
+                    setLinkPreviews((prev) => ({ ...prev, [item.id]: preview }));
+                })
+                .catch(() => {
+                    setCachedPreview(item.linkURL!, null);
+                    setLinkPreviews((prev) => ({ ...prev, [item.id]: null }));
+                });
         });
     }, []);
 
@@ -606,7 +617,7 @@ function ViewContent() {
                                                             src={
                                                                 linkPreviews[
                                                                     item.id
-                                                                    ].favicon!
+                                                                ]!.favicon!
                                                             }
                                                             alt=""
                                                             className="w-5 h-5 shrink-0"
@@ -776,100 +787,23 @@ function ViewContent() {
                                             )}
 
                                             {/* Expanded: link preview */}
-                                            {isExpanded &&
-                                                isLink &&
-                                                (() => {
-                                                    const preview =
-                                                        linkPreviews[item.id];
-                                                    const hasImage =
-                                                        !!preview?.image;
-                                                    const hasFavicon =
-                                                        !!preview?.favicon;
-                                                    return (
-                                                        <TableRow className="hover:bg-transparent">
-                                                            <TableCell
-                                                                colSpan={NUM_COLS}
-                                                                className="p-0"
-                                                            >
-                                                                <a
-                                                                    href={
-                                                                        item.linkURL!
-                                                                    }
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
-                                                                    className="flex items-center gap-4 px-6 py-3 bg-muted/20 hover:bg-muted/40 transition-colors"
-                                                                    onClick={(e) =>
-                                                                        e.stopPropagation()
-                                                                    }
-                                                                >
-                                                                    {hasImage ? (
-                                                                        <img
-                                                                            src={
-                                                                                preview!
-                                                                                    .image!
-                                                                            }
-                                                                            alt=""
-                                                                            className="w-16 h-16 rounded object-cover shrink-0"
-                                                                            onError={(
-                                                                                e,
-                                                                            ) => {
-                                                                                (
-                                                                                    e.currentTarget as HTMLImageElement
-                                                                                ).style.display =
-                                                                                    "none";
-                                                                            }}
-                                                                        />
-                                                                    ) : hasFavicon ? (
-                                                                        <img
-                                                                            src={
-                                                                                preview!
-                                                                                    .favicon!
-                                                                            }
-                                                                            alt=""
-                                                                            className="w-8 h-8 rounded shrink-0"
-                                                                            onError={(
-                                                                                e,
-                                                                            ) => {
-                                                                                (
-                                                                                    e.currentTarget as HTMLImageElement
-                                                                                ).style.display =
-                                                                                    "none";
-                                                                            }}
-                                                                        />
-                                                                    ) : null}
-                                                                    <div className="min-w-0 text-left">
-                                                                        <p className="text-xs text-muted-foreground truncate">
-                                                                            {
-                                                                                item.linkURL
-                                                                            }
-                                                                        </p>
-                                                                        {preview?.siteName && (
-                                                                            <p className="text-xs text-muted-foreground">
-                                                                                {
-                                                                                    preview.siteName
-                                                                                }
-                                                                            </p>
-                                                                        )}
-                                                                        {preview?.title && (
-                                                                            <p className="text-sm font-medium text-foreground truncate">
-                                                                                {
-                                                                                    preview.title
-                                                                                }
-                                                                            </p>
-                                                                        )}
-                                                                        {preview?.description && (
-                                                                            <p className="text-xs text-muted-foreground line-clamp-2">
-                                                                                {
-                                                                                    preview.description
-                                                                                }
-                                                                            </p>
-                                                                        )}
-                                                                    </div>
-                                                                </a>
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    );
-                                                })()}
+                                            {isExpanded && isLink && (
+                                                <TableRow className="hover:bg-transparent">
+                                                    <TableCell colSpan={NUM_COLS} className="p-0">
+                                                        <UrlPreviewLink
+                                                            href={item.linkURL!}
+                                                            status={
+                                                                !(item.id in linkPreviews)
+                                                                    ? "loading"
+                                                                    : linkPreviews[item.id] === null
+                                                                      ? "unreachable"
+                                                                      : "ok"
+                                                            }
+                                                            preview={linkPreviews[item.id] ?? null}
+                                                        />
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
 
                                             {/* Expanded: file preview */}
                                             {isExpanded && isFile && (
@@ -913,12 +847,21 @@ function ViewContent() {
                 onSave={(created) => {
                     setContent((prev) => [...prev, created]);
                     if (created.linkURL) {
-                        fetch(`/api/preview?url=${encodeURIComponent(created.linkURL)}`)
-                            .then((r) => r.ok ? r.json() : null)
-                            .then((preview) => {
-                                if (preview) setLinkPreviews((prev) => ({ ...prev, [created.id]: preview }));
-                            })
-                            .catch(() => {});
+                        const cached = getCachedPreview(created.linkURL);
+                        if (cached !== undefined) {
+                            setLinkPreviews((prev) => ({ ...prev, [created.id]: cached }));
+                        } else {
+                            fetch(`/api/preview?url=${encodeURIComponent(created.linkURL)}`)
+                                .then((r) => r.ok ? r.json() : null)
+                                .then((preview: UrlPreview | null) => {
+                                    setCachedPreview(created.linkURL!, preview);
+                                    setLinkPreviews((prev) => ({ ...prev, [created.id]: preview }));
+                                })
+                                .catch(() => {
+                                    setCachedPreview(created.linkURL!, null);
+                                    setLinkPreviews((prev) => ({ ...prev, [created.id]: null }));
+                                });
+                        }
                     }
                 }}
             />
@@ -929,7 +872,10 @@ function ViewContent() {
                     content={editingContent}
                     open={editOpen}
                     onOpenChange={setEditOpen}
-                    onSave={refreshContent}
+                    onSave={() => {
+                        if (editingContent?.fileURI) invalidateFileCacheById(editingContent.id);
+                        void refreshContent();
+                    }}
                 />
             )}
 

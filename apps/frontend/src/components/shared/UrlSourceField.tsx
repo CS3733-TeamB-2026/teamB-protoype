@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input.tsx";
 import { UrlPreviewCard, type UrlPreview } from "@/components/shared/UrlPreviewCard.tsx";
+import { getCachedPreview, setCachedPreview } from "@/lib/preview-cache.ts";
 
 export type { UrlPreview };
 
@@ -21,21 +22,36 @@ export function UrlSourceField({ value, onChange, onPreviewLoaded, error }: Prop
 
     const fetchPreview = async (url: string) => {
         if (!url.trim() || !isValidUrl(url)) return;
+
+        const cached = getCachedPreview(url);
+        if (cached !== undefined) {
+            setUrlPreview(cached);
+            setUrlStatus(cached === null ? "unreachable" : "ok");
+            if (cached) onPreviewLoaded?.(cached);
+            return;
+        }
+
         setUrlStatus("loading");
         try {
             const res = await fetch(`/api/preview?url=${encodeURIComponent(url)}`);
-            if (!res.ok) { setUrlStatus("unreachable"); return; }
+            if (!res.ok) {
+                setCachedPreview(url, null);
+                setUrlStatus("unreachable");
+                return;
+            }
             const data: UrlPreview = await res.json();
+            setCachedPreview(url, data);
             setUrlPreview(data);
             setUrlStatus("ok");
             onPreviewLoaded?.(data);
         } catch {
+            setCachedPreview(url, null);
             setUrlStatus("unreachable");
         }
     };
 
     // When this component mounts with a pre-filled URL (e.g. switching back to URL mode),
-    // re-fetch the preview so it's immediately visible.
+    // show the preview immediately from cache or re-fetch if not cached.
     useEffect(() => {
         if (value) void fetchPreview(value);
         // Intentionally runs on mount only — value is the initial prop.
