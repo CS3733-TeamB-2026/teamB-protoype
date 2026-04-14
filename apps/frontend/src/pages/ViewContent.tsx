@@ -151,50 +151,48 @@ function ViewContent() {
         (advancedFilters.bookmarkedOnly ? 1 : 0) +
         (advancedFilters.ownedByMe ? 1 : 0);
 
+    const fetchPreviews = (data: ContentItem[]) => {
+        data.filter((item) => item.linkURL).forEach((item) => {
+            fetch(`/api/preview?url=${encodeURIComponent(item.linkURL!)}`)
+                .then((res) => {
+                    if (!res.ok) throw new Error(`preview ${res.status}`);
+                    return res.json();
+                })
+                .then((preview) =>
+                    setLinkPreviews((prev) => ({ ...prev, [item.id]: preview }))
+                )
+                .catch(() =>
+                    setLinkPreviews((prev) => ({
+                        ...prev,
+                        [item.id]: { title: null, description: null, image: null, siteName: null, favicon: null },
+                    }))
+                );
+        });
+    };
 
+    const refreshContent = () => {
+        fetch(`/api/content`)
+            .then((res) => res.json())
+            .then((data: ContentItem[]) => setContent(data))
+            .catch(() => {});
+    };
 
-
-
-
-
-
-
+    // Initial load — shows spinner and fetches link previews
     useEffect(() => {
         fetch(`/api/content`)
             .then((res) => res.json())
             .then((data: ContentItem[]) => {
                 setContent(data);
                 setLoading(false);
-                data.filter((item) => item.linkURL).forEach((item) => {
-                    fetch(
-                        `/api/preview?url=${encodeURIComponent(item.linkURL!)}`,
-                    )
-                        .then((res) => {
-                            if (!res.ok)
-                                throw new Error(`preview ${res.status}`);
-                            return res.json();
-                        })
-                        .then((preview) =>
-                            setLinkPreviews((prev) => ({
-                                ...prev,
-                                [item.id]: preview,
-                            })),
-                        )
-                        .catch(() =>
-                            setLinkPreviews((prev) => ({
-                                ...prev,
-                                [item.id]: {
-                                    title: null,
-                                    description: null,
-                                    image: null,
-                                    siteName: null,
-                                    favicon: null,
-                                },
-                            })),
-                        );
-                });
+                fetchPreviews(data);
             })
             .catch(() => { setError("Failed to load content."); setLoading(false); });
+    }, []);
+
+    // Poll for lock state changes from other users
+    useEffect(() => {
+        const id = setInterval(refreshContent, 15_000);
+        return () => clearInterval(id);
     }, []);
 
     function toggleExpand(id: number) {
@@ -826,11 +824,7 @@ function ViewContent() {
                     content={editingContent}
                     open={editOpen}
                     onOpenChange={setEditOpen}
-                    onSave={(updated) =>
-                        setContent((prev) =>
-                            prev.map((e) => (e.id === updated.id ? updated : e))
-                        )
-                    }
+                    onSave={refreshContent}
                 />
             )}
 
