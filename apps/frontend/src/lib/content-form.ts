@@ -4,8 +4,8 @@ export type ContentFormValues = {
     name: string;
     linkUrl: string;
     ownerID: number | null;
-    contentType: "reference" | "workflow" | "";
-    status: "new" | "inProgress" | "complete" | "";
+    contentType: "reference" | "workflow" | "none";
+    status: "new" | "inProgress" | "complete" | "none";
     jobPosition: string;
     uploadMode: "url" | "file";
     file: File | null;
@@ -40,8 +40,8 @@ export function initialValues(userId: number): ContentFormValues {
         name: "",
         linkUrl: "",
         ownerID: userId,
-        contentType: "",
-        status: "",
+        contentType: "none",
+        status: "none",
         jobPosition: "",
         uploadMode: "url",
         file: null,
@@ -57,8 +57,8 @@ export function buildContentFormData(values: ContentFormValues): FormData {
     formData.append("name", values.name);
     formData.append("linkURL", values.uploadMode === "url" ? values.linkUrl : "");
     formData.append("ownerID", values.ownerID != null ? values.ownerID.toString() : "");
-    formData.append("contentType", values.contentType);
-    formData.append("status", values.status ?? "");
+    formData.append("contentType", values.contentType === "none" ? "" : values.contentType);
+    formData.append("status", values.status === "none" ? "" : values.status);
 
     const lastModifiedDate = values.dateModified ? new Date(values.dateModified) : new Date();
     const [lmh, lmm, lms] = values.lastModifiedTime.split(":").map(Number);
@@ -87,7 +87,7 @@ export function fromContentItem(item: ContentItem): ContentFormValues {
         linkUrl: item.linkURL ?? "",
         ownerID: item.ownerId ?? null,
         contentType: item.contentType,
-        status: item.status ?? "",
+        status: item.status ?? "none",
         jobPosition: item.targetPersona,
         uploadMode: item.linkURL ? "url" : "file",
         file: null,
