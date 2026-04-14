@@ -30,7 +30,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
 
     const [submitted, setSubmitted] = useState(false);
     const [formKey, setFormKey] = useState(0);
-    const errors = submitted ? getErrors(values) : {};
+    const errors = submitted ? getErrors(values, true) : {};
 
     const handleReset = () => {
         setValues(fromContentItem(content));
@@ -63,7 +63,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
     const handleApply = async () => {
         if (!user) return;
         setSubmitted(true);
-        if (Object.keys(getErrors(values)).length > 0) return;
+        if (Object.keys(getErrors(values, true)).length > 0) return;
 
         const formData = new FormData();
         formData.append("id", content.id.toString());
@@ -167,7 +167,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                         <Button
                             className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground rounded-lg px-4 py-1"
                             onClick={handleApply}
-                            disabled={Object.keys(getErrors(values)).length > 0}
+                            disabled={Object.keys(getErrors(values, true)).length > 0}
                         >
                             Apply
                         </Button>

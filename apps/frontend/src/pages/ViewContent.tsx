@@ -17,7 +17,6 @@ import {
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Link } from "react-router-dom";
-import { highlight } from "@/helpers/highlight.tsx";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { LinkSquare01Icon } from "@hugeicons/core-free-icons";
 import {
@@ -53,6 +52,7 @@ import { PersonaBadge } from "@/components/shared/PersonaBadge.tsx";
 import { EditContentDialog } from "@/dialogs/EditContentDialog.tsx";
 import { FilePreview } from "@/components/FilePreview.tsx";
 import { useAuth0 } from "@auth0/auth0-react"
+import {highlight} from "@/helpers/highlight.tsx";
 
 // Matches the Content model from Prisma (with joined owner)
 export interface ContentItem {
@@ -155,6 +155,34 @@ function ViewContent() {
 
     const { getAccessTokenSilently } = useAuth0();
 
+    const fetchPreviews = (data: ContentItem[]) => {
+        data.filter((item) => item.linkURL).forEach((item) => {
+            fetch(`/api/preview?url=${encodeURIComponent(item.linkURL!)}`)
+                .then((res) => {
+                    if (!res.ok) throw new Error(`preview ${res.status}`);
+                    return res.json();
+                })
+                .then((preview) =>
+                    setLinkPreviews((prev) => ({ ...prev, [item.id]: preview }))
+                )
+                .catch(() =>
+                    setLinkPreviews((prev) => ({
+                        ...prev,
+                        [item.id]: { title: null, description: null, image: null, siteName: null, favicon: null },
+                    }))
+                );
+        });
+    };
+
+    const refreshContent = async () => {
+        const token = await getAccessTokenSilently();
+        fetch(`/api/content`, { headers: { Authorization: `Bearer ${token}` } })
+            .then((res) => res.json())
+            .then((data: ContentItem[]) => setContent(data))
+            .catch(() => {});
+    };
+
+    // Initial load — shows spinner and fetches link previews
     useEffect(() => {
 
         if (!user) return;
@@ -210,38 +238,17 @@ function ViewContent() {
             .then((data: ContentItem[]) => {
                 setContent(data);
                 setLoading(false);
-                data.filter((item) => item.linkURL).forEach((item) => {
-                    fetch(
-                        `/api/preview?url=${encodeURIComponent(item.linkURL!)}`,
-                    )
-                        .then((res) => {
-                            if (!res.ok)
-                                throw new Error(`preview ${res.status}`);
-                            return res.json();
-                        })
-                        .then((preview) =>
-                            setLinkPreviews((prev) => ({
-                                ...prev,
-                                [item.id]: preview,
-                            })),
-                        )
-                        .catch(() =>
-                            setLinkPreviews((prev) => ({
-                                ...prev,
-                                [item.id]: {
-                                    title: null,
-                                    description: null,
-                                    image: null,
-                                    siteName: null,
-                                    favicon: null,
-                                },
-                            })),
-                        );
-                });
+                fetchPreviews(data);
             })
             .catch(() => { setError("Failed to load content."); setLoading(false); });
             */
     }, [getAccessTokenSilently, user]);
+
+    // Poll for lock state changes from other users
+    useEffect(() => {
+        const id = setInterval(refreshContent, 15_000);
+        return () => clearInterval(id);
+    }, []);
 
     function toggleExpand(id: number) {
         setExpandedId((prev) => (prev === id ? null : id));
@@ -884,11 +891,7 @@ function ViewContent() {
                     content={editingContent}
                     open={editOpen}
                     onOpenChange={setEditOpen}
-                    onSave={(updated) =>
-                        setContent((prev) =>
-                            prev.map((e) => (e.id === updated.id ? updated : e))
-                        )
-                    }
+                    onSave={refreshContent}
                 />
             )}
 

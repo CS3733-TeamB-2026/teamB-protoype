@@ -9,12 +9,10 @@ import { Button } from "@/components/ui/button.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
-import { Card } from "@/components/ui/card.tsx";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
-import { useUser } from "@/hooks/use-user.ts";
 import { ALLOWED_ACCEPT_STRING, validateFileForUpload, stripExtension } from "@/helpers/mime.ts";
 import { UrlSourceField } from "@/components/shared/UrlSourceField.tsx";
 import { FilePickerCard } from "@/components/shared/FilePickerCard.tsx";
+import { EmployeePicker } from "@/components/shared/EmployeePicker.tsx";
 import { type ContentFormValues, nowTimeString } from "@/lib/content-form.ts";
 
 interface Props {
@@ -25,7 +23,6 @@ interface Props {
 }
 
 export function ContentFormFields({ values, patch, errors, showLastModified = false }: Props) {
-    const user = useUser();
     const [openModifiedDate, setOpenModifiedDate] = React.useState(false);
     const [openExpirationDate, setOpenExpirationDate] = React.useState(false);
     const [filePickError, setFilePickError] = useState<string | null>(null);
@@ -121,21 +118,10 @@ export function ContentFormFields({ values, patch, errors, showLastModified = fa
             {/* Owner */}
             <Field className="bg-background">
                 <FieldLabel className="text-primary">Owner Employee</FieldLabel>
-                {user && (
-                    <Card className="text-left p-4">
-                        <div className="flex items-center gap-3">
-                            <Avatar className="w-10 h-10">
-                                <AvatarFallback className="bg-primary text-primary-foreground">
-                                    {user.firstName[0] + user.lastName[0]}
-                                </AvatarFallback>
-                            </Avatar>
-                            <div>
-                                <p className="font-semibold">{user.firstName} {user.lastName}</p>
-                                <p className="text-sm text-muted-foreground capitalize">{user.persona}</p>
-                            </div>
-                        </div>
-                    </Card>
-                )}
+                <EmployeePicker
+                    selectedId={values.ownerID}
+                    onSelect={(id) => patch({ ownerID: id })}
+                />
             </Field>
 
             <div className="py-2"><Separator className="bg-primary" /></div>
