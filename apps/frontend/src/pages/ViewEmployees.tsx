@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.tsx";
 import { useEffect, useState } from "react";
-import { Loader2, Pencil, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Trash2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { Link } from "react-router-dom";
 import { Hero } from "@/components/shared/Hero.tsx";
@@ -12,7 +12,7 @@ import { SortableHead } from "@/components/shared/SortableHead.tsx";
 import { useSortState, applySortState } from "@/hooks/use-sort-state.ts";
 import {PersonaBadge} from "@/components/shared/PersonaBadge.tsx";
 import { useUser } from "@/hooks/use-user.ts";
-import { highlight } from "@/lib/highlight.tsx";
+import { findMatches, highlight, highlightRange } from "@/lib/highlight.tsx";
 import { useAuth0 } from "@auth0/auth0-react";
 
 export type Employee = {
@@ -66,13 +66,14 @@ function ViewEmployees() {
     }, [getAccessTokenSilently]);
 
     const filteredEmployees = employees.filter((e) => {
-        const query = searchTerm.toLowerCase().trim();
-
+        const query = searchTerm.toLowerCase().trim().replace(/\s/g, "");
+        const concatName = e.firstName + e.lastName;
         if (!query) return true;
 
         return (
             e.firstName.toLowerCase().includes(query) ||
             e.lastName.toLowerCase().includes(query) ||
+            concatName.toLowerCase().includes(query) ||
             e.persona.toLowerCase().includes(query) ||
             (e.login?.userName ?? "").toLowerCase().includes(query) ||
             e.id.toString().includes(query)
@@ -121,13 +122,18 @@ function ViewEmployees() {
                                 Add Employee
                             </Button>
                         </Link>
-                        <input
-                            type="text"
-                            placeholder="Search employees..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-60 max-w-md  mb-4 px-3 py-2 border rounded-md"
-                        />
+                        <div className="relative">
+                            <Search
+                                className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 pointer-events-none"
+                            />
+                            <input
+                                type="text"
+                                placeholder="Search employees..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-64 h-10 text-lg! pl-2! pr-8 border border-gray-700 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                            />
+                        </div>
                     </div>
                     {loading ? (
                         <div className="flex items-center justify-center py-16 gap-3 text-muted-foreground">
@@ -153,11 +159,13 @@ function ViewEmployees() {
                                     if (col === "lastName") return e.lastName;
                                     if (col === "persona") return e.persona;
                                     if (col === "userName") return e.login?.userName ?? "";
-                                }).map((employee) => (
+                                }).map((employee) => {
+                                    const matches = findMatches(employee.firstName+employee.lastName, searchTerm);
+                                    return (
                                     <TableRow key={employee.id}>
                                         <TableCell className="text-right pr-4">{employee.id}</TableCell>
-                                        <TableCell className="font-medium">{highlight(employee.firstName, searchTerm)}</TableCell>
-                                        <TableCell className="font-medium">{highlight(employee.lastName, searchTerm)}</TableCell>
+                                        <TableCell className="font-medium">{highlightRange(employee.firstName, 0, matches)}</TableCell>
+                                        <TableCell className="font-medium">{highlightRange(employee.lastName, employee.firstName.length, matches)}</TableCell>
                                         <TableCell>{highlight(employee.login?.userName || "—", searchTerm)}</TableCell>
                                         <TableCell  className="text-center">
                                             <PersonaBadge
@@ -188,7 +196,7 @@ function ViewEmployees() {
                                             </div>
                                         </TableCell>
                                     </TableRow>
-                                ))}
+                                )})}
                             </TableBody>
                         </Table>
                     )}
