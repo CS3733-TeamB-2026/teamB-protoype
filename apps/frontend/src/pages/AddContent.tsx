@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Hero } from "@/components/shared/Hero.tsx";
-import { FilePlus } from "lucide-react";
+import {FilePlus, Loader2} from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { useUser } from "@/hooks/use-user.ts";
 import { Separator } from "@/components/ui/separator.tsx";
@@ -10,9 +10,10 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { ContentFormFields } from "@/components/shared/ContentFormFields.tsx";
 import { type ContentFormValues, initialValues, getErrors } from "@/lib/content-form.ts";
+import { useAuth0 } from "@auth0/auth0-react"
 
 function AddContent() {
-    const [user] = useUser();
+    const user = useUser();
     const [values, setValues] = useState<ContentFormValues>(() => initialValues(user?.id ?? 0));
     const patch = (p: Partial<ContentFormValues>) => setValues(prev => ({ ...prev, ...p }));
 
@@ -20,13 +21,17 @@ function AddContent() {
     const [formKey, setFormKey] = useState(0);
     const errors = submitted ? getErrors(values) : {};
 
+    const { getAccessTokenSilently } = useAuth0();
+
     const handleReset = () => {
         setValues(initialValues(user!.id));
         setSubmitted(false);
         setFormKey(k => k + 1);
     };
 
+    // Function to handle post requests to backend
     const handleSubmit = async () => {
+        if (!user) return;
         setSubmitted(true);
         if (Object.keys(getErrors(values)).length > 0) return;
 
@@ -55,7 +60,11 @@ function AddContent() {
                 formData.append("file", values.file);
             }
 
-            const res = await fetch("/api/content", { method: "POST", body: formData });
+            const token = await getAccessTokenSilently();
+            const res = await fetch("/api/content", {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` },
+                body: formData });
             if (!res.ok) { toast.error("Error creating content."); return; }
 
             toast.success("Content created successfully!");
@@ -66,7 +75,11 @@ function AddContent() {
         }
     };
 
-    if (!user) return null;
+    if (!user) return (
+        <div className="flex items-center justify-center min-h-screen bg-secondary">
+            <Loader2 className="w-10 h-10 text-primary animate-spin" />
+        </div>
+    );
 
     return (
         <>

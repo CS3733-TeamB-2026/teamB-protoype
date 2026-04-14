@@ -16,8 +16,27 @@ import ViewContent from "@/pages/ViewContent.tsx";
 import { ViewSingleFile } from "@/pages/VIewSingleFile.tsx";
 import SidebarOverlay from "./components/layout/SidebarOverlay.tsx";
 import { Route, Routes } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
+import { Navigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
+
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+    const { isAuthenticated } = useAuth0();
+
+    if (!isAuthenticated) return <Navigate to="/" />;
+
+    return <>{children}</>;
+};
 
 function App() {
+
+    const { isLoading } = useAuth0();
+
+    if (isLoading) return (
+        <div className="flex items-center justify-center min-h-screen bg-secondary">
+            <Loader2 className="w-10 h-10 text-primary animate-spin" />
+        </div>
+    )
 
     // Your application must be wrapped with the BrowserRouter component to enable routing
     return (
@@ -34,14 +53,14 @@ function App() {
                         <Routes>
                             {/*This is where Home gets loaded automatically when it detected we are on "/" page*/}
                             <Route path="/" element={<Home/>}/>
-                            <Route path="/employeeform" element={<AddEmployee/>}/>
-                            <Route path="/manageform" element={<AddContent/>}/>
-                            <Route path="/usermanagement" element={<ViewEmployees/>}/>
+                            <Route path="/employeeform" element={<ProtectedRoute><AddEmployee/></ProtectedRoute>}/>
+                            <Route path="/manageform" element={<ProtectedRoute><AddContent/></ProtectedRoute>}/>
+                            <Route path="/usermanagement" element={<ProtectedRoute><ViewEmployees/></ProtectedRoute>}/>
                             <Route path="/underwriter" element={<UnderwriterPersona/>}/>
                             <Route path="/businessanalyst" element={<BusinessAnalystPersona/>}/>
-                            <Route path="/files" element={<ViewContent/>}/>
-                            <Route path="/employeehome" element={<EmployeeHome/>}/>
-                            <Route path="/file/:id" element={<ViewSingleFile/>}/>
+                            <Route path="/files" element={<ProtectedRoute><ViewContent/></ProtectedRoute>}/>
+                            <Route path="/employeehome" element={<ProtectedRoute><EmployeeHome/></ProtectedRoute>}/>
+                            <Route path="/file/:id" element={<ProtectedRoute><ViewSingleFile/></ProtectedRoute>}/>
                         </Routes>
                     </main>
                     <Footer />

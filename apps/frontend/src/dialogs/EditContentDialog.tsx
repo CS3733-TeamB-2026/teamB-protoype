@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { ContentFormFields } from "@/components/shared/ContentFormFields.tsx";
 import { type ContentFormValues, fromContentItem, getErrors } from "@/lib/content-form.ts";
 import type { ContentItem } from "@/pages/ViewContent.tsx";
+import { useAuth0 } from "@auth0/auth0-react";
 
 interface Props {
     content: ContentItem;
@@ -38,13 +39,18 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
     };
 
     const [expired, setExpired] = useState(false);
-    const [user] = useUser();
+    const user = useUser();
+    const { getAccessTokenSilently } = useAuth0();
 
     // Kick the user out if the checkout expires.
     useEffect(() => {
         if (!open) return;
         const interval = setInterval(async () => {
-            const res = await fetch(`/api/content/${content.id}`, { cache: "no-store" });
+            const token = await getAccessTokenSilently();
+            const res = await fetch(`/api/content/${content.id}`, {
+                cache: "no-store",
+                headers: { Authorization: `Bearer ${token}` },
+            });
             const data = await res.json();
             if (String(data.checkedOutById) !== String(user!.id)) {
                 setExpired(true);
@@ -52,9 +58,10 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
             }
         }, 5 * 1000);
         return () => clearInterval(interval);
-    }, [open, content.id, onOpenChange, user]);
+    }, [open, content.id, onOpenChange, user, getAccessTokenSilently]);
 
     const handleApply = async () => {
+        if (!user) return;
         setSubmitted(true);
         if (Object.keys(getErrors(values, true)).length > 0) return;
 
@@ -62,7 +69,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
         formData.append("id", content.id.toString());
         formData.append("name", values.name);
         formData.append("linkURL", values.uploadMode === "url" ? values.linkUrl : "");
-        formData.append("ownerID", values.ownerID.toString());
+        formData.append("ownerID", user.id.toString());
         formData.append("contentType", values.contentType);
         formData.append("status", values.status ?? "");
 
@@ -85,7 +92,12 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
         }
 
         try {
-            const res = await fetch("/api/content", { method: "PUT", body: formData });
+            const token = await getAccessTokenSilently();
+            const res = await fetch("/api/content", {
+                method: "PUT",
+                headers: { Authorization: `Bearer ${token}` },
+                body: formData
+            });
             if (!res.ok) { toast.error("Error updating content."); return; }
             const updated = await res.json();
             onSave(updated);
@@ -101,9 +113,13 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
             open={open}
             onOpenChange={async (nextOpen) => {
                 if (!nextOpen && user && !expired) {
+                    const token = await getAccessTokenSilently();
                     await fetch("/api/content/checkin", {
                         method: "POST",
-                        headers: { "Content-Type": "application/json" },
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`
+                        },
                         body: JSON.stringify({ id: content.id, employeeID: user.id }),
                     });
                 }
