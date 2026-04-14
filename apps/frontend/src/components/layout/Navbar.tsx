@@ -1,6 +1,6 @@
 //import React from "react";
 import { useSidebar } from "@/components/ui/sidebar.tsx";
-import { Menu } from "lucide-react";
+import { Menu, Loader2 } from "lucide-react";
 import logo from "../../assets/hanover_logo.svg"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
 import {
@@ -24,7 +24,7 @@ function Navbar() {
 
     const { isAuthenticated, loginWithRedirect, logout, user: auth0User } = useAuth0();
 
-    const employee = useUser();
+    const user = useUser();
 
     return (
         <>
@@ -48,14 +48,24 @@ function Navbar() {
                 {/* user avatar popover */}
                 <Popover>
                     <PopoverTrigger asChild>
-                        <button className="rounded-full flex items-center gap-2 hover:opacity-80 active:scale-[0.96] group">
-                            <span className="text-xl font-semibold relative after:absolute after:bottom-0 after:right-0 after:h-0.5 after:w-0 after:bg-current after:transition-all group-hover:after:w-full group-hover:after:opacity-80 ">
-                                { isAuthenticated ? employee?.firstName + " " + employee?.lastName : "Log In"}
-                            </span>
-                            <Avatar className="cursor-pointer w-10 h-10 ">
-                                <AvatarFallback className="bg-secondary text-primary">{isAuthenticated ? " " + employee?.firstName[0] + employee?.lastName[0] : <UserIcon />}</AvatarFallback>
-                            </Avatar>
-                        </button>
+                        {
+                            isAuthenticated && !user ?
+                                <div className="flex items-center justify-center">
+                                    <Loader2 className="w-10 h-10 text-secondary animate-spin" />
+                                </div>
+                                :
+                                <button className="rounded-full flex items-center gap-2 hover:opacity-80 active:scale-[0.96] group cursor-pointer">
+                                    <span className="text-xl font-semibold relative after:absolute after:bottom-0 after:right-0 after:h-0.5 after:w-0 after:bg-current after:transition-all group-hover:after:w-full group-hover:after:opacity-80 ">
+                                        { isAuthenticated ? user?.firstName + " " + user?.lastName : "Log In"}
+                                    </span>
+                                    <Avatar className="cursor-pointer w-10 h-10 ">
+                                        <AvatarFallback className="bg-secondary text-primary">{isAuthenticated ? " " + user?.firstName[0] + user?.lastName[0] : <UserIcon />}</AvatarFallback>
+                                    </Avatar>
+                                </button>
+
+
+                        }
+
                     </PopoverTrigger>
                     <PopoverContent className="w-60">
                         {
@@ -67,8 +77,8 @@ function Navbar() {
                                             <AvatarFallback className="bg-primary text-primary-foreground">{auth0User?.name?.[0]}</AvatarFallback>
                                         </Avatar>
                                         <div>
-                                            <p className="font-semibold text-lg">{employee?.firstName + " " + employee?.lastName}</p>
-                                            <p className="text-muted-foreground text-md capitalize">{employee?.persona}</p>
+                                            <p className="font-semibold text-lg">{user?.firstName + " " + user?.lastName}</p>
+                                            <p className="text-muted-foreground text-md capitalize">{user?.persona}</p>
                                         </div>
                                     </div>
                                     <Separator className="bg-primary" />
@@ -90,7 +100,9 @@ function Navbar() {
                                     </div>
                                     <Separator className="bg-primary" />
                                     <button className="w-full active:scale-97 bg-secondary rounded-lg px-2 py-2 transition-colors hover:bg-primary hover:text-primary-foreground" onClick={() => {
-                                        loginWithRedirect()
+                                        loginWithRedirect({
+                                            appState: { returnTo: '/employeehome' }
+                                        })
                                     }}>
                                         Log In
                                     </button>

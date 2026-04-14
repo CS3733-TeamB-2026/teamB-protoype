@@ -14,6 +14,9 @@ createRoot(document.getElementById('root')!).render(
                 redirect_uri: window.location.origin,
                 audience: "https://hanover-cma-api"
             }}
+            onRedirectCallback={(appState) => {
+                window.location.replace(appState?.returnTo || '/employeehome')
+            }}
         >
             <App />
         </Auth0Provider>

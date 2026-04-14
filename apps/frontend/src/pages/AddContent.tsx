@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Hero } from "@/components/shared/Hero.tsx";
-import { FilePlus } from "lucide-react";
+import {FilePlus, Loader2} from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { useUser } from "@/hooks/use-user.ts";
 import { Separator } from "@/components/ui/separator.tsx";
@@ -75,7 +75,11 @@ function AddContent() {
         }
     };
 
-    if (!user) return null;
+    if (!user) return (
+        <div className="flex items-center justify-center min-h-screen bg-secondary">
+            <Loader2 className="w-10 h-10 text-primary animate-spin" />
+        </div>
+    );
 
     return (
         <>

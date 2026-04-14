@@ -329,7 +329,11 @@ function ViewContent() {
 
     const NUM_COLS = 8;
 
-    if (!user) return null;
+    if (!user) return (
+        <div className="flex items-center justify-center min-h-screen bg-secondary">
+            <Loader2 className="w-10 h-10 text-primary animate-spin" />
+        </div>
+    );
 
     return (
         <>
