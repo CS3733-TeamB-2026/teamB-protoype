@@ -68,6 +68,21 @@ export const getContentById = async (req: req, res: res) => {
     }
 };
 
+export const getContentByBookmarkerId = async (req: req, res: res) => {
+    try {
+        const bookmarkerId = parseInt(req.params.bookmarkerId);
+        const content = await q.Content.queryContentByBookmarkerId(bookmarkerId);
+
+        if (!content) {
+            return res.status(404).json({ message: "Content not found" });
+        }
+        return res.status(200).json(content);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
 export const getContentInfo = async (req: req, res: res) => {
     try {
         const id = parseInt(req.params.id);
