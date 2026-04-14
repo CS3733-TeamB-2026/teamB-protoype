@@ -76,7 +76,7 @@ function Navbar() {
                                         Log Out
                                     </button>
                                 </div>
-                            :
+                                :
                                 //User is not logged in
                                 <div className="flex flex-col gap-3">
                                     <div className="flex items-center gap-3">
