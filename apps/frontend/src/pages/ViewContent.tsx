@@ -116,8 +116,6 @@ function ViewContent() {
         item.displayName.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-
-
     const advancedFilteredContent = searchedContent.filter((item) => {
         const matchesStatus =
             advancedFilters.status.length === 0 ||
