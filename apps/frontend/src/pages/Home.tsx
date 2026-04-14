@@ -54,25 +54,29 @@ function Home() {
                     <CardDescription className="text-lg">One place to manage your files.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-md mt-4">Disclaimer: This website has been created for WPI’s CS 3733 Software Engineering as a class project and is not in use by Hanover Insurance.</p>
-                    <div className="flex flex-row items-center justify-center gap-3 h-50">
-                        <div className="flex flex-col items-center justify-center gap-5 w-60">
-                            <h1 className="text-2xl">Manage all your files.</h1>
-                            <LucideFolder className="w-15! h-15!"/>
+                    <div className="grid grid-cols-2 gap-4 w-fit mx-auto">
+                        <div className="flex flex-col items-center justify-center gap-4 w-90 py-8 px-6 rounded-2xl border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors">
+                            <div className="p-4 rounded-full bg-primary/10">
+                                <User className="w-8 h-8 text-primary"/>
+                            </div>
+                            <h1 className="text-xl font-semibold text-primary">Log in to begin.</h1>
                         </div>
-                        <div className="self-stretch bg-primary w-px mx-4 my-4" />
-                        <div className="flex flex-col items-center justify-center gap-5 w-60">
-                            <h1 className="text-2xl">Log in to begin.</h1>
-                            <User className="w-15! h-15!"/>
+                        <div className="flex flex-col items-center justify-center gap-4 w-90 py-8 px-6 rounded-2xl border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors">
+                            <div className="p-4 rounded-full bg-primary/10">
+                                <LucideFolder className="w-8 h-8 text-primary"/>
+                            </div>
+                            <h1 className="text-xl font-semibold text-primary">Manage all your files.</h1>
                         </div>
-                        <div className="self-stretch bg-primary w-px mx-4 my-4" />
-                        <div className="flex flex-col items-center justify-center gap-5 w-60">
-                            <h1 className="text-2xl ">This is a student project.</h1>
-                            <GraduationCap className="w-15! h-15!"/>
+                        <div className="col-span-2 flex flex-col items-center justify-center gap-4 py-8 px-6 rounded-2xl border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors">
+                            <div className="p-4 rounded-full bg-primary/10">
+                                <GraduationCap className="w-8 h-8 text-primary"/>
+                            </div>
+                            <h1 className="text-xl font-semibold text-primary">Made by WPI Students.</h1>
                         </div>
-                    </div>
 
-                    <p className="text-md mt-4">This application created by Team B, D26.</p>
+                    </div>
+                    <p className="text-md mt-4">Disclaimer: This website has been created for WPI’s CS 3733 Software Engineering as a class project and is not in use by Hanover Insurance.</p>
+                    <p className="text-md mt-4">Created by Team B, D26.</p>
 
                     <br />
 

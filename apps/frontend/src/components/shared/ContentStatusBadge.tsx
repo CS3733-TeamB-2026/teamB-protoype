@@ -3,9 +3,9 @@ import { Badge } from "@/components/ui/badge";
 type Status = "new" | "inProgress" | "complete";
 
 const STATUS_STYLES: Record<Status, { label: string; className: string }> = {
-    new:        { label: "New",         className: "bg-sky-100 text-sky-700" },
-    inProgress: { label: "In Progress", className: "bg-amber-100 text-amber-700" },
-    complete:   { label: "Complete",    className: "bg-green-100 text-green-700" },
+    new:        { label: "New",         className: "bg-labellight2a text-labeltext" },
+    inProgress: { label: "In Progress", className: "bg-labellight1a text-labeltext" },
+    complete:   { label: "Complete",    className: "bg-labellight4a  text-labeltext" },
 };
 
 export function ContentStatusBadge({ status }: { status: string | null }) {

@@ -121,6 +121,22 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
   --font-sans: 'Roboto Variable', sans-serif;
+
+  /*for the content table labels*/
+  --color-labellight1: #ADD4FF;
+  --color-labellight2: #D6EAFF;
+  --color-labellight3: #ADC4DB;
+  --color-labeltext: #3E6187;
+  --color-labellight4: #B8D4E8;
+  --color-labellight5: #E8F2FA;
+
+  /*low opacity versions, "a"!*/
+  --color-labellight1a: #ADD4FF99;
+  --color-labellight2a: #D6EAFF99;
+  --color-labellight3a: #ADC4DB99;
+  --color-labeltexta:   #3E618799;
+  --color-labellight4a: #B8D4E899;
+  --color-labellight5a: #E8F2FA99;
 }
 
 /*removes the wierd random ticker in the id input fields */

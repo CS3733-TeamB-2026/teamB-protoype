@@ -3,9 +3,9 @@ import { Badge } from "@/components/ui/badge";
 type Persona = "underwriter" | "businessAnalyst" | "admin";
 
 const PERSONA_STYLES: Record<Persona, { label: string; className: string }> = {
-    underwriter:     { label: "Underwriter",          className: "bg-sky-100 text-sky-700" },
-    businessAnalyst: { label: "Business Analyst",     className: "bg-violet-100 text-violet-700" },
-    admin:           { label: "Admin",                className: "bg-rose-100 text-rose-700" },
+    underwriter:     { label: "Underwriter",          className: "bg-labellight1a text-labeltext"  },
+    businessAnalyst: { label: "Business Analyst",     className: "bg-labellight2a text-labeltext"  },
+    admin:           { label: "Admin",                className: "bg-labellight4a text-labeltext"  },
 };
 
 export function PersonaBadge({ persona }: { persona: string | null }) {
