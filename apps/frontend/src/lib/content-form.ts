@@ -22,14 +22,14 @@ export function isValidUrl(url: string): boolean {
     try { new URL(url); return true; } catch { return false; }
 }
 
-export function getErrors(values: ContentFormValues): Record<string, string> {
+export function getErrors(values: ContentFormValues, isEdit = false): Record<string, string> {
     const e: Record<string, string> = {};
     if (!values.name.trim()) e.name = "Name is required.";
     if (values.uploadMode === "url") {
         if (!values.linkUrl.trim()) e.source = "URL is required.";
         else if (!isValidUrl(values.linkUrl)) e.source = "Please enter a valid URL.";
     }
-    if (values.uploadMode === "file" && !values.file) e.source = "Please select a file.";
+    if (values.uploadMode === "file" && !values.file && !isEdit) e.source = "Please select a file.";
     if (!values.jobPosition) e.persona = "Please select a job position.";
     if (!values.contentType) e.contentType = "Please select a document type.";
     return e;
