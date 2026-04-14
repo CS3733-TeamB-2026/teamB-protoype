@@ -5,6 +5,7 @@ import {
     Dialog,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog.tsx";
@@ -97,7 +98,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                 onOpenChange(nextOpen);
             }}
         >
-            <DialogContent className="sm:max-w-lg overflow-hidden">
+            <DialogContent className="sm:max-w-2xl max-h-[80vh] flex flex-col">
                 <DialogHeader>
                     <DialogTitle>Modify Content</DialogTitle>
                     <DialogDescription className="text-muted-foreground">
@@ -105,7 +106,9 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="flex flex-col gap-2 min-w-0">
+                <Separator />
+
+                <div className="overflow-y-auto flex-1 flex flex-col gap-2 min-w-0 pr-2">
                     {/* Content ID — read-only, edit-only field */}
                     <div>
                         <Label className="my-2">Content ID</Label>
@@ -128,19 +131,25 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                         </div>
                     )}
 
-                    <div className="flex justify-center gap-4 mt-5">
-                        <Button variant="outline" onClick={handleReset}>
-                            Reset
-                        </Button>
-                        <Button
-                            className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground rounded-lg px-4 py-1"
-                            onClick={handleApply}
-                            disabled={hasErrors}
-                        >
-                            Apply
-                        </Button>
-                    </div>
                 </div>
+
+                <DialogFooter>
+                    <div className="flex flex-col justify-center! items-center gap-4 mt-5 w-full">
+                        <Separator />
+                        <div className="flex flex-row gap-2">
+                            <Button variant="outline" onClick={handleReset}>
+                                Reset
+                            </Button>
+                            <Button
+                                className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground rounded-lg px-4 py-1"
+                                onClick={handleApply}
+                                disabled={hasErrors}
+                            >
+                                Apply
+                            </Button>
+                        </div>
+                    </div>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     );
