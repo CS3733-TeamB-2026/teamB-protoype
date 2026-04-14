@@ -27,7 +27,7 @@ import { Label } from "@/components/ui/label.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
-import { UrlPreviewCard, type UrlPreview } from "@/components/shared/UrlPreviewCard.tsx";
+import { UrlSourceField } from "@/components/shared/UrlSourceField.tsx";
 import { FilePickerCard } from "@/components/shared/FilePickerCard.tsx";
 
 type ContentFormValues = {
@@ -77,8 +77,6 @@ function AddContent() {
     const [openModifiedDate, setOpenModifiedDate] = React.useState(false);
     const [openExpirationDate, setOpenExpirationDate] = React.useState(false);
     const [filePickError, setFilePickError] = useState<string | null>(null);
-    const [urlStatus, setUrlStatus] = useState<"idle" | "loading" | "unreachable" | "ok">("idle");
-    const [urlPreview, setUrlPreview] = useState<UrlPreview | null>(null);
     const [submitted, setSubmitted] = useState(false);
 
     function getErrors() {
@@ -93,25 +91,6 @@ function AddContent() {
         if (!values.contentType) e.contentType = "Please select a document type.";
         return e;
     }
-
-    const fetchUrlPreview = async () => {
-        if (!values.linkUrl.trim() || !isValidUrl(values.linkUrl)) return;
-        setUrlStatus("loading");
-        try {
-            const res = await fetch(`/api/preview?url=${encodeURIComponent(values.linkUrl)}`);
-            if (!res.ok) { setUrlStatus("unreachable"); return; }
-            const data: UrlPreview = await res.json();
-            setUrlPreview(data);
-            setUrlStatus("ok");
-            patch({
-                ...(data.title ? { name: data.title } : {}),
-                dateModified: new Date(),
-                lastModifiedTime: nowTimeString(),
-            });
-        } catch {
-            setUrlStatus("unreachable");
-        }
-    };
 
     const errors = submitted ? getErrors() : {};
 
@@ -170,8 +149,6 @@ function AddContent() {
             toast.success("Content created successfully!");
             setValues(initialValues(user!.id));
             setSubmitted(false);
-            setUrlStatus("idle");
-            setUrlPreview(null);
             setFilePickError(null);
         } catch {
             toast.error("Error creating content.");
@@ -229,7 +206,6 @@ function AddContent() {
                                     onValueChange={(v) => {
                                         const mode = v as "url" | "file";
                                         patch({ uploadMode: mode });
-                                        if (mode === "url") void fetchUrlPreview();
                                         if (mode === "file" && values.file) {
                                             handleFileChange(values.file);
                                         }
@@ -247,22 +223,16 @@ function AddContent() {
                                 </RadioGroup>
 
                                 {values.uploadMode === "url" ? (
-                                    <>
-                                        <Input
-                                            id="input-field-url"
-                                            type="text"
-                                            placeholder="Enter the URL of the link"
-                                            value={values.linkUrl}
-                                            onChange={(e) => {
-                                                patch({ linkUrl: e.target.value });
-                                                setUrlStatus("idle");
-                                                setUrlPreview(null);
-                                            }}
-                                            onBlur={fetchUrlPreview}
-                                        />
-                                        {errors.source && <FieldDescription className="text-destructive">{errors.source}</FieldDescription>}
-                                        <UrlPreviewCard status={urlStatus} preview={urlPreview} />
-                                    </>
+                                    <UrlSourceField
+                                        value={values.linkUrl}
+                                        onChange={(url) => patch({ linkUrl: url })}
+                                        onPreviewLoaded={(preview) => patch({
+                                            ...(preview.title ? { name: preview.title } : {}),
+                                            dateModified: new Date(),
+                                            lastModifiedTime: nowTimeString(),
+                                        })}
+                                        error={errors.source}
+                                    />
                                 ) : (
                                     <FilePickerCard
                                         file={values.file}
