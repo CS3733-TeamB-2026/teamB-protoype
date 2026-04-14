@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Link } from "react-router-dom";
+import { highlight } from "@/helpers/highlight.tsx";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { LinkSquare01Icon } from "@hugeicons/core-free-icons";
 import {
@@ -359,6 +360,11 @@ function ViewContent() {
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                         className="w-64 h-10 text-lg! pl-2! pr-8 border border-gray-700 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-gray-500"
                                     />
+                                    {advancedFilteredContent.map((item) => (
+                                        <div key={item.id}>
+                                            {highlight(item.displayName, searchTerm)}
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
 
