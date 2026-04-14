@@ -31,7 +31,7 @@ function ViewEmployees() {
     const [deleteTarget, setDeleteTarget] = useState<Employee | null>(null);
     const [user] = useUser();
     const [sort, toggleSort] = useSortState<"id" | "firstName" | "lastName" | "persona" | "userName">({column: "id", direction: "asc"});
-
+    const [searchTerm, setSearchTerm] = useState("");
     useEffect(() => {
         fetch("/api/employee/all")
             .then((res) => res.json())
@@ -41,6 +41,19 @@ function ViewEmployees() {
             })
             .catch(() => setLoading(false));
     }, []);
+    const filteredEmployees = employees.filter((e) => {
+        const query = searchTerm.toLowerCase().trim();
+
+        if (!query) return true;
+
+        return (
+            e.firstName.toLowerCase().includes(query) ||
+            e.lastName.toLowerCase().includes(query) ||
+            e.persona.toLowerCase().includes(query) ||
+            (e.login?.userName ?? "").toLowerCase().includes(query) ||
+            e.id.toString().includes(query)
+        );
+    });
 
     const handleDelete = async (employee: Employee) => {
         const res = await fetch(`/api/employee`, {
@@ -70,12 +83,20 @@ function ViewEmployees() {
                     <CardDescription>Total Employees: {employees.length}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Link to="/employeeform">
-                        <Button className="my-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-60 mx-auto rounded-lg px-2 py-6 text-xl">
-                            Add Employee
-                        </Button>
-                    </Link>
-
+                    <div className="flex items-center justify-between mb-4">
+                        <Link to="/employeeform">
+                            <Button className="my-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-60 mr-auto rounded-lg px-2 py-6 text-xl">
+                                Add Employee
+                            </Button>
+                        </Link>
+                        <input
+                            type="text"
+                            placeholder="Search employees..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-60 max-w-md  mb-4 px-3 py-2 border rounded-md"
+                        />
+                    </div>
                     {loading ? (
                         <div className="flex items-center justify-center py-16 gap-3 text-muted-foreground">
                             <Loader2 className="w-6 h-6 animate-spin" />
@@ -94,7 +115,7 @@ function ViewEmployees() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {applySortState(employees, sort, (e, col) => {
+                                {applySortState(filteredEmployees, sort, (e, col) => {
                                     if (col === "id") return e.id;
                                     if (col === "firstName") return e.firstName;
                                     if (col === "lastName") return e.lastName;
