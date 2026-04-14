@@ -229,7 +229,7 @@ export function ContentFormFields({ values, patch, errors, showLastModified = fa
                         <SelectValue placeholder="Select document type" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         <SelectItem value="reference">Reference Content</SelectItem>
                         <SelectItem value="workflow">Workflow Content</SelectItem>
                     </SelectContent>
@@ -244,7 +244,7 @@ export function ContentFormFields({ values, patch, errors, showLastModified = fa
                         <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         <SelectItem value="new">New</SelectItem>
                         <SelectItem value="inProgress">In Progress</SelectItem>
                         <SelectItem value="complete">Complete</SelectItem>

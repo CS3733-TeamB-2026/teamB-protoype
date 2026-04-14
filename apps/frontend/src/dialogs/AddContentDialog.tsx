@@ -3,7 +3,7 @@ import { useUser } from "@/hooks/use-user.ts";
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
+    DialogDescription, DialogFooter,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog.tsx";
@@ -56,16 +56,16 @@ export function AddContentDialog({ open, onOpenChange, onSave }: Props) {
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-lg overflow-hidden">
+            <DialogContent className="sm:max-w-2xl max-h-[80vh] flex flex-col">
                 <DialogHeader>
                     <DialogTitle>Add Content</DialogTitle>
                     <DialogDescription className="text-muted-foreground">
                         Add a new piece of content.
                     </DialogDescription>
+                    <Separator />
                 </DialogHeader>
 
-                <div className="flex flex-col gap-2 min-w-0">
-                    <Separator />
+                <div className="overflow-y-auto flex-1 flex flex-col gap-2 min-w-0 pr-2">
 
                     <ContentFormFields
                         key={formKey}
@@ -75,19 +75,25 @@ export function AddContentDialog({ open, onOpenChange, onSave }: Props) {
                         showLastModified
                     />
 
-                    <div className="flex justify-center gap-4 mt-5">
-                        <Button variant="outline" onClick={handleReset}>
-                            Reset
-                        </Button>
-                        <Button
-                            className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground rounded-lg px-4 py-1"
-                            onClick={handleSubmit}
-                            disabled={hasErrors}
-                        >
-                            Submit
-                        </Button>
-                    </div>
                 </div>
+
+                <DialogFooter>
+                    <div className="flex flex-col justify-center! items-center gap-4 mt-5 w-full">
+                        <Separator />
+                        <div className="flex flex-row gap-2">
+                            <Button variant="outline" onClick={handleReset}>
+                                Reset
+                            </Button>
+                            <Button
+                                className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground rounded-lg px-4 py-1"
+                                onClick={handleSubmit}
+                                disabled={hasErrors}
+                            >
+                                Submit
+                            </Button>
+                        </div>
+                    </div>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     );
