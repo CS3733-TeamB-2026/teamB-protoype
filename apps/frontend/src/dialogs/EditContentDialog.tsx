@@ -46,7 +46,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
         const interval = setInterval(async () => {
             const res = await fetch(`/api/content/${content.id}`, { cache: "no-store" });
             const data = await res.json();
-            if (String(data.checkedOutBy) !== String(user!.id)) {
+            if (String(data.checkedOutById) !== String(user!.id)) {
                 setExpired(true);
                 setTimeout(() => onOpenChange(false), 2000);
             }
