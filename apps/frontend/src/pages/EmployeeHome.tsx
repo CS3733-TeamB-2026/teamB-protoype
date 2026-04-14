@@ -15,7 +15,7 @@ import {LayoutDashboard, User, Clock} from "lucide-react"
 import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx";
 
 function EmployeeHome() {
-    const [user] = useUser();
+    const user = useUser();
 
     const [currentDateTime, setCurrentDateTime] = useState({
         day: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
@@ -34,8 +34,6 @@ function EmployeeHome() {
         return () => clearInterval(interval);
     }, []);
 
-    if (!user) return null;
-
     return (
         <>
             {/*Main Page*/}
@@ -45,8 +43,7 @@ function EmployeeHome() {
                 title="Dashboard"
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-8 mx-20 my-5">
-
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-8 mx-20">
                 {/* Hello Card */}
                 <Card className="md:col-span-2 py-8 px-4 shadow-lg hover:scale-101 transition-transform">
                     <CardHeader>
@@ -56,7 +53,7 @@ function EmployeeHome() {
                                     <AvatarFallback className="bg-primary text-primary-foreground">{user ? user.firstName[0] + user.lastName[0] : <User />}</AvatarFallback>
                                 </Avatar>
                                 <div>
-                                    <CardTitle className="text-3xl text-left">Welcome back, {user.firstName} {user.lastName}.</CardTitle>
+                                    <CardTitle className="text-3xl text-left">Welcome back, {user?.firstName} {user?.lastName}.</CardTitle>
                                     <CardDescription className="text-lg text-left">Let's pick up where you left off.</CardDescription>
                                 </div>
                             </div>
@@ -79,12 +76,12 @@ function EmployeeHome() {
                 {/* Quick Links Card */}
                 <Card className="shadow-lg hover:scale-101 transition-transform">
                     <CardHeader>
-                        <CardTitle className="capitalize text-2xl mb-4 font-semibold px-4 py-3 text-center">User Access: {user.persona}</CardTitle>
+                        <CardTitle className="capitalize text-2xl mb-4 font-semibold px-4 py-3 text-center">User Access: {user?.persona}</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <p className="text-center mb-4 text-xl">Quick Links:</p>
+                    <CardContent className="pb-5">
+                        <p className="text-center text-xl">Quick Links:</p>
                         <div className="flex flex-col items-center gap-2 gap-y-5 justify-center h-full">
-                            { user.persona === "admin" ?
+                            { user?.persona === "admin" ?
                                 <Link to="/usermanagement">
                                     <Button className="rounded-sm shadow-xl text-lg px-6 py-5 bg-accent text-background hover:bg-accent-dark transition-colors hover:text-primary-foreground active:brightness-80" variant="outline">
                                         View Users
@@ -93,7 +90,7 @@ function EmployeeHome() {
                                 :
                                 null
                             }
-                            { user.persona === "admin" ?
+                            { user?.persona === "admin" ?
                                 <Link to="/employeeform">
                                     <Button className="rounded-sm  shadow-xl text-lg px-6 py-5 bg-accent text-background hover:bg-accent-dark transition-colors hover:text-primary-foreground active:brightness-80" variant="outline">
                                         Add Employee Form
@@ -109,7 +106,7 @@ function EmployeeHome() {
                             </Link>
                             <Link to="/manageform">
                                 <Button className="rounded-sm shadow-xl text-lg px-6 py-5 bg-accent text-background hover:bg-accent-dark transition-colors hover:text-primary-foreground active:brightness-80" variant="outline">
-                                    Manage Content Form
+                                    Add Content Form
                                 </Button>
                             </Link>
                         </div>

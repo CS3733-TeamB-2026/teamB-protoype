@@ -1,6 +1,4 @@
 import * as q from "@softeng-app/db";
-import express from "express";
-const app = express();
 import bcrypt from 'bcrypt';
 import {req, res} from "./types"
 

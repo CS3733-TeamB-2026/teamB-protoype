@@ -5,6 +5,7 @@ allowBuilds:
   '@iamjariwala/react-doc-viewer': true
   '@prisma/engines': true
   bcrypt: true
+  browser-tabs-lock: true
   canvas: true
   esbuild: true
   msw: true

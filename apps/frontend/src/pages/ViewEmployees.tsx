@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.tsx";
 import { useEffect, useState } from "react";
-import { Loader2, Pencil, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Trash2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { Link } from "react-router-dom";
 import { Hero } from "@/components/shared/Hero.tsx";
@@ -12,6 +12,8 @@ import { SortableHead } from "@/components/shared/SortableHead.tsx";
 import { useSortState, applySortState } from "@/hooks/use-sort-state.ts";
 import {PersonaBadge} from "@/components/shared/PersonaBadge.tsx";
 import { useUser } from "@/hooks/use-user.ts";
+import { findMatches, highlight, highlightRange } from "@/lib/highlight.tsx";
+import { useAuth0 } from "@auth0/auth0-react";
 
 export type Employee = {
     firstName: string;
@@ -29,23 +31,63 @@ function ViewEmployees() {
     const [editOpen, setEditOpen] = useState(false);
     const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<Employee | null>(null);
-    const [user] = useUser();
+    const user = useUser();
     const [sort, toggleSort] = useSortState<"id" | "firstName" | "lastName" | "persona" | "userName">({column: "id", direction: "asc"});
+    const [searchTerm, setSearchTerm] = useState("");
+    const { getAccessTokenSilently } = useAuth0();
 
     useEffect(() => {
+
+        const fetchEmployees = async () => {
+            try {
+                const token = await getAccessTokenSilently();
+                const res = await fetch("/api/employee/all", {
+                    headers: {Authorization: `Bearer ${token}`},
+                })
+                const data = await res.json();
+                setEmployees(data);
+                setLoading(false);
+            } catch {
+                setLoading(false);
+            }
+        }
+
+        fetchEmployees();
+
+        /*
         fetch("/api/employee/all")
             .then((res) => res.json())
             .then((data) => {
                 setEmployees(data);
                 setLoading(false);
             })
-            .catch(() => setLoading(false));
-    }, []);
+            .catch(() => setLoading(false)); */
+
+    }, [getAccessTokenSilently]);
+
+    const filteredEmployees = employees.filter((e) => {
+        const query = searchTerm.toLowerCase().trim().replace(/\s/g, "");
+        const concatName = e.firstName + e.lastName;
+        if (!query) return true;
+
+        return (
+            e.firstName.toLowerCase().includes(query) ||
+            e.lastName.toLowerCase().includes(query) ||
+            concatName.toLowerCase().includes(query) ||
+            e.persona.toLowerCase().includes(query) ||
+            (e.login?.userName ?? "").toLowerCase().includes(query) ||
+            e.id.toString().includes(query)
+        );
+    });
 
     const handleDelete = async (employee: Employee) => {
+        const token = await getAccessTokenSilently();
         const res = await fetch(`/api/employee`, {
             method: "DELETE",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
             body: JSON.stringify({ id: employee.id }),
         });
         if (res.ok) {
@@ -54,7 +96,11 @@ function ViewEmployees() {
         setDeleteTarget(null);
     };
 
-    if (!user) return null;
+    if (!user) return (
+        <div className="flex items-center justify-center min-h-screen bg-secondary">
+            <Loader2 className="w-10 h-10 text-primary animate-spin" />
+        </div>
+    );
 
     return (
         <>
@@ -70,12 +116,25 @@ function ViewEmployees() {
                     <CardDescription>Total Employees: {employees.length}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Link to="/employeeform">
-                        <Button className="my-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-60 mx-auto rounded-lg px-2 py-6 text-xl">
-                            Add Employee
-                        </Button>
-                    </Link>
-
+                    <div className="flex items-center justify-between mb-4">
+                        <Link to="/employeeform">
+                            <Button className="my-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-60 mr-auto rounded-lg px-2 py-6 text-xl">
+                                Add Employee
+                            </Button>
+                        </Link>
+                        <div className="relative">
+                            <Search
+                                className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 pointer-events-none"
+                            />
+                            <input
+                                type="text"
+                                placeholder="Search employees..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-64 h-10 text-lg! pl-2! pr-8 border border-gray-700 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                            />
+                        </div>
+                    </div>
                     {loading ? (
                         <div className="flex items-center justify-center py-16 gap-3 text-muted-foreground">
                             <Loader2 className="w-6 h-6 animate-spin" />
@@ -94,18 +153,20 @@ function ViewEmployees() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {applySortState(employees, sort, (e, col) => {
+                                {applySortState(filteredEmployees, sort, (e, col) => {
                                     if (col === "id") return e.id;
                                     if (col === "firstName") return e.firstName;
                                     if (col === "lastName") return e.lastName;
                                     if (col === "persona") return e.persona;
                                     if (col === "userName") return e.login?.userName ?? "";
-                                }).map((employee) => (
+                                }).map((employee) => {
+                                    const matches = findMatches(employee.firstName+employee.lastName, searchTerm);
+                                    return (
                                     <TableRow key={employee.id}>
                                         <TableCell className="text-right pr-4">{employee.id}</TableCell>
-                                        <TableCell className="font-medium">{employee.firstName}</TableCell>
-                                        <TableCell className="font-medium">{employee.lastName}</TableCell>
-                                        <TableCell>{employee.login?.userName || "—"}</TableCell>
+                                        <TableCell className="font-medium">{highlightRange(employee.firstName, 0, matches)}</TableCell>
+                                        <TableCell className="font-medium">{highlightRange(employee.lastName, employee.firstName.length, matches)}</TableCell>
+                                        <TableCell>{highlight(employee.login?.userName || "—", searchTerm)}</TableCell>
                                         <TableCell  className="text-center">
                                             <PersonaBadge
                                                 persona={employee.persona}
@@ -135,7 +196,7 @@ function ViewEmployees() {
                                             </div>
                                         </TableCell>
                                     </TableRow>
-                                ))}
+                                )})}
                             </TableBody>
                         </Table>
                     )}

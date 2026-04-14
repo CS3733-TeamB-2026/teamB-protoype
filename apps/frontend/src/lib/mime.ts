@@ -268,6 +268,12 @@ export function getExtension(filename: string): string {
     return filename.split(".").pop()?.toLowerCase() ?? "unknown";
 }
 
+/** Returns the filename with its extension removed. */
+export function stripExtension(filename: string): string {
+    const lastDot = filename.lastIndexOf(".");
+    return lastDot > 0 ? filename.slice(0, lastDot) : filename;
+}
+
 // ---------- Colors ----------
 
 export const CATEGORY_COLORS: Record<
@@ -290,10 +296,12 @@ export type UploadValidation =
     | { ok: true; mimeType: string; entry: AllowedType }
     | { ok: false; reason: string };
 
+export const MAX_FILE_SIZE_MB = 50;
+
 /**
- * Validate a browser File against the allowlist. On success, returns the
- * canonical mimetype and the matched entry. On failure, returns a human
- * readable reason suitable for showing in the upload form.
+ * Validate a browser File against the allowlist and size limit. On success,
+ * returns the canonical mimetype and the matched entry. On failure, returns a
+ * human readable reason suitable for showing in the upload form.
  */
 export function validateFileForUpload(file: File): UploadValidation {
     const entry = resolveAllowedType(file.type, file.name);
@@ -303,6 +311,15 @@ export function validateFileForUpload(file: File): UploadValidation {
             reason: `"${file.name}" is not a supported file type.`,
         };
     }
+
+    const fileSizeMB = file.size / 1024 / 1024;
+    if (fileSizeMB > MAX_FILE_SIZE_MB) {
+        return {
+            ok: false,
+            reason: `File size exceeds ${MAX_FILE_SIZE_MB}MB. Please select a smaller file.`,
+        };
+    }
+
     // Prefer the browser-reported mimetype when present; some browsers return
     // an empty string for less common types, in which case we fall back to the
     // allowlist entry's canonical value.

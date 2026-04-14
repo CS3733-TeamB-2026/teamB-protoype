@@ -10,13 +10,13 @@ export class Content {
         _name: string,
         _linkURL: string | null,
         _fileURI: string | null,
-        _ownerID: number | null,
+        _ownerId: number | null,
         _contentType: p.ContentType,
         _status: p.Status | null,
         _lastModified: Date,
         _expiration: Date | null,
         _targetPersona: string,
-        _employeeID: number,
+        _checkedOutById: number,
     ): Promise<p.Content> {
         const _personaTyped: p.Persona | null = Helper.personaHelper(_targetPersona)
         if (_personaTyped === null) {
@@ -31,36 +31,37 @@ export class Content {
             throw new Error("Content not found")
         }
 
-        if (content.checkedOutBy !== _employeeID) {
+        if (content.checkedOutById !== _checkedOutById) {
             throw new Error("You do not have this content checked out.")
         }
 
         if (Content.isLockExpired(content.checkedOutAt)) {
             throw new Error("Your editing lock expired. Please close and try again.")
         }
-        return await prisma.content.update({
+
+        return prisma.content.update({
             where: {id: id},
             data: {
                 displayName: _name,
                 linkURL: _linkURL,
                 fileURI: _fileURI,
-                ownerID: _ownerID,
+                ownerId: _ownerId,
                 contentType: _contentType,
                 status: _statusTyped,
                 lastModified: _lastModified,
                 expiration: _expiration,
                 targetPersona: _personaTyped,
-                checkedOutBy: null,
+                checkedOutById: null,
                 checkedOutAt: null,
             }
-        })
+        });
     }
 
     public static async createContent(
         _name: string,
         _linkURL: string | null,
         _fileURI: string | null,
-        _ownerID: number | null,
+        _ownerId: number | null,
         _contentType: p.ContentType,
         _status: p.Status | null,
         _lastModified: Date,
@@ -83,12 +84,22 @@ export class Content {
                 displayName: _name,
                 linkURL: _linkURL,
                 fileURI: _fileURI,
-                ownerID: _ownerID,
+                ownerId: _ownerId,
                 contentType: _contentType,
                 status: _statusTyped,
                 lastModified: _lastModified,
                 expiration: _expiration,
                 targetPersona: _personaTyped,
+            }
+        })
+    }
+
+    public static async queryContentByBookmarkerId(bookmarkerId: number) {
+        return prisma.content.findMany({
+            include: {
+                bookmarkedBy: {
+                    where: { bookmarkerId: bookmarkerId }
+                }
             }
         })
     }
@@ -101,7 +112,7 @@ export class Content {
 
     public static async queryAllContent() {
         return prisma.content.findMany({
-            include: {owner: true, checkedOutByEmployee: true,},
+            include: {owner: true, checkedOutBy: true,},
 
         })
     }
@@ -118,7 +129,7 @@ export class Content {
             where: {targetPersona: _personaTyped},
             include: {
                 owner: true,
-                checkedOutByEmployee: true,
+                checkedOutBy: true,
             },
         })
     }
@@ -126,56 +137,36 @@ export class Content {
     public static async queryContentById(_id: number): Promise<p.Content | null> {
         return prisma.content.findUnique({
             where: {id: _id},
-            include: { owner: true, checkedOutByEmployee: true }
+            include: { owner: true, checkedOutBy: true }
         })
     }
 
-    public static async queryContentByOwnerId(ownerId: number | null): Promise<p.Content | null> {
-        let _ownerId
-        if (ownerId === null) {
-            _ownerId = JSON.parse(localStorage.getItem("user")!).id
-        } else {
-            _ownerId = ownerId
-        }
-        return prisma.content.findUnique({
-            where: {id: _ownerId}
-        })
-    }
 
-    public static async queryContentByName(name: string): Promise<p.Content | null> {
-        return prisma.content.findFirst({
-            where: {displayName: name}
-            // TODO: Maybe add case insensitivity
-            //  Perhaps better to grab ALL filenames so a fuzzy search may be done - Oscar
-        })
-
-
-    }
     public static async checkoutContent(id: number, employeeID: number){
         const content = await prisma.content.findUnique({
             where: {id: id},
             include: {owner: true,
-            checkedOutByEmployee: true,}
+            checkedOutBy: true,}
         })
         if (!content) {
             throw new Error("Content not found");
         }
-        const locked = content.checkedOutBy !== null && content.checkedOutBy !== employeeID;
+        const locked = content.checkedOutById !== null && content.checkedOutById !== employeeID;
         const expired = Content.isLockExpired(content.checkedOutAt);
         if (locked && !expired) {
-            const first = content.checkedOutByEmployee?.firstName ?? "Someone";
-            const last = content.checkedOutByEmployee?.lastName ?? "";
+            const first = content.checkedOutBy?.firstName ?? "Someone";
+            const last = content.checkedOutBy?.lastName ?? "";
             throw new Error(`${first} ${last}`.trim() + " is currently modifying this content.");
         }
         return prisma.content.update({
             where: { id },
             data: {
-                checkedOutBy: employeeID,
+                checkedOutById: employeeID,
                 checkedOutAt: new Date(),
             },
             include: {
                 owner: true,
-                checkedOutByEmployee: true,
+                checkedOutBy: true,
             },
         });
     }
@@ -184,20 +175,22 @@ export class Content {
         if (!checkedOutAt) return true;
         return Date.now() - new Date(checkedOutAt).getTime() > LOCK_TIMEOUT_MS;
     }
+
     public static async checkinContent(id: number, employeeID: number): Promise<void> {
         await prisma.content.update({
             where: { id },
-            data: { checkedOutBy: null, checkedOutAt: null }
+            data: { checkedOutById: null, checkedOutAt: null }
         })
     }
+
     public static async clearExpiredLocks(before: Date): Promise<void> {
         await prisma.content.updateMany({
             where: {
                 checkedOutAt: { lt: before },
-                checkedOutBy: { not: null }
+                checkedOutById: { not: null }
             },
             data: {
-                checkedOutBy: null,
+                checkedOutById: null,
                 checkedOutAt: null,
             }
         })
