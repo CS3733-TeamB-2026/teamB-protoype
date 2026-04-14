@@ -156,30 +156,31 @@ function ViewContent() {
     const { getAccessTokenSilently } = useAuth0();
 
     const fetchPreviews = (data: ContentItem[]) => {
-        data.filter((item) => item.linkURL).forEach((item) => {
-            fetch(`/api/preview?url=${encodeURIComponent(item.linkURL!)}`)
-                .then((res) => {
-                    if (!res.ok) throw new Error(`preview ${res.status}`);
-                    return res.json();
-                })
-                .then((preview) =>
-                    setLinkPreviews((prev) => ({ ...prev, [item.id]: preview }))
-                )
-                .catch(() =>
-                    setLinkPreviews((prev) => ({
-                        ...prev,
-                        [item.id]: { title: null, description: null, image: null, siteName: null, favicon: null },
-                    }))
-                );
+        data.filter((item) => item.linkURL).forEach(async (item) => {
+            try {
+                const res = await fetch(`/api/preview?url=${encodeURIComponent(item.linkURL!)}`);
+                if (!res.ok) throw new Error(`preview ${res.status}`);
+                const preview = await res.json();
+                setLinkPreviews((prev) => ({ ...prev, [item.id]: preview }));
+            } catch {
+                setLinkPreviews((prev) => ({
+                    ...prev,
+                    [item.id]: { title: null, description: null, image: null, siteName: null, favicon: null },
+                }));
+            }
         });
     };
 
     const refreshContent = async () => {
-        const token = await getAccessTokenSilently();
-        fetch(`/api/content`, { headers: { Authorization: `Bearer ${token}` } })
-            .then((res) => res.json())
-            .then((data: ContentItem[]) => setContent(data))
-            .catch(() => {});
+        try {
+            const token = await getAccessTokenSilently();
+            const res = await fetch(`/api/content`, { headers: { Authorization: `Bearer ${token}` } });
+            const data: ContentItem[] = await res.json();
+            setContent(data);
+            fetchPreviews(data);
+        } catch {
+            setError("Failed to refresh content.");
+        }
     };
 
     // Initial load — shows spinner and fetches link previews
@@ -195,60 +196,20 @@ function ViewContent() {
                 const data: ContentItem[] = await res.json();
                 setContent(data);
                 setLoading(false);
-
-                data.filter((item) => item.linkURL).forEach((item) => {
-                    fetch(
-                        `/api/preview?url=${encodeURIComponent(item.linkURL!)}`,
-                    )
-                        .then((res) => {
-                            if (!res.ok)
-                                throw new Error(`preview ${res.status}`);
-                            return res.json();
-                        })
-                        .then((preview) =>
-                            setLinkPreviews((prev) => ({
-                                ...prev,
-                                [item.id]: preview,
-                            })),
-                        )
-                        .catch(() =>
-                            setLinkPreviews((prev) => ({
-                                ...prev,
-                                [item.id]: {
-                                    title: null,
-                                    description: null,
-                                    image: null,
-                                    siteName: null,
-                                    favicon: null,
-                                },
-                            })),
-                        );
-                });
-
+                fetchPreviews(data);
             } catch {
                 setError("Failed to load content.");
                 setLoading(false);
             }
         }
-        fetchContent();
-
-        /*
-        fetch(`/api/content`)
-            .then((res) => res.json())
-            .then((data: ContentItem[]) => {
-                setContent(data);
-                setLoading(false);
-                fetchPreviews(data);
-            })
-            .catch(() => { setError("Failed to load content."); setLoading(false); });
-            */
+        void fetchContent();
     }, [getAccessTokenSilently, user]);
 
     // Poll for lock state changes from other users
     useEffect(() => {
         const id = setInterval(refreshContent, 15_000);
         return () => clearInterval(id);
-    }, []);
+    }, [refreshContent]);
 
     function toggleExpand(id: number) {
         setExpandedId((prev) => (prev === id ? null : id));

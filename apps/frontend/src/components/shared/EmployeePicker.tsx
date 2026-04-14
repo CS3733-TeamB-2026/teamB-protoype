@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Loader2, ChevronsUpDown } from "lucide-react";
 import { EmployeeCard, type EmployeeCardData } from "@/components/shared/EmployeeCard.tsx";
+import { useAuth0 } from "@auth0/auth0-react"
 
 interface Props {
     selectedId: number;
@@ -16,12 +17,21 @@ export function EmployeePicker({ selectedId, onSelect }: Props) {
     const [search, setSearch] = useState("");
     const containerRef = useRef<HTMLDivElement>(null);
 
+    const { getAccessTokenSilently } = useAuth0();
+
     useEffect(() => {
-        fetch("/api/employee/all")
-            .then((res) => res.json())
-            .then((data: EmployeeCardData[]) => setEmployees(data))
-            .finally(() => setLoading(false));
-    }, []);
+        const load = async () => {
+            try {
+                const token = await getAccessTokenSilently();
+                const res = await fetch("/api/employee/all", { headers: { Authorization: `Bearer ${token}` } });
+                const data: EmployeeCardData[] = await res.json();
+                setEmployees(data);
+            } finally {
+                setLoading(false);
+            }
+        };
+        void load();
+    }, [getAccessTokenSilently]);
 
     // Close on click outside
     useEffect(() => {

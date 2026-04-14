@@ -39,7 +39,7 @@ function AddContent() {
             const formData = new FormData();
             formData.append("name", values.name);
             formData.append("linkURL", values.uploadMode === "url" ? values.linkUrl : "");
-            formData.append("ownerID", user.id.toString());
+            formData.append("ownerID", values.ownerID.toString());
             formData.append("contentType", values.contentType);
             formData.append("status", values.status);
 
