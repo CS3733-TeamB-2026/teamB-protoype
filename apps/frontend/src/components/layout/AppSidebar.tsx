@@ -50,7 +50,7 @@ const navItems = [
 
 function AppSidebar() {
 
-    const [user] = useUser();
+    const user = useUser();
     const {toggleSidebar} = useSidebar();
 
     return (

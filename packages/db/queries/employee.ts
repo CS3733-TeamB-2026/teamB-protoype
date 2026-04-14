@@ -68,6 +68,12 @@ export class Employee {
         })
     }
 
+    public static async queryEmployeeByAuth( auth0Id: string ) {
+        return prisma.employee.findUnique({
+            where: { auth0Id: auth0Id }
+        })
+    }
+
     public static async createEmployee(_id: number, _firstName: string, _lastName: string, _persona: string | null): Promise<void> {
         const _personaTyped: p.Persona | null = Helper.personaHelper(_persona)
         if (_personaTyped === null) {
