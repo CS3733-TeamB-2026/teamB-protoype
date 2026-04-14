@@ -9,6 +9,7 @@ import { ContentTypeBadge } from "@/components/shared/ContentTypeBadge.tsx";
 import { PersonaBadge } from "@/components/shared/PersonaBadge.tsx";
 import { getOriginalFilename } from "@/lib/mime.ts";
 import type { ContentItem } from "@/pages/ViewContent.tsx";
+import { useAuth0 } from "@auth0/auth0-react";
 
 export function ViewSingleFile() {
     const { id } = useParams<{ id: string }>();
@@ -16,15 +17,26 @@ export function ViewSingleFile() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    const { getAccessTokenSilently } = useAuth0();
+
     useEffect(() => {
-        fetch(`/api/content/${id}`)
-            .then((res) => {
+        const fetchItem = async () => {
+            try {
+                const token = await getAccessTokenSilently();
+                const res = await fetch(`/api/content/${id}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
                 if (!res.ok) throw new Error(`${res.status}`);
-                return res.json();
-            })
-            .then((data: ContentItem) => { setItem(data); setLoading(false); })
-            .catch(() => { setError("File not found or failed to load."); setLoading(false); });
-    }, [id]);
+                const data: ContentItem = await res.json();
+                setItem(data);
+            } catch {
+                setError("File not found or failed to load.");
+            } finally {
+                setLoading(false);
+            }
+        };
+        void fetchItem();
+    }, [id, getAccessTokenSilently]);
 
     const originalFilename = item?.fileURI ? getOriginalFilename(item.fileURI) : null;
 

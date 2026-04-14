@@ -37,6 +37,19 @@ export function FilePreview({ filename, src, infoSrc }: Props) {
 
     const { getAccessTokenSilently } = useAuth0();
 
+    const handleDownload = async () => {
+        const token = await getAccessTokenSilently();
+        const res = await fetch(src, { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) return;
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
     useEffect(() => {
 
         const fetchPreview = async () => {
@@ -177,14 +190,12 @@ export function FilePreview({ filename, src, infoSrc }: Props) {
                 {fileSize != null && (
                     <span className="text-xs text-muted-foreground">{formatBytes(fileSize)}</span>
                 )}
-                <a
-                    href={src}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                <button
+                    onClick={handleDownload}
                     className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
                 >
                     <Download className="w-4 h-4" /> Download
-                </a>
+                </button>
             </div>
 
             {status === "loading" && (
