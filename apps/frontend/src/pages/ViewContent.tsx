@@ -44,7 +44,7 @@ import {
     getCategory,
     getExtension,
     getOriginalFilename,
-} from "@/helpers/mime.ts";
+} from "@/lib/mime.ts";
 import { ContentExtBadge } from "@/components/shared/ContentExtBadge.tsx";
 import { ContentStatusBadge } from "@/components/shared/ContentStatusBadge.tsx";
 import { ContentTypeBadge } from "@/components/shared/ContentTypeBadge.tsx";
@@ -52,7 +52,7 @@ import { PersonaBadge } from "@/components/shared/PersonaBadge.tsx";
 import { EditContentDialog } from "@/dialogs/EditContentDialog.tsx";
 import { FilePreview } from "@/components/FilePreview.tsx";
 import { useAuth0 } from "@auth0/auth0-react"
-import {highlight} from "@/helpers/highlight.tsx";
+import {highlight} from "@/lib/highlight.tsx";
 
 // Matches the Content model from Prisma (with joined owner)
 export interface ContentItem {

@@ -1,4 +1,4 @@
-import { type Category, CATEGORY_COLORS } from "@/helpers/mime.ts";
+import { type Category, CATEGORY_COLORS } from "@/lib/mime.ts";
 import { Badge } from "@/components/ui/badge.tsx";
 
 export function ContentExtBadge({

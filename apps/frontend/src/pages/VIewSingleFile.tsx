@@ -7,7 +7,7 @@ import { FilePreview } from "@/components/FilePreview.tsx";
 import { ContentStatusBadge } from "@/components/shared/ContentStatusBadge.tsx";
 import { ContentTypeBadge } from "@/components/shared/ContentTypeBadge.tsx";
 import { PersonaBadge } from "@/components/shared/PersonaBadge.tsx";
-import { getOriginalFilename } from "@/helpers/mime.ts";
+import { getOriginalFilename } from "@/lib/mime.ts";
 import type { ContentItem } from "@/pages/ViewContent.tsx";
 
 export function ViewSingleFile() {

@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
-import { ALLOWED_ACCEPT_STRING, validateFileForUpload, stripExtension } from "@/helpers/mime.ts";
+import { ALLOWED_ACCEPT_STRING, validateFileForUpload, stripExtension } from "@/lib/mime.ts";
 import { UrlSourceField } from "@/components/shared/UrlSourceField.tsx";
 import { FilePickerCard } from "@/components/shared/FilePickerCard.tsx";
 import { EmployeePicker } from "@/components/shared/EmployeePicker.tsx";
