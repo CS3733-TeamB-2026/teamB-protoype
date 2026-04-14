@@ -125,9 +125,9 @@ function ViewEmployees() {
                                 }).map((employee) => (
                                     <TableRow key={employee.id}>
                                         <TableCell className="text-right pr-4">{employee.id}</TableCell>
-                                        <TableCell className="font-medium">{employee.firstName}</TableCell>
-                                        <TableCell className="font-medium">{employee.lastName}</TableCell>
-                                        <TableCell>{employee.login?.userName || "—"}</TableCell>
+                                        <TableCell className="font-medium">{highlight(employee.firstName, searchTerm)}</TableCell>
+                                        <TableCell className="font-medium">{highlight(employee.lastName, searchTerm)}</TableCell>
+                                        <TableCell>{highlight(employee.login?.userName || "—", searchTerm)}</TableCell>
                                         <TableCell  className="text-center">
                                             <PersonaBadge
                                                 persona={employee.persona}

@@ -152,14 +152,6 @@ function ViewContent() {
         (advancedFilters.bookmarkedOnly ? 1 : 0) +
         (advancedFilters.ownedByMe ? 1 : 0);
 
-
-
-
-
-
-
-
-
     useEffect(() => {
         fetch(`/api/content`)
             .then((res) => res.json())
@@ -358,11 +350,6 @@ function ViewContent() {
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                         className="w-64 h-10 text-lg! pl-2! pr-8 border border-gray-700 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-gray-500"
                                     />
-                                    {advancedFilteredContent.map((item) => (
-                                        <div key={item.id}>
-                                            {highlight(item.displayName, searchTerm)}
-                                        </div>
-                                    ))}
                                 </div>
                             </div>
 
@@ -564,7 +551,7 @@ function ViewContent() {
                                                 <TableCell className="w-full max-w-0">
                                                     <div className="flex items-center gap-2">
                                                     <span className="truncate font-medium text-foreground">
-                                                        {item.displayName}
+                                                        {highlight(item.displayName, searchTerm)}
                                                     </span>
                                                         <span className="text-muted-foreground shrink-0">
                                                         {isExpanded ? (
