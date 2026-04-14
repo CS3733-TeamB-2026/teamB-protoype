@@ -1,4 +1,4 @@
-//import React from "react";
+import React from "react";
 import { useSidebar } from "@/components/ui/sidebar.tsx";
 import { Menu } from "lucide-react";
 import logo from "../../assets/hanover_logo.svg"
@@ -9,20 +9,17 @@ import {
     PopoverTrigger
 } from "@/components/ui/popover.tsx"
 import { Separator } from "@/components/ui/separator.tsx"
-//import LoginDialog from "@/dialogs/LoginDialog.tsx"
+import LoginDialog from "@/dialogs/LoginDialog.tsx"
 import { User } from "lucide-react"
 import { Link } from "react-router-dom"
-//import { useUser } from "@/hooks/use-user.ts"
-import { useAuth0 } from "@auth0/auth0-react"
+import { useUser } from "@/hooks/use-user.ts"
 
 
 function Navbar() {
 
     const { toggleSidebar } = useSidebar();
-    //const [loginOpen, setLoginOpen] = React.useState(false);
-    //const [user, setUser] = useUser();
-
-    const { isAuthenticated, loginWithRedirect, logout, user: auth0User } = useAuth0();
+    const [loginOpen, setLoginOpen] = React.useState(false);
+    const [user, setUser] = useUser();
 
     return (
         <>
@@ -48,36 +45,38 @@ function Navbar() {
                     <PopoverTrigger asChild>
                         <button className="rounded-full flex items-center gap-2 hover:opacity-80 active:scale-[0.96] group">
                             <span className="text-xl font-semibold relative after:absolute after:bottom-0 after:right-0 after:h-0.5 after:w-0 after:bg-current after:transition-all group-hover:after:w-full group-hover:after:opacity-80 ">
-                                { isAuthenticated ? auth0User?.name : "Log In"}
+                                { user ? user.firstName + " " + user.lastName : "Log In"}
                             </span>
                             <Avatar className="cursor-pointer w-10 h-10 ">
-                                <AvatarFallback className="bg-secondary text-primary">{isAuthenticated ? auth0User?.name?.[0] : <User />}</AvatarFallback>
+                                <AvatarFallback className="bg-secondary text-primary">{user ? user.firstName[0] + user.lastName[0] : <User />}</AvatarFallback>
                             </Avatar>
                         </button>
                     </PopoverTrigger>
                     <PopoverContent className="w-60">
                         {
                             //login check
-                            isAuthenticated ?
+                            user ?
                                 <div className="flex flex-col gap-3">
                                     <div className="flex items-center gap-3">
                                         <Avatar className="cursor-pointer w-10 h-10 ">
-                                            <AvatarFallback className="bg-primary text-primary-foreground">{auth0User?.name?.[0]}</AvatarFallback>
+                                            <AvatarFallback className="bg-primary text-primary-foreground">{user.firstName[0] + user.lastName[0]}</AvatarFallback>
                                         </Avatar>
                                         <div>
-                                            <p className="font-semibold text-lg">{auth0User?.name}</p>
-                                            <p className="text-muted-foreground text-md capitalize">test</p>
+                                            <p className="font-semibold text-lg">{user.firstName} {user.lastName}</p>
+                                            <p className="text-muted-foreground text-md capitalize">{user.persona}</p>
                                         </div>
                                     </div>
                                     <Separator className="bg-primary" />
                                     {/*log out button*/}
                                     <button className="w-full active:scale-97 bg-secondary rounded-lg px-2 py-2 transition-colors hover:bg-primary hover:text-primary-foreground" onClick={() => {
-                                        logout({ logoutParams: { returnTo: window.location.origin } })
+                                        localStorage.removeItem("user");
+                                        setUser(null);
+                                        window.location.href = "/";
                                     }}>
                                         Log Out
                                     </button>
                                 </div>
-                            :
+                                :
                                 //User is not logged in
                                 <div className="flex flex-col gap-3">
                                     <div className="flex items-center gap-3">
@@ -87,8 +86,9 @@ function Navbar() {
                                         </div>
                                     </div>
                                     <Separator className="bg-primary" />
-                                    <button className="w-full active:scale-97 bg-secondary rounded-lg px-2 py-2 transition-colors hover:bg-primary hover:text-primary-foreground" onClick={() => {
-                                        loginWithRedirect()
+                                    <button className="w-full active:scale-97 bg-secondary rounded-lg px-2 py-2 transition-colors hover:bg-primary hover:text-primary-foreground" onClick={(e) => {
+                                        e.preventDefault();
+                                        setTimeout(() => setLoginOpen(true), 50); //Timeout b/c object destroys too fast to open dialog
                                     }}>
                                         Log In
                                     </button>
@@ -97,12 +97,12 @@ function Navbar() {
                     </PopoverContent>
                 </Popover>
 
-                {/* login dialog
+                {/* login dialog */}
                 <LoginDialog
                     open={loginOpen}
                     onOpenChange={setLoginOpen}
                     onLogin={(user) => setUser(user)}
-                />*/}
+                />
             </nav>
         </>
     )

@@ -11,7 +11,6 @@
     "start": "vite preview"
   },
   "dependencies": {
-    "@auth0/auth0-react": "~2.16.1",
     "@fontsource-variable/merriweather": "^5.2.6",
     "@fontsource-variable/roboto": "^5.2.10",
     "@fontsource-variable/roboto-slab": "^5.2.8",
