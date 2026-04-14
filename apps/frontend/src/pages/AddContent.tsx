@@ -28,6 +28,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
 import { UrlPreviewCard, type UrlPreview } from "@/components/shared/UrlPreviewCard.tsx";
+import { FilePickerCard } from "@/components/shared/FilePickerCard.tsx";
 
 type ContentFormValues = {
     name: string;
@@ -73,9 +74,8 @@ function AddContent() {
     const patch = (p: Partial<ContentFormValues>) => setValues(prev => ({ ...prev, ...p }));
 
     // UI-only state
-    const [openModified, setOpenModified] = React.useState(false);
-    const [openExpiration, setOpenExpiration] = React.useState(false);
-    const [fileKey, setFileKey] = useState(0);
+    const [openModifiedDate, setOpenModifiedDate] = React.useState(false);
+    const [openExpirationDate, setOpenExpirationDate] = React.useState(false);
     const [filePickError, setFilePickError] = useState<string | null>(null);
     const [urlStatus, setUrlStatus] = useState<"idle" | "loading" | "unreachable" | "ok">("idle");
     const [urlPreview, setUrlPreview] = useState<UrlPreview | null>(null);
@@ -169,7 +169,6 @@ function AddContent() {
 
             toast.success("Content created successfully!");
             setValues(initialValues(user!.id));
-            setFileKey(prev => prev + 1);
             setSubmitted(false);
             setUrlStatus("idle");
             setUrlPreview(null);
@@ -265,22 +264,12 @@ function AddContent() {
                                         <UrlPreviewCard status={urlStatus} preview={urlPreview} />
                                     </>
                                 ) : (
-                                    <>
-                                        <Input
-                                            key={fileKey}
-                                            id="file"
-                                            type="file"
-                                            accept={ALLOWED_ACCEPT_STRING}
-                                            onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
-                                        />
-                                        {(filePickError || errors.source) ? (
-                                            <FieldDescription className="text-destructive">
-                                                {filePickError ?? errors.source}
-                                            </FieldDescription>
-                                        ) : (
-                                            <FieldDescription>Select a file to upload.</FieldDescription>
-                                        )}
-                                    </>
+                                    <FilePickerCard
+                                        file={values.file}
+                                        onChange={handleFileChange}
+                                        error={filePickError ?? errors.source}
+                                        accept={ALLOWED_ACCEPT_STRING}
+                                    />
                                 )}
                             </Field>
 
@@ -338,7 +327,7 @@ function AddContent() {
                                     <FieldLabel className="text-primary" htmlFor="date">
                                         Last Modified Date
                                     </FieldLabel>
-                                    <Popover open={openModified} onOpenChange={setOpenModified}>
+                                    <Popover open={openModifiedDate} onOpenChange={setOpenModifiedDate}>
                                         <PopoverTrigger asChild>
                                             <Button variant="outline" id="date" className="justify-start font-normal" disabled={values.uploadMode === "file" && values.file !== null}>
                                                 {values.dateModified ? values.dateModified.toLocaleDateString() : "Select date"}
@@ -350,7 +339,7 @@ function AddContent() {
                                                 selected={values.dateModified}
                                                 defaultMonth={values.dateModified}
                                                 captionLayout="dropdown"
-                                                onSelect={(date) => { patch({ dateModified: date }); setOpenModified(false); }}
+                                                onSelect={(date) => { patch({ dateModified: date }); setOpenModifiedDate(false); }}
                                             />
                                         </PopoverContent>
                                     </Popover>
@@ -377,7 +366,7 @@ function AddContent() {
                                     <FieldLabel className="text-primary" htmlFor="date-picker-expirationdate">
                                         Expiration Date
                                     </FieldLabel>
-                                    <Popover open={openExpiration} onOpenChange={setOpenExpiration}>
+                                    <Popover open={openExpirationDate} onOpenChange={setOpenExpirationDate}>
                                         <PopoverTrigger asChild>
                                             <Button variant="outline" id="date-picker-expirationdate" className="justify-start font-normal">
                                                 {values.dateExpiration ? values.dateExpiration.toLocaleDateString() : "Select date"}
@@ -389,7 +378,7 @@ function AddContent() {
                                                 selected={values.dateExpiration}
                                                 defaultMonth={values.dateExpiration}
                                                 captionLayout="dropdown"
-                                                onSelect={(date) => { patch({ dateExpiration: date }); setOpenExpiration(false); }}
+                                                onSelect={(date) => { patch({ dateExpiration: date }); setOpenExpirationDate(false); }}
                                             />
                                         </PopoverContent>
                                     </Popover>
