@@ -5,7 +5,7 @@ export type ContentFormValues = {
     linkUrl: string;
     ownerID: number | null;
     contentType: "reference" | "workflow" | "";
-    status: "new" | "inProgress" | "complete";
+    status: "new" | "inProgress" | "complete" | "";
     jobPosition: string;
     uploadMode: "url" | "file";
     file: File | null;
@@ -31,7 +31,6 @@ export function getErrors(values: ContentFormValues, isEdit = false): Record<str
     }
     if (values.uploadMode === "file" && !values.file && !isEdit) e.source = "Please select a file.";
     if (!values.jobPosition) e.persona = "Please select a job position.";
-    if (!values.contentType) e.contentType = "Please select a document type.";
     return e;
 }
 
@@ -42,7 +41,7 @@ export function initialValues(userId: number): ContentFormValues {
         linkUrl: "",
         ownerID: userId,
         contentType: "",
-        status: "new",
+        status: "",
         jobPosition: "",
         uploadMode: "url",
         file: null,
@@ -88,7 +87,7 @@ export function fromContentItem(item: ContentItem): ContentFormValues {
         linkUrl: item.linkURL ?? "",
         ownerID: item.ownerId ?? null,
         contentType: item.contentType,
-        status: item.status ?? "new",
+        status: item.status ?? "",
         jobPosition: item.targetPersona,
         uploadMode: item.linkURL ? "url" : "file",
         file: null,
