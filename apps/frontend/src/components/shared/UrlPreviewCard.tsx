@@ -67,7 +67,7 @@ export function UrlPreviewCard({ status, preview }: Props) {
                     <ContentIcon category="other" isLink={true} className="w-8 h-8" />
                 )}
                 <div className="min-w-0">
-                    {preview.siteName && <p className="text-xs text-muted-foreground">{preview.siteName}</p>}
+                    {preview.siteName && <p className="text-xs text-muted-foreground truncate">{preview.siteName}</p>}
                     {preview.title && <p className="text-sm font-medium text-foreground truncate">{preview.title}</p>}
                     {preview.description && <p className="text-xs text-muted-foreground line-clamp-2">{preview.description}</p>}
                 </div>
