@@ -5,6 +5,7 @@ import {
     BookmarkCheck,
     ChevronDown,
     ChevronRight,
+    EllipsisVertical,
     FolderOpen,
     Loader2,
     Pencil,
@@ -15,6 +16,12 @@ import {
     Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Link } from "react-router-dom";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -684,27 +691,38 @@ function ViewContent() {
                                                                 <Bookmark className="w-4 h-4" />
                                                             )}
                                                         </button>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            disabled={!canEdit(item) || isCheckedOut(item)}
-                                                            title={isCheckedOut(item) ? lockLabel(item) : "Edit content"}
-                                                            onClick={(e) => handleStartEdit(item, e)}
-                                                        >
-                                                            {isCheckedOut(item) ? (
-                                                                <Lock className="w-4 h-4" />
-                                                            ) : (
-                                                                <Pencil className="w-4 h-4" />
-                                                            )}
-                                                        </Button>
-                                                        <Button
-                                                            variant="destructive"
-                                                            size="sm"
-                                                            disabled={!canEdit(item)}
-                                                            onClick={(e) => { e.stopPropagation(); setDeleteTarget(item); }}
-                                                        >
-                                                            <Trash2 className="w-4 h-4" />
-                                                        </Button>
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                                                <button
+                                                                    className="w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground"
+                                                                    title="More actions"
+                                                                >
+                                                                    <EllipsisVertical className="w-4 h-4" />
+                                                                </button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                                                                <DropdownMenuItem
+                                                                    disabled={!canEdit(item) || isCheckedOut(item)}
+                                                                    title={isCheckedOut(item) ? lockLabel(item) : "Edit content"}
+                                                                    onClick={(e) => handleStartEdit(item, e)}
+                                                                >
+                                                                    {isCheckedOut(item) ? (
+                                                                        <Lock className="w-4 h-4" />
+                                                                    ) : (
+                                                                        <Pencil className="w-4 h-4" />
+                                                                    )}
+                                                                    {isCheckedOut(item) ? "Locked" : "Edit"}
+                                                                </DropdownMenuItem>
+                                                                <DropdownMenuItem
+                                                                    disabled={!canEdit(item)}
+                                                                    className="text-destructive focus:text-destructive"
+                                                                    onClick={(e) => { e.stopPropagation(); setDeleteTarget(item); }}
+                                                                >
+                                                                    <Trash2 className="w-4 h-4" />
+                                                                    Delete
+                                                                </DropdownMenuItem>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
                                                     </div>
                                                 </TableCell>
                                             </TableRow>
