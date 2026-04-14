@@ -9,6 +9,7 @@ import * as login from './hooks/login'
 import * as servicereqs from './hooks/servicereqs'
 import * as content from './hooks/content'
 import * as employee from './hooks/employee'
+import * as bookmark from './hooks/bookmark'
 import { auth } from 'express-oauth2-jwt-bearer'
 
 const app = express();
@@ -43,10 +44,13 @@ app.post("/api/content/checkout", content.checkoutContent)
 app.get("/api/content/info/:id", content.getContentInfo)
 app.get("/api/content/download/:id", content.downloadContent)
 app.get("/api/content/:id", content.getContentById)
-app.get("/api/content/bookmark/:id", content.getContentByBookmarkerId)
 app.post("/api/content", upload.single("file"), content.uploadFile)
 app.put("/api/content", upload.single("file"), content.updateContent)
 app.delete("/api/content/:id", content.deleteContent)
+// Bookmarks
+app.get("/api/bookmark", bookmark.getBookmarks)
+app.post("/api/bookmark/:contentId", bookmark.addBookmark)
+app.delete("/api/bookmark/:contentId", bookmark.removeBookmark)
 // Employee
 app.get("/api/employee/all", employee.getAllEmployeesWithLogin)
 app.get("/api/employee", employee.getAllEmployees)
