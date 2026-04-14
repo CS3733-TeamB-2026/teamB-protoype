@@ -64,9 +64,9 @@ export interface ContentItem {
         firstName: string;
         lastName: string;
     } | null;
-    checkedOutBy: number | null;
+    checkedOutById: number | null;
     checkedOutAt: string | null;
-    checkedOutByEmployee: {
+    checkedOutBy: {
         id: number;
         firstName: string;
         lastName: string;
@@ -220,15 +220,15 @@ function ViewContent() {
     }
 
     function isCheckedOut(item: ContentItem): boolean {
-        if (item.checkedOutBy === null) return false;
-        return item.checkedOutBy !== user!.id;
+        if (item.checkedOutById === null) return false;
+        return item.checkedOutById !== user!.id;
     }
 
     function lockLabel(item: ContentItem): string {
-        if (!item.checkedOutByEmployee) {
+        if (!item.checkedOutBy) {
             return "This content is currently being modified.";
         }
-        return `${item.checkedOutByEmployee.firstName} ${item.checkedOutByEmployee.lastName} is currently modifying this content.`;
+        return `${item.checkedOutBy.firstName} ${item.checkedOutBy.lastName} is currently modifying this content.`;
     }
 
     function formatName(item: ContentItem): string {
@@ -659,10 +659,10 @@ function ViewContent() {
                                                         className="px-6 py-2 bg-muted/10 border-t border-border"
                                                     >
                                                         <div className="flex gap-6 text-xs text-muted-foreground">
-                                                            {item.checkedOutByEmployee && (
+                                                            {item.checkedOutBy && (
                                                                 <span>
                                                                     <span className = "font-medium text-foreground">Editing </span>
-                                                                    {item.checkedOutByEmployee.firstName} {item.checkedOutByEmployee.lastName}
+                                                                    {item.checkedOutBy.firstName} {item.checkedOutBy.lastName}
                                                                 </span>
                                                             )}
                                                         <span>
