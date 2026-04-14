@@ -31,7 +31,7 @@ model Employee {
 
   ownedContent      Content[]        @relation("Owned")
   checkedOutContent Content[]        @relation("CheckedOut")
-  bookmarkedContent Content[]        @relation("Bookmarked")
+  bookmarkedContent Bookmarks[]
 
   ownedRequests     ServiceRequest[] @relation("OwnedBy")
   assignedRequests  ServiceRequest[] @relation("AssignedTo")
@@ -50,7 +50,7 @@ model Content {
   owner   Employee? @relation("Owned", fields: [ownerId], references: [id], onDelete: SetNull)
   ownerId Int?
 
-  bookmarkedBy Employee[] @relation("Bookmarked")
+  bookmarkedBy Bookmark[]
 
   checkedOutById         Int?
   checkedOutAt         DateTime?
@@ -66,8 +66,6 @@ model Content {
   @@schema("public")
 }
 
-
-
 //TODO: delete once we know we aren't using this
 model ServiceRequest {
   owner   Employee @relation("OwnedBy", fields: [ownerId], references: [id])
@@ -82,6 +80,14 @@ model ServiceRequest {
 
   @@id([ownerId, created])
   @@schema("public")
+}
+
+model Bookmark {
+  bookmarker Employee @relation(fields: [bookmarkerId], references: [id])
+  bookmarkerId Int
+  bookmarkedContent Content @relation(fields: [bookmarkedContentId], referenes: [id])
+  bookmarkedContentId Int
+  @@id([bookmarkerId, bookmarkedContentId])
 }
 
 enum Persona {

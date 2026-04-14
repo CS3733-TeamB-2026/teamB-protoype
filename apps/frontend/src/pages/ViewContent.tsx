@@ -85,7 +85,7 @@ function ViewContent() {
     const [editingContent, setEditingContent] = useState<ContentItem | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [expandedId, setExpandedId] = useState<number | null>(null);
-    const [bookmarks, setBookmarks] = useState<Set<number>>(new Set());
+    //const [bookmarks, setBookmarks] = useState<Set<number>>(new Set());
     const [deleteTarget, setDeleteTarget] = useState<ContentItem | null>(null);
     const [sort, toggleSort] = useSortState<"name" | "owner" | "status" | "contentType" | "persona">({column: "name", direction: "asc"});
     const [linkPreviews, setLinkPreviews] = useState<
