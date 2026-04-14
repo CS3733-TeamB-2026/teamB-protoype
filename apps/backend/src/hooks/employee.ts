@@ -11,6 +11,17 @@ export const getAllEmployeesWithLogin = async (req: req, res: res) => {
     }
 }
 
+export const getMe = async (req: req, res: res) => {
+
+    const auth0Id = req.auth?.payload.sub;
+
+    const employee = await q.Employee.queryEmployeeByAuth(auth0Id);
+
+    if (!employee) return res.status(404).json({error: "No employee found"});
+
+    return res.json(employee);
+
+}
 
 export const getAllEmployees = async (req: req, res: res) => {
     try {

@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button.tsx"
 import { Separator } from "@/components/ui/separator.tsx"
 
 import { Hero } from "@/components/shared/Hero.tsx"
+import { useAuth0 } from "@auth0/auth0-react";
 
 function AddEmployee() {
     const [targetPersona, setTargetPersona] = useState("Select job position")
@@ -35,6 +36,7 @@ function AddEmployee() {
     const [password, setPassword] = React.useState("")
     const [id, setID] = React.useState("")
     const [submitResult, setSubmitResult] = useState<"success" | "error" | null>(null)
+    const { getAccessTokenSilently } = useAuth0();
 
     const handleSubmit = async () => {
         {/*TODO: This forces the user to enter all the fields, should probably do this on backend later */}
@@ -43,9 +45,13 @@ function AddEmployee() {
             return
         }
             try {
+            const token = await getAccessTokenSilently();
             const empRes =  await fetch('/api/employee', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
                 body: JSON.stringify({
                     firstName: firstName,
                     lastName: lastName,
@@ -60,7 +66,10 @@ function AddEmployee() {
 
             const loginRes = await fetch('/api/login/create', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
                 body: JSON.stringify({
                     userName: userName,
                     password: password,
@@ -222,7 +231,7 @@ function AddEmployee() {
                             </div>
                         )}
                         <div className="flex justify-center bg-background py-4">
-                            <Button onClick={handleSubmit} className="bg-primary text-white hover:bg-black hover:text-white" variant="outline" size="lg">
+                            <Button onClick={handleSubmit} className="bg-accent text-white hover:bg-accent-dark hover:text-white" variant="outline" size="lg">
                                 Submit
                             </Button>
                         </div>

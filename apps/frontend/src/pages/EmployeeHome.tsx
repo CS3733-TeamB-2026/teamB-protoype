@@ -15,7 +15,7 @@ import {LayoutDashboard, User, Clock, Users, UserPlus, FolderOpen, Plus} from "l
 import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx";
 
 function EmployeeHome() {
-    const [user] = useUser();
+    const user = useUser();
 
     const [currentDateTime, setCurrentDateTime] = useState({
         day: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
@@ -34,8 +34,6 @@ function EmployeeHome() {
         return () => clearInterval(interval);
     }, []);
 
-    if (!user) return null;
-
     return (
         <>
             {/*Main Page*/}
@@ -45,8 +43,7 @@ function EmployeeHome() {
                 title="Dashboard"
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-8 mx-20 my-5">
-
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-8 mx-20">
                 {/* Hello Card */}
                 <Card className="md:col-span-2 py-8 px-4 shadow-lg hover:scale-101 transition-transform">
                     <CardHeader>
@@ -56,7 +53,7 @@ function EmployeeHome() {
                                     <AvatarFallback className="bg-primary text-primary-foreground">{user ? user.firstName[0] + user.lastName[0] : <User />}</AvatarFallback>
                                 </Avatar>
                                 <div>
-                                    <CardTitle className="text-3xl text-left">Welcome back, {user.firstName} {user.lastName}.</CardTitle>
+                                    <CardTitle className="text-3xl text-left">Welcome back, {user?.firstName} {user?.lastName}.</CardTitle>
                                     <CardDescription className="text-lg text-left">Let's pick up where you left off.</CardDescription>
                                 </div>
                             </div>
@@ -98,28 +95,32 @@ function EmployeeHome() {
                 <Card className="shadow-lg hover:scale-101 transition-transform">
                     <CardHeader>
                         <CardTitle className="capitalize text-2xl font-semibold text-center">
-                            User Access: {user.persona}
+                            User Access: {user?.persona}
                         </CardTitle>
                         <p className="text-center text-sm text-muted-foreground">Quick Links</p>
                     </CardHeader>
                     <CardContent>
                         <div className="flex flex-col gap-3 px-2">
-                            {user.persona === "admin" && (
+                            {user?.persona === "admin" ?
                                 <Link to="/usermanagement" className="w-full">
                                     <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
                                         <Users className="w-4 h-4 shrink-0" />
                                         View Users
                                     </Button>
                                 </Link>
-                            )}
-                            {user.persona === "admin" && (
+                                :
+                                null
+                            }
+                            {user?.persona === "admin" ?
                                 <Link to="/employeeform" className="w-full">
                                     <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
                                         <UserPlus className="w-4 h-4 shrink-0" />
                                         Add Employee
                                     </Button>
                                 </Link>
-                            )}
+                                :
+                                null
+                            }
                             <Link to="/files" className="w-full">
                                 <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
                                     <FolderOpen className="w-4 h-4 shrink-0" />

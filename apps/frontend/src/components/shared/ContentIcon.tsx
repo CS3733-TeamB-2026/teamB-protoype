@@ -6,7 +6,7 @@ import {
     FileText,
     Link,
 } from "lucide-react";
-import { type Category, CATEGORY_COLORS } from "@/helpers/mime";
+import { type Category, CATEGORY_COLORS } from "@/lib/mime.ts";
 
 export function ContentIcon({
     category,

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
     AlertCircle,
     Bookmark,
@@ -44,13 +44,17 @@ import {
     getCategory,
     getExtension,
     getOriginalFilename,
-} from "@/helpers/mime.ts";
+} from "@/lib/mime.ts";
 import { ContentExtBadge } from "@/components/shared/ContentExtBadge.tsx";
 import { ContentStatusBadge } from "@/components/shared/ContentStatusBadge.tsx";
 import { ContentTypeBadge } from "@/components/shared/ContentTypeBadge.tsx";
 import { PersonaBadge } from "@/components/shared/PersonaBadge.tsx";
 import { EditContentDialog } from "@/dialogs/EditContentDialog.tsx";
+import { AddContentDialog } from "@/dialogs/AddContentDialog.tsx";
 import { FilePreview } from "@/components/FilePreview.tsx";
+import { useAuth0 } from "@auth0/auth0-react"
+import {highlight} from "@/lib/highlight.tsx";
+import { toast } from "sonner";
 
 // Matches the Content model from Prisma (with joined owner)
 export interface ContentItem {
@@ -58,15 +62,15 @@ export interface ContentItem {
     displayName: string;
     linkURL: string | null;
     fileURI: string | null;
-    ownerID: number | null;
+    ownerId: number | null;
     owner: {
         id: number;
         firstName: string;
         lastName: string;
     } | null;
-    checkedOutBy: number | null;
+    checkedOutById: number | null;
     checkedOutAt: string | null;
-    checkedOutByEmployee: {
+    checkedOutBy: {
         id: number;
         firstName: string;
         lastName: string;
@@ -78,14 +82,20 @@ export interface ContentItem {
     status: "new" | "inProgress" | "complete" | null;
 }
 
+export interface BookmarkRecord {
+    bookmarkerId: number;
+    bookmarkedContentId: number;
+}
+
 function ViewContent() {
     const [content, setContent] = useState<ContentItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const [addOpen, setAddOpen] = useState(false);
     const [editOpen, setEditOpen] = useState(false);
     const [editingContent, setEditingContent] = useState<ContentItem | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [expandedId, setExpandedId] = useState<number | null>(null);
-    const [bookmarks, setBookmarks] = useState<Set<number>>(new Set());
+    const [bookmarks, setBookmarks] = useState<BookmarkRecord[]>([]);
     const [deleteTarget, setDeleteTarget] = useState<ContentItem | null>(null);
     const [sort, toggleSort] = useSortState<"name" | "owner" | "status" | "contentType" | "persona">({column: "name", direction: "asc"});
     const [linkPreviews, setLinkPreviews] = useState<
@@ -110,13 +120,11 @@ function ViewContent() {
         ownedByMe: false,
     });
 
-    const [user] = useUser();
-    const [searchTerm, setSearchTerm] = React.useState("");
+    const user = useUser();
+    const [searchTerm, setSearchTerm] = useState("");
     const searchedContent = content.filter((item) =>
         item.displayName.toLowerCase().includes(searchTerm.toLowerCase())
     );
-
-
 
     const advancedFilteredContent = searchedContent.filter((item) => {
         const matchesStatus =
@@ -132,10 +140,10 @@ function ViewContent() {
             advancedFilters.persona.includes(item.targetPersona);
 
         const matchesBookmark =
-            !advancedFilters.bookmarkedOnly || bookmarks.has(item.id);
+            !advancedFilters.bookmarkedOnly || bookmarks.some((b) => b.bookmarkedContentId === item.id);
 
         const matchesOwner =
-            !advancedFilters.ownedByMe || item.ownerID === user?.id;
+            !advancedFilters.ownedByMe || item.ownerId === user?.id;
 
         return (
             matchesStatus &&
@@ -153,84 +161,124 @@ function ViewContent() {
         (advancedFilters.bookmarkedOnly ? 1 : 0) +
         (advancedFilters.ownedByMe ? 1 : 0);
 
+    const { getAccessTokenSilently } = useAuth0();
 
+    const fetchPreviews = useCallback((data: ContentItem[]) => {
+        data.filter((item) => item.linkURL).forEach((item) => {
+            fetch(`/api/preview?url=${encodeURIComponent(item.linkURL!)}`)
+                .then((res) => (res.ok ? res.json() : Promise.reject()))
+                .then((preview) => setLinkPreviews((prev) => ({ ...prev, [item.id]: preview })))
+                .catch(() =>
+                    setLinkPreviews((prev) => ({
+                        ...prev,
+                        [item.id]: { title: null, description: null, image: null, siteName: null, favicon: null },
+                    }))
+                );
+        });
+    }, []);
 
+    const updateBookmarks = useCallback(async () => {
+        try {
+            const token = await getAccessTokenSilently();
+            const res = await fetch(`/api/bookmark`, { headers: { Authorization: `Bearer ${token}` } });
+            const data: BookmarkRecord[] = await res.json();
+            setBookmarks(data);
+        } catch {
+            setError("Failed to update bookmarks.");
+        }
+    }, [getAccessTokenSilently]);
 
+    const refreshContent = useCallback(async () => {
+        try {
+            const token = await getAccessTokenSilently();
+            const res = await fetch(`/api/content`, { headers: { Authorization: `Bearer ${token}` } });
+            const data: ContentItem[] = await res.json();
+            setContent(data);
+            fetchPreviews(data);
+            await updateBookmarks();
+        } catch {
+            setError("Failed to refresh content.");
+        }
+    }, [getAccessTokenSilently, fetchPreviews, updateBookmarks]);
 
-
-
-
-
+    // Initial load — shows spinner and fetches link previews
     useEffect(() => {
-        fetch(`/api/content`)
-            .then((res) => res.json())
-            .then((data: ContentItem[]) => {
+        if (!user) return;
+        const fetchContent = async () => {
+            try {
+                const token = await getAccessTokenSilently();
+                const res = await fetch('/api/content', {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                const data: ContentItem[] = await res.json();
                 setContent(data);
                 setLoading(false);
-                data.filter((item) => item.linkURL).forEach((item) => {
-                    fetch(
-                        `/api/preview?url=${encodeURIComponent(item.linkURL!)}`,
-                    )
-                        .then((res) => {
-                            if (!res.ok)
-                                throw new Error(`preview ${res.status}`);
-                            return res.json();
-                        })
-                        .then((preview) =>
-                            setLinkPreviews((prev) => ({
-                                ...prev,
-                                [item.id]: preview,
-                            })),
-                        )
-                        .catch(() =>
-                            setLinkPreviews((prev) => ({
-                                ...prev,
-                                [item.id]: {
-                                    title: null,
-                                    description: null,
-                                    image: null,
-                                    siteName: null,
-                                    favicon: null,
-                                },
-                            })),
-                        );
-                });
-            })
-            .catch(() => { setError("Failed to load content."); setLoading(false); });
-    }, []);
+                fetchPreviews(data);
+                await updateBookmarks();
+            } catch {
+                setError("Failed to load content.");
+                setLoading(false);
+            }
+        };
+        void fetchContent();
+    }, [getAccessTokenSilently, user, fetchPreviews, updateBookmarks]);
+
+    // Poll for lock state changes from other users
+    useEffect(() => {
+        const id = setInterval(refreshContent, 15_000);
+        return () => clearInterval(id);
+    }, [refreshContent]);
 
     function toggleExpand(id: number) {
         setExpandedId((prev) => (prev === id ? null : id));
     }
 
-    function toggleBookmark(id: number, e: React.MouseEvent) {
+    async function toggleBookmark(id: number, e: React.MouseEvent) {
         e.stopPropagation();
-        setBookmarks((prev) => {
-            const next = new Set(prev);
-            if (next.has(id)) {
-                next.delete(id);
+        const isCurrentlyBookmarked = bookmarks.some((b) => b.bookmarkedContentId === id);
+        // Optimistic update
+        if (isCurrentlyBookmarked) {
+            setBookmarks((prev) => prev.filter((b) => b.bookmarkedContentId !== id));
+        } else {
+            setBookmarks((prev) => [...prev, { bookmarkerId: user!.id, bookmarkedContentId: id }]);
+        }
+        try {
+            const token = await getAccessTokenSilently();
+            await fetch(`/api/bookmark/${id}`, {
+                method: isCurrentlyBookmarked ? "DELETE" : "POST",
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (isCurrentlyBookmarked) {
+                toast.success("Bookmark removed.");
             } else {
-                next.add(id);
+                toast.success("Bookmark added.");
             }
-            return next;
-        });
+        } catch {
+            // Roll back on error
+            if (isCurrentlyBookmarked) {
+                setBookmarks((prev) => [...prev, { bookmarkerId: user!.id, bookmarkedContentId: id }]);
+            } else {
+                setBookmarks((prev) => prev.filter((b) => b.bookmarkedContentId !== id));
+            }
+            toast.error("Failed to update bookmark.");
+        }
     }
 
     function canEdit(item: ContentItem): boolean {
         if (user!.persona === "admin") return true;
-        return item.targetPersona === user!.persona || item.ownerID === user!.id;
+        return item.targetPersona === user!.persona || item.ownerId === user!.id;
     }
 
     function isCheckedOut(item: ContentItem): boolean {
-        if (item.checkedOutBy === null) return false;
-        return item.checkedOutBy !== user!.id;
+        if (item.checkedOutById === null) return false;
+        return item.checkedOutById !== user!.id;
     }
 
     function lockLabel(item: ContentItem): string {
-        if (!item.checkedOutByEmployee) {
+        if (!item.checkedOutBy) {
             return "This content is currently being modified.";
         }
-        return `${item.checkedOutByEmployee.firstName} ${item.checkedOutByEmployee.lastName} is currently modifying this content.`;
+        return `${item.checkedOutBy.firstName} ${item.checkedOutBy.lastName} is currently modifying this content.`;
     }
 
     function formatName(item: ContentItem): string {
@@ -240,7 +288,11 @@ function ViewContent() {
     }
 
     const handleDelete = async (id: number) => {
-        const res = await fetch(`/api/content/${id}`, { method: "DELETE" });
+        const token = await getAccessTokenSilently();
+        const res = await fetch(`/api/content/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+        });
         if (res.ok) {
             setContent((prev) => prev.filter((item) => item.id !== id));
         }
@@ -251,9 +303,13 @@ function ViewContent() {
         e.stopPropagation();
         if (!canEdit(item)) { return;}
         try {
+            const token = await getAccessTokenSilently();
             const res = await fetch(`/api/content/checkout`, {
                 method: 'POST',
-                headers: {"Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
             body: JSON.stringify({
                 id: item.id,
                 employeeID: user!.id,
@@ -277,7 +333,11 @@ function ViewContent() {
 
     const NUM_COLS = 8;
 
-    if (!user) return null;
+    if (!user) return (
+        <div className="flex items-center justify-center min-h-screen bg-secondary">
+            <Loader2 className="w-10 h-10 text-primary animate-spin" />
+        </div>
+    );
 
     return (
         <>
@@ -319,22 +379,18 @@ function ViewContent() {
                         <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
                             <FolderOpen className="w-10 h-10" />
                             <p className="text-sm">No content found.</p>
-                            <Link to="/manageform">
-                                <Button className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-60 rounded-lg px-2 py-6 text-xl">Add Content +</Button>
-                            </Link>
+                            <Button onClick={() => setAddOpen(true)} className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-60 rounded-lg px-2 py-6 text-xl">Add Content +</Button>
                         </div>
                     )}
                     {!loading && !error && content.length > 0 && <>
                         <div className="flex flex-row justify-between items-baseline mb-8">
                             <div>
-                                <Link to="/manageform">
-                                    <Button className="p-0! gap-0! border-0! group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-45 hover:bg-primary-dark hover:text-primary-foreground active:brightness-80 transition-all bg-primary text-primary-foreground w-12 h-12 text-lg justify-start">
-                                        <span className="flex items-center justify-center min-w-12 h-12">
-                                            <Plus className="w-8! h-8! text-primary-foreground " />
-                                        </span>
-                                        <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Add Content</span>
-                                    </Button>
-                                </Link>
+                                <Button onClick={() => setAddOpen(true)} className="p-0! gap-0! border-0! group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-45 hover:bg-primary-dark hover:text-primary-foreground active:brightness-80 transition-all bg-primary text-primary-foreground w-12 h-12 text-lg justify-start">
+                                    <span className="flex items-center justify-center min-w-12 h-12">
+                                        <Plus className="w-8! h-8! text-primary-foreground " />
+                                    </span>
+                                    <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Add Content</span>
+                                </Button>
                             </div>
                             <div className="flex flex-row gap-2 items-center">
                                 <Button
@@ -520,7 +576,7 @@ function ViewContent() {
                                         ? getExtension(originalFilename)
                                         : null;
                                     const isExpanded = expandedId === item.id;
-                                    const isBookmarked = bookmarks.has(item.id);
+                                    const isBookmarked = bookmarks.some((b) => b.bookmarkedContentId === item.id);
 
                                     return (
                                         <React.Fragment key={item.id}>
@@ -560,7 +616,7 @@ function ViewContent() {
                                                 <TableCell className="w-full max-w-0">
                                                     <div className="flex items-center gap-2">
                                                     <span className="truncate font-medium text-foreground">
-                                                        {item.displayName}
+                                                        {highlight(item.displayName, searchTerm)}
                                                     </span>
                                                         <span className="text-muted-foreground shrink-0">
                                                         {isExpanded ? (
@@ -661,10 +717,10 @@ function ViewContent() {
                                                         className="px-6 py-2 bg-muted/10 border-t border-border"
                                                     >
                                                         <div className="flex gap-6 text-xs text-muted-foreground">
-                                                            {item.checkedOutByEmployee && (
+                                                            {item.checkedOutBy && (
                                                                 <span>
                                                                     <span className = "font-medium text-foreground">Editing </span>
-                                                                    {item.checkedOutByEmployee.firstName} {item.checkedOutByEmployee.lastName}
+                                                                    {item.checkedOutBy.firstName} {item.checkedOutBy.lastName}
                                                                 </span>
                                                             )}
                                                         <span>
@@ -677,13 +733,24 @@ function ViewContent() {
                                                         </span>
                                                             {item.expiration && (
                                                                 <span>
-                                                                <span className="font-medium text-foreground">
-                                                                    Expires:{" "}
-                                                                </span>
+                                                                    <span className="font-medium text-foreground">
+                                                                        Expires:{" "}
+                                                                    </span>
                                                                     {new Date(
                                                                         item.expiration,
                                                                     ).toLocaleString()}
-                                                            </span>
+                                                                </span>
+                                                            )}
+                                                            {
+                                                                item.expiration && (
+                                                                <span>
+                                                                    <span className="font-medium text-foreground">
+                                                                        Days left:{" "}
+                                                                    </span>
+                                                                    {Math.ceil((new Date(item.expiration,).getTime() -
+                                                                        new Date().getTime()) / (1000 * 60 * 60 * 24)
+                                                                    ).toLocaleString()}
+                                                                </span>
                                                             )}
                                                         </div>
                                                     </TableCell>
@@ -804,12 +871,12 @@ function ViewContent() {
                             </TableBody>
                         </Table></>}
 
-                    {bookmarks.size > 0 && (
+                    {bookmarks.length > 0 && (
                         <div className="mt-4 px-3 py-2 rounded-md bg-primary/5 border border-primary/20 text-xs text-muted-foreground">
                             <span className="font-medium text-primary">
-                                {bookmarks.size}
+                                {bookmarks.length}
                             </span>{" "}
-                            item{bookmarks.size !== 1 ? "s" : ""} bookmarked
+                            item{bookmarks.length !== 1 ? "s" : ""} bookmarked
                         </div>
                     )}
                 </CardContent>
@@ -822,17 +889,29 @@ function ViewContent() {
                 onConfirm={() => handleDelete(deleteTarget!.id)}
             />
 
+            <AddContentDialog
+                open={addOpen}
+                onOpenChange={setAddOpen}
+                onSave={(created) => {
+                    setContent((prev) => [...prev, created]);
+                    if (created.linkURL) {
+                        fetch(`/api/preview?url=${encodeURIComponent(created.linkURL)}`)
+                            .then((r) => r.ok ? r.json() : null)
+                            .then((preview) => {
+                                if (preview) setLinkPreviews((prev) => ({ ...prev, [created.id]: preview }));
+                            })
+                            .catch(() => {});
+                    }
+                }}
+            />
+
             {editingContent && (
                 <EditContentDialog
                     key={`${editingContent.id}-${editOpen}`}
                     content={editingContent}
                     open={editOpen}
                     onOpenChange={setEditOpen}
-                    onSave={(updated) =>
-                        setContent((prev) =>
-                            prev.map((e) => (e.id === updated.id ? updated : e))
-                        )
-                    }
+                    onSave={refreshContent}
                 />
             )}
 

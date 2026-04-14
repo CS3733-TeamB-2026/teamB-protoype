@@ -128,7 +128,7 @@ export const uploadFile = async (req: req, res: res) => {
             payload.status,
             new Date(payload.lastModified),
             payload.expiration ? new Date(payload.expiration) : null,
-            payload.jobPosition,
+            payload.targetPersona,
         );
         return res.status(201).json(result);
     } catch (error) {
@@ -163,7 +163,7 @@ export const updateContent = async (req: req, res: res) => {
             payload.ownerID ? parseInt(payload.ownerID) : null,
             payload.contentType,
             payload.status,
-            new Date(),
+            payload.lastModified ? new Date(payload.lastModified) : new Date(),
             payload.expiration ? new Date(payload.expiration) : null,
             payload.targetPersona,
             parseInt(payload.employeeID),

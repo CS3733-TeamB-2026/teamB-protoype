@@ -12,8 +12,8 @@ datasource db {
   schemas  = ["public"]
 }
 
+//TODO: will not be used once Auth0 is online
 model Login {
-  //TODO: change userName to username
   userName     String
   passwordHash String
 
@@ -25,16 +25,19 @@ model Login {
 
 model Employee {
   id        Int     @id
+  auth0Id   String? @unique
   firstName String
   lastName  String
   persona   Persona
 
-  ownedContent      Content[]        @relation("Owns")
-  checkedOutContent Content[]        @relation("CheckedOut")
-  ownedRequests     ServiceRequest[] @relation("OwnedBy")
-  assignedRequests  ServiceRequest[] @relation("AssignedTo")
-  login             Login?
-  contents          Content[]
+  ownedContent      Content[] @relation("Owned")
+  checkedOutContent Content[] @relation("CheckedOut")
+
+  ownedRequests    ServiceRequest[] @relation("OwnedBy")
+  assignedRequests ServiceRequest[] @relation("AssignedTo")
+
+  login     Login?
+  bookmarks Bookmark[]
 
   @@schema("public")
 }
@@ -45,12 +48,12 @@ model Content {
   linkURL     String? @unique()
   fileURI     String? @unique()
 
-  owner   Employee? @relation("Owns", fields: [ownerID], references: [id], onDelete: SetNull)
-  ownerID Int?
+  owner   Employee? @relation("Owned", fields: [ownerId], references: [id], onDelete: SetNull)
+  ownerId Int?
 
-  checkedOutBy         Int?
-  checkedOutAt         DateTime?
-  checkedOutByEmployee Employee? @relation("CheckedOut", fields: [checkedOutBy], references: [id], onDelete: SetNull)
+  checkedOutById Int?
+  checkedOutAt   DateTime?
+  checkedOutBy   Employee? @relation("CheckedOut", fields: [checkedOutById], references: [id], onDelete: SetNull)
 
   lastModified DateTime
   expiration   DateTime?
@@ -58,25 +61,34 @@ model Content {
   contentType   ContentType
   targetPersona Persona
   status        Status?
-  employee      Employee?   @relation(fields: [employeeId], references: [id])
-  employeeId    Int?
+  bookmarks     Bookmark[]
 
   @@schema("public")
 }
 
 //TODO: delete once we know we aren't using this
 model ServiceRequest {
-  owner   Employee @relation("OwnedBy", fields: [ownerID], references: [id])
-  ownerID Int
+  owner   Employee @relation("OwnedBy", fields: [ownerId], references: [id])
+  ownerId Int
 
-  assignee   Employee? @relation("AssignedTo", fields: [assigneeID], references: [id], onDelete: SetNull)
-  assigneeID Int?
+  assignee   Employee? @relation("AssignedTo", fields: [assigneeId], references: [id], onDelete: SetNull)
+  assigneeId Int?
 
   created  DateTime    @default(now())
   deadline DateTime?
   type     RequestType
 
-  @@id([ownerID, created])
+  @@id([ownerId, created])
+  @@schema("public")
+}
+
+model Bookmark {
+  bookmarker          Employee @relation(fields: [bookmarkerId], references: [id])
+  bookmarkerId        Int
+  bookmarkedContent   Content  @relation(fields: [bookmarkedContentId], references: [id])
+  bookmarkedContentId Int
+
+  @@id([bookmarkerId, bookmarkedContentId])
   @@schema("public")
 }
 

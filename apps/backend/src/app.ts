@@ -9,7 +9,8 @@ import * as login from './hooks/login'
 import * as servicereqs from './hooks/servicereqs'
 import * as content from './hooks/content'
 import * as employee from './hooks/employee'
-
+import * as bookmark from './hooks/bookmark'
+import { auth } from 'express-oauth2-jwt-bearer'
 
 const app = express();
 app.use(cors());
@@ -18,7 +19,15 @@ app.use(express.json());
 const upload = multer({ storage: multer.memoryStorage() });
 const LOCK_TIMEOUT_MS = 2 * 60 * 1000;
 
+const checkJwt = auth({
+    audience: 'https://hanover-cma-api',
+    issuerBaseURL: 'https://dev-s638hh1d5ry67sv6.us.auth0.com/'
+})
 
+app.get("/api/preview", content.previewContent)
+
+// Protect all routes, ANY ROUTES BEFORE ARE UNPROTECTED
+app.use('/api', checkJwt);
 
 // Login
 app.post("/api/login", login.tryLogin);
@@ -29,7 +38,6 @@ app.put('/api/login', login.updateLogin)
 app.get("/api/servicereqs", servicereqs.allServiceReqs)
 app.get("/api/assigned", servicereqs.allAssignedReqs)
 // Content
-app.get("/api/preview", content.previewContent)
 app.get("/api/content", content.getAllContent)
 app.post("/api/content/checkin", content.checkinContent)
 app.post("/api/content/checkout", content.checkoutContent)
@@ -39,9 +47,14 @@ app.get("/api/content/:id", content.getContentById)
 app.post("/api/content", upload.single("file"), content.uploadFile)
 app.put("/api/content", upload.single("file"), content.updateContent)
 app.delete("/api/content/:id", content.deleteContent)
+// Bookmarks
+app.get("/api/bookmark", bookmark.getBookmarks)
+app.post("/api/bookmark/:contentId", bookmark.addBookmark)
+app.delete("/api/bookmark/:contentId", bookmark.removeBookmark)
 // Employee
 app.get("/api/employee/all", employee.getAllEmployeesWithLogin)
 app.get("/api/employee", employee.getAllEmployees)
+app.get("/api/employee/me", employee.getMe);
 app.get("/api/employee/:id", employee.getEmployeeById)
 app.post("/api/employee", employee.createEmployee)
 app.put("/api/employee", employee.updateEmployee)

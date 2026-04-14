@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useUser } from "@/hooks/use-user.ts";
 import { FolderOpen, Loader2 } from "lucide-react";
 import { ContentIcon } from "@/components/shared/ContentIcon.tsx";
-import { getCategory, getExtension, getOriginalFilename, lookupByFilename } from "@/helpers/mime.ts";
+import { getCategory, getExtension, getOriginalFilename, lookupByFilename } from "@/lib/mime.ts";
+import { useAuth0 } from "@auth0/auth0-react";
 
 interface ContentItem {
     id: number;
@@ -17,21 +18,29 @@ function RecentFiles() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const [user] = useUser();
+    const user = useUser();
+
+    const { getAccessTokenSilently } = useAuth0();
 
     useEffect(() => {
         if (!user) return;
-        fetch(`/api/content?persona=${encodeURIComponent(user.persona)}`)
-            .then((res) => res.json())
-            .then((data: ContentItem[]) => {
+        const fetchContent = async () => {
+            try {
+                const token = await getAccessTokenSilently();
+                const res = await fetch(`/api/content?persona=${encodeURIComponent(user.persona)}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                })
+                const data: ContentItem[] = await res.json();
                 setContent(data);
                 setLoading(false);
-            })
-            .catch(() => {
-                setError("Failed to load content.");
+
+            } catch {
+                setError("Failed to load content");
                 setLoading(false);
-            });
-    }, [user]);
+            }
+        }
+        fetchContent();
+    }, [user, getAccessTokenSilently]);
 
     //sort by lastModified (newest first) and take top 5
     const recentFiles = [...content]
