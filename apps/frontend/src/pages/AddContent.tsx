@@ -11,6 +11,7 @@ import {
 import {Calendar} from "@/components/ui/calendar.tsx";
 import { Hero } from "@/components/shared/Hero.tsx"
 import { FilePlus } from "lucide-react"
+import { useAuth0 } from "@auth0/auth0-react"
 
 import {
     DropdownMenu,
@@ -31,10 +32,9 @@ import {ChevronDown} from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
 
 function AddContent() {
-    const [user] = useUser();
+    const user = useUser();
     const [name, setName] = useState("");
     const [linkUrl, setLinkUrl] = useState("");
-    const [ownerID, setOwnerID] = useState(user?.id ?? 0);
     const [contentType, setContentType] = useState<"reference" | "workflow">(
         "reference",
     );
@@ -57,14 +57,17 @@ function AddContent() {
     const [file, setFile] = React.useState<File | null>(null);
     const [submitResult, setSubmitResult] = useState<"success" | "error" | null>(null)
 
+    const { getAccessTokenSilently } = useAuth0();
+
     // Function to handle post requests to backend
     const handleSubmit = async () => {
+        if (!user) return;
         try {
 
             const formData = new FormData();
             formData.append("name", name);
             formData.append("linkURL", uploadMode === "url" ? linkUrl : "");
-            formData.append("ownerID", ownerID.toString());
+            formData.append("ownerID", user.id.toString());
             formData.append("contentType", contentType);
             formData.append("status", status);
             formData.append("lastModified", date?.toISOString() ?? "");
@@ -75,8 +78,10 @@ function AddContent() {
                 formData.append("file", file);
             }
 
+            const token = await getAccessTokenSilently();
             const res = await fetch("/api/content", {
                 method: "POST",
+                headers: { Authorization: `Bearer ${token}` },
                 body: formData,
             });
             if (!res.ok) {
@@ -88,7 +93,6 @@ function AddContent() {
                 setSubmitResult("success")
                 setName("");
                 setLinkUrl("");
-                setOwnerID(user?.id ?? 0);
                 setContentType("reference");
                 setStatus("new");
                 setJobPosition("Select job position");

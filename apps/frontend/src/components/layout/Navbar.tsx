@@ -10,10 +10,11 @@ import {
 } from "@/components/ui/popover.tsx"
 import { Separator } from "@/components/ui/separator.tsx"
 //import LoginDialog from "@/dialogs/LoginDialog.tsx"
-import { User } from "lucide-react"
+import { User as UserIcon } from "lucide-react"
 import { Link } from "react-router-dom"
 //import { useUser } from "@/hooks/use-user.ts"
 import { useAuth0 } from "@auth0/auth0-react"
+import { useUser } from "@/hooks/use-user.ts"
 
 
 function Navbar() {
@@ -23,6 +24,8 @@ function Navbar() {
     //const [user, setUser] = useUser();
 
     const { isAuthenticated, loginWithRedirect, logout, user: auth0User } = useAuth0();
+
+    const employee = useUser();
 
     return (
         <>
@@ -48,10 +51,10 @@ function Navbar() {
                     <PopoverTrigger asChild>
                         <button className="rounded-full flex items-center gap-2 hover:opacity-80 active:scale-[0.96] group">
                             <span className="text-xl font-semibold relative after:absolute after:bottom-0 after:right-0 after:h-0.5 after:w-0 after:bg-current after:transition-all group-hover:after:w-full group-hover:after:opacity-80 ">
-                                { isAuthenticated ? auth0User?.name : "Log In"}
+                                { isAuthenticated ? employee?.firstName + " " + employee?.lastName : "Log In"}
                             </span>
                             <Avatar className="cursor-pointer w-10 h-10 ">
-                                <AvatarFallback className="bg-secondary text-primary">{isAuthenticated ? auth0User?.name?.[0] : <User />}</AvatarFallback>
+                                <AvatarFallback className="bg-secondary text-primary">{isAuthenticated ? " " + employee?.firstName[0] + employee?.lastName[0] : <UserIcon />}</AvatarFallback>
                             </Avatar>
                         </button>
                     </PopoverTrigger>
@@ -65,8 +68,8 @@ function Navbar() {
                                             <AvatarFallback className="bg-primary text-primary-foreground">{auth0User?.name?.[0]}</AvatarFallback>
                                         </Avatar>
                                         <div>
-                                            <p className="font-semibold text-lg">{auth0User?.name}</p>
-                                            <p className="text-muted-foreground text-md capitalize">test</p>
+                                            <p className="font-semibold text-lg">{employee?.firstName + " " + employee?.lastName}</p>
+                                            <p className="text-muted-foreground text-md capitalize">{employee?.persona}</p>
                                         </div>
                                     </div>
                                     <Separator className="bg-primary" />

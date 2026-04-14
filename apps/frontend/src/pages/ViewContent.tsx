@@ -51,6 +51,7 @@ import { ContentTypeBadge } from "@/components/shared/ContentTypeBadge.tsx";
 import { PersonaBadge } from "@/components/shared/PersonaBadge.tsx";
 import { EditContentDialog } from "@/dialogs/EditContentDialog.tsx";
 import { FilePreview } from "@/components/FilePreview.tsx";
+import { useAuth0 } from "@auth0/auth0-react"
 
 // Matches the Content model from Prisma (with joined owner)
 export interface ContentItem {
@@ -110,7 +111,7 @@ function ViewContent() {
         ownedByMe: false,
     });
 
-    const [user] = useUser();
+    const user = useUser();
     const [searchTerm, setSearchTerm] = React.useState("");
     const searchedContent = content.filter((item) =>
         item.displayName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -153,15 +154,58 @@ function ViewContent() {
         (advancedFilters.bookmarkedOnly ? 1 : 0) +
         (advancedFilters.ownedByMe ? 1 : 0);
 
-
-
-
-
-
-
-
+    const { getAccessTokenSilently } = useAuth0();
 
     useEffect(() => {
+
+        if (!user) return;
+        const fetchContent = async () => {
+            try {
+                const token = await getAccessTokenSilently();
+                const res = await fetch('/api/content', {
+                    headers: { Authorization: `Bearer ${token}` },
+                })
+                const data: ContentItem[] = await res.json();
+                setContent(data);
+                setLoading(false);
+
+                data.filter((item) => item.linkURL).forEach((item) => {
+                    fetch(
+                        `/api/preview?url=${encodeURIComponent(item.linkURL!)}`,
+                    )
+                        .then((res) => {
+                            if (!res.ok)
+                                throw new Error(`preview ${res.status}`);
+                            return res.json();
+                        })
+                        .then((preview) =>
+                            setLinkPreviews((prev) => ({
+                                ...prev,
+                                [item.id]: preview,
+                            })),
+                        )
+                        .catch(() =>
+                            setLinkPreviews((prev) => ({
+                                ...prev,
+                                [item.id]: {
+                                    title: null,
+                                    description: null,
+                                    image: null,
+                                    siteName: null,
+                                    favicon: null,
+                                },
+                            })),
+                        );
+                });
+
+            } catch {
+                setError("Failed to load content.");
+                setLoading(false);
+            }
+        }
+        fetchContent();
+
+        /*
         fetch(`/api/content`)
             .then((res) => res.json())
             .then((data: ContentItem[]) => {
@@ -197,7 +241,8 @@ function ViewContent() {
                 });
             })
             .catch(() => { setError("Failed to load content."); setLoading(false); });
-    }, []);
+            */
+    }, [getAccessTokenSilently, user]);
 
     function toggleExpand(id: number) {
         setExpandedId((prev) => (prev === id ? null : id));

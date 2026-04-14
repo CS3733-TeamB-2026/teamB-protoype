@@ -23,7 +23,9 @@ const checkJwt = auth({
     issuerBaseURL: 'https://dev-s638hh1d5ry67sv6.us.auth0.com/'
 })
 
-// Protect all routes
+app.get("/api/preview", content.previewContent)
+
+// Protect all routes, ANY ROUTES BEFORE ARE UNPROTECTED
 app.use('/api', checkJwt);
 
 // Login
@@ -35,7 +37,6 @@ app.put('/api/login', login.updateLogin)
 app.get("/api/servicereqs", servicereqs.allServiceReqs)
 app.get("/api/assigned", servicereqs.allAssignedReqs)
 // Content
-app.get("/api/preview", content.previewContent)
 app.get("/api/content", content.getAllContent)
 app.post("/api/content/checkin", content.checkinContent)
 app.post("/api/content/checkout", content.checkoutContent)
@@ -48,6 +49,7 @@ app.delete("/api/content/:id", content.deleteContent)
 // Employee
 app.get("/api/employee/all", employee.getAllEmployeesWithLogin)
 app.get("/api/employee", employee.getAllEmployees)
+app.get("/api/employee/me", employee.getMe);
 app.get("/api/employee/:id", employee.getEmployeeById)
 app.post("/api/employee", employee.createEmployee)
 app.put("/api/employee", employee.updateEmployee)
