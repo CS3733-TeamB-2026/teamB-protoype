@@ -13,9 +13,10 @@ import { Label } from "@/components/ui/label.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { toast } from "sonner";
 import { ContentFormFields } from "@/components/shared/ContentFormFields.tsx";
-import { type ContentFormValues, fromContentItem, getErrors } from "@/lib/content-form.ts";
+import { fromContentItem, buildContentFormData } from "@/lib/content-form.ts";
 import type { ContentItem } from "@/pages/ViewContent.tsx";
 import { useAuth0 } from "@auth0/auth0-react";
+import { useContentForm } from "@/hooks/use-content-form.ts";
 
 interface Props {
     content: ContentItem;
@@ -25,18 +26,10 @@ interface Props {
 }
 
 export function EditContentDialog({ content, open, onOpenChange, onSave }: Props) {
-    const [values, setValues] = useState<ContentFormValues>(() => fromContentItem(content));
-    const patch = (p: Partial<ContentFormValues>) => setValues(prev => ({ ...prev, ...p }));
+    const { values, patch, setSubmitted, errors, hasErrors, formKey, reset } =
+        useContentForm(fromContentItem(content), true);
 
-    const [submitted, setSubmitted] = useState(false);
-    const [formKey, setFormKey] = useState(0);
-    const errors = submitted ? getErrors(values, true) : {};
-
-    const handleReset = () => {
-        setValues(fromContentItem(content));
-        setSubmitted(false);
-        setFormKey(k => k + 1);
-    };
+    const handleReset = () => reset(fromContentItem(content));
 
     const [expired, setExpired] = useState(false);
     const user = useUser();
@@ -63,40 +56,18 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
     const handleApply = async () => {
         if (!user) return;
         setSubmitted(true);
-        if (Object.keys(getErrors(values, true)).length > 0) return;
+        if (hasErrors) return;
 
-        const formData = new FormData();
+        const formData = buildContentFormData(values);
         formData.append("id", content.id.toString());
-        formData.append("name", values.name);
-        formData.append("linkURL", values.uploadMode === "url" ? values.linkUrl : "");
-        formData.append("ownerID", user.id.toString());
-        formData.append("contentType", values.contentType);
-        formData.append("status", values.status ?? "");
-
-        const lastModifiedDate = values.dateModified ? new Date(values.dateModified) : new Date();
-        const [lmh, lmm, lms] = values.lastModifiedTime.split(":").map(Number);
-        lastModifiedDate.setHours(lmh, lmm, lms ?? 0, 0);
-        formData.append("lastModified", lastModifiedDate.toISOString());
-
-        if (values.dateExpiration) {
-            const expDate = new Date(values.dateExpiration);
-            expDate.setHours(0, 0, 0, 0);
-            formData.append("expiration", expDate.toISOString());
-        } else {
-            formData.append("expiration", "");
-        }
-        formData.append("targetPersona", values.jobPosition);
-        formData.append("employeeID", String(user!.id));
-        if (values.uploadMode === "file" && values.file) {
-            formData.append("file", values.file);
-        }
+        formData.append("employeeID", String(user.id));
 
         try {
             const token = await getAccessTokenSilently();
             const res = await fetch("/api/content", {
                 method: "PUT",
                 headers: { Authorization: `Bearer ${token}` },
-                body: formData
+                body: formData,
             });
             if (!res.ok) { toast.error("Error updating content."); return; }
             const updated = await res.json();
@@ -118,7 +89,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
-                            Authorization: `Bearer ${token}`
+                            Authorization: `Bearer ${token}`,
                         },
                         body: JSON.stringify({ id: content.id, employeeID: user.id }),
                     });
@@ -126,7 +97,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                 onOpenChange(nextOpen);
             }}
         >
-            <DialogContent>
+            <DialogContent className="sm:max-w-lg overflow-hidden">
                 <DialogHeader>
                     <DialogTitle>Modify Content</DialogTitle>
                     <DialogDescription className="text-muted-foreground">
@@ -134,7 +105,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 min-w-0">
                     {/* Content ID — read-only, edit-only field */}
                     <div>
                         <Label className="my-2">Content ID</Label>
@@ -158,16 +129,13 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                     )}
 
                     <div className="flex justify-center gap-4 mt-5">
-                        <Button
-                            variant="outline"
-                            onClick={handleReset}
-                        >
+                        <Button variant="outline" onClick={handleReset}>
                             Reset
                         </Button>
                         <Button
                             className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground rounded-lg px-4 py-1"
                             onClick={handleApply}
-                            disabled={Object.keys(getErrors(values, true)).length > 0}
+                            disabled={hasErrors}
                         >
                             Apply
                         </Button>

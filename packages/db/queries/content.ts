@@ -4,8 +4,6 @@ import {Helper} from "./helper";
 
 const LOCK_TIMEOUT_MS = 2 * 60 * 1000;
 
-type ContentWithBookmarks = p.Content & { bookmarkerId: number }
-
 export class Content {
     public static async updateContent(
         id: number,
@@ -96,6 +94,16 @@ export class Content {
         })
     }
 
+    public static async queryContentByBookmarkerId(bookmarkerId: number) {
+        return prisma.content.findMany({
+            include: {
+                bookmarkedBy: {
+                    where: { bookmarkerId: bookmarkerId }
+                }
+            }
+        })
+    }
+
     public static async deleteContent(id: number): Promise<void> {
         await prisma.content.delete({
             where: {id: id},
@@ -133,37 +141,6 @@ export class Content {
         })
     }
 
-    public static async queryContentByOwnerId(ownerId: number | null): Promise<p.Content | null> {
-        let _ownerId
-        if (ownerId === null) {
-            _ownerId = JSON.parse(localStorage.getItem("user")!).id
-        } else {
-            _ownerId = ownerId
-        }
-        return prisma.content.findUnique({
-            where: {id: _ownerId}
-        })
-    }
-
-    public static async queryContentByBookmarkerId(bookmarkerId: number | null): Promise<ContentWithBookmarks | null> {
-        return prisma.content.findMany({
-            include: {
-                bookmark: {
-                    where: {
-                        bookmarkerId: bookmarkerId
-                    }
-                }
-            }
-        })
-    }
-
-    public static async queryContentByName(name: string): Promise<p.Content | null> {
-        return prisma.content.findFirst({
-            where: {displayName: name}
-            // TODO: Maybe add case insensitivity
-            //  Perhaps better to grab ALL filenames so a fuzzy search may be done - Oscar
-        })
-    }
 
     public static async checkoutContent(id: number, employeeID: number){
         const content = await prisma.content.findUnique({
