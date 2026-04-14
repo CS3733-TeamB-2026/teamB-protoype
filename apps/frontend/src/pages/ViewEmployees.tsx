@@ -80,9 +80,13 @@ function ViewEmployees() {
     });
 
     const handleDelete = async (employee: Employee) => {
+        const token = await getAccessTokenSilently();
         const res = await fetch(`/api/employee`, {
             method: "DELETE",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
             body: JSON.stringify({ id: employee.id }),
         });
         if (res.ok) {

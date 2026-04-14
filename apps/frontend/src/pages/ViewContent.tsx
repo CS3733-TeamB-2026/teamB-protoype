@@ -284,7 +284,11 @@ function ViewContent() {
     }
 
     const handleDelete = async (id: number) => {
-        const res = await fetch(`/api/content/${id}`, { method: "DELETE" });
+        const token = await getAccessTokenSilently();
+        const res = await fetch(`/api/content/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+        });
         if (res.ok) {
             setContent((prev) => prev.filter((item) => item.id !== id));
         }
@@ -295,9 +299,13 @@ function ViewContent() {
         e.stopPropagation();
         if (!canEdit(item)) { return;}
         try {
+            const token = await getAccessTokenSilently();
             const res = await fetch(`/api/content/checkout`, {
                 method: 'POST',
-                headers: {"Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
             body: JSON.stringify({
                 id: item.id,
                 employeeID: user!.id,
