@@ -4,7 +4,7 @@ import {Helper} from "./helper";
 
 const LOCK_TIMEOUT_MS = 2 * 60 * 1000;
 
-type ContentWithBookmarks = p.Content & { bookmarkerId: Int }
+type ContentWithBookmarks = p.Content & { bookmarkerId: number }
 
 export class Content {
     public static async updateContent(
@@ -41,7 +41,7 @@ export class Content {
             throw new Error("Your editing lock expired. Please close and try again.")
         }
 
-        return await prisma.content.update({
+        return prisma.content.update({
             where: {id: id},
             data: {
                 displayName: _name,
@@ -56,7 +56,7 @@ export class Content {
                 checkedOutById: null,
                 checkedOutAt: null,
             }
-        })
+        });
     }
 
     public static async createContent(
