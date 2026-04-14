@@ -178,7 +178,7 @@ export const updateContent = async (req: req, res: res) => {
             payload.ownerID ? parseInt(payload.ownerID) : null,
             payload.contentType,
             payload.status,
-            new Date(),
+            payload.lastModified ? new Date(payload.lastModified) : new Date(),
             payload.expiration ? new Date(payload.expiration) : null,
             payload.targetPersona,
             parseInt(payload.employeeID),

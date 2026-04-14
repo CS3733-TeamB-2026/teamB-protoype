@@ -129,7 +129,7 @@ export class Content {
     public static async queryContentById(_id: number): Promise<p.Content | null> {
         return prisma.content.findUnique({
             where: {id: _id},
-            include: { owner: true, checkedOutById: true }
+            include: { owner: true, checkedOutBy: true }
         })
     }
 
