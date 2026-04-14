@@ -45,9 +45,7 @@ function EmployeeHome() {
                 title="Dashboard"
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-8 mx-20 my-5">
-
-                {/* Hello Card */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-8">                {/* Hello Card */}
                 <Card className="md:col-span-2 py-8 px-4 shadow-lg hover:scale-101 transition-transform">
                     <CardHeader>
                         <div className="flex justify-between items-center">
@@ -79,10 +77,10 @@ function EmployeeHome() {
                 {/* Quick Links Card */}
                 <Card className="shadow-lg hover:scale-101 transition-transform">
                     <CardHeader>
-                        <CardTitle className="capitalize text-2xl mb-4 font-semibold px-4 py-3 text-center">User Access: {user.persona}</CardTitle>
+                        <CardTitle className="capitalize text-2xl  font-semibold px-4 py-3 text-center">User Access: {user.persona}</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <p className="text-center mb-4 text-xl">Quick Links:</p>
+                    <CardContent className="pb-5">
+                        <p className="text-center text-xl">Quick Links:</p>
                         <div className="flex flex-col items-center gap-2 gap-y-5 justify-center h-full">
                             { user.persona === "admin" ?
                                 <Link to="/usermanagement">

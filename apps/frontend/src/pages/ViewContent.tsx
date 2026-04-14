@@ -51,6 +51,7 @@ import { ContentTypeBadge } from "@/components/shared/ContentTypeBadge.tsx";
 import { PersonaBadge } from "@/components/shared/PersonaBadge.tsx";
 import { EditContentDialog } from "@/dialogs/EditContentDialog.tsx";
 import { FilePreview } from "@/components/FilePreview.tsx";
+import {highlight} from "@/helpers/highlight.tsx";
 
 // Matches the Content model from Prisma (with joined owner)
 export interface ContentItem {
@@ -556,7 +557,7 @@ function ViewContent() {
                                                 <TableCell className="w-full max-w-0">
                                                     <div className="flex items-center gap-2">
                                                     <span className="truncate font-medium text-foreground">
-                                                        {item.displayName}
+                                                        {highlight(item.displayName, searchTerm)}
                                                     </span>
                                                         <span className="text-muted-foreground shrink-0">
                                                         {isExpanded ? (
