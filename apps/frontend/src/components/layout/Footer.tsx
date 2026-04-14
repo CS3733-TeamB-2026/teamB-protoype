@@ -7,7 +7,8 @@ function Footer (){
     return (
         <>
             {}
-            <footer className="shrink-0 bg-primary text-primary-foreground mt-auto py-8 px-6">
+            <footer className="shrink-0 bg-primary text-primary-foreground mt-auto py-8 px-6"
+                    style={{ background: "linear-gradient(to right, var(--primary-dark), var(--primary), #2E6AA3)" }}>
                 <div className="w-full mx-auto grid grid-cols-1 md:grid-cols-3 items-center gap-6">
                     <div className="text-center md:text-left justify-self-start">
                         <h3 className="font-bold text-lg">Hanover Content Manager</h3>
