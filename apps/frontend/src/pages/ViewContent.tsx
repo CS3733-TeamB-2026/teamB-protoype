@@ -699,13 +699,24 @@ function ViewContent() {
                                                         </span>
                                                             {item.expiration && (
                                                                 <span>
-                                                                <span className="font-medium text-foreground">
-                                                                    Expires:{" "}
-                                                                </span>
+                                                                    <span className="font-medium text-foreground">
+                                                                        Expires:{" "}
+                                                                    </span>
                                                                     {new Date(
                                                                         item.expiration,
                                                                     ).toLocaleString()}
-                                                            </span>
+                                                                </span>
+                                                            )}
+                                                            {
+                                                                item.expiration && (
+                                                                <span>
+                                                                    <span className="font-medium text-foreground">
+                                                                        Days left:{" "}
+                                                                    </span>
+                                                                    {Math.ceil((new Date(item.expiration,).getTime() -
+                                                                        new Date().getTime()) / (1000 * 60 * 60 * 24)
+                                                                    ).toLocaleString()}
+                                                                </span>
                                                             )}
                                                         </div>
                                                     </TableCell>
