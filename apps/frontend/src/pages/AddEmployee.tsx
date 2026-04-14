@@ -231,7 +231,7 @@ function AddEmployee() {
                             </div>
                         )}
                         <div className="flex justify-center bg-background py-4">
-                            <Button onClick={handleSubmit} className="bg-primary text-white hover:bg-black hover:text-white" variant="outline" size="lg">
+                            <Button onClick={handleSubmit} className="bg-accent text-white hover:bg-accent-dark hover:text-white" variant="outline" size="lg">
                                 Submit
                             </Button>
                         </div>

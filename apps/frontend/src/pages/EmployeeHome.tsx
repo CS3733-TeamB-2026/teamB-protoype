@@ -83,7 +83,7 @@ function EmployeeHome() {
                         <div className="flex flex-col items-center gap-2 gap-y-5 justify-center h-full">
                             { user?.persona === "admin" ?
                                 <Link to="/usermanagement">
-                                    <Button className="rounded-sm shadow-xl text-lg px-6 py-5 bg-primary text-background hover:bg-primary-dark transition-colors hover:text-primary-foreground active:brightness-80" variant="outline">
+                                    <Button className="rounded-sm shadow-xl text-lg px-6 py-5 bg-accent text-background hover:bg-accent-dark transition-colors hover:text-primary-foreground active:brightness-80" variant="outline">
                                         View Users
                                     </Button>
                                 </Link>
@@ -92,7 +92,7 @@ function EmployeeHome() {
                             }
                             { user?.persona === "admin" ?
                                 <Link to="/employeeform">
-                                    <Button className="rounded-sm  shadow-xl text-lg px-6 py-5 bg-primary text-background hover:bg-primary-dark transition-colors hover:text-primary-foreground active:brightness-80" variant="outline">
+                                    <Button className="rounded-sm  shadow-xl text-lg px-6 py-5 bg-accent text-background hover:bg-accent-dark transition-colors hover:text-primary-foreground active:brightness-80" variant="outline">
                                         Add Employee Form
                                     </Button>
                                 </Link>
@@ -100,12 +100,12 @@ function EmployeeHome() {
                                 null
                             }
                             <Link to="/files">
-                                <Button className="rounded-sm shadow-xl text-lg px-6 py-5 bg-primary text-background hover:bg-primary-dark transition-colors hover:text-primary-foreground active:brightness-80" variant="outline">
+                                <Button className="rounded-sm shadow-xl text-lg px-6 py-5 bg-accent text-background hover:bg-accent-dark transition-colors hover:text-primary-foreground active:brightness-80" variant="outline">
                                     View Files
                                 </Button>
                             </Link>
                             <Link to="/manageform">
-                                <Button className="rounded-sm shadow-xl text-lg px-6 py-5 bg-primary text-background hover:bg-primary-dark transition-colors hover:text-primary-foreground active:brightness-80" variant="outline">
+                                <Button className="rounded-sm shadow-xl text-lg px-6 py-5 bg-accent text-background hover:bg-accent-dark transition-colors hover:text-primary-foreground active:brightness-80" variant="outline">
                                     Add Content Form
                                 </Button>
                             </Link>
@@ -119,7 +119,7 @@ function EmployeeHome() {
                     <CardContent>
                         <RecentFiles />
                         <Link to="/files">
-                            <Button className="my-5 hover:bg-primary-dark active:brightness-80 hover:text-bg-primary-foreground transition-all bg-primary text-primary-foreground w-40 mx-auto rounded-lg px-2 py-5 text-base">View All Content</Button>
+                            <Button className="my-5 hover:bg-accent-dark active:brightness-80 hover:text-bg-primary-foreground transition-all bg-accent text-primary-foreground w-40 mx-auto rounded-lg px-2 py-5 text-base">View All Content</Button>
                         </Link>
                     </CardContent>
                 </Card>
