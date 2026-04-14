@@ -69,7 +69,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
         formData.append("id", content.id.toString());
         formData.append("name", values.name);
         formData.append("linkURL", values.uploadMode === "url" ? values.linkUrl : "");
-        formData.append("ownerID", user.id.toString());
+        formData.append("ownerID", values.ownerID.toString());
         formData.append("contentType", values.contentType);
         formData.append("status", values.status ?? "");
 
@@ -126,7 +126,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                 onOpenChange(nextOpen);
             }}
         >
-            <DialogContent>
+            <DialogContent className="sm:max-w-lg overflow-hidden">
                 <DialogHeader>
                     <DialogTitle>Modify Content</DialogTitle>
                     <DialogDescription className="text-muted-foreground">
@@ -134,7 +134,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                     </DialogDescription>
                 </DialogHeader>
 
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 min-w-0">
                     {/* Content ID — read-only, edit-only field */}
                     <div>
                         <Label className="my-2">Content ID</Label>
