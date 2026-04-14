@@ -1,0 +1,27 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ec2-user/teamB-protoype
+            git pull origin main
+            export NODE_OPTIONS="--max-old-space-size=512"
+            pnpm install --network-concurrency 1
+            pnpm --filter db exec prisma generate
+            pnpm --filter frontend build
+            sudo chmod -R o+r /home/ec2-user/teamB-protoype/apps/frontend/dist
+            pm2 restart backend
+            sudo systemctl reload nginx
