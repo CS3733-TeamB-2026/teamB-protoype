@@ -109,7 +109,7 @@ function EmployeeHome() {
                             </Link>
                             <Link to="/manageform">
                                 <Button className="rounded-sm shadow-xl text-lg px-6 py-5 bg-primary text-background hover:bg-primary-dark transition-colors hover:text-primary-foreground active:brightness-80" variant="outline">
-                                    Manage Content Form
+                                    Add Content Form
                                 </Button>
                             </Link>
                         </div>
