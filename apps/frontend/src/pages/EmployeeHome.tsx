@@ -11,7 +11,7 @@ import {Link} from "react-router-dom";
 import RecentFiles from "@/components/RecentFiles.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {Hero} from "@/components/shared/Hero.tsx";
-import {LayoutDashboard, User, Clock} from "lucide-react"
+import {LayoutDashboard, User, Clock, Users, UserPlus, FolderOpen, Plus} from "lucide-react"
 import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx";
 
 function EmployeeHome() {
@@ -76,40 +76,60 @@ function EmployeeHome() {
                     </CardContent>
                 </Card>
 
+                {/* Expiring Soon */}
+                <Card className="shadow-lg hover:scale-101 transition-transform md:col-span-1 px-4 py-8">
+                    <CardHeader className="text-left text-2xl! font-semibold">Expiring Soon: </CardHeader>
+                    <CardContent>
+                        <RecentFiles />
+                        <p>Temporary</p>
+                    </CardContent>
+                </Card>
+
+                {/* My Content Card */}
+                <Card className="shadow-lg hover:scale-101 transition-transform md:col-span- px-4 py-8">
+                    <CardHeader className="text-left text-2xl! font-semibold">My Files: </CardHeader>
+                    <CardContent>
+                        <RecentFiles />
+                        <p>Temporary</p>
+                    </CardContent>
+                </Card>
+
                 {/* Quick Links Card */}
                 <Card className="shadow-lg hover:scale-101 transition-transform">
                     <CardHeader>
-                        <CardTitle className="capitalize text-2xl mb-4 font-semibold px-4 py-3 text-center">User Access: {user.persona}</CardTitle>
+                        <CardTitle className="capitalize text-2xl font-semibold text-center">
+                            User Access: {user.persona}
+                        </CardTitle>
+                        <p className="text-center text-sm text-muted-foreground">Quick Links</p>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-center mb-4 text-xl">Quick Links:</p>
-                        <div className="flex flex-col items-center gap-2 gap-y-5 justify-center h-full">
-                            { user.persona === "admin" ?
-                                <Link to="/usermanagement">
-                                    <Button className="rounded-sm shadow-xl text-lg px-6 py-5 bg-primary text-background hover:bg-primary-dark transition-colors hover:text-primary-foreground active:brightness-80" variant="outline">
+                        <div className="flex flex-col gap-3 px-2">
+                            {user.persona === "admin" && (
+                                <Link to="/usermanagement" className="w-full">
+                                    <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
+                                        <Users className="w-4 h-4 shrink-0" />
                                         View Users
                                     </Button>
                                 </Link>
-                                :
-                                null
-                            }
-                            { user.persona === "admin" ?
-                                <Link to="/employeeform">
-                                    <Button className="rounded-sm  shadow-xl text-lg px-6 py-5 bg-primary text-background hover:bg-primary-dark transition-colors hover:text-primary-foreground active:brightness-80" variant="outline">
-                                        Add Employee Form
+                            )}
+                            {user.persona === "admin" && (
+                                <Link to="/employeeform" className="w-full">
+                                    <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
+                                        <UserPlus className="w-4 h-4 shrink-0" />
+                                        Add Employee
                                     </Button>
                                 </Link>
-                                :
-                                null
-                            }
-                            <Link to="/files">
-                                <Button className="rounded-sm shadow-xl text-lg px-6 py-5 bg-primary text-background hover:bg-primary-dark transition-colors hover:text-primary-foreground active:brightness-80" variant="outline">
+                            )}
+                            <Link to="/files" className="w-full">
+                                <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
+                                    <FolderOpen className="w-4 h-4 shrink-0" />
                                     View Files
                                 </Button>
                             </Link>
-                            <Link to="/manageform">
-                                <Button className="rounded-sm shadow-xl text-lg px-6 py-5 bg-primary text-background hover:bg-primary-dark transition-colors hover:text-primary-foreground active:brightness-80" variant="outline">
-                                    Add Content Form
+                            <Link to="/manageform" className="w-full">
+                                <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
+                                    <Plus className="w-4 h-4 shrink-0" />
+                                    Add Content
                                 </Button>
                             </Link>
                         </div>
@@ -117,12 +137,15 @@ function EmployeeHome() {
                 </Card>
 
                 {/* Recent Files Card */}
-                <Card className="shadow-lg hover:scale-101 transition-transform md:col-span-2 px-4 py-8">
+                <Card className="shadow-lg hover:scale-101 transition-transform md:col-span-3 px-4 py-8">
                     <CardHeader className="text-left text-2xl! font-semibold">Recent Files: </CardHeader>
                     <CardContent>
                         <RecentFiles />
-                        <Link to="/files">
-                            <Button className="my-5 hover:bg-primary-dark active:brightness-80 hover:text-bg-primary-foreground transition-all bg-primary text-primary-foreground w-40 mx-auto rounded-lg px-2 py-5 text-base">View All Content</Button>
+                        <Link to="/files" className="w-full">
+                            <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
+                                <FolderOpen className="w-4 h-4 shrink-0" />
+                                View Files
+                            </Button>
                         </Link>
                     </CardContent>
                 </Card>
