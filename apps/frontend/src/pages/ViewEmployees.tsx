@@ -12,7 +12,7 @@ import { SortableHead } from "@/components/shared/SortableHead.tsx";
 import { useSortState, applySortState } from "@/hooks/use-sort-state.ts";
 import {PersonaBadge} from "@/components/shared/PersonaBadge.tsx";
 import { useUser } from "@/hooks/use-user.ts";
-import { findMatches, highlight, highlightRange } from "@/lib/highlight.tsx";
+import { findMatches, /*highlight,*/ highlightRange } from "@/lib/highlight.tsx";
 import { useAuth0 } from "@auth0/auth0-react";
 
 export type Employee = {
@@ -53,15 +53,6 @@ function ViewEmployees() {
         }
 
         fetchEmployees();
-
-        /*
-        fetch("/api/employee/all")
-            .then((res) => res.json())
-            .then((data) => {
-                setEmployees(data);
-                setLoading(false);
-            })
-            .catch(() => setLoading(false)); */
 
     }, [getAccessTokenSilently]);
 
@@ -146,8 +137,8 @@ function ViewEmployees() {
                                 <TableRow className="hover:bg-transparent">
                                     <SortableHead column="id" label="ID" sort={sort} onSort={toggleSort} />
                                     <SortableHead column="firstName" label="First Name" sort={sort} onSort={toggleSort} />
-                                    <SortableHead column="lastName" label="Last Name" sort={sort} onSort={toggleSort} />
-                                    <SortableHead column="userName" label="User Name" sort={sort} onSort={toggleSort} className="w-full" />
+                                    <SortableHead column="lastName" label="Last Name" sort={sort} onSort={toggleSort} className="w-full" />
+                                    {/*<SortableHead column="userName" label="User Name" sort={sort} onSort={toggleSort} className="w-full" />*/}
                                     <SortableHead column="persona" label="Persona" sort={sort} onSort={toggleSort} />
                                     <TableHead className="uppercase tracking-wider text-muted-foreground select-none">Actions</TableHead>
                                 </TableRow>
@@ -158,7 +149,7 @@ function ViewEmployees() {
                                     if (col === "firstName") return e.firstName;
                                     if (col === "lastName") return e.lastName;
                                     if (col === "persona") return e.persona;
-                                    if (col === "userName") return e.login?.userName ?? "";
+                                    //if (col === "userName") return auth0User?.username ?? "";
                                 }).map((employee) => {
                                     const matches = findMatches(employee.firstName+employee.lastName, searchTerm);
                                     return (
@@ -166,7 +157,7 @@ function ViewEmployees() {
                                         <TableCell className="text-right pr-4">{employee.id}</TableCell>
                                         <TableCell className="font-medium">{highlightRange(employee.firstName, 0, matches)}</TableCell>
                                         <TableCell className="font-medium">{highlightRange(employee.lastName, employee.firstName.length, matches)}</TableCell>
-                                        <TableCell>{highlight(employee.login?.userName || "—", searchTerm)}</TableCell>
+                                        {/*<TableCell>{highlight(auth0User?.nickname || "—", searchTerm)}</TableCell>*/}
                                         <TableCell  className="text-center">
                                             <PersonaBadge
                                                 persona={employee.persona}

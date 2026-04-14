@@ -55,6 +55,22 @@ export class Employee {
         })
     }
 
+    public static async createEmployeeWithAuth0(_id: number, _firstName: string, _lastName: string, _persona: string | null, _auth0Id: string): Promise<void> {
+        const _personaTyped: p.Persona | null = Helper.personaHelper(_persona)
+        if (_personaTyped === null) {
+            throw new Error("No persona type provided")
+        }
+        await prisma.employee.create({
+            data: {
+                id: _id,
+                firstName: _firstName,
+                lastName: _lastName,
+                persona: _personaTyped,
+                auth0Id: _auth0Id,
+            }
+        })
+    }
+
     public static async queryAllEmployeesWithLogin() {
         return prisma.employee.findMany({
             orderBy: { id: 'asc' },
