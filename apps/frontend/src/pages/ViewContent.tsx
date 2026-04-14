@@ -60,7 +60,7 @@ export interface ContentItem {
     displayName: string;
     linkURL: string | null;
     fileURI: string | null;
-    ownerID: number | null;
+    ownerId: number | null;
     owner: {
         id: number;
         firstName: string;
@@ -135,7 +135,7 @@ function ViewContent() {
             !advancedFilters.bookmarkedOnly || bookmarks.has(item.id);
 
         const matchesOwner =
-            !advancedFilters.ownedByMe || item.ownerID === user?.id;
+            !advancedFilters.ownedByMe || item.ownerId === user?.id;
 
         return (
             matchesStatus &&
@@ -230,7 +230,7 @@ function ViewContent() {
 
     function canEdit(item: ContentItem): boolean {
         if (user!.persona === "admin") return true;
-        return item.targetPersona === user!.persona || item.ownerID === user!.id;
+        return item.targetPersona === user!.persona || item.ownerId === user!.id;
     }
 
     function isCheckedOut(item: ContentItem): boolean {

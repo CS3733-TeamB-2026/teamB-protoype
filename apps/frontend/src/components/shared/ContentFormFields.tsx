@@ -120,7 +120,7 @@ export function ContentFormFields({ values, patch, errors, showLastModified = fa
                 <FieldLabel className="text-primary">Owner Employee</FieldLabel>
                 <EmployeePicker
                     selectedId={values.ownerID}
-                    onSelect={(id) => patch({ ownerID: id })}
+                    onSelect={(id) => patch({ ownerID: id ?? null })}
                 />
             </Field>
 

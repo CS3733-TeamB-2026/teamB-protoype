@@ -1,7 +1,6 @@
 "use client";
-import { useState } from "react";
 import { Hero } from "@/components/shared/Hero.tsx";
-import {FilePlus, Loader2} from "lucide-react";
+import { FilePlus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { useUser } from "@/hooks/use-user.ts";
 import { Separator } from "@/components/ui/separator.tsx";
@@ -9,67 +8,35 @@ import { Card } from "@/components/ui/card.tsx";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { ContentFormFields } from "@/components/shared/ContentFormFields.tsx";
-import { type ContentFormValues, initialValues, getErrors } from "@/lib/content-form.ts";
-import { useAuth0 } from "@auth0/auth0-react"
+import { initialValues, buildContentFormData } from "@/lib/content-form.ts";
+import { useContentForm } from "@/hooks/use-content-form.ts";
+import { useAuth0 } from "@auth0/auth0-react";
 
 function AddContent() {
     const user = useUser();
-    const [values, setValues] = useState<ContentFormValues>(() => initialValues(user?.id ?? 0));
-    const patch = (p: Partial<ContentFormValues>) => setValues(prev => ({ ...prev, ...p }));
-
-    const [submitted, setSubmitted] = useState(false);
-    const [formKey, setFormKey] = useState(0);
-    const errors = submitted ? getErrors(values) : {};
+    const { values, patch, setSubmitted, errors, hasErrors, formKey, reset } =
+        useContentForm(initialValues(user?.id ?? 0));
 
     const { getAccessTokenSilently } = useAuth0();
 
-    const handleReset = () => {
-        setValues(initialValues(user!.id));
-        setSubmitted(false);
-        setFormKey(k => k + 1);
-    };
+    const handleReset = () => reset(initialValues(user!.id));
 
-    // Function to handle post requests to backend
     const handleSubmit = async () => {
         if (!user) return;
         setSubmitted(true);
-        if (Object.keys(getErrors(values)).length > 0) return;
+        if (hasErrors) return;
 
         try {
-            const formData = new FormData();
-            formData.append("name", values.name);
-            formData.append("linkURL", values.uploadMode === "url" ? values.linkUrl : "");
-            formData.append("ownerID", values.ownerID.toString());
-            formData.append("contentType", values.contentType);
-            formData.append("status", values.status);
-
-            const lastModifiedDate = values.dateModified ? new Date(values.dateModified) : new Date();
-            const [lmh, lmm, lms] = values.lastModifiedTime.split(":").map(Number);
-            lastModifiedDate.setHours(lmh, lmm, lms ?? 0, 0);
-            formData.append("lastModified", lastModifiedDate.toISOString());
-
-            if (values.dateExpiration) {
-                const expDate = new Date(values.dateExpiration);
-                expDate.setHours(0, 0, 0, 0);
-                formData.append("expiration", expDate.toISOString());
-            } else {
-                formData.append("expiration", "");
-            }
-            formData.append("jobPosition", values.jobPosition);
-            if (values.uploadMode === "file" && values.file) {
-                formData.append("file", values.file);
-            }
-
+            const formData = buildContentFormData(values);
             const token = await getAccessTokenSilently();
             const res = await fetch("/api/content", {
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}` },
-                body: formData });
+                body: formData,
+            });
             if (!res.ok) { toast.error("Error creating content."); return; }
-
             toast.success("Content created successfully!");
-            setValues(initialValues(user!.id));
-            setSubmitted(false);
+            reset(initialValues(user!.id));
         } catch {
             toast.error("Error creating content.");
         }
@@ -110,16 +77,12 @@ function AddContent() {
                             <Button asChild variant="outline" size="lg">
                                 <Link to="/files">View Files</Link>
                             </Button>
-                            <Button
-                                onClick={handleReset}
-                                variant="outline"
-                                size="lg"
-                            >
+                            <Button onClick={handleReset} variant="outline" size="lg">
                                 Reset
                             </Button>
                             <Button
                                 onClick={handleSubmit}
-                                disabled={Object.keys(getErrors(values)).length > 0}
+                                disabled={hasErrors}
                                 className="bg-primary text-background hover:bg-black hover:text-background"
                                 variant="outline"
                                 size="lg"
