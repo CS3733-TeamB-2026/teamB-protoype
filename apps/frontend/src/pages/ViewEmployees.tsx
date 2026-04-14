@@ -97,6 +97,11 @@ function ViewEmployees() {
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-60 max-w-md  mb-4 px-3 py-2 border rounded-md"
                         />
+                        {filteredEmployees.map((item) => (
+                            <div key={item.id}>
+                                {highlight(item.firstName, searchTerm)}
+                            </div>
+                        ))}
                     </div>
                     {loading ? (
                         <div className="flex items-center justify-center py-16 gap-3 text-muted-foreground">
