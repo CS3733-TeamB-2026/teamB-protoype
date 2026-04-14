@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Link } from "react-router-dom";
+import { highlight } from "@/helpers/highlight.tsx";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { LinkSquare01Icon } from "@hugeicons/core-free-icons";
 import {
@@ -150,14 +151,6 @@ function ViewContent() {
         advancedFilters.persona.length +
         (advancedFilters.bookmarkedOnly ? 1 : 0) +
         (advancedFilters.ownedByMe ? 1 : 0);
-
-
-
-
-
-
-
-
 
     useEffect(() => {
         fetch(`/api/content`)
@@ -558,7 +551,7 @@ function ViewContent() {
                                                 <TableCell className="w-full max-w-0">
                                                     <div className="flex items-center gap-2">
                                                     <span className="truncate font-medium text-foreground">
-                                                        {item.displayName}
+                                                        {highlight(item.displayName, searchTerm)}
                                                     </span>
                                                         <span className="text-muted-foreground shrink-0">
                                                         {isExpanded ? (
