@@ -3,9 +3,9 @@ import type { ContentItem } from "@/pages/ViewContent.tsx";
 export type ContentFormValues = {
     name: string;
     linkUrl: string;
-    ownerID: number;
+    ownerID: number | null;
     contentType: "reference" | "workflow" | "";
-    status: "new" | "inProgress" | "complete";
+    status: "new" | "inProgress" | "complete" | "";
     jobPosition: string;
     uploadMode: "url" | "file";
     file: File | null;
@@ -31,7 +31,6 @@ export function getErrors(values: ContentFormValues, isEdit = false): Record<str
     }
     if (values.uploadMode === "file" && !values.file && !isEdit) e.source = "Please select a file.";
     if (!values.jobPosition) e.persona = "Please select a job position.";
-    if (!values.contentType) e.contentType = "Please select a document type.";
     return e;
 }
 
@@ -42,7 +41,7 @@ export function initialValues(userId: number): ContentFormValues {
         linkUrl: "",
         ownerID: userId,
         contentType: "",
-        status: "new",
+        status: "",
         jobPosition: "",
         uploadMode: "url",
         file: null,
@@ -52,15 +51,43 @@ export function initialValues(userId: number): ContentFormValues {
     };
 }
 
+/** Build a FormData with all fields shared between create and update. */
+export function buildContentFormData(values: ContentFormValues): FormData {
+    const formData = new FormData();
+    formData.append("name", values.name);
+    formData.append("linkURL", values.uploadMode === "url" ? values.linkUrl : "");
+    formData.append("ownerID", values.ownerID != null ? values.ownerID.toString() : "");
+    formData.append("contentType", values.contentType);
+    formData.append("status", values.status ?? "");
+
+    const lastModifiedDate = values.dateModified ? new Date(values.dateModified) : new Date();
+    const [lmh, lmm, lms] = values.lastModifiedTime.split(":").map(Number);
+    lastModifiedDate.setHours(lmh, lmm, lms ?? 0, 0);
+    formData.append("lastModified", lastModifiedDate.toISOString());
+
+    if (values.dateExpiration) {
+        const expDate = new Date(values.dateExpiration);
+        expDate.setHours(0, 0, 0, 0);
+        formData.append("expiration", expDate.toISOString());
+    } else {
+        formData.append("expiration", "");
+    }
+    formData.append("targetPersona", values.jobPosition);
+    if (values.uploadMode === "file" && values.file) {
+        formData.append("file", values.file);
+    }
+    return formData;
+}
+
 /** Populate form values from an existing ContentItem for the Edit form. */
 export function fromContentItem(item: ContentItem): ContentFormValues {
     const lastMod = new Date(item.lastModified);
     return {
         name: item.displayName,
         linkUrl: item.linkURL ?? "",
-        ownerID: item.ownerID ?? 0,
+        ownerID: item.ownerId ?? null,
         contentType: item.contentType,
-        status: item.status ?? "new",
+        status: item.status ?? "",
         jobPosition: item.targetPersona,
         uploadMode: item.linkURL ? "url" : "file",
         file: null,

@@ -12,7 +12,7 @@ import { SortableHead } from "@/components/shared/SortableHead.tsx";
 import { useSortState, applySortState } from "@/hooks/use-sort-state.ts";
 import {PersonaBadge} from "@/components/shared/PersonaBadge.tsx";
 import { useUser } from "@/hooks/use-user.ts";
-import { findMatches, highlight, highlightRange } from "@/helpers/highlight.tsx";
+import { findMatches, highlight, highlightRange } from "@/lib/highlight.tsx";
 import { useAuth0 } from "@auth0/auth0-react";
 
 export type Employee = {

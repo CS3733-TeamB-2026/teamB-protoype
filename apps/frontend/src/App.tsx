@@ -7,13 +7,12 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/layout/AppSidebar.tsx";
 import Home from "@/pages/Home.tsx";
 import AddEmployee from "@/pages/AddEmployee.tsx";
-import AddContent from "@/pages/AddContent.tsx";
 import UnderwriterPersona from "@/pages/UnderwriterPersona.tsx";
 import BusinessAnalystPersona from "@/pages/BusinessAnalystPersona.tsx";
 import EmployeeHome from "@/pages/EmployeeHome.tsx";
 import ViewEmployees from "@/pages/ViewEmployees.tsx";
 import ViewContent from "@/pages/ViewContent.tsx";
-import { ViewSingleFile } from "@/pages/VIewSingleFile.tsx";
+import { ViewSingleFile } from "@/pages/ViewSingleFile.tsx";
 import SidebarOverlay from "./components/layout/SidebarOverlay.tsx";
 import { Route, Routes } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
@@ -54,7 +53,6 @@ function App() {
                             {/*This is where Home gets loaded automatically when it detected we are on "/" page*/}
                             <Route path="/" element={<Home/>}/>
                             <Route path="/employeeform" element={<ProtectedRoute><AddEmployee/></ProtectedRoute>}/>
-                            <Route path="/manageform" element={<ProtectedRoute><AddContent/></ProtectedRoute>}/>
                             <Route path="/usermanagement" element={<ProtectedRoute><ViewEmployees/></ProtectedRoute>}/>
                             <Route path="/underwriter" element={<UnderwriterPersona/>}/>
                             <Route path="/businessanalyst" element={<BusinessAnalystPersona/>}/>

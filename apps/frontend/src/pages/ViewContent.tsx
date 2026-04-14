@@ -44,15 +44,16 @@ import {
     getCategory,
     getExtension,
     getOriginalFilename,
-} from "@/helpers/mime.ts";
+} from "@/lib/mime.ts";
 import { ContentExtBadge } from "@/components/shared/ContentExtBadge.tsx";
 import { ContentStatusBadge } from "@/components/shared/ContentStatusBadge.tsx";
 import { ContentTypeBadge } from "@/components/shared/ContentTypeBadge.tsx";
 import { PersonaBadge } from "@/components/shared/PersonaBadge.tsx";
 import { EditContentDialog } from "@/dialogs/EditContentDialog.tsx";
+import { AddContentDialog } from "@/dialogs/AddContentDialog.tsx";
 import { FilePreview } from "@/components/FilePreview.tsx";
 import { useAuth0 } from "@auth0/auth0-react"
-import {highlight} from "@/helpers/highlight.tsx";
+import {highlight} from "@/lib/highlight.tsx";
 
 // Matches the Content model from Prisma (with joined owner)
 export interface ContentItem {
@@ -60,7 +61,7 @@ export interface ContentItem {
     displayName: string;
     linkURL: string | null;
     fileURI: string | null;
-    ownerID: number | null;
+    ownerId: number | null;
     owner: {
         id: number;
         firstName: string;
@@ -83,6 +84,7 @@ export interface ContentItem {
 function ViewContent() {
     const [content, setContent] = useState<ContentItem[]>([]);
     const [loading, setLoading] = useState(true);
+    const [addOpen, setAddOpen] = useState(false);
     const [editOpen, setEditOpen] = useState(false);
     const [editingContent, setEditingContent] = useState<ContentItem | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -135,7 +137,7 @@ function ViewContent() {
             !advancedFilters.bookmarkedOnly || bookmarks.has(item.id);
 
         const matchesOwner =
-            !advancedFilters.ownedByMe || item.ownerID === user?.id;
+            !advancedFilters.ownedByMe || item.ownerId === user?.id;
 
         return (
             matchesStatus &&
@@ -230,7 +232,7 @@ function ViewContent() {
 
     function canEdit(item: ContentItem): boolean {
         if (user!.persona === "admin") return true;
-        return item.targetPersona === user!.persona || item.ownerID === user!.id;
+        return item.targetPersona === user!.persona || item.ownerId === user!.id;
     }
 
     function isCheckedOut(item: ContentItem): boolean {
@@ -343,22 +345,18 @@ function ViewContent() {
                         <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
                             <FolderOpen className="w-10 h-10" />
                             <p className="text-sm">No content found.</p>
-                            <Link to="/manageform">
-                                <Button className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-60 rounded-lg px-2 py-6 text-xl">Add Content +</Button>
-                            </Link>
+                            <Button onClick={() => setAddOpen(true)} className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-60 rounded-lg px-2 py-6 text-xl">Add Content +</Button>
                         </div>
                     )}
                     {!loading && !error && content.length > 0 && <>
                         <div className="flex flex-row justify-between items-baseline mb-8">
                             <div>
-                                <Link to="/manageform">
-                                    <Button className="p-0! gap-0! border-0! group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-45 hover:bg-primary-dark hover:text-primary-foreground active:brightness-80 transition-all bg-primary text-primary-foreground w-12 h-12 text-lg justify-start">
-                                        <span className="flex items-center justify-center min-w-12 h-12">
-                                            <Plus className="w-8! h-8! text-primary-foreground " />
-                                        </span>
-                                        <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Add Content</span>
-                                    </Button>
-                                </Link>
+                                <Button onClick={() => setAddOpen(true)} className="p-0! gap-0! border-0! group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-45 hover:bg-primary-dark hover:text-primary-foreground active:brightness-80 transition-all bg-primary text-primary-foreground w-12 h-12 text-lg justify-start">
+                                    <span className="flex items-center justify-center min-w-12 h-12">
+                                        <Plus className="w-8! h-8! text-primary-foreground " />
+                                    </span>
+                                    <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Add Content</span>
+                                </Button>
                             </div>
                             <div className="flex flex-row gap-2 items-center">
                                 <Button
@@ -844,6 +842,22 @@ function ViewContent() {
                 onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
                 description={deleteTarget ? <span>This will permanently delete <strong>"{deleteTarget.displayName}"</strong>.</span> : undefined}
                 onConfirm={() => handleDelete(deleteTarget!.id)}
+            />
+
+            <AddContentDialog
+                open={addOpen}
+                onOpenChange={setAddOpen}
+                onSave={(created) => {
+                    setContent((prev) => [...prev, created]);
+                    if (created.linkURL) {
+                        fetch(`/api/preview?url=${encodeURIComponent(created.linkURL)}`)
+                            .then((r) => r.ok ? r.json() : null)
+                            .then((preview) => {
+                                if (preview) setLinkPreviews((prev) => ({ ...prev, [created.id]: preview }));
+                            })
+                            .catch(() => {});
+                    }
+                }}
             />
 
             {editingContent && (

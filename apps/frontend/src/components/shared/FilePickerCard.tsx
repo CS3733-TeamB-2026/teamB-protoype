@@ -3,7 +3,7 @@ import { X, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import { ContentIcon } from "@/components/shared/ContentIcon.tsx";
-import { resolveAllowedType, CATEGORY_COLORS } from "@/helpers/mime.ts";
+import { resolveAllowedType, CATEGORY_COLORS } from "@/lib/mime.ts";
 
 interface Props {
     file: File | null;

@@ -6,8 +6,8 @@ import { EmployeeCard, type EmployeeCardData } from "@/components/shared/Employe
 import { useAuth0 } from "@auth0/auth0-react"
 
 interface Props {
-    selectedId: number;
-    onSelect: (id: number) => void;
+    selectedId: number | null;
+    onSelect: (id: number | null) => void;
 }
 
 export function EmployeePicker({ selectedId, onSelect }: Props) {
@@ -45,7 +45,7 @@ export function EmployeePicker({ selectedId, onSelect }: Props) {
         return () => document.removeEventListener("mousedown", handleClick);
     }, [open]);
 
-    const selected = employees.find((e) => Number(e.id) === Number(selectedId));
+    const selected = selectedId != null ? employees.find((e) => e.id === selectedId) : undefined;
 
     const filtered = employees.filter((e) => {
         const q = search.toLowerCase().trim();
@@ -96,28 +96,42 @@ export function EmployeePicker({ selectedId, onSelect }: Props) {
                                 <Loader2 className="w-4 h-4 animate-spin" />
                                 <span className="text-sm">Loading employees...</span>
                             </div>
-                        ) : filtered.length === 0 ? (
-                            <p className="text-sm text-muted-foreground text-center py-6">
-                                No employees found.
-                            </p>
                         ) : (
-                            filtered.map((emp) => (
+                            <>
                                 <Button
-                                    key={emp.id}
                                     type="button"
                                     variant="ghost"
-                                    className={`w-full justify-start h-auto px-3 py-2 font-normal rounded-none ${
-                                        Number(emp.id) === Number(selectedId) ? "bg-accent" : ""
+                                    className={`w-full justify-start h-auto px-3 py-2 font-normal rounded-none text-muted-foreground ${
+                                        selectedId === null ? "bg-accent" : ""
                                     }`}
-                                    onClick={() => {
-                                        onSelect(emp.id);
-                                        setOpen(false);
-                                        setSearch("");
-                                    }}
+                                    onClick={() => { onSelect(null); setOpen(false); setSearch(""); }}
                                 >
-                                    <EmployeeCard employee={emp} compact />
+                                    None
                                 </Button>
-                            ))
+                                {filtered.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground text-center py-6">
+                                        No employees found.
+                                    </p>
+                                ) : (
+                                    filtered.map((emp) => (
+                                        <Button
+                                            key={emp.id}
+                                            type="button"
+                                            variant="ghost"
+                                            className={`w-full justify-start h-auto px-3 py-2 font-normal rounded-none ${
+                                                selectedId != null && emp.id === selectedId ? "bg-accent" : ""
+                                            }`}
+                                            onClick={() => {
+                                                onSelect(emp.id);
+                                                setOpen(false);
+                                                setSearch("");
+                                            }}
+                                        >
+                                            <EmployeeCard employee={emp} compact />
+                                        </Button>
+                                    ))
+                                )}
+                            </>
                         )}
                     </div>
                 </div>

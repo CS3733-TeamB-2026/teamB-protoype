@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
-import { ALLOWED_ACCEPT_STRING, validateFileForUpload, stripExtension } from "@/helpers/mime.ts";
+import { ALLOWED_ACCEPT_STRING, validateFileForUpload, stripExtension } from "@/lib/mime.ts";
 import { UrlSourceField } from "@/components/shared/UrlSourceField.tsx";
 import { FilePickerCard } from "@/components/shared/FilePickerCard.tsx";
 import { EmployeePicker } from "@/components/shared/EmployeePicker.tsx";
@@ -120,7 +120,7 @@ export function ContentFormFields({ values, patch, errors, showLastModified = fa
                 <FieldLabel className="text-primary">Owner Employee</FieldLabel>
                 <EmployeePicker
                     selectedId={values.ownerID}
-                    onSelect={(id) => patch({ ownerID: id })}
+                    onSelect={(id) => patch({ ownerID: id ?? null })}
                 />
             </Field>
 
@@ -223,19 +223,17 @@ export function ContentFormFields({ values, patch, errors, showLastModified = fa
 
             {/* Document Type */}
             <Field className="bg-background">
-                <FieldLabel className="text-primary">
-                    Type of Document <span className="text-destructive">*</span>
-                </FieldLabel>
+                <FieldLabel className="text-primary">Type of Document</FieldLabel>
                 <Select value={values.contentType} onValueChange={(v) => patch({ contentType: v as ContentFormValues["contentType"] })}>
                     <SelectTrigger className="bg-background">
                         <SelectValue placeholder="Select document type" />
                     </SelectTrigger>
                     <SelectContent>
+                        <SelectItem value="">None</SelectItem>
                         <SelectItem value="reference">Reference Content</SelectItem>
                         <SelectItem value="workflow">Workflow Content</SelectItem>
                     </SelectContent>
                 </Select>
-                {errors.contentType && <FieldDescription className="text-destructive">{errors.contentType}</FieldDescription>}
             </Field>
 
             {/* Document Status */}
@@ -243,9 +241,10 @@ export function ContentFormFields({ values, patch, errors, showLastModified = fa
                 <FieldLabel className="text-primary">Document Status</FieldLabel>
                 <Select value={values.status} onValueChange={(v) => patch({ status: v as ContentFormValues["status"] })}>
                     <SelectTrigger className="bg-background">
-                        <SelectValue />
+                        <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent>
+                        <SelectItem value="">None</SelectItem>
                         <SelectItem value="new">New</SelectItem>
                         <SelectItem value="inProgress">In Progress</SelectItem>
                         <SelectItem value="complete">Complete</SelectItem>
