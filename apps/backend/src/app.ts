@@ -9,7 +9,7 @@ import * as login from './hooks/login'
 import * as servicereqs from './hooks/servicereqs'
 import * as content from './hooks/content'
 import * as employee from './hooks/employee'
-
+import { auth } from 'express-oauth2-jwt-bearer'
 
 const app = express();
 app.use(cors());
@@ -18,7 +18,13 @@ app.use(express.json());
 const upload = multer({ storage: multer.memoryStorage() });
 const LOCK_TIMEOUT_MS = 2 * 60 * 1000;
 
+const checkJwt = auth({
+    audience: 'https://hanover-cma-api',
+    issuerBaseURL: 'https://dev-s638hh1d5ry67sv6.us.auth0.com/'
+})
 
+// Protect all routes
+app.use('/api', checkJwt);
 
 // Login
 app.post("/api/login", login.tryLogin);
