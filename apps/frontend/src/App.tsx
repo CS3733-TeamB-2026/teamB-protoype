@@ -15,9 +15,10 @@ import ViewEmployees from "@/pages/ViewEmployees.tsx";
 import ViewContent from "@/pages/ViewContent.tsx";
 import { ViewSingleFile } from "@/pages/VIewSingleFile.tsx";
 import SidebarOverlay from "./components/layout/SidebarOverlay.tsx";
-import { Route, Routes} from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 
 function App() {
+
     // Your application must be wrapped with the BrowserRouter component to enable routing
     return (
 
