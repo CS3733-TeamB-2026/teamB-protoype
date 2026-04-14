@@ -17,6 +17,7 @@ import {
     SelectValue,
 } from "@/components/ui/select.tsx";
 import type { Employee } from "@/pages/ViewEmployees.tsx";
+import { useAuth0 } from "@auth0/auth0-react";
 
 interface Props {
     content: Employee;
@@ -28,6 +29,7 @@ interface Props {
 export function EditEmployeeDialog({ content, open, onOpenChange, onSave }: Props) {
     const [modified, setModified] = useState<Employee>(content);
     const [error, setError] = useState("");
+    const { getAccessTokenSilently } = useAuth0();
 
     async function handleApply() {
         if (!modified.firstName.trim() || !modified.lastName.trim() || !modified.persona.trim()) {
@@ -36,9 +38,13 @@ export function EditEmployeeDialog({ content, open, onOpenChange, onSave }: Prop
         }
         setError("");
 
+        const token = await getAccessTokenSilently();
         const empRes = await fetch("/api/employee", {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
             body: JSON.stringify({
                 id: modified.id,
                 firstName: modified.firstName,
@@ -48,9 +54,13 @@ export function EditEmployeeDialog({ content, open, onOpenChange, onSave }: Prop
         });
 
         if (modified.login?.userName) {
+            const token = await getAccessTokenSilently();
             await fetch("/api/login", {
                 method: "PUT",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
                 body: JSON.stringify({
                     userName: modified.login.userName,
                     employeeID: modified.id,

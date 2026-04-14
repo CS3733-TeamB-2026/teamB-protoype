@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.tsx";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { Link } from "react-router-dom";
@@ -13,6 +13,7 @@ import { useSortState, applySortState } from "@/hooks/use-sort-state.ts";
 import {PersonaBadge} from "@/components/shared/PersonaBadge.tsx";
 import { useUser } from "@/hooks/use-user.ts";
 import { highlight } from "@/helpers/highlight.tsx";
+import { useAuth0 } from "@auth0/auth0-react";
 
 export type Employee = {
     firstName: string;
@@ -30,18 +31,40 @@ function ViewEmployees() {
     const [editOpen, setEditOpen] = useState(false);
     const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<Employee | null>(null);
-    const [user] = useUser();
+    const user = useUser();
     const [sort, toggleSort] = useSortState<"id" | "firstName" | "lastName" | "persona" | "userName">({column: "id", direction: "asc"});
     const [searchTerm, setSearchTerm] = useState("");
+    const { getAccessTokenSilently } = useAuth0();
+
     useEffect(() => {
+
+        const fetchEmployees = async () => {
+            try {
+                const token = await getAccessTokenSilently();
+                const res = await fetch("/api/employee/all", {
+                    headers: {Authorization: `Bearer ${token}`},
+                })
+                const data = await res.json();
+                setEmployees(data);
+                setLoading(false);
+            } catch {
+                setLoading(false);
+            }
+        }
+
+        fetchEmployees();
+
+        /*
         fetch("/api/employee/all")
             .then((res) => res.json())
             .then((data) => {
                 setEmployees(data);
                 setLoading(false);
             })
-            .catch(() => setLoading(false));
-    }, []);
+            .catch(() => setLoading(false)); */
+
+    }, [getAccessTokenSilently]);
+
     const filteredEmployees = employees.filter((e) => {
         const query = searchTerm.toLowerCase().trim();
 
@@ -57,9 +80,13 @@ function ViewEmployees() {
     });
 
     const handleDelete = async (employee: Employee) => {
+        const token = await getAccessTokenSilently();
         const res = await fetch(`/api/employee`, {
             method: "DELETE",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
             body: JSON.stringify({ id: employee.id }),
         });
         if (res.ok) {
@@ -68,7 +95,11 @@ function ViewEmployees() {
         setDeleteTarget(null);
     };
 
-    if (!user) return null;
+    if (!user) return (
+        <div className="flex items-center justify-center min-h-screen bg-secondary">
+            <Loader2 className="w-10 h-10 text-primary animate-spin" />
+        </div>
+    );
 
     return (
         <>

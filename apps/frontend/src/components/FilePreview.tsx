@@ -9,6 +9,7 @@ import ReactMarkdown from "react-markdown";
 import DocViewer, { DocViewerRenderers } from "@iamjariwala/react-doc-viewer";
 import "@iamjariwala/react-doc-viewer/dist/index.css";
 import { getPreviewMode } from "@/helpers/mime.ts";
+import { useAuth0 } from "@auth0/auth0-react"
 
 function formatBytes(bytes: number): string {
     if (bytes < 1024) return `${bytes} B`;
@@ -34,9 +35,91 @@ export function FilePreview({ filename, src, infoSrc }: Props) {
     const [tableData, setTableData] = useState<string[][] | null>(null);
     const [lightboxOpen, setLightboxOpen] = useState(false);
 
+    const { getAccessTokenSilently } = useAuth0();
+
     useEffect(() => {
+
+        const fetchPreview = async () => {
+
+            try {
+                const token = await getAccessTokenSilently();
+
+                if (infoSrc) {
+                    const res = await fetch(infoSrc, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    });
+                    const meta = await res.json();
+                    setFileSize(meta?.size ?? null);
+                }
+
+                if (previewMode === "none") return;
+
+                let localUrl: string | null = null;
+
+                if (previewMode === "text" || previewMode === "markdown") {
+                    try {
+                        const res = await fetch(src, {
+                            headers: { Authorization: `Bearer ${token}` },
+                        })
+                        if (!res.ok) {
+                            throw new Error();
+                        }
+                        const text = await res.text();
+                        setContent(text);
+                        setStatus("ready");
+                    } catch {
+                        setStatus("error");
+                    }
+
+                } else if (previewMode === "table") {
+                    try {
+                        const res = await fetch(src, {
+                            headers: { Authorization: `Bearer ${token}` },
+                        })
+                        if (!res.ok) throw new Error();
+                        const buf = await res.arrayBuffer();
+                        const wb = XLSX.read(buf, { type: "array" });
+                        const ws = wb.Sheets[wb.SheetNames[0]];
+                        const rows = XLSX.utils.sheet_to_json<string[]>(ws, { header: 1, defval: "" });
+                        setTableData(rows as string[][]);
+                        setStatus("ready");
+                    } catch {
+                        setStatus("error");
+                    }
+
+                } else {
+                    try {
+                        const res = await fetch(src, {
+                            headers: { Authorization: `Bearer ${token}` },
+                        });
+                        if (!res.ok) throw new Error();
+                        const blob = await res.blob();
+                        localUrl = URL.createObjectURL(blob);
+                        setObjectUrl(localUrl);
+                        setStatus("ready");
+                    } catch {
+                        setStatus("error");
+                    }
+                }
+
+                return () => {
+                    if (localUrl) URL.revokeObjectURL(localUrl);
+                };
+
+            } catch {
+                setStatus("error");
+            }
+
+        }
+
+        fetchPreview();
+
+        /* OLD CODE, refactored is above
+        const token = getAccessTokenSilently();
         if (infoSrc) {
-            fetch(infoSrc)
+            fetch(infoSrc, {
+                headers: { Authorization: `Bearer ${token}` },
+            })
                 .then((res) => res.json())
                 .then((meta) => setFileSize(meta?.size ?? null))
                 .catch(() => {});
@@ -47,12 +130,16 @@ export function FilePreview({ filename, src, infoSrc }: Props) {
         let localUrl: string | null = null;
 
         if (previewMode === "text" || previewMode === "markdown") {
-            fetch(src)
+            fetch(src, {
+                headers: { Authorization: `Bearer ${token}` },
+            })
                 .then((res) => { if (!res.ok) throw new Error(); return res.text(); })
                 .then((text) => { setContent(text); setStatus("ready"); })
                 .catch(() => setStatus("error"));
         } else if (previewMode === "table") {
-            fetch(src)
+            fetch(src, {
+                headers: { Authorization: `Bearer ${token}` },
+            })
                 .then((res) => { if (!res.ok) throw new Error(); return res.arrayBuffer(); })
                 .then((buf) => {
                     const wb = XLSX.read(buf, { type: "array" });
@@ -63,7 +150,9 @@ export function FilePreview({ filename, src, infoSrc }: Props) {
                 })
                 .catch(() => setStatus("error"));
         } else {
-            fetch(src)
+            fetch(src, {
+                headers: { Authorization: `Bearer ${token}` },
+            })
                 .then((res) => { if (!res.ok) throw new Error(); return res.blob(); })
                 .then((blob) => {
                     localUrl = URL.createObjectURL(blob);
@@ -76,7 +165,9 @@ export function FilePreview({ filename, src, infoSrc }: Props) {
         return () => {
             if (localUrl) URL.revokeObjectURL(localUrl);
         };
-    }, [infoSrc, previewMode, src]);
+        */
+
+    }, [infoSrc, previewMode, src, getAccessTokenSilently]);
 
     return (
         <div className="bg-background overflow-hidden">
