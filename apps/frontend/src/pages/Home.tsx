@@ -85,7 +85,7 @@ function Home() {
 
             {/*team member cards*/}
             <section className="mt-12 max-w-7xl mx-auto mb-12">
-                <h1 className="text-2xl font-bold text-primary text-center mb-8" >Meet Our Team</h1>
+                <h1 className="text-2xl font-bold text-primary text-center mb-8" >Meet The Team</h1>
                 <div className="flex flex-wrap md:grid-cols-5 gap-6 justify-center">
 
                     {members.map((member: TeamMember) => (
