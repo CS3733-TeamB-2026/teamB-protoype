@@ -30,14 +30,14 @@ model Employee {
   lastName  String
   persona   Persona
 
-  ownedContent      Content[]        @relation("Owned")
-  checkedOutContent Content[]        @relation("CheckedOut")
-  bookmarkedContent Bookmark[]
+  ownedContent      Content[] @relation("Owned")
+  checkedOutContent Content[] @relation("CheckedOut")
 
-  ownedRequests     ServiceRequest[] @relation("OwnedBy")
-  assignedRequests  ServiceRequest[] @relation("AssignedTo")
+  ownedRequests    ServiceRequest[] @relation("OwnedBy")
+  assignedRequests ServiceRequest[] @relation("AssignedTo")
 
-  login             Login?
+  login     Login?
+  bookmarks Bookmark[]
 
   @@schema("public")
 }
@@ -51,11 +51,9 @@ model Content {
   owner   Employee? @relation("Owned", fields: [ownerId], references: [id], onDelete: SetNull)
   ownerId Int?
 
-  bookmarkedBy Bookmark[]
-
-  checkedOutById         Int?
-  checkedOutAt         DateTime?
-  checkedOutBy Employee? @relation("CheckedOut", fields: [checkedOutById], references: [id], onDelete: SetNull)
+  checkedOutById Int?
+  checkedOutAt   DateTime?
+  checkedOutBy   Employee? @relation("CheckedOut", fields: [checkedOutById], references: [id], onDelete: SetNull)
 
   lastModified DateTime
   expiration   DateTime?
@@ -63,6 +61,7 @@ model Content {
   contentType   ContentType
   targetPersona Persona
   status        Status?
+  bookmarks     Bookmark[]
 
   @@schema("public")
 }
@@ -84,12 +83,12 @@ model ServiceRequest {
 }
 
 model Bookmark {
-  bookmarker Employee @relation(fields: [bookmarkerId], references: [id])
-  bookmarkerId Int
-  bookmarkedContent Content @relation(fields: [bookmarkedContentId], references: [id])
+  bookmarker          Employee @relation(fields: [bookmarkerId], references: [id])
+  bookmarkerId        Int
+  bookmarkedContent   Content  @relation(fields: [bookmarkedContentId], references: [id])
   bookmarkedContentId Int
-  @@id([bookmarkerId, bookmarkedContentId])
 
+  @@id([bookmarkerId, bookmarkedContentId])
   @@schema("public")
 }
 

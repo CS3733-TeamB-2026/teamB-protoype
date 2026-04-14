@@ -94,16 +94,6 @@ export class Content {
         })
     }
 
-    public static async queryContentByBookmarkerId(bookmarkerId: number) {
-        return prisma.content.findMany({
-            include: {
-                bookmarkedBy: {
-                    where: { bookmarkerId: bookmarkerId }
-                }
-            }
-        })
-    }
-
     public static async deleteContent(id: number): Promise<void> {
         await prisma.content.delete({
             where: {id: id},
