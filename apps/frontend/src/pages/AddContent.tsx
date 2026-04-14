@@ -1,265 +1,255 @@
 "use client";
 import * as React from "react";
-import {useState} from "react";
-import {Field, FieldLabel, FieldDescription} from "@/components/ui/field.tsx";
-import {Input} from "@/components/ui/input.tsx";
+import { useState } from "react";
+import { Field, FieldLabel, FieldDescription } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover.tsx";
-import {Calendar} from "@/components/ui/calendar.tsx";
-import { Hero } from "@/components/shared/Hero.tsx"
-import { FilePlus } from "lucide-react"
-
+import { Calendar } from "@/components/ui/calendar.tsx";
+import { Hero } from "@/components/shared/Hero.tsx";
+import { FilePlus } from "lucide-react";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuGroup,
-    DropdownMenuLabel,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx";
-import {Button} from "@/components/ui/button.tsx";
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import { useUser } from "@/hooks/use-user.ts";
-import {Separator} from "@/components/ui/separator.tsx";
+import { ALLOWED_ACCEPT_STRING, validateFileForUpload, stripExtension } from "@/helpers/mime.ts";
+import { Separator } from "@/components/ui/separator.tsx";
 import { Card } from "@/components/ui/card.tsx";
-import {Label} from "@/components/ui/label.tsx";
-import {RadioGroup, RadioGroupItem} from "@/components/ui/radio-group.tsx";
-import {ChevronDown} from "lucide-react";
+import { Label } from "@/components/ui/label.tsx";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
+import { toast } from "sonner";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
+import { UrlSourceField } from "@/components/shared/UrlSourceField.tsx";
+import { FilePickerCard } from "@/components/shared/FilePickerCard.tsx";
+
+type ContentFormValues = {
+    name: string;
+    linkUrl: string;
+    ownerID: number;
+    contentType: "reference" | "workflow" | "";
+    status: "new" | "inProgress" | "complete";
+    jobPosition: string;
+    uploadMode: "url" | "file";
+    file: File | null;
+    dateModified: Date | undefined;
+    lastModifiedTime: string;
+    dateExpiration: Date | undefined;
+};
+
+function nowTimeString(): string {
+    return new Date().toTimeString().substring(0, 8);
+}
+
+function isValidUrl(url: string): boolean {
+    try { new URL(url); return true; } catch { return false; }
+}
+
+function initialValues(userId: number): ContentFormValues {
+    return {
+        name: "",
+        linkUrl: "",
+        ownerID: userId,
+        contentType: "",
+        status: "new",
+        jobPosition: "",
+        uploadMode: "url",
+        file: null,
+        dateModified: new Date(),
+        lastModifiedTime: nowTimeString(),
+        dateExpiration: undefined,
+    };
+}
 
 function AddContent() {
     const [user] = useUser();
-    const [name, setName] = useState("");
-    const [linkUrl, setLinkUrl] = useState("");
-    const [ownerID, setOwnerID] = useState(user?.id ?? 0);
-    const [contentType, setContentType] = useState<"reference" | "workflow">(
-        "reference",
-    );
-    const [status, setStatus] = useState<"new" | "inProgress" | "complete">(
-        "new",
-    );
-    const [expirationTime, setExpirationTime] = useState(() =>
-        new Date().toTimeString().substring(0, 8),
-    );
-    const [jobPosition, setJobPosition] = useState("Select job position");
-    const [open, setOpen] = React.useState(false);
-    const [date, setDate] = React.useState<Date | undefined>(new Date());
-    const [open2, setOpen2] = React.useState(false);
-    const [date2, setDate2] = React.useState<Date | undefined>(undefined);
-    const [lastModifiedTime, setLastModifiedTime] = React.useState(() =>
-        new Date().toTimeString().substring(0, 8),
-    );
-    const [fileKey, setFileKey] = useState(0);
-    const [uploadMode, setUploadMode] = React.useState<"url" | "file">("url");
-    const [file, setFile] = React.useState<File | null>(null);
-    const [submitResult, setSubmitResult] = useState<"success" | "error" | null>(null)
+    const [values, setValues] = useState<ContentFormValues>(() => initialValues(user?.id ?? 0));
+    const patch = (p: Partial<ContentFormValues>) => setValues(prev => ({ ...prev, ...p }));
 
-    // Function to handle post requests to backend
+    // UI-only state
+    const [openModifiedDate, setOpenModifiedDate] = React.useState(false);
+    const [openExpirationDate, setOpenExpirationDate] = React.useState(false);
+    const [filePickError, setFilePickError] = useState<string | null>(null);
+    const [submitted, setSubmitted] = useState(false);
+
+    function getErrors() {
+        const e: Record<string, string> = {};
+        if (!values.name.trim()) e.name = "Name is required.";
+        if (values.uploadMode === "url") {
+            if (!values.linkUrl.trim()) e.source = "URL is required.";
+            else if (!isValidUrl(values.linkUrl)) e.source = "Please enter a valid URL.";
+        }
+        if (values.uploadMode === "file" && !values.file) e.source = "Please select a file.";
+        if (!values.jobPosition) e.persona = "Please select a job position.";
+        if (!values.contentType) e.contentType = "Please select a document type.";
+        return e;
+    }
+
+    const errors = submitted ? getErrors() : {};
+
+    const handleFileChange = (file: File | null) => {
+        setFilePickError(null);
+        if (!file) { patch({ file: null }); return; }
+
+        const validation = validateFileForUpload(file);
+        if (!validation.ok) {
+            setFilePickError(validation.reason);
+            patch({ file: null });
+            return;
+        }
+
+        const lastMod = new Date(file.lastModified);
+        patch({
+            file,
+            name: stripExtension(file.name),
+            dateModified: lastMod,
+            lastModifiedTime: lastMod.toTimeString().substring(0, 8),
+        });
+    };
+
     const handleSubmit = async () => {
+        setSubmitted(true);
+        if (Object.keys(getErrors()).length > 0) return;
+
         try {
-
             const formData = new FormData();
-            formData.append("name", name);
-            formData.append("linkURL", uploadMode === "url" ? linkUrl : "");
-            formData.append("ownerID", ownerID.toString());
-            formData.append("contentType", contentType);
-            formData.append("status", status);
-            formData.append("lastModified", date?.toISOString() ?? "");
-            formData.append("expiration", date2?.toISOString() ?? "");
-            formData.append("jobPosition", jobPosition);
+            formData.append("name", values.name);
+            formData.append("linkURL", values.uploadMode === "url" ? values.linkUrl : "");
+            formData.append("ownerID", values.ownerID.toString());
+            formData.append("contentType", values.contentType);
+            formData.append("status", values.status);
 
-            if (uploadMode === "file" && file) {
-                formData.append("file", file);
+            const lastModifiedDate = values.dateModified ? new Date(values.dateModified) : new Date();
+            const [lmh, lmm, lms] = values.lastModifiedTime.split(":").map(Number);
+            lastModifiedDate.setHours(lmh, lmm, lms ?? 0, 0);
+            formData.append("lastModified", lastModifiedDate.toISOString());
+
+            if (values.dateExpiration) {
+                const expDate = new Date(values.dateExpiration);
+                expDate.setHours(0, 0, 0, 0);
+                formData.append("expiration", expDate.toISOString());
+            } else {
+                formData.append("expiration", "");
+            }
+            formData.append("jobPosition", values.jobPosition);
+            if (values.uploadMode === "file" && values.file) {
+                formData.append("file", values.file);
             }
 
-            const res = await fetch("/api/content", {
-                method: "POST",
-                body: formData,
-            });
-            if (!res.ok) {
-                setSubmitResult("error");
-                return
-            }
+            const res = await fetch("/api/content", { method: "POST", body: formData });
+            if (!res.ok) { toast.error("Error creating content."); return; }
 
-            if (res.status === 201) {
-                setSubmitResult("success")
-                setName("");
-                setLinkUrl("");
-                setOwnerID(user?.id ?? 0);
-                setContentType("reference");
-                setStatus("new");
-                setJobPosition("Select job position");
-                setDate(new Date());
-                setDate2(undefined);
-                setLastModifiedTime(new Date().toTimeString().substring(0, 8));
-                setExpirationTime(new Date().toTimeString().substring(0, 8));
-                setFileKey((prev) => prev + 1);
-                setFile(null);
-            }
+            toast.success("Content created successfully!");
+            setValues(initialValues(user!.id));
+            setSubmitted(false);
+            setFilePickError(null);
         } catch {
-            setSubmitResult("error")
+            toast.error("Error creating content.");
         }
     };
 
     if (!user) return null;
 
     return (
-
         <>
-
             <Hero
                 title="Add Content"
                 description="Add new content here."
-                icon={ FilePlus }
+                icon={FilePlus}
             />
 
-            {/*This gives space between the border and content*/}
             <div className="bg-secondary px-4">
-                {/*This does the border around the screen*/}
                 <Card className="shadow-lg max-w-5xl mx-auto mt-8 text-center mb-8">
                     <div className="px-6">
                         <>
-                            {/*Title*/}
                             <div className="bg-background py-4 text-center">
-                                <h1 className="text-primary text-2xl font-semibold">
-                                    Add Content
-                                </h1>
+                                <h1 className="text-primary text-2xl font-semibold">Add Content</h1>
                             </div>
 
-                            {/*Separator*/}
                             <div className="bg-background py-2">
-                                <Separator className="bg-primary"/>
+                                <Separator className="bg-primary" />
                             </div>
 
-                            {/*Input Name Field*/}
-                            {/*TEXTBOX*/}
-                            <Field className="bg-background ">
-                                {/*Primary Color and input field*/}
-                                <FieldLabel
-                                    className="text-primary"
-                                    htmlFor="input-field-name"
-                                >
-                                    Name
+                            {/*Name*/}
+                            <Field className="bg-background">
+                                <FieldLabel className="text-primary" htmlFor="input-field-name">
+                                    Name <span className="text-destructive">*</span>
                                 </FieldLabel>
                                 <Input
                                     id="input-field-name"
                                     type="text"
                                     placeholder="Enter document name"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
+                                    value={values.name}
+                                    onChange={(e) => patch({ name: e.target.value })}
                                 />
+                                {errors.name && <FieldDescription className="text-destructive">{errors.name}</FieldDescription>}
                             </Field>
 
-                            {/*Separator*/}
                             <div className="bg-background py-2">
-                                <Separator className="bg-primary"/>
+                                <Separator className="bg-primary" />
                             </div>
 
-                            {/*Content source selector*/}
-                            <div className="flex gap-4">
-                                <Field className="bg-background">
-                                    <FieldLabel className="text-primary">
-                                        Content Source
-                                    </FieldLabel>
-                                    <RadioGroup
-                                        value={uploadMode}
-                                        onValueChange={(v) =>
-                                            setUploadMode(v as "url" | "file")
-                                        }
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            <RadioGroupItem
-                                                value="url"
-                                                id="mode-url"
-                                            />
-                                            <Label htmlFor="mode-url">URL</Label>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <RadioGroupItem
-                                                value="file"
-                                                id="mode-file"
-                                            />
-                                            <Label htmlFor="mode-file">
-                                                File Upload
-                                            </Label>
-                                        </div>
-                                    </RadioGroup>
-                                </Field>
-
-                                <Separator
-                                    className="bg-primary"
-                                    orientation="vertical"
-                                />
-
-                                {uploadMode === "url" ? (
-                                    <Field className="bg-background ">
-                                        {/*Input Url Field*/}
-                                        <FieldLabel
-                                            className="text-primary"
-                                            htmlFor="input-field-url"
-                                        >
-                                            URL
-                                        </FieldLabel>
-                                        <Input
-                                            id="input-field-url"
-                                            type="text"
-                                            placeholder="Enter the URL of the link"
-                                            value={linkUrl}
-                                            onChange={(e) =>
-                                                setLinkUrl(e.target.value)
-                                            }
-                                        />
-                                    </Field>
-                                ) : (
-                                    <Field className="bg-background">
-                                        {/*File upload field*/}
-                                        <FieldLabel
-                                            className="text-primary"
-                                            htmlFor="file"
-                                        >
-                                            File Upload
-                                        </FieldLabel>
-                                        <Input
-                                            key={fileKey}
-                                            id="file"
-                                            type="file"
-                                            onChange={(e) =>
-                                                setFile(e.target.files?.[0] ?? null)
-                                            }
-                                        />
-                                        <FieldDescription>
-                                            Select a file to upload.
-                                        </FieldDescription>
-                                    </Field>
-                                )}
-                            </div>
-
-                            {/*Separator*/}
-                            <div className="bg-background py-2">
-                                <Separator className="bg-primary"/>
-                            </div>
-
-                            {/*Employee ID Field*/}
-                            {/*Only allows ints*/}
-                            {/*<Field className="bg-background">*/}
-                            {/*    <Input*/}
-                            {/*        id="input-employee-id"*/}
-                            {/*        type="number"*/}
-                            {/*        placeholder="000000"*/}
-                            {/*        value={ownerID}*/}
-                            {/*        onChange={(e) => setOwnerID(e.target.value)}*/}
-                            {/*    />*/}
-                            {/*    <FieldDescription>*/}
-                            {/*        /!* TODO: Enter the employee ID of the content owner*!/*/}
-                            {/*    </FieldDescription>*/}
-                            {/*</Field>*/}
+                            {/*Content Source*/}
                             <Field className="bg-background">
                                 <FieldLabel className="text-primary">
-                                    Owner Employee
+                                    Content Source <span className="text-destructive">*</span>
                                 </FieldLabel>
+                                <RadioGroup
+                                    value={values.uploadMode}
+                                    onValueChange={(v) => {
+                                        const mode = v as "url" | "file";
+                                        patch({ uploadMode: mode });
+                                        if (mode === "file" && values.file) {
+                                            handleFileChange(values.file);
+                                        }
+                                    }}
+                                    className="flex gap-6"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <RadioGroupItem value="url" id="mode-url" />
+                                        <Label htmlFor="mode-url">URL</Label>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <RadioGroupItem value="file" id="mode-file" />
+                                        <Label htmlFor="mode-file">File Upload</Label>
+                                    </div>
+                                </RadioGroup>
+
+                                {values.uploadMode === "url" ? (
+                                    <UrlSourceField
+                                        value={values.linkUrl}
+                                        onChange={(url) => patch({ linkUrl: url })}
+                                        onPreviewLoaded={(preview) => patch({
+                                            ...(preview.title ? { name: preview.title } : {}),
+                                            dateModified: new Date(),
+                                            lastModifiedTime: nowTimeString(),
+                                        })}
+                                        error={errors.source}
+                                    />
+                                ) : (
+                                    <FilePickerCard
+                                        file={values.file}
+                                        onChange={handleFileChange}
+                                        error={filePickError ?? errors.source}
+                                        accept={ALLOWED_ACCEPT_STRING}
+                                    />
+                                )}
+                            </Field>
+
+                            <div className="bg-background py-2">
+                                <Separator className="bg-primary" />
+                            </div>
+
+                            {/*Owner*/}
+                            <Field className="bg-background">
+                                <FieldLabel className="text-primary">Owner Employee</FieldLabel>
                                 <Card className="text-left p-4">
                                     <div className="flex items-center gap-3">
                                         <Avatar className="w-10 h-10">
@@ -275,276 +265,136 @@ function AddContent() {
                                 </Card>
                             </Field>
 
-                            {/*Separator*/}
                             <div className="bg-background py-2">
-                                <Separator className="bg-primary"/>
+                                <Separator className="bg-primary" />
                             </div>
 
-                            {/*Job position dropdown, this needs to be updated*/}
+                            {/*Target Persona*/}
                             <Field className="bg-background">
                                 <FieldLabel className="text-primary">
-                                    Select job position
+                                    Target Persona <span className="text-destructive">*</span>
                                 </FieldLabel>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="bg-background justify-between">
-                                            {jobPosition === "underwriter" ? "Underwriter" : jobPosition === "businessAnalyst" ? "Business Analyst" : jobPosition === "admin" ? "Admin" : "Select job position"}
-                                            <ChevronDown className="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                        <DropdownMenuGroup>
-                                            <DropdownMenuLabel>
-                                                Job Position
-                                            </DropdownMenuLabel>
-                                            <DropdownMenuRadioGroup
-                                                value={jobPosition}
-                                                onValueChange={setJobPosition}
-                                            >
-                                                <DropdownMenuRadioItem value="underwriter">
-                                                    Underwriter
-                                                </DropdownMenuRadioItem>
-                                                <DropdownMenuRadioItem value="businessAnalyst">
-                                                    Business Analyst
-                                                </DropdownMenuRadioItem>
-                                                <DropdownMenuRadioItem value="admin">
-                                                    Admin
-                                                </DropdownMenuRadioItem>
-                                            </DropdownMenuRadioGroup>
-                                        </DropdownMenuGroup>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                <Select value={values.jobPosition} onValueChange={(v) => patch({ jobPosition: v })}>
+                                    <SelectTrigger className="bg-background">
+                                        <SelectValue placeholder="Select job position" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="underwriter">Underwriter</SelectItem>
+                                        <SelectItem value="businessAnalyst">Business Analyst</SelectItem>
+                                        <SelectItem value="admin">Admin</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {errors.persona && <FieldDescription className="text-destructive">{errors.persona}</FieldDescription>}
                             </Field>
 
-                            {/*Separator*/}
                             <div className="bg-background py-2">
-                                <Separator className="bg-primary"/>
+                                <Separator className="bg-primary" />
                             </div>
 
-                            {/*Date Picker Region*/}
+                            {/*Dates*/}
                             <div className="flex flex-wrap items-end gap-4 bg-background py-4">
-                                {/*Last modified date*/}
-                                {/*TODO: Consider whether to do this*/}
                                 <Field className="bg-background flex-1">
-                                    <FieldLabel
-                                        className="text-primary"
-                                        htmlFor="date"
-                                    >
+                                    <FieldLabel className="text-primary" htmlFor="date">
                                         Last Modified Date
                                     </FieldLabel>
-                                    <Popover open={open} onOpenChange={setOpen}>
+                                    <Popover open={openModifiedDate} onOpenChange={setOpenModifiedDate}>
                                         <PopoverTrigger asChild>
-                                            <Button
-                                                variant="outline"
-                                                id="date"
-                                                className="justify-start font-normal"
-                                            >
-                                                {date
-                                                    ? date.toLocaleDateString()
-                                                    : "Select date"}
+                                            <Button variant="outline" id="date" className="justify-start font-normal" disabled={values.uploadMode === "file" && values.file !== null}>
+                                                {values.dateModified ? values.dateModified.toLocaleDateString() : "Select date"}
                                             </Button>
                                         </PopoverTrigger>
-                                        <PopoverContent
-                                            className="w-auto overflow-hidden p-0"
-                                            align="start"
-                                        >
+                                        <PopoverContent className="w-auto overflow-hidden p-0" align="start">
                                             <Calendar
                                                 mode="single"
-                                                selected={date}
-                                                defaultMonth={date}
+                                                selected={values.dateModified}
+                                                defaultMonth={values.dateModified}
                                                 captionLayout="dropdown"
-                                                onSelect={(date) => {
-                                                    setDate(date);
-                                                    setOpen(false);
-                                                }}
+                                                onSelect={(date) => { patch({ dateModified: date }); setOpenModifiedDate(false); }}
                                             />
                                         </PopoverContent>
                                     </Popover>
                                 </Field>
 
-                                {/*Time picker last modified*/}
                                 <Field className="w-32">
-                                    <FieldLabel
-                                        className="text-primary"
-                                        htmlFor="time-picker-lastmodified"
-                                    >
+                                    <FieldLabel className="text-primary" htmlFor="time-picker-lastmodified">
                                         Time
                                     </FieldLabel>
                                     <Input
                                         type="time"
                                         id="time-picker-lastmodified"
                                         step="1"
-                                        value={lastModifiedTime}
-                                        onChange={(e) =>
-                                            setLastModifiedTime(e.target.value)
-                                        }
+                                        value={values.lastModifiedTime}
+                                        onChange={(e) => patch({ lastModifiedTime: e.target.value })}
+                                        disabled={values.uploadMode === "file" && values.file !== null}
                                         className="appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
                                     />
                                 </Field>
-                                <Separator
-                                    className="bg-primary"
-                                    orientation="vertical"
-                                />
 
-                                {/*Expiration Date Picker*/}
+                                <Separator className="bg-primary" orientation="vertical" />
+
                                 <Field className="bg-background flex-1">
-                                    <FieldLabel
-                                        className="text-primary"
-                                        htmlFor="date-picker-expirationdate"
-                                    >
+                                    <FieldLabel className="text-primary" htmlFor="date-picker-expirationdate">
                                         Expiration Date
                                     </FieldLabel>
-                                    <Popover open={open2} onOpenChange={setOpen2}>
+                                    <Popover open={openExpirationDate} onOpenChange={setOpenExpirationDate}>
                                         <PopoverTrigger asChild>
-                                            <Button
-
-                                                variant="outline"
-                                                id="date-picker-expirationdate"
-                                                className="justify-start font-normal"
-                                            >
-                                                {date2
-                                                    ? date2.toLocaleDateString()
-                                                    : "Select date"}
+                                            <Button variant="outline" id="date-picker-expirationdate" className="justify-start font-normal">
+                                                {values.dateExpiration ? values.dateExpiration.toLocaleDateString() : "Select date"}
                                             </Button>
                                         </PopoverTrigger>
-                                        <PopoverContent
-                                            className="w-auto overflow-hidden p-0"
-                                            align="start"
-                                        >
+                                        <PopoverContent className="w-auto overflow-hidden p-0" align="start">
                                             <Calendar
                                                 mode="single"
-                                                selected={date2}
-                                                defaultMonth={date2}
+                                                selected={values.dateExpiration}
+                                                defaultMonth={values.dateExpiration}
                                                 captionLayout="dropdown"
-                                                onSelect={(date) => {
-                                                    setDate2(date);
-                                                    setOpen2(false);
-                                                }}
+                                                onSelect={(date) => { patch({ dateExpiration: date }); setOpenExpirationDate(false); }}
                                             />
                                         </PopoverContent>
                                     </Popover>
                                 </Field>
-
-                                {/*Time Picker Expiration Date*/}
-                                <Field className="w-32">
-                                    <FieldLabel
-                                        className="text-primary"
-                                        htmlFor="time-picker-expirationdate"
-                                    >
-                                        Time
-                                    </FieldLabel>
-                                    <Input
-                                        type="time"
-                                        id="time-picker-expirationdate"
-                                        step="1"
-                                        value={expirationTime}
-                                        onChange={(e) =>
-                                            setExpirationTime(e.target.value)
-                                        }
-
-                                        className="appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-                                    />
-                                </Field>
                             </div>
 
-                            {/*Separator*/}
                             <div className="bg-background py-2">
-                                <Separator className="bg-primary"/>
+                                <Separator className="bg-primary" />
                             </div>
 
-                            {/*Type of document dropdown*/}
+                            {/*Document Type*/}
                             <Field className="bg-background">
                                 <FieldLabel className="text-primary">
-                                    Type of Document
+                                    Type of Document <span className="text-destructive">*</span>
                                 </FieldLabel>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="bg-background justify-between">
-                                            {contentType === "reference"
-                                                ? "Reference Content"
-                                                : "Workflow Content"}
-                                            <ChevronDown className="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                        <DropdownMenuGroup>
-                                            <DropdownMenuLabel>
-                                                Document Type
-                                            </DropdownMenuLabel>
-                                            <DropdownMenuRadioGroup
-                                                value={contentType}
-                                                onValueChange={(v) =>
-                                                    setContentType(v as "reference" | "workflow")
-                                                }
-                                            >
-                                                <DropdownMenuRadioItem value="reference">
-                                                    Reference Content
-                                                </DropdownMenuRadioItem>
-                                                <DropdownMenuRadioItem value="workflow">
-                                                    Workflow Content
-                                                </DropdownMenuRadioItem>
-                                            </DropdownMenuRadioGroup>
-                                        </DropdownMenuGroup>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                <Select value={values.contentType} onValueChange={(v) => patch({ contentType: v as "reference" | "workflow" | "" })}>
+                                    <SelectTrigger className="bg-background">
+                                        <SelectValue placeholder="Select document type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="reference">Reference Content</SelectItem>
+                                        <SelectItem value="workflow">Workflow Content</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {errors.contentType && <FieldDescription className="text-destructive">{errors.contentType}</FieldDescription>}
                             </Field>
 
-                            {/*Document Status dropdown*/}
+                            {/*Document Status*/}
                             <Field className="bg-background">
-                                <FieldLabel className="text-primary">
-                                    Document Status
-                                </FieldLabel>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="bg-background justify-between">
-                                            {status === "new"
-                                                ? "New"
-                                                : status === "inProgress"
-                                                    ? "In Progress"
-                                                    : "Complete"}
-                                            <ChevronDown className="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                        <DropdownMenuGroup>
-                                            <DropdownMenuLabel>
-                                                Document Status
-                                            </DropdownMenuLabel>
-                                            <DropdownMenuRadioGroup
-                                                value={status}
-                                                onValueChange={(v) =>
-                                                    setStatus(v as "new" | "inProgress" | "complete")
-                                                }
-                                            >
-                                                <DropdownMenuRadioItem value="new">
-                                                    New
-                                                </DropdownMenuRadioItem>
-                                                <DropdownMenuRadioItem value="inProgress">
-                                                    In Progress
-                                                </DropdownMenuRadioItem>
-                                                <DropdownMenuRadioItem value="complete">
-                                                    Complete
-                                                </DropdownMenuRadioItem>
-                                            </DropdownMenuRadioGroup>
-                                        </DropdownMenuGroup>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                <FieldLabel className="text-primary">Document Status</FieldLabel>
+                                <Select value={values.status} onValueChange={(v) => patch({ status: v as "new" | "inProgress" | "complete" })}>
+                                    <SelectTrigger className="bg-background">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="new">New</SelectItem>
+                                        <SelectItem value="inProgress">In Progress</SelectItem>
+                                        <SelectItem value="complete">Complete</SelectItem>
+                                    </SelectContent>
+                                </Select>
                             </Field>
-                        {submitResult === "success" && (
-                            <div className="mt-4 rounded-md bg-chart-1 border-chart-2 px-3 py-2">
-                                Content created successfully!
-                            </div>
-                        )}
 
-                            {submitResult === "error" && (
-                                <div className="mt-4 rounded-md bg-destructive border-destructive text-background px-3 py-2">
-                                    Error creating content.
-                                </div>
-                            )}
-                            {/*Submit button*/}
                             <div className="flex justify-center bg-background py-4">
                                 <Button
                                     onClick={handleSubmit}
+                                    disabled={Object.keys(getErrors()).length > 0}
                                     className="bg-primary text-background hover:bg-black hover:text-background"
                                     variant="outline"
                                     size="lg"

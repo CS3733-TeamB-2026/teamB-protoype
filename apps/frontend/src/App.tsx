@@ -1,4 +1,5 @@
 import './App.css'
+import { Toaster } from "@/components/ui/sonner.tsx";
 import Navbar from './components/layout/Navbar.tsx'
 import Footer from './components/layout/Footer.tsx'
 import {BrowserRouter} from 'react-router-dom';
@@ -46,6 +47,7 @@ function App() {
                 </div>
 
             </SidebarProvider>
+            <Toaster />
 
         </BrowserRouter>
     )
