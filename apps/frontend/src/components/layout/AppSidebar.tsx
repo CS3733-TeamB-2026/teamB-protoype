@@ -1,4 +1,4 @@
-import { Home, FilePlus, User, ChevronDown, LucideFolders, Users, UserPlus, X, Library, UserCog, LayoutDashboard } from "lucide-react"
+import { Home, User, ChevronDown, LucideFolders, Users, UserPlus, X, Library, UserCog, LayoutDashboard } from "lucide-react"
 import React from "react"
 import {Link} from "react-router-dom";
 import {
@@ -36,7 +36,6 @@ const navItems = [
     { title: "Dashboard", icon: LayoutDashboard, href: "/employeehome", children: [], access: ["admin", "underwriter", "businessAnalyst"] },
     { title: "Manage Content", icon: Library, href: "/", children: [
             { title: "View Content", icon: LucideFolders, href: "/files", children: [], access: ["admin", "underwriter", "businessAnalyst"] },
-            { title: "Add Content", icon: FilePlus, href: "/manageform", children: [], access: ["admin", "underwriter", "businessAnalyst"] },
         ], access: ["admin", "underwriter", "businessAnalyst"] },
     { title: "Manage Employees", icon: UserCog, href: "/", children: [
             { title: "View Employees", icon: Users, href: "/usermanagement", children: [], access: ["admin"] },
