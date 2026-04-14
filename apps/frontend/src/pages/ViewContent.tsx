@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
     AlertCircle,
     Bookmark,
@@ -54,6 +54,7 @@ import { AddContentDialog } from "@/dialogs/AddContentDialog.tsx";
 import { FilePreview } from "@/components/FilePreview.tsx";
 import { useAuth0 } from "@auth0/auth0-react"
 import {highlight} from "@/lib/highlight.tsx";
+import { toast } from "sonner";
 
 // Matches the Content model from Prisma (with joined owner)
 export interface ContentItem {
@@ -81,6 +82,11 @@ export interface ContentItem {
     status: "new" | "inProgress" | "complete" | null;
 }
 
+export interface BookmarkRecord {
+    bookmarkerId: number;
+    bookmarkedContentId: number;
+}
+
 function ViewContent() {
     const [content, setContent] = useState<ContentItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -89,7 +95,7 @@ function ViewContent() {
     const [editingContent, setEditingContent] = useState<ContentItem | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [expandedId, setExpandedId] = useState<number | null>(null);
-    const [bookmarks, setBookmarks] = useState<Set<number>>(new Set());
+    const [bookmarks, setBookmarks] = useState<BookmarkRecord[]>([]);
     const [deleteTarget, setDeleteTarget] = useState<ContentItem | null>(null);
     const [sort, toggleSort] = useSortState<"name" | "owner" | "status" | "contentType" | "persona">({column: "name", direction: "asc"});
     const [linkPreviews, setLinkPreviews] = useState<
@@ -115,7 +121,7 @@ function ViewContent() {
     });
 
     const user = useUser();
-    const [searchTerm, setSearchTerm] = React.useState("");
+    const [searchTerm, setSearchTerm] = useState("");
     const searchedContent = content.filter((item) =>
         item.displayName.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -134,7 +140,7 @@ function ViewContent() {
             advancedFilters.persona.includes(item.targetPersona);
 
         const matchesBookmark =
-            !advancedFilters.bookmarkedOnly || bookmarks.has(item.id);
+            !advancedFilters.bookmarkedOnly || bookmarks.some((b) => b.bookmarkedContentId === item.id);
 
         const matchesOwner =
             !advancedFilters.ownedByMe || item.ownerId === user?.id;
@@ -157,55 +163,65 @@ function ViewContent() {
 
     const { getAccessTokenSilently } = useAuth0();
 
-    const fetchPreviews = (data: ContentItem[]) => {
-        data.filter((item) => item.linkURL).forEach(async (item) => {
-            try {
-                const res = await fetch(`/api/preview?url=${encodeURIComponent(item.linkURL!)}`);
-                if (!res.ok) throw new Error(`preview ${res.status}`);
-                const preview = await res.json();
-                setLinkPreviews((prev) => ({ ...prev, [item.id]: preview }));
-            } catch {
-                setLinkPreviews((prev) => ({
-                    ...prev,
-                    [item.id]: { title: null, description: null, image: null, siteName: null, favicon: null },
-                }));
-            }
+    const fetchPreviews = useCallback((data: ContentItem[]) => {
+        data.filter((item) => item.linkURL).forEach((item) => {
+            fetch(`/api/preview?url=${encodeURIComponent(item.linkURL!)}`)
+                .then((res) => (res.ok ? res.json() : Promise.reject()))
+                .then((preview) => setLinkPreviews((prev) => ({ ...prev, [item.id]: preview })))
+                .catch(() =>
+                    setLinkPreviews((prev) => ({
+                        ...prev,
+                        [item.id]: { title: null, description: null, image: null, siteName: null, favicon: null },
+                    }))
+                );
         });
-    };
+    }, []);
 
-    const refreshContent = async () => {
+    const updateBookmarks = useCallback(async () => {
+        try {
+            const token = await getAccessTokenSilently();
+            const res = await fetch(`/api/bookmark`, { headers: { Authorization: `Bearer ${token}` } });
+            const data: BookmarkRecord[] = await res.json();
+            setBookmarks(data);
+        } catch {
+            setError("Failed to update bookmarks.");
+        }
+    }, [getAccessTokenSilently]);
+
+    const refreshContent = useCallback(async () => {
         try {
             const token = await getAccessTokenSilently();
             const res = await fetch(`/api/content`, { headers: { Authorization: `Bearer ${token}` } });
             const data: ContentItem[] = await res.json();
             setContent(data);
             fetchPreviews(data);
+            await updateBookmarks();
         } catch {
             setError("Failed to refresh content.");
         }
-    };
+    }, [getAccessTokenSilently, fetchPreviews, updateBookmarks]);
 
     // Initial load — shows spinner and fetches link previews
     useEffect(() => {
-
         if (!user) return;
         const fetchContent = async () => {
             try {
                 const token = await getAccessTokenSilently();
                 const res = await fetch('/api/content', {
                     headers: { Authorization: `Bearer ${token}` },
-                })
+                });
                 const data: ContentItem[] = await res.json();
                 setContent(data);
                 setLoading(false);
                 fetchPreviews(data);
+                await updateBookmarks();
             } catch {
                 setError("Failed to load content.");
                 setLoading(false);
             }
-        }
+        };
         void fetchContent();
-    }, [getAccessTokenSilently, user]);
+    }, [getAccessTokenSilently, user, fetchPreviews, updateBookmarks]);
 
     // Poll for lock state changes from other users
     useEffect(() => {
@@ -217,17 +233,35 @@ function ViewContent() {
         setExpandedId((prev) => (prev === id ? null : id));
     }
 
-    function toggleBookmark(id: number, e: React.MouseEvent) {
+    async function toggleBookmark(id: number, e: React.MouseEvent) {
         e.stopPropagation();
-        setBookmarks((prev) => {
-            const next = new Set(prev);
-            if (next.has(id)) {
-                next.delete(id);
+        const isCurrentlyBookmarked = bookmarks.some((b) => b.bookmarkedContentId === id);
+        // Optimistic update
+        if (isCurrentlyBookmarked) {
+            setBookmarks((prev) => prev.filter((b) => b.bookmarkedContentId !== id));
+        } else {
+            setBookmarks((prev) => [...prev, { bookmarkerId: user!.id, bookmarkedContentId: id }]);
+        }
+        try {
+            const token = await getAccessTokenSilently();
+            await fetch(`/api/bookmark/${id}`, {
+                method: isCurrentlyBookmarked ? "DELETE" : "POST",
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (isCurrentlyBookmarked) {
+                toast.success("Bookmark removed.");
             } else {
-                next.add(id);
+                toast.success("Bookmark added.");
             }
-            return next;
-        });
+        } catch {
+            // Roll back on error
+            if (isCurrentlyBookmarked) {
+                setBookmarks((prev) => [...prev, { bookmarkerId: user!.id, bookmarkedContentId: id }]);
+            } else {
+                setBookmarks((prev) => prev.filter((b) => b.bookmarkedContentId !== id));
+            }
+            toast.error("Failed to update bookmark.");
+        }
     }
 
     function canEdit(item: ContentItem): boolean {
@@ -542,7 +576,7 @@ function ViewContent() {
                                         ? getExtension(originalFilename)
                                         : null;
                                     const isExpanded = expandedId === item.id;
-                                    const isBookmarked = bookmarks.has(item.id);
+                                    const isBookmarked = bookmarks.some((b) => b.bookmarkedContentId === item.id);
 
                                     return (
                                         <React.Fragment key={item.id}>
@@ -826,12 +860,12 @@ function ViewContent() {
                             </TableBody>
                         </Table></>}
 
-                    {bookmarks.size > 0 && (
+                    {bookmarks.length > 0 && (
                         <div className="mt-4 px-3 py-2 rounded-md bg-primary/5 border border-primary/20 text-xs text-muted-foreground">
                             <span className="font-medium text-primary">
-                                {bookmarks.size}
+                                {bookmarks.length}
                             </span>{" "}
-                            item{bookmarks.size !== 1 ? "s" : ""} bookmarked
+                            item{bookmarks.length !== 1 ? "s" : ""} bookmarked
                         </div>
                     )}
                 </CardContent>
