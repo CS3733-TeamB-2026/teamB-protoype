@@ -9,6 +9,7 @@ import ReactMarkdown from "react-markdown";
 import DocViewer, { DocViewerRenderers } from "@iamjariwala/react-doc-viewer";
 import "@iamjariwala/react-doc-viewer/dist/index.css";
 import { getPreviewMode } from "@/lib/mime.ts";
+import { getCachedText, setCachedText, getCachedBlob, setCachedBlob } from "@/lib/file-cache.ts";
 import { useAuth0 } from "@auth0/auth0-react"
 
 function formatBytes(bytes: number): string {
@@ -51,135 +52,77 @@ export function FilePreview({ filename, src, infoSrc }: Props) {
     };
 
     useEffect(() => {
+        let localUrl: string | null = null;
 
-        const fetchPreview = async () => {
-
+        const run = async () => {
             try {
                 const token = await getAccessTokenSilently();
 
                 if (infoSrc) {
-                    const res = await fetch(infoSrc, {
-                        headers: { Authorization: `Bearer ${token}` },
-                    });
+                    const res = await fetch(infoSrc, { headers: { Authorization: `Bearer ${token}` } });
                     const meta = await res.json();
                     setFileSize(meta?.size ?? null);
                 }
 
                 if (previewMode === "none") return;
 
-                let localUrl: string | null = null;
-
                 if (previewMode === "text" || previewMode === "markdown") {
-                    try {
-                        const res = await fetch(src, {
-                            headers: { Authorization: `Bearer ${token}` },
-                        })
-                        if (!res.ok) {
-                            throw new Error();
-                        }
-                        const text = await res.text();
-                        setContent(text);
+                    const cachedText = getCachedText(src);
+                    if (cachedText !== undefined) {
+                        setContent(cachedText);
                         setStatus("ready");
-                    } catch {
-                        setStatus("error");
+                        return;
                     }
+                    const res = await fetch(src, { headers: { Authorization: `Bearer ${token}` } });
+                    if (!res.ok) { setStatus("error"); return; }
+                    const text = await res.text();
+                    setCachedText(src, text);
+                    setContent(text);
+                    setStatus("ready");
 
                 } else if (previewMode === "table") {
-                    try {
-                        const res = await fetch(src, {
-                            headers: { Authorization: `Bearer ${token}` },
-                        })
-                        if (!res.ok) throw new Error();
-                        const buf = await res.arrayBuffer();
-                        const wb = XLSX.read(buf, { type: "array" });
-                        const ws = wb.Sheets[wb.SheetNames[0]];
-                        const rows = XLSX.utils.sheet_to_json<string[]>(ws, { header: 1, defval: "" });
-                        setTableData(rows as string[][]);
-                        setStatus("ready");
-                    } catch {
-                        setStatus("error");
-                    }
-
-                } else {
-                    try {
-                        const res = await fetch(src, {
-                            headers: { Authorization: `Bearer ${token}` },
-                        });
-                        if (!res.ok) throw new Error();
+                    const cachedBlob = getCachedBlob(src);
+                    let buf: ArrayBuffer;
+                    if (cachedBlob) {
+                        buf = await cachedBlob.arrayBuffer();
+                    } else {
+                        const res = await fetch(src, { headers: { Authorization: `Bearer ${token}` } });
+                        if (!res.ok) { setStatus("error"); return; }
                         const blob = await res.blob();
-                        localUrl = URL.createObjectURL(blob);
-                        setObjectUrl(localUrl);
-                        setStatus("ready");
-                    } catch {
-                        setStatus("error");
+                        setCachedBlob(src, blob);
+                        buf = await blob.arrayBuffer();
                     }
-                }
-
-                return () => {
-                    if (localUrl) URL.revokeObjectURL(localUrl);
-                };
-
-            } catch {
-                setStatus("error");
-            }
-
-        }
-
-        fetchPreview();
-
-        /* OLD CODE, refactored is above
-        const token = getAccessTokenSilently();
-        if (infoSrc) {
-            fetch(infoSrc, {
-                headers: { Authorization: `Bearer ${token}` },
-            })
-                .then((res) => res.json())
-                .then((meta) => setFileSize(meta?.size ?? null))
-                .catch(() => {});
-        }
-
-        if (previewMode === "none") return;
-
-        let localUrl: string | null = null;
-
-        if (previewMode === "text" || previewMode === "markdown") {
-            fetch(src, {
-                headers: { Authorization: `Bearer ${token}` },
-            })
-                .then((res) => { if (!res.ok) throw new Error(); return res.text(); })
-                .then((text) => { setContent(text); setStatus("ready"); })
-                .catch(() => setStatus("error"));
-        } else if (previewMode === "table") {
-            fetch(src, {
-                headers: { Authorization: `Bearer ${token}` },
-            })
-                .then((res) => { if (!res.ok) throw new Error(); return res.arrayBuffer(); })
-                .then((buf) => {
                     const wb = XLSX.read(buf, { type: "array" });
                     const ws = wb.Sheets[wb.SheetNames[0]];
                     const rows = XLSX.utils.sheet_to_json<string[]>(ws, { header: 1, defval: "" });
                     setTableData(rows as string[][]);
                     setStatus("ready");
-                })
-                .catch(() => setStatus("error"));
-        } else {
-            fetch(src, {
-                headers: { Authorization: `Bearer ${token}` },
-            })
-                .then((res) => { if (!res.ok) throw new Error(); return res.blob(); })
-                .then((blob) => {
+
+                } else {
+                    const cachedBlob = getCachedBlob(src);
+                    let blob: Blob;
+                    if (cachedBlob) {
+                        blob = cachedBlob;
+                    } else {
+                        const res = await fetch(src, { headers: { Authorization: `Bearer ${token}` } });
+                        if (!res.ok) { setStatus("error"); return; }
+                        blob = await res.blob();
+                        setCachedBlob(src, blob);
+                    }
                     localUrl = URL.createObjectURL(blob);
                     setObjectUrl(localUrl);
                     setStatus("ready");
-                })
-                .catch(() => setStatus("error"));
-        }
+                }
+            } catch {
+                setStatus("error");
+            }
+        };
+
+        void run();
 
         return () => {
             if (localUrl) URL.revokeObjectURL(localUrl);
         };
-        */
-
     }, [infoSrc, previewMode, src, getAccessTokenSilently]);
 
     return (
