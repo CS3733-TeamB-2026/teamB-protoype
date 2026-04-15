@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import {
     AlertCircle,
     Bookmark,
@@ -14,6 +14,7 @@ import {
     Search,
     Plus,
     Lock,
+    RefreshCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -41,12 +42,12 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table.tsx";
-import { Hero } from "@/components/shared/Hero.tsx";
-import { ContentIcon } from "@/components/shared/ContentIcon.tsx";
-import { ConfirmDeleteDialog } from "@/dialogs/ConfirmDeleteDialog.tsx";
-import { SortableHead } from "@/components/shared/SortableHead.tsx";
-import { useSortState, applySortState } from "@/hooks/use-sort-state.ts";
-import { useUser } from "@/hooks/use-user.ts";
+import {Hero} from "@/components/shared/Hero.tsx";
+import {ContentIcon} from "@/components/shared/ContentIcon.tsx";
+import {ConfirmDeleteDialog} from "@/dialogs/ConfirmDeleteDialog.tsx";
+import {SortableHead} from "@/components/shared/SortableHead.tsx";
+import {useSortState, applySortState} from "@/hooks/use-sort-state.ts";
+import {useUser} from "@/hooks/use-user.ts";
 import {
     getCategory,
     getExtension,
@@ -65,7 +66,7 @@ import { getCachedPreview, setCachedPreview } from "@/lib/preview-cache.ts";
 import { invalidateFileCacheById } from "@/lib/file-cache.ts";
 import { useAuth0 } from "@auth0/auth0-react"
 import {highlight} from "@/lib/highlight.tsx";
-import { toast } from "sonner";
+import {toast} from "sonner";
 
 // Matches the Content model from Prisma (with joined owner)
 export interface ContentItem {
@@ -125,6 +126,7 @@ function ViewContent() {
     const searchedContent = content.filter((item) =>
         item.displayName.toLowerCase().includes(searchTerm.toLowerCase())
     );
+    const [refreshing, setRefreshing] = useState(false);
 
     const advancedFilteredContent = searchedContent.filter((item) => {
         const matchesStatus =
@@ -161,7 +163,7 @@ function ViewContent() {
         (advancedFilters.bookmarkedOnly ? 1 : 0) +
         (advancedFilters.ownedByMe ? 1 : 0);
 
-    const { getAccessTokenSilently } = useAuth0();
+    const {getAccessTokenSilently} = useAuth0();
 
     const fetchPreviews = useCallback((data: ContentItem[]) => {
         const linkItems = data.filter((item) => item.linkURL);
@@ -198,7 +200,7 @@ function ViewContent() {
     const updateBookmarks = useCallback(async () => {
         try {
             const token = await getAccessTokenSilently();
-            const res = await fetch(`/api/bookmark`, { headers: { Authorization: `Bearer ${token}` } });
+            const res = await fetch(`/api/bookmark`, {headers: {Authorization: `Bearer ${token}`}});
             const data: BookmarkRecord[] = await res.json();
             setBookmarks(data);
         } catch {
@@ -209,7 +211,7 @@ function ViewContent() {
     const refreshContent = useCallback(async () => {
         try {
             const token = await getAccessTokenSilently();
-            const res = await fetch(`/api/content`, { headers: { Authorization: `Bearer ${token}` } });
+            const res = await fetch(`/api/content`, {headers: {Authorization: `Bearer ${token}`}});
             const data: ContentItem[] = await res.json();
             setContent(data);
             fetchPreviews(data);
@@ -226,7 +228,7 @@ function ViewContent() {
             try {
                 const token = await getAccessTokenSilently();
                 const res = await fetch('/api/content', {
-                    headers: { Authorization: `Bearer ${token}` },
+                    headers: {Authorization: `Bearer ${token}`},
                 });
                 const data: ContentItem[] = await res.json();
                 setContent(data);
@@ -258,13 +260,13 @@ function ViewContent() {
         if (isCurrentlyBookmarked) {
             setBookmarks((prev) => prev.filter((b) => b.bookmarkedContentId !== id));
         } else {
-            setBookmarks((prev) => [...prev, { bookmarkerId: user!.id, bookmarkedContentId: id }]);
+            setBookmarks((prev) => [...prev, {bookmarkerId: user!.id, bookmarkedContentId: id}]);
         }
         try {
             const token = await getAccessTokenSilently();
             await fetch(`/api/bookmark/${id}`, {
                 method: isCurrentlyBookmarked ? "DELETE" : "POST",
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {Authorization: `Bearer ${token}`},
             });
             if (isCurrentlyBookmarked) {
                 toast.success("Bookmark removed.");
@@ -274,7 +276,7 @@ function ViewContent() {
         } catch {
             // Roll back on error
             if (isCurrentlyBookmarked) {
-                setBookmarks((prev) => [...prev, { bookmarkerId: user!.id, bookmarkedContentId: id }]);
+                setBookmarks((prev) => [...prev, {bookmarkerId: user!.id, bookmarkedContentId: id}]);
             } else {
                 setBookmarks((prev) => prev.filter((b) => b.bookmarkedContentId !== id));
             }
@@ -305,11 +307,17 @@ function ViewContent() {
             : ""
     }
 
+    function formatLabel(value: string): string {
+        return value
+            .replace(/([A-Z])/g, ' $1')  //split camelCase
+            .replace(/^./, (c) => c.toUpperCase()); //capitalize first letter
+    }
+
     const handleDelete = async (id: number) => {
         const token = await getAccessTokenSilently();
         const res = await fetch(`/api/content/${id}`, {
             method: "DELETE",
-            headers: { Authorization: `Bearer ${token}` },
+            headers: {Authorization: `Bearer ${token}`},
         });
         if (res.ok) {
             setContent((prev) => prev.filter((item) => item.id !== id));
@@ -317,9 +325,11 @@ function ViewContent() {
         setDeleteTarget(null);
     };
 
-    const handleStartEdit = async (item: ContentItem, e:React.MouseEvent) => {
+    const handleStartEdit = async (item: ContentItem, e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!canEdit(item)) { return;}
+        if (!canEdit(item)) {
+            return;
+        }
         try {
             const token = await getAccessTokenSilently();
             const res = await fetch(`/api/content/checkout`, {
@@ -328,44 +338,44 @@ function ViewContent() {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`
                 },
-            body: JSON.stringify({
-                id: item.id,
-                employeeID: user!.id,
-            }),
+                body: JSON.stringify({
+                    id: item.id,
+                    employeeID: user!.id,
+                }),
             });
             const data = await res.json();
-            if(!res.ok) {
+            if (!res.ok) {
                 setError(data.message || "Someone else is editing");
                 return;
             }
-            setContent ((prev) =>
-            prev.map((c) => (c.id === item.id ? {...c, ...data}: c)));
-            setEditingContent({ ...item, ...data });
+            setContent((prev) =>
+                prev.map((c) => (c.id === item.id ? {...c, ...data} : c)));
+            setEditingContent({...item, ...data});
             setEditOpen(true);
         } catch {
             setError("Someone else is editing");
         }
 
-        }
+    }
 
 
     const NUM_COLS = 8;
 
     if (!user) return (
         <div className="flex items-center justify-center min-h-screen bg-secondary">
-            <Loader2 className="w-10 h-10 text-primary animate-spin" />
+            <Loader2 className="w-10 h-10 text-primary animate-spin"/>
         </div>
     );
 
     return (
         <>
             <Hero
-                icon={ LucideFolders }
+                icon={LucideFolders}
                 title="View Content"
                 description="View, update, and delete content you have access to"
             />
 
-            <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center px-4">
+            <Card className="shadow-lg max-w-6xl mx-auto my-8 text-center px-4">
                 <CardHeader>
                     <CardTitle className="text-3xl text-primary mt-4">
                         {user.persona === "underwriter" ? "Underwriter" :
@@ -383,44 +393,39 @@ function ViewContent() {
 
                     {loading && (
                         <div className="flex items-center justify-center py-16 gap-3 text-muted-foreground">
-                            <Loader2 className="w-6 h-6 animate-spin" />
+                            <Loader2 className="w-6 h-6 animate-spin"/>
                             <p className="text-sm">Loading...</p>
                         </div>
                     )}
                     {error && (
                         <div className="flex flex-col items-center justify-center py-16 gap-3 text-destructive">
-                            <AlertCircle className="w-8 h-8" />
+                            <AlertCircle className="w-8 h-8"/>
                             <p className="text-sm font-medium">{error}</p>
                         </div>
                     )}
                     {!loading && !error && content.length === 0 && (
                         <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
-                            <FolderOpen className="w-10 h-10" />
+                            <FolderOpen className="w-10 h-10"/>
                             <p className="text-sm">No content found.</p>
-                            <Button onClick={() => setAddOpen(true)} className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-60 rounded-lg px-2 py-6 text-xl">Add Content +</Button>
+                            <Button onClick={() => setAddOpen(true)}
+                                    className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-60 rounded-lg px-2 py-6 text-xl">Add
+                                Content +</Button>
                         </div>
+
                     )}
                     {!loading && !error && content.length > 0 && <>
-                        <div className="flex flex-row justify-between items-baseline mb-8">
-                            <div>
-                                <Button onClick={() => setAddOpen(true)} className="p-0! gap-0! border-0! group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-45 hover:bg-primary-dark hover:text-primary-foreground active:brightness-80 transition-all bg-primary text-primary-foreground w-12 h-12 text-lg justify-start">
-                                    <span className="flex items-center justify-center min-w-12 h-12">
-                                        <Plus className="w-8! h-8! text-primary-foreground " />
-                                    </span>
-                                    <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Add Content</span>
-                                </Button>
-                            </div>
+                        <div className="flex flex-row justify-between items-baseline mb-2">
                             <div className="flex flex-row gap-2 items-center">
                                 <Button
                                     variant="outline"
                                     onClick={() => setShowAdvancedFilters((prev) => !prev)}
-                                    className="hover:bg-secondary hover:text-secondary-foreground"
+                                    className="hover:bg-secondary hover:text-secondary-foreground h-11 w-25 text-base"
                                 >
                                     {showAdvancedFilters
-                                        ? "Hide Advanced Filters"
+                                        ? "Hide Filters"
                                         : activeFilterCount > 0
-                                            ? `Advanced Filters (${activeFilterCount})`
-                                            : "Advanced Filters"}
+                                            ? `Filters (${activeFilterCount})`
+                                            : "Filters"}
                                 </Button>
                                 <div className="relative">
                                     <Search
@@ -431,288 +436,324 @@ function ViewContent() {
                                         placeholder="Search by name..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-64 h-10 text-lg! pl-2! pr-8 border border-gray-700 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                                        className="w-64 h-10 text-base pl-2! pr-8 border border-gray-700 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-gray-500"
                                     />
                                 </div>
                             </div>
 
-                        </div>
-                        {showAdvancedFilters && (
-                            <div className="mb-4 rounded-lg border p-4 bg-muted/20 text-left">
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="flex flex-row gap-2">
+                                <Button onClick={async () => {
+                                    setRefreshing(true);
+                                    await Promise.all([
+                                        refreshContent(),
+                                        new Promise((r) => setTimeout(r, 1500)),
+                                    ]);
+                                    setRefreshing(false);
+                                }}
+                                        className="p-0! gap-0! border-0! flex items-center  rounded-full hover:bg-primary-dark hover:text-primary-foreground active:brightness-80 transition-all bg-primary text-primary-foreground w-12 h-12 text-lg">
+                                    <span className="flex items-center justify-center min-w-12 h-12">
+                                        <RefreshCcw className="w-8! h-8! text-primary-foreground"
+                                                    style={refreshing ? { animation: "spin 1.5s ease-in-out reverse" } : undefined}/>
+                                    </span>
+                                </Button>
+                                <Button onClick={() => setAddOpen(true)}
+                                        className="p-0! gap-0! border-0! group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-45 hover:bg-primary-dark hover:text-primary-foreground active:brightness-80 transition-all bg-primary text-primary-foreground w-12 h-12 text-lg justify-start">
+                                    <span className="flex items-center justify-center min-w-12 h-12">
+                                        <Plus className="w-8! h-8! text-primary-foreground "/>
+                                    </span>
+                                    <span
+                                        className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Add Content</span>
+                                </Button>
 
-                                    <div>
-                                        <p className="font-medium mb-2">Status</p>
-                                        <div className="flex flex-col gap-2">
-                                            {["new", "inProgress", "complete"].map((status) => (
-                                                <label key={status} className="flex items-center gap-2">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={advancedFilters.status.includes(status as "new" | "inProgress" | "complete")}
-                                                        onChange={(e) => {
-                                                            setAdvancedFilters((prev) => ({
-                                                                ...prev,
-                                                                status: e.target.checked
-                                                                    ? [...prev.status, status as "new" | "inProgress" | "complete"]
-                                                                    : prev.status.filter((s) => s !== status),
-                                                            }));
-                                                        }}
-                                                    />
-                                                    <span>{status}</span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                    </div>
 
-                                    <div>
-                                        <p className="font-medium mb-2">Kind</p>
-                                        <div className="flex flex-col gap-2">
-                                            {["reference", "workflow"].map((type) => (
-                                                <label key={type} className="flex items-center gap-2">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={advancedFilters.contentType.includes(type as "reference" | "workflow")}
-                                                        onChange={(e) => {
-                                                            setAdvancedFilters((prev) => ({
-                                                                ...prev,
-                                                                contentType: e.target.checked
-                                                                    ? [...prev.contentType, type as "reference" | "workflow"]
-                                                                    : prev.contentType.filter((t) => t !== type),
-                                                            }));
-                                                        }}
-                                                    />
-                                                    <span>{type}</span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <p className="font-medium mb-2">Persona</p>
-                                        <div className="flex flex-col gap-2">
-                                            {["underwriter", "businessAnalyst", "admin"].map((persona) => (
-                                                <label key={persona} className="flex items-center gap-2">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={advancedFilters.persona.includes(persona as "underwriter" | "businessAnalyst" | "admin")}
-                                                        onChange={(e) => {
-                                                            setAdvancedFilters((prev) => ({
-                                                                ...prev,
-                                                                persona: e.target.checked
-                                                                    ? [...prev.persona, persona as "underwriter" | "businessAnalyst" | "admin"]
-                                                                    : prev.persona.filter((p) => p !== persona),
-                                                            }));
-                                                        }}
-                                                    />
-                                                    <span>{persona}</span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <p className="font-medium mb-2">Other</p>
-                                        <div className="flex flex-col gap-2">
-                                            <label className="flex items-center gap-2">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={advancedFilters.bookmarkedOnly}
-                                                    onChange={(e) =>
-                                                        setAdvancedFilters((prev) => ({
-                                                            ...prev,
-                                                            bookmarkedOnly: e.target.checked,
-                                                        }))
-                                                    }
-                                                />
-                                                <span>Bookmarked only</span>
-                                            </label>
-
-                                            <label className="flex items-center gap-2">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={advancedFilters.ownedByMe}
-                                                    onChange={(e) =>
-                                                        setAdvancedFilters((prev) => ({
-                                                            ...prev,
-                                                            ownedByMe: e.target.checked,
-                                                        }))
-                                                    }
-                                                />
-                                                <span>Owned by me</span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="mt-4">
-                                    <Button
-                                        variant="secondary"
-                                        onClick={() =>
-                                            setAdvancedFilters({
-                                                status: [],
-                                                contentType: [],
-                                                persona: [],
-                                                bookmarkedOnly: false,
-                                                ownedByMe: false,
-                                            })
-                                        }
-                                    >
-                                        Clear Filters
-                                    </Button>
-                                </div>
                             </div>
-                        )}
+                        </div>
+                        <div className={`flex gap-4 items-start`}>
+                            {/* Filter Sidebar */}
+                            {showAdvancedFilters && (
+                                <div
+                                    className="mt-10 shrink-0 w-48 rounded-lg border p-3 bg-muted/20 text-left text-sm">
+                                    <div className="flex flex-col gap-4">
+                                        <div>
+                                            <p className="font-medium mb-2">Status</p>
+                                            <div className="flex flex-col gap-1.5">
+                                                {["new", "inProgress", "complete"].map((status) => (
+                                                    <label key={status} className="flex items-center gap-2">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={advancedFilters.status.includes(status as "new" | "inProgress" | "complete")}
+                                                            onChange={(e) => {
+                                                                setAdvancedFilters((prev) => ({
+                                                                    ...prev,
+                                                                    status: e.target.checked
+                                                                        ? [...prev.status, status as "new" | "inProgress" | "complete"]
+                                                                        : prev.status.filter((s) => s !== status),
+                                                                }));
+                                                            }}
+                                                        />
+                                                        <span>{formatLabel(status)}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
 
-                        <Table className="text-left">
-                            <TableHeader>
-                                <TableRow className="hover:bg-transparent">
-                                    <TableHead className="w-8" />
-                                    <SortableHead column="name" label="Name" sort={sort} onSort={toggleSort} />
-                                    <SortableHead column="owner" label="Owner" sort={sort} onSort={toggleSort} className="hidden sm:table-cell" />
-                                    <SortableHead column="status" label="Status" sort={sort} onSort={toggleSort} className="hidden sm:table-cell" />
-                                    <SortableHead column="contentType" label="Kind" sort={sort} onSort={toggleSort} className="hidden sm:table-cell" />
-                                    <SortableHead column="persona" label="Persona" sort={sort} onSort={toggleSort} className="hidden sm:table-cell" />
-                                    <TableHead className="hidden sm:table-cell uppercase tracking-wider text-muted-foreground select-none text-center">Type</TableHead>
-                                    <TableHead className="uppercase tracking-wider text-muted-foreground select-none text-center">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {applySortState(advancedFilteredContent, sort, (item, col) => {
-                                    if (col === "name") return item.displayName;
-                                    if (col === "owner") return formatName(item);
-                                    if (col === "status") return item.status ?? "";
-                                    if (col === "contentType") return item.contentType;
-                                    if (col === "persona") return item.targetPersona;
-                                }).map((item) => {
-                                    const isFile = !!item.fileURI;
-                                    const isLink = !!item.linkURL;
-                                    const originalFilename = isFile
-                                        ? getOriginalFilename(item.fileURI!)
-                                        : null;
-                                    const category = getCategory(null, originalFilename);
-                                    const ext = originalFilename
-                                        ? getExtension(originalFilename)
-                                        : null;
-                                    const isExpanded = expandedId === item.id;
-                                    const isBookmarked = bookmarks.some((b) => b.bookmarkedContentId === item.id);
+                                        <div>
+                                            <p className="font-medium mb-2">Kind</p>
+                                            <div className="flex flex-col gap-1.5">
+                                                {["reference", "workflow"].map((type) => (
+                                                    <label key={type} className="flex items-center gap-2">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={advancedFilters.contentType.includes(type as "reference" | "workflow")}
+                                                            onChange={(e) => {
+                                                                setAdvancedFilters((prev) => ({
+                                                                    ...prev,
+                                                                    contentType: e.target.checked
+                                                                        ? [...prev.contentType, type as "reference" | "workflow"]
+                                                                        : prev.contentType.filter((t) => t !== type),
+                                                                }));
+                                                            }}
+                                                        />
+                                                        <span>{formatLabel(type)}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
 
-                                    return (
-                                        <React.Fragment key={item.id}>
-                                            <TableRow
-                                                className={`cursor-pointer ${isExpanded ? "bg-muted/40 hover:bg-muted/40" : ""}`}
-                                                onClick={() => toggleExpand(item.id)}
-                                                tabIndex={0}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === "Enter" || e.key === " ") {
-                                                        e.preventDefault();
-                                                        toggleExpand(item.id);
-                                                    }
-                                                }}
-                                            >
-                                                <TableCell className="w-8 pr-0">
-                                                    {isLink &&
-                                                    linkPreviews[item.id]
-                                                        ?.favicon ? (
-                                                        <img
-                                                            src={
-                                                                linkPreviews[
-                                                                    item.id
-                                                                ]!.favicon!
+                                        <div>
+                                            <p className="font-medium mb-2">Persona</p>
+                                            <div className="flex flex-col gap-1.5">
+                                                {["underwriter", "businessAnalyst", "admin"].map((persona) => (
+                                                    <label key={persona} className="flex items-center gap-2">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={advancedFilters.persona.includes(persona as "underwriter" | "businessAnalyst" | "admin")}
+                                                            onChange={(e) => {
+                                                                setAdvancedFilters((prev) => ({
+                                                                    ...prev,
+                                                                    persona: e.target.checked
+                                                                        ? [...prev.persona, persona as "underwriter" | "businessAnalyst" | "admin"]
+                                                                        : prev.persona.filter((p) => p !== persona),
+                                                                }));
+                                                            }}
+                                                        />
+                                                        <span>{formatLabel(persona)}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <p className="font-medium mb-2">Other</p>
+                                            <div className="flex flex-col gap-1.5">
+                                                <label className="flex items-center gap-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={advancedFilters.bookmarkedOnly}
+                                                        onChange={(e) =>
+                                                            setAdvancedFilters((prev) => ({
+                                                                ...prev,
+                                                                bookmarkedOnly: e.target.checked,
+                                                            }))
+                                                        }
+                                                    />
+                                                    <span>Bookmarked</span>
+                                                </label>
+                                                <label className="flex items-center gap-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={advancedFilters.ownedByMe}
+                                                        onChange={(e) =>
+                                                            setAdvancedFilters((prev) => ({
+                                                                ...prev,
+                                                                ownedByMe: e.target.checked,
+                                                            }))
+                                                        }
+                                                    />
+                                                    <span>Owned By Me</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-4">
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            className="w-full"
+                                            onClick={() =>
+                                                setAdvancedFilters({
+                                                    status: [],
+                                                    contentType: [],
+                                                    persona: [],
+                                                    bookmarkedOnly: false,
+                                                    ownedByMe: false,
+                                                })
+                                            }
+                                        >
+                                            Clear Filters
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+                            {/* Table takes all remaining space */}
+                            <div className="flex-1 min-w-0">
+                                <Table className="text-left md:col-span-2">
+                                    <TableHeader>
+                                        <TableRow className="hover:bg-transparent">
+                                            <TableHead className="w-8"/>
+                                            <SortableHead column="name" label="Name" sort={sort} onSort={toggleSort}/>
+                                            <SortableHead column="owner" label="Owner" sort={sort} onSort={toggleSort}
+                                                          className="hidden sm:table-cell"/>
+                                            <SortableHead column="status" label="Status" sort={sort} onSort={toggleSort}
+                                                          className="hidden sm:table-cell"/>
+                                            <SortableHead column="contentType" label="Kind" sort={sort}
+                                                          onSort={toggleSort} className="hidden sm:table-cell"/>
+                                            <SortableHead column="persona" label="Persona" sort={sort}
+                                                          onSort={toggleSort} className="hidden sm:table-cell"/>
+                                            <TableHead
+                                                className="hidden sm:table-cell uppercase tracking-wider text-muted-foreground select-none text-center">Type</TableHead>
+                                            <TableHead
+                                                className="uppercase tracking-wider text-muted-foreground select-none text-center">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {applySortState(advancedFilteredContent, sort, (item, col) => {
+                                            if (col === "name") return item.displayName;
+                                            if (col === "owner") return formatName(item);
+                                            if (col === "status") return item.status ?? "";
+                                            if (col === "contentType") return item.contentType;
+                                            if (col === "persona") return item.targetPersona;
+                                        }).map((item) => {
+                                            const isFile = !!item.fileURI;
+                                            const isLink = !!item.linkURL;
+                                            const originalFilename = isFile
+                                                ? getOriginalFilename(item.fileURI!)
+                                                : null;
+                                            const category = getCategory(null, originalFilename);
+                                            const ext = originalFilename
+                                                ? getExtension(originalFilename)
+                                                : null;
+                                            const isExpanded = expandedId === item.id;
+                                            const isBookmarked = bookmarks.some((b) => b.bookmarkedContentId === item.id);
+
+                                            return (
+                                                <React.Fragment key={item.id}>
+                                                    <TableRow
+                                                        className={`cursor-pointer ${isExpanded ? "bg-muted/40 hover:bg-muted/40" : ""}`}
+                                                        onClick={() => toggleExpand(item.id)}
+                                                        tabIndex={0}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Enter" || e.key === " ") {
+                                                                e.preventDefault();
+                                                                toggleExpand(item.id);
                                                             }
-                                                            alt=""
-                                                            className="w-5 h-5 shrink-0"
-                                                        />
-                                                    ) : (
-                                                        <ContentIcon
-                                                            category={category}
-                                                            isLink={isLink}
-                                                            className="w-5 h-5"
-                                                        />
-                                                    )}
-                                                </TableCell>
+                                                        }}
+                                                    >
+                                                        <TableCell className="w-8 pr-0">
+                                                            {isLink &&
+                                                            linkPreviews[item.id]
+                                                                ?.favicon ? (
+                                                                <img
+                                                                    src={
+                                                                        linkPreviews[
+                                                                            item.id
+                                                                            ].favicon!
+                                                                    }
+                                                                    alt=""
+                                                                    className="w-5 h-5 shrink-0"
+                                                                />
+                                                            ) : (
+                                                                <ContentIcon
+                                                                    category={category}
+                                                                    isLink={isLink}
+                                                                    className="w-5 h-5"
+                                                                />
+                                                            )}
+                                                        </TableCell>
 
-                                                <TableCell className="w-full max-w-0">
-                                                    <div className="flex items-center gap-2">
+                                                        <TableCell className="w-full max-w-0">
+                                                            <div className="flex items-center gap-2">
                                                     <span className="truncate font-medium text-foreground">
                                                         {highlight(item.displayName, searchTerm)}
                                                     </span>
-                                                        <span className="text-muted-foreground shrink-0">
+                                                                <span className="text-muted-foreground shrink-0">
                                                         {isExpanded ? (
-                                                            <ChevronDown className="w-4 h-4" />
+                                                            <ChevronDown className="w-4 h-4"/>
                                                         ) : (
-                                                            <ChevronRight className="w-4 h-4" />
+                                                            <ChevronRight className="w-4 h-4"/>
                                                         )}
                                                     </span>
-                                                    </div>
-                                                </TableCell>
+                                                            </div>
+                                                        </TableCell>
 
-                                                <TableCell className="hidden sm:table-cell text-foreground">
-                                                    {formatName(item)}
-                                                </TableCell>
+                                                        <TableCell className="hidden sm:table-cell text-foreground">
+                                                            {formatName(item)}
+                                                        </TableCell>
 
-                                                <TableCell className="hidden sm:table-cell text-center">
-                                                    <ContentStatusBadge
-                                                        status={item.status}
-                                                    />
-                                                </TableCell>
+                                                        <TableCell className="hidden sm:table-cell text-center">
+                                                            <ContentStatusBadge
+                                                                status={item.status}
+                                                            />
+                                                        </TableCell>
 
-                                                <TableCell className="hidden sm:table-cell text-center">
-                                                    <ContentTypeBadge
-                                                        contentType={item.contentType}
-                                                    />
-                                                </TableCell>
+                                                        <TableCell className="hidden sm:table-cell text-center">
+                                                            <ContentTypeBadge
+                                                                contentType={item.contentType}
+                                                            />
+                                                        </TableCell>
 
-                                                <TableCell className="hidden sm:table-cell text-center">
-                                                    <PersonaBadge persona={item.targetPersona} />
-                                                </TableCell>
+                                                        <TableCell className="hidden sm:table-cell text-center">
+                                                            <PersonaBadge persona={item.targetPersona}/>
+                                                        </TableCell>
 
-                                                <TableCell className="hidden sm:table-cell text-center">
-                                                    <ContentExtBadge
-                                                        category={category}
-                                                        ext={ext}
-                                                        isLink={isLink}
-                                                    />
-                                                </TableCell>
+                                                        <TableCell className="hidden sm:table-cell text-center">
+                                                            <ContentExtBadge
+                                                                category={category}
+                                                                ext={ext}
+                                                                isLink={isLink}
+                                                            />
+                                                        </TableCell>
 
-                                                <TableCell>
-                                                    <div className="flex justify-end gap-1">
-                                                        {(() => {
-                                                            const icon = <HugeiconsIcon icon={LinkSquare01Icon} className="w-4 h-4" />;
-                                                            const btnClass = "w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground";
-                                                            if (item.fileURI) return (
-                                                                <Link to={`/file/${item.id}`} onClick={(e) => e.stopPropagation()}>
-                                                                    <button className={btnClass} title="View file">{icon}</button>
-                                                                </Link>
-                                                            );
-                                                            if (item.linkURL) return (
-                                                                <a href={item.linkURL} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
-                                                                    <button className={btnClass} title="Open link">{icon}</button>
-                                                                </a>
-                                                            );
-                                                            return <button className="w-8 h-8 flex items-center justify-center rounded-md opacity-30 cursor-not-allowed text-muted-foreground" title="No file or link" disabled>{icon}</button>;
-                                                        })()}
-                                                        <button
-                                                            className={`w-8 h-8 flex items-center justify-center rounded-md transition-colors ${isBookmarked ? "text-primary hover:text-primary/70" : "text-muted-foreground hover:text-foreground"}`}
-                                                            onClick={(e) => toggleBookmark(item.id, e)}
-                                                            aria-label={isBookmarked ? "Remove bookmark" : "Bookmark"}
-                                                        >
-                                                            {isBookmarked ? (
-                                                                <BookmarkCheck className="w-4 h-4" />
-                                                            ) : (
-                                                                <Bookmark className="w-4 h-4" />
-                                                            )}
-                                                        </button>
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                                        <TableCell>
+                                                            <div className="flex justify-end gap-1">
+                                                                {(() => {
+                                                                    const icon = <HugeiconsIcon icon={LinkSquare01Icon} className="w-4 h-4" />;
+                                                                    const btnClass = "w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground";
+                                                                    if (item.fileURI) return (
+                                                                        <Link to={`/file/${item.id}`} onClick={(e) => e.stopPropagation()}>
+                                                                            <button className={btnClass} title="View file">{icon}</button>
+                                                                        </Link>
+                                                                    );
+                                                                    if (item.linkURL) return (
+                                                                        <a href={item.linkURL} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
+                                                                            <button className={btnClass} title="Open link">{icon}</button>
+                                                                        </a>
+                                                                    );
+                                                                    return <button className="w-8 h-8 flex items-center justify-center rounded-md opacity-30 cursor-not-allowed text-muted-foreground" title="No file or link" disabled>{icon}</button>;
+                                                                })()}
                                                                 <button
-                                                                    className="w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground"
-                                                                    title="More actions"
+                                                                    className={`w-8 h-8 flex items-center justify-center rounded-md transition-colors ${isBookmarked ? "text-primary hover:text-primary/70" : "text-muted-foreground hover:text-foreground"}`}
+                                                                    onClick={(e) => toggleBookmark(item.id, e)}
+                                                                    aria-label={isBookmarked ? "Remove bookmark" : "Bookmark"}
                                                                 >
-                                                                    <EllipsisVertical className="w-4 h-4" />
+                                                                    {isBookmarked ? (
+                                                                        <BookmarkCheck className="w-4 h-4" />
+                                                                    ) : (
+                                                                        <Bookmark className="w-4 h-4" />
+                                                                    )}
                                                                 </button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                                                                <DropdownMenuItem
+                                                                <DropdownMenu>
+                                                                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                                                        <button
+                                                                            className="w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground"
+                                                                            title="More actions"
+                                                                        >
+                                                                            <EllipsisVertical className="w-4 h-4" />
+                                                                        </button>
+                                                                    </DropdownMenuTrigger>
+                                                                    <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                                                                        <DropdownMenuItem
                                                                     disabled={!canEdit(item) || isCheckedOut(item)}
                                                                     title={isCheckedOut(item) ? lockLabel(item) : "Edit content"}
                                                                     onClick={(e) => handleStartEdit(item, e)}
@@ -748,37 +789,24 @@ function ViewContent() {
                                                         <div className="flex gap-6 text-xs text-muted-foreground">
                                                             {item.checkedOutBy && (
                                                                 <span>
-                                                                    <span className = "font-medium text-foreground">Editing </span>
+                                                                    <span className="font-medium text-foreground">Editing </span>
                                                                     {item.checkedOutBy.firstName} {item.checkedOutBy.lastName}
                                                                 </span>
                                                             )}
-                                                        <span>
-                                                            <span className="font-medium text-foreground">
-                                                                Modified:{" "}
+                                                            <span>
+                                                                <span className="font-medium text-foreground">Modified:{" "}</span>
+                                                                {new Date(item.lastModified).toLocaleString()}
                                                             </span>
-                                                            {new Date(
-                                                                item.lastModified,
-                                                            ).toLocaleString()}
-                                                        </span>
                                                             {item.expiration && (
                                                                 <span>
-                                                                    <span className="font-medium text-foreground">
-                                                                        Expires:{" "}
-                                                                    </span>
-                                                                    {new Date(
-                                                                        item.expiration,
-                                                                    ).toLocaleString()}
+                                                                    <span className="font-medium text-foreground">Expires:{" "}</span>
+                                                                    {new Date(item.expiration).toLocaleString()}
                                                                 </span>
                                                             )}
-                                                            {
-                                                                item.expiration && (
+                                                            {item.expiration && (
                                                                 <span>
-                                                                    <span className="font-medium text-foreground">
-                                                                        Days left:{" "}
-                                                                    </span>
-                                                                    {Math.ceil((new Date(item.expiration,).getTime() -
-                                                                        new Date().getTime()) / (1000 * 60 * 60 * 24)
-                                                                    ).toLocaleString()}
+                                                                    <span className="font-medium text-foreground">Days left:{" "}</span>
+                                                                    {Math.ceil((new Date(item.expiration).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)).toLocaleString()}
                                                                 </span>
                                                             )}
                                                         </div>
@@ -806,38 +834,46 @@ function ViewContent() {
                                             )}
 
                                             {/* Expanded: file preview */}
-                                            {isExpanded && isFile && (
-                                                <TableRow className="hover:bg-transparent">
-                                                    <TableCell colSpan={NUM_COLS} className="p-0 max-w-0 overflow-hidden">
-                                                        <FilePreview
-                                                            filename={originalFilename!}
-                                                            src={`/api/content/download/${item.id}`}
-                                                            infoSrc={`/api/content/info/${item.id}`}
-                                                        />
-                                                    </TableCell>
-                                                </TableRow>
-                                            )}
-                                        </React.Fragment>
-                                    );
-                                })}
-                            </TableBody>
-                        </Table></>}
+                                                    {isExpanded && isFile && (
+                                                        <TableRow className="hover:bg-transparent">
+                                                            <TableCell colSpan={NUM_COLS}
+                                                                       className="p-0 max-w-0 overflow-hidden">
+                                                                <FilePreview
+                                                                    filename={originalFilename!}
+                                                                    src={`/api/content/download/${item.id}`}
+                                                                    infoSrc={`/api/content/info/${item.id}`}
+                                                                />
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    )}
+                                                </React.Fragment>
+                                            );
+                                        })}
+                                    </TableBody>
+                                </Table>
+                            </div>
 
-                    {bookmarks.length > 0 && (
-                        <div className="mt-4 px-3 py-2 rounded-md bg-primary/5 border border-primary/20 text-xs text-muted-foreground">
+                        </div>
+                        {bookmarks.length > 0 && (
+                            <div
+                                className="mt-4 px-3 py-2 rounded-md bg-primary/5 border border-primary/20 text-xs text-muted-foreground">
                             <span className="font-medium text-primary">
                                 {bookmarks.length}
                             </span>{" "}
-                            item{bookmarks.length !== 1 ? "s" : ""} bookmarked
-                        </div>
-                    )}
+                                item{bookmarks.length !== 1 ? "s" : ""} bookmarked
+                            </div>
+                        )}
+                    </>}
                 </CardContent>
             </Card>
 
             <ConfirmDeleteDialog
                 open={!!deleteTarget}
-                onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
-                description={deleteTarget ? <span>This will permanently delete <strong>"{deleteTarget.displayName}"</strong>.</span> : undefined}
+                onOpenChange={(open) => {
+                    if (!open) setDeleteTarget(null);
+                }}
+                description={deleteTarget ?
+                    <span>This will permanently delete <strong>"{deleteTarget.displayName}"</strong>.</span> : undefined}
                 onConfirm={() => handleDelete(deleteTarget!.id)}
             />
 

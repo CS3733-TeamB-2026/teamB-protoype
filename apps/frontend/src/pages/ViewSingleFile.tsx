@@ -26,6 +26,7 @@ export function ViewSingleFile() {
                 const res = await fetch(`/api/content/${id}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
+                if (!res.ok) throw new Error(`${res.status}`);
                 const data: ContentItem = await res.json();
                 setItem(data);
             } catch {

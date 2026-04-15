@@ -34,6 +34,7 @@ function AddEmployee() {
     const [lastName, setLastName] = React.useState("")
     const [userName, setUserName] = React.useState("")
     const [password, setPassword] = React.useState("")
+    const [email, setEmail] = React.useState("")
     const [id, setID] = React.useState("")
     const [submitResult, setSubmitResult] = useState<"success" | "error" | null>(null)
     const { getAccessTokenSilently } = useAuth0();
@@ -46,7 +47,7 @@ function AddEmployee() {
         }
             try {
             const token = await getAccessTokenSilently();
-            const empRes =  await fetch('/api/employee', {
+            const empRes =  await fetch('/api/employee/auth', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -57,6 +58,9 @@ function AddEmployee() {
                     lastName: lastName,
                     id: parseInt(id),
                     persona: targetPersona,
+                    username: userName,
+                    email: email,
+                    password: password,
                 })
             })
             if (!empRes.ok) {
@@ -64,22 +68,6 @@ function AddEmployee() {
                 return
             }
 
-            const loginRes = await fetch('/api/login/create', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    userName: userName,
-                    password: password,
-                    employeeID: parseInt(id),
-                })
-            })
-            if (!loginRes.ok) {
-                setSubmitResult("error");
-                return
-            }
             setSubmitResult("success")
 
             setTargetPersona("Select job position")
@@ -87,6 +75,7 @@ function AddEmployee() {
             setLastName("")
             setUserName("")
             setPassword("")
+            setEmail("")
             setID("")
         } catch {
             setSubmitResult("error")
@@ -196,29 +185,40 @@ function AddEmployee() {
                         </div>
                         {/* //TEXTBOX*/}
                         <div className="flex flex-wrap items-end gap-4 bg-background py-4">
-                        <Field className="bg-background flex-1">
-                            <FieldLabel className="text-primary" htmlFor="input-field-last-name">Username</FieldLabel>
-                            <Input
-                                value={userName}
-                                onChange={(e) => setUserName(e.target.value)}
-                                id="input-field-last-name"
-                                type="text"
-                                placeholder="Enter username"
-                            />
-                        </Field>
+                            <Field className="bg-background flex-1">
+                                <FieldLabel className="text-primary" htmlFor="input-field-last-name">Username</FieldLabel>
+                                <Input
+                                    value={userName}
+                                    onChange={(e) => setUserName(e.target.value)}
+                                    id="input-field-last-name"
+                                    type="text"
+                                    placeholder="Enter username"
+                                />
+                            </Field>
 
-                        {/* //TEXTBOX*/}
-                        <Field className="bg-background flex-1">
-                            <FieldLabel className="text-primary" htmlFor="input-field-password">Password</FieldLabel>
-                            <Input
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                id="input-field-last-name"
-                                type="text"
-                                placeholder="Enter user password"
-                            />
-                        </Field>
-                            </div>
+                            {/* //TEXTBOX*/}
+                            <Field className="bg-background flex-1">
+                                <FieldLabel className="text-primary" htmlFor="input-field-password">Password</FieldLabel>
+                                <Input
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    id="input-field-last-name"
+                                    type="text"
+                                    placeholder="Enter user password"
+                                />
+                            </Field>
+
+                            <Field className="bg-background flex-1">
+                                <FieldLabel className="text-primary" htmlFor="input-field-password">Email</FieldLabel>
+                                <Input
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    id="input-field-last-name"
+                                    type="text"
+                                    placeholder="Enter user Email"
+                                />
+                            </Field>
+                        </div>
                         {submitResult === "success" && (
                             <div className="rounded-md bg-chart-1 border-chart-2 px-3 py-2">
                                 Employee created successfully!

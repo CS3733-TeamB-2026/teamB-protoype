@@ -1,5 +1,6 @@
 import * as q from "@softeng-app/db";
 import {req, res} from "./types"
+import { createAuth0User } from "../helpers/auth0Management";
 
 export const getAllEmployeesWithLogin = async (req: req, res: res) => {
     try {
@@ -59,6 +60,31 @@ export const createEmployee = async (req: req, res: res) => {
         return res.status(500).end();
     }
 };
+
+export const createEmployeeWithAuth0 = async (req: req, res: res) => {
+    const { id, firstName, lastName, persona, username, password, email } = req.body;
+
+    try {
+
+        console.log("Calling create auth")
+        const auth0Id = await createAuth0User(username, password, email);
+        console.log("Calling create auth")
+
+        const employee = await q.Employee.createEmployeeWithAuth0(
+            id,
+            firstName,
+            lastName,
+            persona,
+            auth0Id
+        )
+
+        return res.status(201).json(employee);
+
+    } catch (error){
+        console.error(error)
+        res.status(500).json({ error: "Failed to create employee" })
+    }
+}
 
 export const updateEmployee = async (req: req, res: res) => {
     const payload = req.body;
