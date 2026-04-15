@@ -61,43 +61,13 @@ import { EditContentDialog } from "@/dialogs/EditContentDialog.tsx";
 import { AddContentDialog } from "@/dialogs/AddContentDialog.tsx";
 import { FilePreview } from "@/components/FilePreview.tsx";
 import { UrlPreviewLink } from "@/components/shared/UrlPreviewLink.tsx";
-import { type UrlPreview } from "@/components/shared/UrlPreviewCard.tsx";
 import { getCachedPreview, setCachedPreview } from "@/lib/preview-cache.ts";
 import { invalidateFileCacheById } from "@/lib/file-cache.ts";
 import { useAuth0 } from "@auth0/auth0-react"
 import {highlight} from "@/lib/highlight.tsx";
 import {toast} from "sonner";
-
-// Matches the Content model from Prisma (with joined owner)
-export interface ContentItem {
-    id: number;
-    displayName: string;
-    linkURL: string | null;
-    fileURI: string | null;
-    ownerId: number | null;
-    owner: {
-        id: number;
-        firstName: string;
-        lastName: string;
-    } | null;
-    checkedOutById: number | null;
-    checkedOutAt: string | null;
-    checkedOutBy: {
-        id: number;
-        firstName: string;
-        lastName: string;
-    } | null;
-    lastModified: string;
-    expiration: string | null;
-    contentType: "reference" | "workflow";
-    targetPersona: "underwriter" | "businessAnalyst" | "admin";
-    status: "new" | "inProgress" | "complete" | null;
-}
-
-export interface BookmarkRecord {
-    bookmarkerId: number;
-    bookmarkedContentId: number;
-}
+import type { ContentItem, BookmarkRecord } from "@/lib/types.ts";
+import type { UrlPreview } from "@/lib/types.ts";
 
 function ViewContent() {
     const [content, setContent] = useState<ContentItem[]>([]);

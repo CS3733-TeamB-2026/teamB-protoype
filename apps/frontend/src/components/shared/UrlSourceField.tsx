@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input.tsx";
-import { UrlPreviewCard, type UrlPreview } from "@/components/shared/UrlPreviewCard.tsx";
+import { UrlPreviewCard } from "@/components/shared/UrlPreviewCard.tsx";
+import type { UrlPreview } from "@/lib/types.ts";
 import { getCachedPreview, setCachedPreview } from "@/lib/preview-cache.ts";
 
 export type { UrlPreview };

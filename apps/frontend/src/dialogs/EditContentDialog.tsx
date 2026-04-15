@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator.tsx";
 import { toast } from "sonner";
 import { ContentFormFields } from "@/components/shared/ContentFormFields.tsx";
 import { fromContentItem, buildContentFormData } from "@/lib/content-form.ts";
-import type { ContentItem } from "@/pages/ViewContent.tsx";
+import type { ContentItem } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useContentForm } from "@/hooks/use-content-form.ts";
 

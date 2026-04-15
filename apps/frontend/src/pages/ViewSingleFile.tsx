@@ -8,7 +8,7 @@ import { ContentStatusBadge } from "@/components/shared/ContentStatusBadge.tsx";
 import { ContentTypeBadge } from "@/components/shared/ContentTypeBadge.tsx";
 import { PersonaBadge } from "@/components/shared/PersonaBadge.tsx";
 import { getOriginalFilename } from "@/lib/mime.ts";
-import type { ContentItem } from "@/pages/ViewContent.tsx";
+import type { ContentItem } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 
 export function ViewSingleFile() {

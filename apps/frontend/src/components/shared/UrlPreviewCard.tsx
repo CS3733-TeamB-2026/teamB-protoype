@@ -2,14 +2,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card.tsx";
 import { Loader2, TriangleAlert } from "lucide-react";
 import { ContentIcon } from "@/components/shared/ContentIcon.tsx";
-
-export type UrlPreview = {
-    title: string | null;
-    description: string | null;
-    image: string | null;
-    siteName: string | null;
-    favicon: string | null;
-};
+import type { UrlPreview } from "@/lib/types.ts";
 
 interface Props {
     status: "idle" | "loading" | "unreachable" | "ok";

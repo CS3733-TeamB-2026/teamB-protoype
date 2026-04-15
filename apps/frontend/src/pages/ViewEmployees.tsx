@@ -15,17 +15,7 @@ import { useUser } from "@/hooks/use-user.ts";
 import { findMatches, /*highlight,*/ highlightRange } from "@/lib/highlight.tsx";
 import { useAuth0 } from "@auth0/auth0-react";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
-
-export type Employee = {
-    firstName: string;
-    lastName: string;
-    id: number;
-    persona: string;
-    profilePhotoURI: string;
-    login?: {
-        userName: string;
-    };
-};
+import type { Employee } from "@/lib/types.ts";
 
 function ViewEmployees() {
     const [employees, setEmployees] = useState<Employee[]>([]);

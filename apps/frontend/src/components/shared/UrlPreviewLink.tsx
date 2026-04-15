@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Loader2, TriangleAlert } from "lucide-react";
-import type { UrlPreview } from "@/components/shared/UrlPreviewCard.tsx";
+import type { UrlPreview } from "@/lib/types.ts";
 
 interface Props {
     href: string;
