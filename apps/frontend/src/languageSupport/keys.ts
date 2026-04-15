@@ -47,6 +47,9 @@ export type TranslationKey =
     | 'home.meetTheTeam'
     | 'home.notLoggedIn'
     | 'home.manageFiles'
+    | 'home.bubble1'
+    | 'home.bubble2'
+    | 'home.bubble3'
 
     | '404';
 
