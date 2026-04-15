@@ -18,10 +18,13 @@ export type Category =
     | "document"
     | "spreadsheet"
     | "image"
+    | "audio"
+    | "video"
     | "archive"
+    | "code"
     | "other";
 
-export type PreviewMode = "docviewer" | "image" | "text" | "table" | "none";
+export type PreviewMode = "docviewer" | "image" | "audio" | "video" | "text" | "table" | "html" | "none";
 
 export interface AllowedType {
     /** Canonical MIME type. Lowercase. */
@@ -112,6 +115,75 @@ export const ALLOWED_TYPES: readonly AllowedType[] = [
         category: "spreadsheet",
         previewMode: "table",
         label: "CSV",
+    },
+
+    // --- Video ---
+    {
+        mimeType: "video/mp4",
+        extensions: ["mp4"],
+        category: "video",
+        previewMode: "video",
+        label: "MP4",
+    },
+    {
+        mimeType: "video/webm",
+        extensions: ["webm"],
+        category: "video",
+        previewMode: "video",
+        label: "WebM Video",
+    },
+
+    // --- Audio ---
+    {
+        mimeType: "audio/mpeg",
+        extensions: ["mp3"],
+        category: "audio",
+        previewMode: "audio",
+        label: "MP3",
+    },
+    {
+        mimeType: "audio/wav",
+        extensions: ["wav"],
+        category: "audio",
+        previewMode: "audio",
+        label: "WAV",
+    },
+    {
+        mimeType: "audio/ogg",
+        extensions: ["ogg", "oga"],
+        category: "audio",
+        previewMode: "audio",
+        label: "OGG Audio",
+    },
+    {
+        mimeType: "audio/mp4",
+        extensions: ["m4a"],
+        category: "audio",
+        previewMode: "audio",
+        label: "M4A",
+    },
+    {
+        mimeType: "audio/aac",
+        extensions: ["aac"],
+        category: "audio",
+        previewMode: "audio",
+        label: "AAC",
+    },
+    {
+        mimeType: "audio/flac",
+        extensions: ["flac"],
+        category: "audio",
+        previewMode: "audio",
+        label: "FLAC",
+    },
+
+    // --- HTML (sandboxed iframe preview) ---
+    {
+        mimeType: "text/html",
+        extensions: ["html", "htm"],
+        category: "code",
+        previewMode: "html",
+        label: "HTML",
     },
 
     // --- Archives (no preview, download only) ---
@@ -248,11 +320,13 @@ export const CATEGORY_COLORS: Record<
     pdf:          { badge: "bg-red-100 text-red-700",         icon: "text-red-500" },
     document:     { badge: "bg-blue-100 text-blue-700",      icon: "text-blue-500" },
     spreadsheet:  { badge: "bg-emerald-100 text-emerald-700", icon: "text-emerald-500" },
-
-    image:    { badge: "bg-pink-100 text-pink-700",   icon: "text-pink-500" },
-    archive:  { badge: "bg-yellow-100 text-yellow-700", icon: "text-yellow-500" },
-    other:    { badge: "bg-secondary text-secondary-foreground", icon: "text-muted-foreground" },
-    link:     { badge: "bg-violet-100 text-violet-700", icon: "text-violet-500" },
+    image:        { badge: "bg-pink-100 text-pink-700",   icon: "text-pink-500" },
+    audio:        { badge: "bg-teal-100 text-teal-700",    icon: "text-teal-500" },
+    video:        { badge: "bg-indigo-100 text-indigo-700", icon: "text-indigo-500" },
+    archive:      { badge: "bg-yellow-100 text-yellow-700", icon: "text-yellow-500" },
+    code:         { badge: "bg-orange-100 text-orange-700", icon: "text-orange-500" },
+    other:        { badge: "bg-secondary text-secondary-foreground", icon: "text-muted-foreground" },
+    link:         { badge: "bg-violet-100 text-violet-700", icon: "text-violet-500" },
 };
 
 // ---------- Upload validation ----------
