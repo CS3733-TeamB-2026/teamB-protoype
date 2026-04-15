@@ -1,4 +1,4 @@
-import type { UrlPreview } from "@/components/shared/UrlPreviewCard.tsx";
+import type { UrlPreview } from "@/lib/types.ts";
 
 // Module-level singleton — persists for the entire app session.
 // undefined (key absent) = not yet fetched

@@ -52,26 +52,26 @@ function Home() {
             />
 
             {/*Main Paragraph*/}
-            <Card id="content" className="scroll-mt-25 shadow-lg max-w-5xl mx-auto mt-8 text-center py-8">
+            <Card id="content" className="scroll-mt-25 shadow-lg max-w-6xl mx-auto mt-8 text-center py-8">
                 <CardHeader>
                     <CardTitle className="text-4xl text-primary">{ts('home.mainHeader')}</CardTitle>
                     <CardDescription className="text-lg">{ts('home.subheader')}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid grid-cols-2 gap-4 w-fit mx-auto">
-                        <div className="flex flex-col items-center justify-center gap-4 w-90 py-8 px-6 rounded-2xl border border-primary/20 bg-primary/5">
+                    <div className="flex flex-row items-center justify-center gap-4">
+                        <div className="flex flex-col items-center justify-center gap-4 w-70 py-8 rounded-2xl border border-primary/20 bg-primary/5">
                             <div className="p-4 rounded-full bg-primary/10">
                                 <User className="w-8 h-8 text-secondary-foreground/80"/>
                             </div>
                             <h1 className="text-xl font-semibold text-secondary-foreground/80">{ts("home.bubble1")}</h1>
                         </div>
-                        <div className="flex flex-col items-center justify-center gap-4 w-90 py-8 px-6 rounded-2xl border border-primary/20 bg-primary/5">
+                        <div className="flex flex-col items-center justify-center gap-4 w-70 py-8 px-6 rounded-2xl border border-primary/20 bg-primary/5">
                             <div className="p-4 rounded-full bg-primary/10">
                                 <LucideFolder className="w-8 h-8 text-secondary-foreground/80"/>
                             </div>
                             <h1 className="text-xl font-semibold text-secondary-foreground/80">{ts("home.bubble2")}</h1>
                         </div>
-                        <div className="col-span-2 flex flex-col items-center justify-center gap-4 py-8 px-6 rounded-2xl border border-primary/20 bg-primary/5">
+                        <div className="col-span-2 flex flex-col items-center justify-center gap-4 py-8 px-6 w-70 rounded-2xl border border-primary/20 bg-primary/5">
                             <div className="p-4 rounded-full bg-primary/10">
                                 <GraduationCap className="w-8 h-8 text-secondary-foreground/80"/>
                             </div>

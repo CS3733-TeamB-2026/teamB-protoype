@@ -4,19 +4,7 @@ import { Bookmark, Loader2 } from "lucide-react";
 import { ContentIcon } from "@/components/shared/ContentIcon.tsx";
 import { getCategory, getExtension, getOriginalFilename, lookupByFilename } from "@/lib/mime.ts";
 import { useAuth0 } from "@auth0/auth0-react";
-
-interface ContentItem {
-    id: number;
-    displayName: string;
-    linkURL: string | null;
-    fileURI: string | null;
-    lastModified: string;
-}
-
-interface BookmarkRecord {
-    bookmarkerId: number;
-    bookmarkedContentId: number;
-}
+import type { ContentItem, BookmarkRecord } from "@/lib/types.ts";
 
 function RecentFiles() {
     const [bookmarkedItems, setBookmarkedItems] = useState<ContentItem[]>([]);
@@ -49,7 +37,7 @@ function RecentFiles() {
                 setLoading(false);
             }
         };
-        fetchBookmarkedContent();
+        void fetchBookmarkedContent();
     }, [user, getAccessTokenSilently]);
 
     if (loading) {
