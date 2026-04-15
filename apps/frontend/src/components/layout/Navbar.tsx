@@ -122,7 +122,7 @@ function Navbar() {
                 {/*settings*/}
                 <Popover>
                     <PopoverTrigger asChild>
-                        <button className="group cursor-pointer p-2 px-6 rounded-full active:scale-[0.96] transition-all duration-200">
+                        <button className="group cursor-pointer p-2 ml-4 mr-1 rounded-full active:scale-[0.96] transition-all duration-200">
                             <Settings
                                 size={22}
                                 className="opacity-70 transition-all duration-200 group-hover:opacity-100"

@@ -435,14 +435,14 @@ function ViewContent() {
                                     ]);
                                     setRefreshing(false);
                                 }}
-                                        className="p-0! gap-0! border-0! flex items-center  rounded-full hover:bg-accent-dark hover:text-primary-foreground active:brightness-80 transition-all bg-accent text-primary-foreground w-12 h-12 text-lg">
+                                        className="cursor-pointer p-0! gap-0! border-0! flex items-center  rounded-full hover:bg-accent-dark hover:text-primary-foreground active:brightness-80 transition-all bg-accent text-primary-foreground w-12 h-12 text-lg">
                                     <span className="flex items-center justify-center min-w-12 h-12">
                                         <RefreshCcw className="w-8! h-8! text-primary-foreground"
                                                     style={refreshing ? { animation: "spin 1.5s ease-in-out reverse" } : undefined}/>
                                     </span>
                                 </Button>
                                 <Button onClick={() => setAddOpen(true)}
-                                        className="p-0! gap-0! border-0! group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-45 hover:bg-acent-dark hover:text-primary-foreground active:brightness-80 transition-all bg-accent text-primary-foreground w-12 h-12 text-lg justify-start">
+                                        className="cursor-pointer p-0! gap-0! border-0! group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-45 hover:bg-acent-dark hover:text-primary-foreground active:brightness-80 transition-all bg-accent text-primary-foreground w-12 h-12 text-lg justify-start">
                                     <span className="flex items-center justify-center min-w-12 h-12">
                                         <Plus className="w-8! h-8! text-primary-foreground "/>
                                     </span>

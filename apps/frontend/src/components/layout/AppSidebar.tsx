@@ -38,10 +38,7 @@ For dropdowns, add more items in children array, leave the array empty for singl
 const navItems: NavItem[] = [
     { title: "Home", icon: Home, href: "/", children: [], access: [], langKey: 'sidebar.home' },
     { title: "Dashboard", icon: LayoutDashboard, href: "/employeehome", children: [], access: ["admin", "underwriter", "businessAnalyst"], langKey: 'sidebar.dashboard' },
-    { title: "Manage Content", icon: Library, href: "/", children: [
-            { title: "View Content", icon: Library, href: "/files", children: [], access: ["admin", "underwriter", "businessAnalyst"], langKey: 'sidebar.viewContent' },
-            { title: "Add Content", icon: Library, href: "/manageform", children: [], access: ["admin", "underwriter", "businessAnalyst"], langKey: 'sidebar.addContent' },
-        ], access: ["admin", "underwriter", "businessAnalyst"], langKey: 'sidebar.manageContent' },
+    { title: "Manage Content", icon: Library, href: "/files", children: [], access: ["admin", "underwriter", "businessAnalyst"], langKey: 'sidebar.manageContent' },
     { title: "Manage Employees", icon: UserCog, href: "/", children: [
             { title: "View Employees", icon: Users, href: "/usermanagement", children: [], access: ["admin"], langKey: 'sidebar.viewEmployees' },
             { title: "Add Employees", icon: UserPlus, href: "/employeeform", children: [], access: ["admin"], langKey: 'sidebar.addEmployees' },
