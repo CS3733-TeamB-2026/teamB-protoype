@@ -17,8 +17,8 @@ function DisclaimerAlert() {
             if (location.pathname == "/" && !hasShownAlert.current && !isAuthenticated) {
                 console.log("DisclaimerAlert2");
                 hasShownAlert.current = true;
-                setTimeout(() => setOpen(true), 500);
-                setTimeout(() => setOpen(false), 5000);
+                setTimeout(() => setOpen(true), 1000);
+                setTimeout(() => setOpen(false), 6000);
             }
         }, 50);
 
@@ -28,13 +28,13 @@ function DisclaimerAlert() {
     return (
         <div className="relative flex items-center">
             <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
-                 className={`absolute flex items-center overflow-hidden transition-all duration-600 ease-in-out ${ open || hovered ? "text-secondary" : "text-secondary/25"}`}
-                 style={{maxWidth: open || hovered ? '800px' : '40px'}}
+                 className={`absolute flex items-center overflow-hidden transition-all duration-900 ease-in-out ${ open || hovered ? "text-secondary" : "text-secondary/25"}`}
+                 style={{maxWidth: open || hovered ? '800px' : '30px'}}
                  onClick={() => { hasShownAlert.current = false }}
             >
-                <AlertTriangle className={`transition-colors duration-200 w-8! h-8! shrink-0 ${ open || hovered ? "text-[#FF6B6B]" : "text-secondary/15"}`}/>
+                <AlertTriangle className={`transition-colors duration-200 w-8! h-8! shrink-0 ${ open || hovered ? "text-accent" : "text-secondary/15"}`}/>
                 <span className="ml-2 w-100 shrink-0 text-xs">
-                    <span className={`font-bold transition-colors duration-400 ${open || hovered ? "text-[#FF6B6B]" : "text-secondary/15"}`}>Disclaimer:</span> This website has been created for WPI’s CS 3733 Software Engineering as a class project and is <span className={`font-bold transition-colors duration-400 ${open || hovered ? "text-[#FF6B6B]" : "text-secondary/15"}`}>not in use by Hanover Insurance.</span></span>
+                    <span className={`font-bold transition-colors duration-800 ${open || hovered ? "text-accent" : "text-secondary/15"}`}>Disclaimer:</span> This website has been created for WPI’s CS 3733 Software Engineering as a class project and is <span className={`font-bold transition-colors duration-800 ${open || hovered ? "text-accent" : "text-secondary/15"}`}>not in use by Hanover Insurance.</span></span>
             </div>
         </div>
     )
