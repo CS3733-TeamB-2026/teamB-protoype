@@ -1,11 +1,6 @@
 import { memo, useEffect, useRef, useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import * as XLSX from "xlsx";
-import Lightbox from "yet-another-react-lightbox";
-import "yet-another-react-lightbox/styles.css";
-import Zoom from "yet-another-react-lightbox/plugins/zoom";
-import Fullscreen from "yet-another-react-lightbox/plugins/fullscreen";
-import ReactMarkdown from "react-markdown";
 import DocViewer, { DocViewerRenderers } from "@iamjariwala/react-doc-viewer";
 import "@iamjariwala/react-doc-viewer/dist/index.css";
 import { getPreviewMode } from "@/lib/mime.ts";
@@ -47,8 +42,6 @@ export function FilePreview({ filename, src, infoSrc }: Props) {
     const [content, setContent] = useState<string | null>(null);
     const [objectUrl, setObjectUrl] = useState<string | null>(null);
     const [tableData, setTableData] = useState<string[][] | null>(null);
-    const [lightboxOpen, setLightboxOpen] = useState(false);
-
     const { getAccessTokenSilently } = useAuth0();
     // Keep a ref so the fetch effect never needs getAccessTokenSilently as a dep.
     // Auth0 returns a new function reference on every render, which would otherwise
@@ -84,7 +77,7 @@ export function FilePreview({ filename, src, infoSrc }: Props) {
 
                 if (previewMode === "none") return;
 
-                if (previewMode === "text" || previewMode === "markdown") {
+                if (previewMode === "text") {
                     const cachedText = getCachedText(src);
                     if (cachedText !== undefined) {
                         setContent(cachedText);
@@ -180,24 +173,12 @@ export function FilePreview({ filename, src, infoSrc }: Props) {
                     {content}
                 </pre>
             )}
-            {status === "ready" && previewMode === "markdown" && (
-                <div className="px-6 pb-4 text-left prose prose-sm max-w-none">
-                    <ReactMarkdown>{content ?? ""}</ReactMarkdown>
-                </div>
-            )}
             {status === "ready" && previewMode === "image" && objectUrl && (
                 <div className="px-6 pb-4">
                     <img
                         src={objectUrl}
                         alt={filename}
-                        className="max-h-64 mx-auto rounded cursor-zoom-in object-contain"
-                        onClick={() => setLightboxOpen(true)}
-                    />
-                    <Lightbox
-                        open={lightboxOpen}
-                        close={() => setLightboxOpen(false)}
-                        slides={[{ src: objectUrl, alt: filename }]}
-                        plugins={[Zoom, Fullscreen]}
+                        className="mx-auto rounded object-contain"
                     />
                 </div>
             )}

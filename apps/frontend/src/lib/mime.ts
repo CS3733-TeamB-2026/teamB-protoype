@@ -21,7 +21,7 @@ export type Category =
     | "archive"
     | "other";
 
-export type PreviewMode = "docviewer" | "image" | "text" | "markdown" | "table" | "none";
+export type PreviewMode = "docviewer" | "image" | "text" | "table" | "none";
 
 export interface AllowedType {
     /** Canonical MIME type. Lowercase. */
@@ -94,7 +94,7 @@ export const ALLOWED_TYPES: readonly AllowedType[] = [
         mimeType: "text/markdown",
         extensions: ["md", "markdown"],
         category: "document",
-        previewMode: "markdown",
+        previewMode: "docviewer",
         label: "Markdown",
     },
 
@@ -121,41 +121,6 @@ export const ALLOWED_TYPES: readonly AllowedType[] = [
         category: "archive",
         previewMode: "none",
         label: "ZIP",
-    },
-    {
-        mimeType: "application/x-tar",
-        extensions: ["tar"],
-        category: "archive",
-        previewMode: "none",
-        label: "TAR",
-    },
-    {
-        mimeType: "application/gzip",
-        extensions: ["gz", "tgz"],
-        category: "archive",
-        previewMode: "none",
-        label: "GZIP",
-    },
-    {
-        mimeType: "application/x-bzip2",
-        extensions: ["bz2"],
-        category: "archive",
-        previewMode: "none",
-        label: "BZIP2",
-    },
-    {
-        mimeType: "application/x-7z-compressed",
-        extensions: ["7z"],
-        category: "archive",
-        previewMode: "none",
-        label: "7-Zip",
-    },
-    {
-        mimeType: "application/vnd.rar",
-        extensions: ["rar"],
-        category: "archive",
-        previewMode: "none",
-        label: "RAR",
     },
 
     // --- Images (rendered with an <img> tag) ---
