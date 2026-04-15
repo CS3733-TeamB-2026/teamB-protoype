@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.tsx";
 import { useEffect, useState } from "react";
-import { Loader2, Pencil, Trash2, Search } from "lucide-react";
+import {Loader2, Pencil, Trash2, Search, Plus} from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { Link } from "react-router-dom";
 import { Hero } from "@/components/shared/Hero.tsx";
@@ -12,7 +12,7 @@ import { SortableHead } from "@/components/shared/SortableHead.tsx";
 import { useSortState, applySortState } from "@/hooks/use-sort-state.ts";
 import {PersonaBadge} from "@/components/shared/PersonaBadge.tsx";
 import { useUser } from "@/hooks/use-user.ts";
-import { findMatches, highlight, highlightRange } from "@/lib/highlight.tsx";
+import { findMatches, /*highlight,*/ highlightRange } from "@/lib/highlight.tsx";
 import { useAuth0 } from "@auth0/auth0-react";
 
 export type Employee = {
@@ -53,15 +53,6 @@ function ViewEmployees() {
         }
 
         fetchEmployees();
-
-        /*
-        fetch("/api/employee/all")
-            .then((res) => res.json())
-            .then((data) => {
-                setEmployees(data);
-                setLoading(false);
-            })
-            .catch(() => setLoading(false)); */
 
     }, [getAccessTokenSilently]);
 
@@ -110,18 +101,23 @@ function ViewEmployees() {
                 description="View, update, and delete employees."
             />
 
-            <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center">
+            <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center px-4">
                 <CardHeader>
                     <CardTitle className="text-3xl text-primary mt-4">All Employees</CardTitle>
                     <CardDescription>Total Employees: {employees.length}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="flex items-center justify-between mb-4">
-                        <Link to="/employeeform">
-                            <Button className="my-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-60 mr-auto rounded-lg px-2 py-6 text-xl">
-                                Add Employee
-                            </Button>
-                        </Link>
+                        <div>
+                            <Link to="/employeeform">
+                                <Button className="cursor-pointer p-0! gap-0! border-0! group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-48 hover:bg-accent-dark hover:text-primary-foreground active:brightness-80 transition-all bg-accent text-primary-foreground w-12 h-12 text-lg justify-start">
+                                <span className="flex items-center justify-center min-w-12 h-12">
+                                    <Plus className="w-8! h-8! text-primary-foreground " />
+                                </span>
+                                    <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Add Employees</span>
+                                </Button>
+                            </Link>
+                        </div>
                         <div className="relative">
                             <Search
                                 className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 pointer-events-none"
@@ -146,8 +142,8 @@ function ViewEmployees() {
                                 <TableRow className="hover:bg-transparent">
                                     <SortableHead column="id" label="ID" sort={sort} onSort={toggleSort} />
                                     <SortableHead column="firstName" label="First Name" sort={sort} onSort={toggleSort} />
-                                    <SortableHead column="lastName" label="Last Name" sort={sort} onSort={toggleSort} />
-                                    <SortableHead column="userName" label="User Name" sort={sort} onSort={toggleSort} className="w-full" />
+                                    <SortableHead column="lastName" label="Last Name" sort={sort} onSort={toggleSort} className="w-full" />
+                                    {/*<SortableHead column="userName" label="User Name" sort={sort} onSort={toggleSort} className="w-full" />*/}
                                     <SortableHead column="persona" label="Persona" sort={sort} onSort={toggleSort} />
                                     <TableHead className="uppercase tracking-wider text-muted-foreground select-none">Actions</TableHead>
                                 </TableRow>
@@ -158,7 +154,7 @@ function ViewEmployees() {
                                     if (col === "firstName") return e.firstName;
                                     if (col === "lastName") return e.lastName;
                                     if (col === "persona") return e.persona;
-                                    if (col === "userName") return e.login?.userName ?? "";
+                                    //if (col === "userName") return auth0User?.username ?? "";
                                 }).map((employee) => {
                                     const matches = findMatches(employee.firstName+employee.lastName, searchTerm);
                                     return (
@@ -166,7 +162,7 @@ function ViewEmployees() {
                                         <TableCell className="text-right pr-4">{employee.id}</TableCell>
                                         <TableCell className="font-medium">{highlightRange(employee.firstName, 0, matches)}</TableCell>
                                         <TableCell className="font-medium">{highlightRange(employee.lastName, employee.firstName.length, matches)}</TableCell>
-                                        <TableCell>{highlight(employee.login?.userName || "—", searchTerm)}</TableCell>
+                                        {/*<TableCell>{highlight(auth0User?.nickname || "—", searchTerm)}</TableCell>*/}
                                         <TableCell  className="text-center">
                                             <PersonaBadge
                                                 persona={employee.persona}

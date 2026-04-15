@@ -11,6 +11,7 @@ import * as content from './hooks/content'
 import * as employee from './hooks/employee'
 import * as bookmark from './hooks/bookmark'
 import { auth } from 'express-oauth2-jwt-bearer'
+import {createEmployeeWithAuth0} from "./hooks/employee";
 
 const app = express();
 app.use(cors());
@@ -55,8 +56,9 @@ app.delete("/api/bookmark/:contentId", bookmark.removeBookmark)
 app.get("/api/employee/all", employee.getAllEmployeesWithLogin)
 app.get("/api/employee", employee.getAllEmployees)
 app.get("/api/employee/me", employee.getMe);
-app.get("/api/employee/:id", employee.getEmployeeById)
+app.post("/api/employee/auth", employee.createEmployeeWithAuth0)
 app.post("/api/employee", employee.createEmployee)
+app.get("/api/employee/:id", employee.getEmployeeById)
 app.put("/api/employee", employee.updateEmployee)
 app.delete("/api/employee", employee.deleteEmployee)
 

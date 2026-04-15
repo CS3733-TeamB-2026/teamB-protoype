@@ -14,6 +14,7 @@ import {Hero} from "@/components/shared/Hero.tsx";
 import {LayoutDashboard, User, Clock, Users, UserPlus, FolderOpen, Plus} from "lucide-react"
 import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx";
 import MyFiles from "@/components/shared/MyFiles.tsx";
+import BookmarkedFiles from "@/components/shared/BookmarkedFiles.tsx";
 
 function EmployeeHome() {
     const user = useUser();
@@ -51,7 +52,7 @@ function EmployeeHome() {
                         <div className="flex justify-between items-center">
                             <div className="flex flex-row gap-5 items-center">
                                 <Avatar className="w-15 h-15 ">
-                                    <AvatarFallback className="bg-primary text-primary-foreground">{user ? user.firstName[0] + user.lastName[0] : <User />}</AvatarFallback>
+                                    <AvatarFallback className="bg-accent text-primary-foreground text-lg">{user ? user.firstName[0] + user.lastName[0] : <User />}</AvatarFallback>
                                 </Avatar>
                                 <div>
                                     <CardTitle className="text-3xl text-left">Welcome back, {user?.firstName} {user?.lastName}.</CardTitle>
@@ -76,10 +77,9 @@ function EmployeeHome() {
 
                 {/* Expiring Soon */}
                 <Card className="shadow-lg hover:scale-101 transition-transform md:col-span-1 px-4 py-8">
-                    <CardHeader className="text-left text-2xl! font-semibold">Expiring Soon: </CardHeader>
+                    <CardHeader className="text-left text-2xl! font-semibold">Bookmarked: </CardHeader>
                     <CardContent>
-                        <RecentFiles />
-                        <p>Temporary</p>
+                        <BookmarkedFiles />
                     </CardContent>
                 </Card>
 
@@ -103,7 +103,7 @@ function EmployeeHome() {
                         <div className="flex flex-col gap-3 px-2">
                             {user?.persona === "admin" ?
                                 <Link to="/usermanagement" className="w-full">
-                                    <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
+                                    <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-accent hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
                                         <Users className="w-4 h-4 shrink-0" />
                                         View Users
                                     </Button>
@@ -113,7 +113,7 @@ function EmployeeHome() {
                             }
                             {user?.persona === "admin" ?
                                 <Link to="/employeeform" className="w-full">
-                                    <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
+                                    <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-accent hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
                                         <UserPlus className="w-4 h-4 shrink-0" />
                                         Add Employee
                                     </Button>
@@ -122,13 +122,13 @@ function EmployeeHome() {
                                 null
                             }
                             <Link to="/files" className="w-full">
-                                <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
+                                <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-accent hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
                                     <FolderOpen className="w-4 h-4 shrink-0" />
                                     View Files
                                 </Button>
                             </Link>
                             <Link to="/manageform" className="w-full">
-                                <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
+                                <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-accent hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
                                     <Plus className="w-4 h-4 shrink-0" />
                                     Add Content
                                 </Button>

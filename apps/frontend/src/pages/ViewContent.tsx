@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import {
     AlertCircle,
     Bookmark,
@@ -13,12 +13,13 @@ import {
     Search,
     Plus,
     Lock,
+    RefreshCcw,
 } from "lucide-react";
-import { Button } from "@/components/ui/button.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Link } from "react-router-dom";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { LinkSquare01Icon } from "@hugeicons/core-free-icons";
+import {Button} from "@/components/ui/button.tsx";
+import {Input} from "@/components/ui/input.tsx";
+import {Link} from "react-router-dom";
+import {HugeiconsIcon} from "@hugeicons/react";
+import {LinkSquare01Icon} from "@hugeicons/core-free-icons";
 import {
     Card,
     CardContent,
@@ -34,27 +35,27 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table.tsx";
-import { Hero } from "@/components/shared/Hero.tsx";
-import { ContentIcon } from "@/components/shared/ContentIcon.tsx";
-import { ConfirmDeleteDialog } from "@/dialogs/ConfirmDeleteDialog.tsx";
-import { SortableHead } from "@/components/shared/SortableHead.tsx";
-import { useSortState, applySortState } from "@/hooks/use-sort-state.ts";
-import { useUser } from "@/hooks/use-user.ts";
+import {Hero} from "@/components/shared/Hero.tsx";
+import {ContentIcon} from "@/components/shared/ContentIcon.tsx";
+import {ConfirmDeleteDialog} from "@/dialogs/ConfirmDeleteDialog.tsx";
+import {SortableHead} from "@/components/shared/SortableHead.tsx";
+import {useSortState, applySortState} from "@/hooks/use-sort-state.ts";
+import {useUser} from "@/hooks/use-user.ts";
 import {
     getCategory,
     getExtension,
     getOriginalFilename,
 } from "@/lib/mime.ts";
-import { ContentExtBadge } from "@/components/shared/ContentExtBadge.tsx";
-import { ContentStatusBadge } from "@/components/shared/ContentStatusBadge.tsx";
-import { ContentTypeBadge } from "@/components/shared/ContentTypeBadge.tsx";
-import { PersonaBadge } from "@/components/shared/PersonaBadge.tsx";
-import { EditContentDialog } from "@/dialogs/EditContentDialog.tsx";
-import { AddContentDialog } from "@/dialogs/AddContentDialog.tsx";
-import { FilePreview } from "@/components/FilePreview.tsx";
-import { useAuth0 } from "@auth0/auth0-react"
+import {ContentExtBadge} from "@/components/shared/ContentExtBadge.tsx";
+import {ContentStatusBadge} from "@/components/shared/ContentStatusBadge.tsx";
+import {ContentTypeBadge} from "@/components/shared/ContentTypeBadge.tsx";
+import {PersonaBadge} from "@/components/shared/PersonaBadge.tsx";
+import {EditContentDialog} from "@/dialogs/EditContentDialog.tsx";
+import {AddContentDialog} from "@/dialogs/AddContentDialog.tsx";
+import {FilePreview} from "@/components/FilePreview.tsx";
+import {useAuth0} from "@auth0/auth0-react"
 import {highlight} from "@/lib/highlight.tsx";
-import { toast } from "sonner";
+import {toast} from "sonner";
 
 // Matches the Content model from Prisma (with joined owner)
 export interface ContentItem {
@@ -97,7 +98,10 @@ function ViewContent() {
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [bookmarks, setBookmarks] = useState<BookmarkRecord[]>([]);
     const [deleteTarget, setDeleteTarget] = useState<ContentItem | null>(null);
-    const [sort, toggleSort] = useSortState<"name" | "owner" | "status" | "contentType" | "persona">({column: "name", direction: "asc"});
+    const [sort, toggleSort] = useSortState<"name" | "owner" | "status" | "contentType" | "persona">({
+        column: "name",
+        direction: "asc"
+    });
     const [linkPreviews, setLinkPreviews] = useState<
         Record<
             number,
@@ -125,6 +129,7 @@ function ViewContent() {
     const searchedContent = content.filter((item) =>
         item.displayName.toLowerCase().includes(searchTerm.toLowerCase())
     );
+    const [refreshing, setRefreshing] = useState(false);
 
     const advancedFilteredContent = searchedContent.filter((item) => {
         const matchesStatus =
@@ -161,17 +166,17 @@ function ViewContent() {
         (advancedFilters.bookmarkedOnly ? 1 : 0) +
         (advancedFilters.ownedByMe ? 1 : 0);
 
-    const { getAccessTokenSilently } = useAuth0();
+    const {getAccessTokenSilently} = useAuth0();
 
     const fetchPreviews = useCallback((data: ContentItem[]) => {
         data.filter((item) => item.linkURL).forEach((item) => {
             fetch(`/api/preview?url=${encodeURIComponent(item.linkURL!)}`)
                 .then((res) => (res.ok ? res.json() : Promise.reject()))
-                .then((preview) => setLinkPreviews((prev) => ({ ...prev, [item.id]: preview })))
+                .then((preview) => setLinkPreviews((prev) => ({...prev, [item.id]: preview})))
                 .catch(() =>
                     setLinkPreviews((prev) => ({
                         ...prev,
-                        [item.id]: { title: null, description: null, image: null, siteName: null, favicon: null },
+                        [item.id]: {title: null, description: null, image: null, siteName: null, favicon: null},
                     }))
                 );
         });
@@ -180,7 +185,7 @@ function ViewContent() {
     const updateBookmarks = useCallback(async () => {
         try {
             const token = await getAccessTokenSilently();
-            const res = await fetch(`/api/bookmark`, { headers: { Authorization: `Bearer ${token}` } });
+            const res = await fetch(`/api/bookmark`, {headers: {Authorization: `Bearer ${token}`}});
             const data: BookmarkRecord[] = await res.json();
             setBookmarks(data);
         } catch {
@@ -191,7 +196,7 @@ function ViewContent() {
     const refreshContent = useCallback(async () => {
         try {
             const token = await getAccessTokenSilently();
-            const res = await fetch(`/api/content`, { headers: { Authorization: `Bearer ${token}` } });
+            const res = await fetch(`/api/content`, {headers: {Authorization: `Bearer ${token}`}});
             const data: ContentItem[] = await res.json();
             setContent(data);
             fetchPreviews(data);
@@ -208,7 +213,7 @@ function ViewContent() {
             try {
                 const token = await getAccessTokenSilently();
                 const res = await fetch('/api/content', {
-                    headers: { Authorization: `Bearer ${token}` },
+                    headers: {Authorization: `Bearer ${token}`},
                 });
                 const data: ContentItem[] = await res.json();
                 setContent(data);
@@ -240,13 +245,13 @@ function ViewContent() {
         if (isCurrentlyBookmarked) {
             setBookmarks((prev) => prev.filter((b) => b.bookmarkedContentId !== id));
         } else {
-            setBookmarks((prev) => [...prev, { bookmarkerId: user!.id, bookmarkedContentId: id }]);
+            setBookmarks((prev) => [...prev, {bookmarkerId: user!.id, bookmarkedContentId: id}]);
         }
         try {
             const token = await getAccessTokenSilently();
             await fetch(`/api/bookmark/${id}`, {
                 method: isCurrentlyBookmarked ? "DELETE" : "POST",
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {Authorization: `Bearer ${token}`},
             });
             if (isCurrentlyBookmarked) {
                 toast.success("Bookmark removed.");
@@ -256,7 +261,7 @@ function ViewContent() {
         } catch {
             // Roll back on error
             if (isCurrentlyBookmarked) {
-                setBookmarks((prev) => [...prev, { bookmarkerId: user!.id, bookmarkedContentId: id }]);
+                setBookmarks((prev) => [...prev, {bookmarkerId: user!.id, bookmarkedContentId: id}]);
             } else {
                 setBookmarks((prev) => prev.filter((b) => b.bookmarkedContentId !== id));
             }
@@ -297,7 +302,7 @@ function ViewContent() {
         const token = await getAccessTokenSilently();
         const res = await fetch(`/api/content/${id}`, {
             method: "DELETE",
-            headers: { Authorization: `Bearer ${token}` },
+            headers: {Authorization: `Bearer ${token}`},
         });
         if (res.ok) {
             setContent((prev) => prev.filter((item) => item.id !== id));
@@ -305,9 +310,11 @@ function ViewContent() {
         setDeleteTarget(null);
     };
 
-    const handleStartEdit = async (item: ContentItem, e:React.MouseEvent) => {
+    const handleStartEdit = async (item: ContentItem, e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!canEdit(item)) { return;}
+        if (!canEdit(item)) {
+            return;
+        }
         try {
             const token = await getAccessTokenSilently();
             const res = await fetch(`/api/content/checkout`, {
@@ -316,39 +323,39 @@ function ViewContent() {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`
                 },
-            body: JSON.stringify({
-                id: item.id,
-                employeeID: user!.id,
-            }),
+                body: JSON.stringify({
+                    id: item.id,
+                    employeeID: user!.id,
+                }),
             });
             const data = await res.json();
-            if(!res.ok) {
+            if (!res.ok) {
                 setError(data.message || "Someone else is editing");
                 return;
             }
-            setContent ((prev) =>
-            prev.map((c) => (c.id === item.id ? {...c, ...data}: c)));
-            setEditingContent({ ...item, ...data });
+            setContent((prev) =>
+                prev.map((c) => (c.id === item.id ? {...c, ...data} : c)));
+            setEditingContent({...item, ...data});
             setEditOpen(true);
         } catch {
             setError("Someone else is editing");
         }
 
-        }
+    }
 
 
     const NUM_COLS = 8;
 
     if (!user) return (
         <div className="flex items-center justify-center min-h-screen bg-secondary">
-            <Loader2 className="w-10 h-10 text-primary animate-spin" />
+            <Loader2 className="w-10 h-10 text-primary animate-spin"/>
         </div>
     );
 
     return (
         <>
             <Hero
-                icon={ LucideFolders }
+                icon={LucideFolders}
                 title="View Content"
                 description="View, update, and delete content you have access to"
             />
@@ -371,22 +378,25 @@ function ViewContent() {
 
                     {loading && (
                         <div className="flex items-center justify-center py-16 gap-3 text-muted-foreground">
-                            <Loader2 className="w-6 h-6 animate-spin" />
+                            <Loader2 className="w-6 h-6 animate-spin"/>
                             <p className="text-sm">Loading...</p>
                         </div>
                     )}
                     {error && (
                         <div className="flex flex-col items-center justify-center py-16 gap-3 text-destructive">
-                            <AlertCircle className="w-8 h-8" />
+                            <AlertCircle className="w-8 h-8"/>
                             <p className="text-sm font-medium">{error}</p>
                         </div>
                     )}
                     {!loading && !error && content.length === 0 && (
                         <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
-                            <FolderOpen className="w-10 h-10" />
+                            <FolderOpen className="w-10 h-10"/>
                             <p className="text-sm">No content found.</p>
-                            <Button onClick={() => setAddOpen(true)} className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-60 rounded-lg px-2 py-6 text-xl">Add Content +</Button>
+                            <Button onClick={() => setAddOpen(true)}
+                                    className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-60 rounded-lg px-2 py-6 text-xl">Add
+                                Content +</Button>
                         </div>
+
                     )}
                     {!loading && !error && content.length > 0 && <>
                         <div className="flex flex-row justify-between items-baseline mb-2">
@@ -415,19 +425,39 @@ function ViewContent() {
                                     />
                                 </div>
                             </div>
-                            <div>
-                                <Button onClick={() => setAddOpen(true)} className="p-0! gap-0! border-0! group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-45 hover:bg-primary-dark hover:text-primary-foreground active:brightness-80 transition-all bg-primary text-primary-foreground w-12 h-12 text-lg justify-start">
+
+                            <div className="flex flex-row gap-2">
+                                <Button onClick={async () => {
+                                    setRefreshing(true);
+                                    await Promise.all([
+                                        refreshContent(),
+                                        new Promise((r) => setTimeout(r, 1500)),
+                                    ]);
+                                    setRefreshing(false);
+                                }}
+                                        className="p-0! gap-0! border-0! flex items-center  rounded-full hover:bg-accent-dark hover:text-primary-foreground active:brightness-80 transition-all bg-accent text-primary-foreground w-12 h-12 text-lg">
                                     <span className="flex items-center justify-center min-w-12 h-12">
-                                        <Plus className="w-8! h-8! text-primary-foreground " />
+                                        <RefreshCcw className="w-8! h-8! text-primary-foreground"
+                                                    style={refreshing ? { animation: "spin 1.5s ease-in-out reverse" } : undefined}/>
                                     </span>
-                                    <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Add Content</span>
                                 </Button>
+                                <Button onClick={() => setAddOpen(true)}
+                                        className="p-0! gap-0! border-0! group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-45 hover:bg-acent-dark hover:text-primary-foreground active:brightness-80 transition-all bg-accent text-primary-foreground w-12 h-12 text-lg justify-start">
+                                    <span className="flex items-center justify-center min-w-12 h-12">
+                                        <Plus className="w-8! h-8! text-primary-foreground "/>
+                                    </span>
+                                    <span
+                                        className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Add Content</span>
+                                </Button>
+
+
                             </div>
                         </div>
                         <div className={`flex gap-4 items-start`}>
                             {/* Filter Sidebar */}
                             {showAdvancedFilters && (
-                                <div className="mt-10 shrink-0 w-48 rounded-lg border p-3 bg-muted/20 text-left text-sm">
+                                <div
+                                    className="mt-10 shrink-0 w-48 rounded-lg border p-3 bg-muted/20 text-left text-sm">
                                     <div className="flex flex-col gap-4">
                                         <div>
                                             <p className="font-medium mb-2">Status</p>
@@ -556,14 +586,20 @@ function ViewContent() {
                                 <Table className="text-left md:col-span-2">
                                     <TableHeader>
                                         <TableRow className="hover:bg-transparent">
-                                            <TableHead className="w-8" />
-                                            <SortableHead column="name" label="Name" sort={sort} onSort={toggleSort} />
-                                            <SortableHead column="owner" label="Owner" sort={sort} onSort={toggleSort} className="hidden sm:table-cell" />
-                                            <SortableHead column="status" label="Status" sort={sort} onSort={toggleSort} className="hidden sm:table-cell" />
-                                            <SortableHead column="contentType" label="Kind" sort={sort} onSort={toggleSort} className="hidden sm:table-cell" />
-                                            <SortableHead column="persona" label="Persona" sort={sort} onSort={toggleSort} className="hidden sm:table-cell" />
-                                            <TableHead className="hidden sm:table-cell uppercase tracking-wider text-muted-foreground select-none text-center">Type</TableHead>
-                                            <TableHead className="uppercase tracking-wider text-muted-foreground select-none text-center">Actions</TableHead>
+                                            <TableHead className="w-8"/>
+                                            <SortableHead column="name" label="Name" sort={sort} onSort={toggleSort}/>
+                                            <SortableHead column="owner" label="Owner" sort={sort} onSort={toggleSort}
+                                                          className="hidden sm:table-cell"/>
+                                            <SortableHead column="status" label="Status" sort={sort} onSort={toggleSort}
+                                                          className="hidden sm:table-cell"/>
+                                            <SortableHead column="contentType" label="Kind" sort={sort}
+                                                          onSort={toggleSort} className="hidden sm:table-cell"/>
+                                            <SortableHead column="persona" label="Persona" sort={sort}
+                                                          onSort={toggleSort} className="hidden sm:table-cell"/>
+                                            <TableHead
+                                                className="hidden sm:table-cell uppercase tracking-wider text-muted-foreground select-none text-center">Type</TableHead>
+                                            <TableHead
+                                                className="uppercase tracking-wider text-muted-foreground select-none text-center">Actions</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -628,9 +664,9 @@ function ViewContent() {
                                                     </span>
                                                                 <span className="text-muted-foreground shrink-0">
                                                         {isExpanded ? (
-                                                            <ChevronDown className="w-4 h-4" />
+                                                            <ChevronDown className="w-4 h-4"/>
                                                         ) : (
-                                                            <ChevronRight className="w-4 h-4" />
+                                                            <ChevronRight className="w-4 h-4"/>
                                                         )}
                                                     </span>
                                                             </div>
@@ -653,7 +689,7 @@ function ViewContent() {
                                                         </TableCell>
 
                                                         <TableCell className="hidden sm:table-cell text-center">
-                                                            <PersonaBadge persona={item.targetPersona} />
+                                                            <PersonaBadge persona={item.targetPersona}/>
                                                         </TableCell>
 
                                                         <TableCell className="hidden sm:table-cell text-center">
@@ -667,19 +703,28 @@ function ViewContent() {
                                                         <TableCell>
                                                             <div className="flex justify-end gap-1">
                                                                 {(() => {
-                                                                    const icon = <HugeiconsIcon icon={LinkSquare01Icon} className="w-4 h-4" />;
+                                                                    const icon = <HugeiconsIcon icon={LinkSquare01Icon}
+                                                                                                className="w-4 h-4"/>;
                                                                     const btnClass = "w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground";
                                                                     if (item.fileURI) return (
-                                                                        <Link to={`/file/${item.id}`} onClick={(e) => e.stopPropagation()}>
-                                                                            <button className={btnClass} title="View file">{icon}</button>
+                                                                        <Link to={`/file/${item.id}`}
+                                                                              onClick={(e) => e.stopPropagation()}>
+                                                                            <button className={btnClass}
+                                                                                    title="View file">{icon}</button>
                                                                         </Link>
                                                                     );
                                                                     if (item.linkURL) return (
-                                                                        <a href={item.linkURL} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
-                                                                            <button className={btnClass} title="Open link">{icon}</button>
+                                                                        <a href={item.linkURL} target="_blank"
+                                                                           rel="noopener noreferrer"
+                                                                           onClick={(e) => e.stopPropagation()}>
+                                                                            <button className={btnClass}
+                                                                                    title="Open link">{icon}</button>
                                                                         </a>
                                                                     );
-                                                                    return <button className="w-8 h-8 flex items-center justify-center rounded-md opacity-30 cursor-not-allowed text-muted-foreground" title="No file or link" disabled>{icon}</button>;
+                                                                    return <button
+                                                                        className="w-8 h-8 flex items-center justify-center rounded-md opacity-30 cursor-not-allowed text-muted-foreground"
+                                                                        title="No file or link"
+                                                                        disabled>{icon}</button>;
                                                                 })()}
                                                                 <button
                                                                     className={`w-8 h-8 flex items-center justify-center rounded-md transition-colors ${isBookmarked ? "text-primary hover:text-primary/70" : "text-muted-foreground hover:text-foreground"}`}
@@ -687,9 +732,9 @@ function ViewContent() {
                                                                     aria-label={isBookmarked ? "Remove bookmark" : "Bookmark"}
                                                                 >
                                                                     {isBookmarked ? (
-                                                                        <BookmarkCheck className="w-4 h-4" />
+                                                                        <BookmarkCheck className="w-4 h-4"/>
                                                                     ) : (
-                                                                        <Bookmark className="w-4 h-4" />
+                                                                        <Bookmark className="w-4 h-4"/>
                                                                     )}
                                                                 </button>
                                                                 <Button
@@ -700,18 +745,21 @@ function ViewContent() {
                                                                     onClick={(e) => handleStartEdit(item, e)}
                                                                 >
                                                                     {isCheckedOut(item) ? (
-                                                                        <Lock className="w-4 h-4" />
+                                                                        <Lock className="w-4 h-4"/>
                                                                     ) : (
-                                                                        <Pencil className="w-4 h-4" />
+                                                                        <Pencil className="w-4 h-4"/>
                                                                     )}
                                                                 </Button>
                                                                 <Button
                                                                     variant="destructive"
                                                                     size="sm"
                                                                     disabled={!canEdit(item)}
-                                                                    onClick={(e) => { e.stopPropagation(); setDeleteTarget(item); }}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setDeleteTarget(item);
+                                                                    }}
                                                                 >
-                                                                    <Trash2 className="w-4 h-4" />
+                                                                    <Trash2 className="w-4 h-4"/>
                                                                 </Button>
                                                             </div>
                                                         </TableCell>
@@ -724,10 +772,12 @@ function ViewContent() {
                                                                 colSpan={NUM_COLS}
                                                                 className="px-6 py-2 bg-muted/10 border-t border-border"
                                                             >
-                                                                <div className="flex gap-6 text-xs text-muted-foreground">
+                                                                <div
+                                                                    className="flex gap-6 text-xs text-muted-foreground">
                                                                     {item.checkedOutBy && (
                                                                         <span>
-                                                                    <span className = "font-medium text-foreground">Editing </span>
+                                                                    <span
+                                                                        className="font-medium text-foreground">Editing </span>
                                                                             {item.checkedOutBy.firstName} {item.checkedOutBy.lastName}
                                                                 </span>
                                                                     )}
@@ -864,7 +914,8 @@ function ViewContent() {
                                                     {/* Expanded: file preview */}
                                                     {isExpanded && isFile && (
                                                         <TableRow className="hover:bg-transparent">
-                                                            <TableCell colSpan={NUM_COLS} className="p-0 max-w-0 overflow-hidden">
+                                                            <TableCell colSpan={NUM_COLS}
+                                                                       className="p-0 max-w-0 overflow-hidden">
                                                                 <FilePreview
                                                                     filename={originalFilename!}
                                                                     src={`/api/content/download/${item.id}`}
@@ -881,22 +932,26 @@ function ViewContent() {
                             </div>
 
                         </div>
-                    {bookmarks.length > 0 && (
-                        <div className="mt-4 px-3 py-2 rounded-md bg-primary/5 border border-primary/20 text-xs text-muted-foreground">
+                        {bookmarks.length > 0 && (
+                            <div
+                                className="mt-4 px-3 py-2 rounded-md bg-primary/5 border border-primary/20 text-xs text-muted-foreground">
                             <span className="font-medium text-primary">
                                 {bookmarks.length}
                             </span>{" "}
-                            item{bookmarks.length !== 1 ? "s" : ""} bookmarked
-                        </div>
-                    )}
+                                item{bookmarks.length !== 1 ? "s" : ""} bookmarked
+                            </div>
+                        )}
                     </>}
                 </CardContent>
             </Card>
 
             <ConfirmDeleteDialog
                 open={!!deleteTarget}
-                onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
-                description={deleteTarget ? <span>This will permanently delete <strong>"{deleteTarget.displayName}"</strong>.</span> : undefined}
+                onOpenChange={(open) => {
+                    if (!open) setDeleteTarget(null);
+                }}
+                description={deleteTarget ?
+                    <span>This will permanently delete <strong>"{deleteTarget.displayName}"</strong>.</span> : undefined}
                 onConfirm={() => handleDelete(deleteTarget!.id)}
             />
 
@@ -909,9 +964,10 @@ function ViewContent() {
                         fetch(`/api/preview?url=${encodeURIComponent(created.linkURL)}`)
                             .then((r) => r.ok ? r.json() : null)
                             .then((preview) => {
-                                if (preview) setLinkPreviews((prev) => ({ ...prev, [created.id]: preview }));
+                                if (preview) setLinkPreviews((prev) => ({...prev, [created.id]: preview}));
                             })
-                            .catch(() => {});
+                            .catch(() => {
+                            });
                     }
                 }}
             />
