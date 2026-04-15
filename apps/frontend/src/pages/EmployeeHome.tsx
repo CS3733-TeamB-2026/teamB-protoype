@@ -11,8 +11,8 @@ import {Link} from "react-router-dom";
 import RecentFiles from "@/components/RecentFiles.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {Hero} from "@/components/shared/Hero.tsx";
-import {LayoutDashboard, User, Clock, Users, UserPlus, FolderOpen, Plus} from "lucide-react"
-import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx";
+import {LayoutDashboard, Clock, Users, UserPlus, FolderOpen, Plus} from "lucide-react"
+import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
 import MyFiles from "@/components/shared/MyFiles.tsx";
 import BookmarkedFiles from "@/components/shared/BookmarkedFiles.tsx";
 
@@ -52,7 +52,12 @@ function EmployeeHome() {
                         <div className="flex justify-between items-center">
                             <div className="flex flex-row gap-5 items-center">
                                 <Avatar className="w-15 h-15 ">
-                                    <AvatarFallback className="bg-accent text-primary-foreground text-lg">{user ? user.firstName[0] + user.lastName[0] : <User />}</AvatarFallback>
+                                    {
+                                        user?.profilePhotoURI?
+                                            <AvatarImage src={user?.profilePhotoURI} />
+                                            :
+                                            <AvatarFallback className="bg-accent text-primary-foreground">{" " + user?.firstName[0] + user?.lastName[0]}</AvatarFallback>
+                                    }
                                 </Avatar>
                                 <div>
                                     <CardTitle className="text-3xl text-left">Welcome back, {user?.firstName} {user?.lastName}.</CardTitle>
