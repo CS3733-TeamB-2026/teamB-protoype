@@ -1,6 +1,7 @@
 import { AlertTriangle } from "lucide-react";
 import React, {useEffect} from "react";
 import { useLocation } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
 
 function DisclaimerAlert() {
 
@@ -8,15 +9,16 @@ function DisclaimerAlert() {
     const [hovered, setHovered] = React.useState(false);
     const hasShownAlert = React.useRef(false);
     const location = useLocation();
+    const {isAuthenticated} = useAuth0();
 
     useEffect( () => {
         console.log("DisclaimerAlert");
         const timer = setTimeout(() => {
-            if (location.pathname == "/" && !hasShownAlert.current) {
+            if (location.pathname == "/" && !hasShownAlert.current && !isAuthenticated) {
                 console.log("DisclaimerAlert2");
                 hasShownAlert.current = true;
                 setTimeout(() => setOpen(true), 500);
-                setTimeout(() => setOpen(false), 4000);
+                setTimeout(() => setOpen(false), 5000);
             }
         }, 50);
 
@@ -30,8 +32,9 @@ function DisclaimerAlert() {
                  style={{maxWidth: open || hovered ? '800px' : '40px'}}
                  onClick={() => { hasShownAlert.current = false }}
             >
-                <AlertTriangle className={`w-8! h-8! shrink-0 ${ open || hovered ? "text-destructive" : "text-secondary/15"} transition-colors`}/>
-                <span className="ml-2 w-100 shrink-0 text-xs"><b>Disclaimer:</b> This website has been created for WPI’s CS 3733 Software Engineering as a class project and is not in use by Hanover Insurance.</span>
+                <AlertTriangle className={`transition-colors duration-200 w-8! h-8! shrink-0 ${ open || hovered ? "text-[#FF6B6B]" : "text-secondary/15"}`}/>
+                <span className="ml-2 w-100 shrink-0 text-xs">
+                    <span className={`font-bold transition-colors duration-400 ${open || hovered ? "text-[#FF6B6B]" : "text-secondary/15"}`}>Disclaimer:</span> This website has been created for WPI’s CS 3733 Software Engineering as a class project and is <span className={`font-bold transition-colors duration-400 ${open || hovered ? "text-[#FF6B6B]" : "text-secondary/15"}`}>not in use by Hanover Insurance.</span></span>
             </div>
         </div>
     )
