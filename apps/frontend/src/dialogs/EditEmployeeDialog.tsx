@@ -16,7 +16,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select.tsx";
-import type { Employee } from "@/pages/ViewEmployees.tsx";
+import type { Employee } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 
 interface Props {

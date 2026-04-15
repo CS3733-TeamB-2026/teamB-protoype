@@ -1,4 +1,4 @@
-import type { ContentItem } from "@/pages/ViewContent.tsx";
+import type { ContentItem } from "@/lib/types.ts";
 
 export type ContentFormValues = {
     name: string;
