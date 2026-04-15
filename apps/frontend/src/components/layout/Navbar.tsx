@@ -22,7 +22,7 @@ function Navbar() {
     //const [loginOpen, setLoginOpen] = React.useState(false);
     //const [user, setUser] = useUser();
 
-    const { isAuthenticated, loginWithRedirect, logout, user: auth0User } = useAuth0();
+    const { isAuthenticated, loginWithRedirect, logout } = useAuth0();
 
     const user = useUser();
 
@@ -60,7 +60,7 @@ function Navbar() {
                                         { isAuthenticated ? user?.firstName + " " + user?.lastName : "Log In"}
                                     </span>
                                     <Avatar className="cursor-pointer w-10 h-10 ">
-                                        <AvatarFallback className="bg-secondary text-primary">{isAuthenticated ? " " + user?.firstName[0] + user?.lastName[0] : <UserIcon />}</AvatarFallback>
+                                        <AvatarFallback className="bg-accent text-primary-foreground">{isAuthenticated ? " " + user?.firstName[0] + user?.lastName[0] : <UserIcon />}</AvatarFallback>
                                     </Avatar>
                                 </button>
 
@@ -75,16 +75,16 @@ function Navbar() {
                                 <div className="flex flex-col gap-3">
                                     <div className="flex items-center gap-3">
                                         <Avatar className="cursor-pointer w-10 h-10 ">
-                                            <AvatarFallback className="bg-primary text-primary-foreground">{auth0User?.name?.[0]}</AvatarFallback>
+                                            <AvatarFallback className="bg-primary-dark text-primary-foreground">{"" + user?.firstName[0] + user?.lastName[0]}</AvatarFallback>
                                         </Avatar>
                                         <div>
-                                            <p className="font-semibold text-lg">{user?.firstName + " " + user?.lastName}</p>
+                                            <p className="font-semibold text-lg text-primary">{user?.firstName + " " + user?.lastName}</p>
                                             <p className="text-muted-foreground text-md capitalize">{user?.persona}</p>
                                         </div>
                                     </div>
                                     <Separator className="bg-primary" />
                                     {/*log out button*/}
-                                    <button className="w-full active:scale-97 bg-secondary rounded-lg px-2 py-2 transition-colors hover:bg-primary hover:text-primary-foreground" onClick={() => {
+                                    <button className="w-full active:scale-97 bg-secondary rounded-lg px-2 py-2 transition-colors hover:bg-accent hover:text-primary-foreground" onClick={() => {
                                         logout({ logoutParams: { returnTo: window.location.origin } })
                                     }}>
                                         Log Out
@@ -100,7 +100,7 @@ function Navbar() {
                                         </div>
                                     </div>
                                     <Separator className="bg-primary" />
-                                    <button className="w-full active:scale-97 bg-secondary rounded-lg px-2 py-2 transition-colors hover:bg-primary hover:text-primary-foreground" onClick={() => {
+                                    <button className="w-full active:scale-97 bg-secondary rounded-lg px-2 py-2 transition-colors hover:bg-accent hover:text-primary-foreground" onClick={() => {
                                         loginWithRedirect({
                                             appState: { returnTo: '/employeehome' }
                                         })

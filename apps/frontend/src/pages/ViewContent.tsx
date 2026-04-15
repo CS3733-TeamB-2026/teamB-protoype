@@ -385,7 +385,7 @@ function ViewContent() {
                     {!loading && !error && content.length > 0 && <>
                         <div className="flex flex-row justify-between items-baseline mb-8">
                             <div>
-                                <Button onClick={() => setAddOpen(true)} className="p-0! gap-0! border-0! group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-45 hover:bg-primary-dark hover:text-primary-foreground active:brightness-80 transition-all bg-primary text-primary-foreground w-12 h-12 text-lg justify-start">
+                                <Button onClick={() => setAddOpen(true)} className="cursor-pointer p-0! gap-0! border-0! group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-42 hover:bg-accent-dark hover:text-primary-foreground active:brightness-80 transition-all bg-accent text-primary-foreground w-12 h-12 text-lg justify-start">
                                     <span className="flex items-center justify-center min-w-12 h-12">
                                         <Plus className="w-8! h-8! text-primary-foreground " />
                                     </span>

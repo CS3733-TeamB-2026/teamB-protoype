@@ -55,23 +55,23 @@ function Home() {
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-2 gap-4 w-fit mx-auto">
-                        <div className="flex flex-col items-center justify-center gap-4 w-90 py-8 px-6 rounded-2xl border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors">
+                        <div className="flex flex-col items-center justify-center gap-4 w-90 py-8 px-6 rounded-2xl border border-primary/20 bg-primary/5">
                             <div className="p-4 rounded-full bg-primary/10">
-                                <User className="w-8 h-8 text-primary"/>
+                                <User className="w-8 h-8 text-secondary-foreground/80"/>
                             </div>
-                            <h1 className="text-xl font-semibold text-primary">Log in to begin.</h1>
+                            <h1 className="text-xl font-semibold text-secondary-foreground/80">Log in above to begin.</h1>
                         </div>
-                        <div className="flex flex-col items-center justify-center gap-4 w-90 py-8 px-6 rounded-2xl border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors">
+                        <div className="flex flex-col items-center justify-center gap-4 w-90 py-8 px-6 rounded-2xl border border-primary/20 bg-primary/5">
                             <div className="p-4 rounded-full bg-primary/10">
-                                <LucideFolder className="w-8 h-8 text-primary"/>
+                                <LucideFolder className="w-8 h-8 text-secondary-foreground/80"/>
                             </div>
-                            <h1 className="text-xl font-semibold text-primary">Manage all your files.</h1>
+                            <h1 className="text-xl font-semibold text-secondary-foreground/80">Manage all your files.</h1>
                         </div>
-                        <div className="col-span-2 flex flex-col items-center justify-center gap-4 py-8 px-6 rounded-2xl border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors">
+                        <div className="col-span-2 flex flex-col items-center justify-center gap-4 py-8 px-6 rounded-2xl border border-primary/20 bg-primary/5">
                             <div className="p-4 rounded-full bg-primary/10">
-                                <GraduationCap className="w-8 h-8 text-primary"/>
+                                <GraduationCap className="w-8 h-8 text-secondary-foreground/80"/>
                             </div>
-                            <h1 className="text-xl font-semibold text-primary">Made by WPI Students.</h1>
+                            <h1 className="text-xl font-semibold text-secondary-foreground/80">Made by WPI Students.</h1>
                         </div>
 
                     </div>

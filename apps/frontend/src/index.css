@@ -22,8 +22,8 @@
   --secondary-foreground: oklch(0.21 0.006 285.885);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(79.5% 0.184 86.047);
-  --accent-dark: oklch(68.1% 0.162 75.834);
+  --accent: oklch(0.714 0.128 71.436);
+  --accent-dark: oklch(0.631 0.118 67.658);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
@@ -125,20 +125,20 @@
   --font-sans: 'Roboto Variable', sans-serif;
 
   /*for the content table labels*/
-  --color-labellight1: #ADD4FF;
-  --color-labellight2: #D6EAFF;
-  --color-labellight3: #ADC4DB;
-  --color-labeltext: #3E6187;
-  --color-labellight4: #B8D4E8;
-  --color-labellight5: #E8F2FA;
+  --color-labellight1: #FFD4A0;
+  --color-labellight2: #FFE8CC;
+  --color-labellight3: #DBBA8E;
+  --color-labeltext: #87603E;
+  --color-labellight4: #E8CBA8;
+  --color-labellight5: #FAF0E2;
 
   /*low opacity versions, "a"!*/
-  --color-labellight1a: #ADD4FF99;
-  --color-labellight2a: #D6EAFF99;
-  --color-labellight3a: #ADC4DB99;
-  --color-labeltexta:   #3E618799;
-  --color-labellight4a: #B8D4E899;
-  --color-labellight5a: #E8F2FA99;
+  --color-labellight1a: #FFD4A099;
+  --color-labellight2a: #FFE8CC99;
+  --color-labellight3a: #DBBA8E99;
+  --color-labeltexta:   #87603E99;
+  --color-labellight4a: #E8CBA899;
+  --color-labellight5a: #E8CBA899;
 }
 
 /*removes the wierd random ticker in the id input fields */
