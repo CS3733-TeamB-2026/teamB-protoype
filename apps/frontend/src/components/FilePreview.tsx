@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import * as XLSX from "xlsx";
 import Lightbox from "yet-another-react-lightbox";
@@ -26,6 +26,19 @@ interface Props {
 
 type FetchStatus = "loading" | "ready" | "error";
 
+// Memoized so DocViewer only re-renders (and resets its internal page state)
+// when the URI or filename actually changes, not on every parent re-render.
+const DocViewerMemo = memo(function DocViewerMemo({ objectUrl, filename }: { objectUrl: string; filename: string }) {
+    return (
+        <DocViewer
+            documents={[{ uri: objectUrl, fileName: filename }]}
+            pluginRenderers={DocViewerRenderers}
+            style={{ minHeight: 520 }}
+            config={{ header: { disableHeader: true } }}
+        />
+    );
+});
+
 export function FilePreview({ filename, src, infoSrc }: Props) {
     const previewMode = getPreviewMode(null, filename);
 
@@ -37,6 +50,11 @@ export function FilePreview({ filename, src, infoSrc }: Props) {
     const [lightboxOpen, setLightboxOpen] = useState(false);
 
     const { getAccessTokenSilently } = useAuth0();
+    // Keep a ref so the fetch effect never needs getAccessTokenSilently as a dep.
+    // Auth0 returns a new function reference on every render, which would otherwise
+    // cause the effect to re-run, revoking and recreating blob URLs unnecessarily.
+    const getTokenRef = useRef(getAccessTokenSilently);
+    useEffect(() => { getTokenRef.current = getAccessTokenSilently; });
 
     const handleDownload = async () => {
         const token = await getAccessTokenSilently();
@@ -56,7 +74,7 @@ export function FilePreview({ filename, src, infoSrc }: Props) {
 
         const run = async () => {
             try {
-                const token = await getAccessTokenSilently();
+                const token = await getTokenRef.current();
 
                 if (infoSrc) {
                     const res = await fetch(infoSrc, { headers: { Authorization: `Bearer ${token}` } });
@@ -121,9 +139,13 @@ export function FilePreview({ filename, src, infoSrc }: Props) {
         void run();
 
         return () => {
-            if (localUrl) URL.revokeObjectURL(localUrl);
+            if (localUrl) {
+                URL.revokeObjectURL(localUrl);
+                setObjectUrl(null);
+                setStatus("loading");
+            }
         };
-    }, [infoSrc, previewMode, src, getAccessTokenSilently]);
+    }, [infoSrc, previewMode, src]);
 
     return (
         <div className="bg-background overflow-hidden">
@@ -206,12 +228,7 @@ export function FilePreview({ filename, src, infoSrc }: Props) {
                 </div>
             )}
             {status === "ready" && previewMode === "docviewer" && objectUrl && (
-                <DocViewer
-                    documents={[{ uri: objectUrl, fileName: filename }]}
-                    pluginRenderers={DocViewerRenderers}
-                    style={{ minHeight: 520 }}
-                    config={{ header: { disableHeader: true } }}
-                />
+                <DocViewerMemo objectUrl={objectUrl} filename={filename} />
             )}
         </div>
     );
