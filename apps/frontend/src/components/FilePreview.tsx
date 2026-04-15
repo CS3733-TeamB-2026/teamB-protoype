@@ -1,12 +1,7 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import * as XLSX from "xlsx";
-import Lightbox from "yet-another-react-lightbox";
-import "yet-another-react-lightbox/styles.css";
-import Zoom from "yet-another-react-lightbox/plugins/zoom";
-import Fullscreen from "yet-another-react-lightbox/plugins/fullscreen";
-import ReactMarkdown from "react-markdown";
-import DocViewer, { DocViewerRenderers } from "@iamjariwala/react-doc-viewer";
+import DocViewer, { PDFRenderer, DocxRenderer, MarkdownRenderer } from "@iamjariwala/react-doc-viewer";
 import "@iamjariwala/react-doc-viewer/dist/index.css";
 import { getPreviewMode } from "@/lib/mime.ts";
 import { getCachedText, setCachedText, getCachedBlob, setCachedBlob } from "@/lib/file-cache.ts";
@@ -18,15 +13,39 @@ function formatBytes(bytes: number): string {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+type DisplayMode = "inline" | "full";
+
 interface Props {
     filename: string;
     src: string;
     infoSrc?: string;
+    mode?: DisplayMode;
 }
 
 type FetchStatus = "loading" | "ready" | "error";
 
-export function FilePreview({ filename, src, infoSrc }: Props) {
+// Memoized so DocViewer only re-renders (and resets its internal page state)
+// when the URI or filename actually changes, not on every parent re-render.
+const DocViewerMemo = memo(function DocViewerMemo({
+    objectUrl, filename, mode,
+}: {
+    objectUrl: string;
+    filename: string;
+    mode: DisplayMode;
+}) {
+    return (
+        <DocViewer
+            documents={[{ uri: objectUrl, fileName: filename }]}
+            pluginRenderers={[PDFRenderer, DocxRenderer, MarkdownRenderer]}
+            config={{
+                header: { disableHeader: true },
+                pdfVerticalScrollByDefault: mode === "full",
+            }}
+        />
+    );
+});
+
+export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) {
     const previewMode = getPreviewMode(null, filename);
 
     const [fileSize, setFileSize] = useState<number | null>(null);
@@ -34,9 +53,12 @@ export function FilePreview({ filename, src, infoSrc }: Props) {
     const [content, setContent] = useState<string | null>(null);
     const [objectUrl, setObjectUrl] = useState<string | null>(null);
     const [tableData, setTableData] = useState<string[][] | null>(null);
-    const [lightboxOpen, setLightboxOpen] = useState(false);
-
     const { getAccessTokenSilently } = useAuth0();
+    // Keep a ref so the fetch effect never needs getAccessTokenSilently as a dep.
+    // Auth0 returns a new function reference on every render, which would otherwise
+    // cause the effect to re-run, revoking and recreating blob URLs unnecessarily.
+    const getTokenRef = useRef(getAccessTokenSilently);
+    useEffect(() => { getTokenRef.current = getAccessTokenSilently; });
 
     const handleDownload = async () => {
         const token = await getAccessTokenSilently();
@@ -56,7 +78,7 @@ export function FilePreview({ filename, src, infoSrc }: Props) {
 
         const run = async () => {
             try {
-                const token = await getAccessTokenSilently();
+                const token = await getTokenRef.current();
 
                 if (infoSrc) {
                     const res = await fetch(infoSrc, { headers: { Authorization: `Bearer ${token}` } });
@@ -66,7 +88,7 @@ export function FilePreview({ filename, src, infoSrc }: Props) {
 
                 if (previewMode === "none") return;
 
-                if (previewMode === "text" || previewMode === "markdown") {
+                if (previewMode === "text") {
                     const cachedText = getCachedText(src);
                     if (cachedText !== undefined) {
                         setContent(cachedText);
@@ -121,9 +143,13 @@ export function FilePreview({ filename, src, infoSrc }: Props) {
         void run();
 
         return () => {
-            if (localUrl) URL.revokeObjectURL(localUrl);
+            if (localUrl) {
+                URL.revokeObjectURL(localUrl);
+                setObjectUrl(null);
+                setStatus("loading");
+            }
         };
-    }, [infoSrc, previewMode, src, getAccessTokenSilently]);
+    }, [infoSrc, previewMode, src]);
 
     return (
         <div className="bg-background overflow-hidden">
@@ -158,29 +184,17 @@ export function FilePreview({ filename, src, infoSrc }: Props) {
                     {content}
                 </pre>
             )}
-            {status === "ready" && previewMode === "markdown" && (
-                <div className="px-6 pb-4 text-left prose prose-sm max-w-none">
-                    <ReactMarkdown>{content ?? ""}</ReactMarkdown>
-                </div>
-            )}
             {status === "ready" && previewMode === "image" && objectUrl && (
                 <div className="px-6 pb-4">
                     <img
                         src={objectUrl}
                         alt={filename}
-                        className="max-h-64 mx-auto rounded cursor-zoom-in object-contain"
-                        onClick={() => setLightboxOpen(true)}
-                    />
-                    <Lightbox
-                        open={lightboxOpen}
-                        close={() => setLightboxOpen(false)}
-                        slides={[{ src: objectUrl, alt: filename }]}
-                        plugins={[Zoom, Fullscreen]}
+                        className="mx-auto rounded object-contain"
                     />
                 </div>
             )}
             {status === "ready" && previewMode === "table" && tableData != null && (
-                <div className="overflow-x-auto max-h-130 px-6 pb-4">
+                <div className="overflow-auto max-h-130 px-6 pb-4">
                     <table className="text-sm border-collapse">
                         <thead>
                             <tr>
@@ -205,13 +219,27 @@ export function FilePreview({ filename, src, infoSrc }: Props) {
                     </table>
                 </div>
             )}
-            {status === "ready" && previewMode === "docviewer" && objectUrl && (
-                <DocViewer
-                    documents={[{ uri: objectUrl, fileName: filename }]}
-                    pluginRenderers={DocViewerRenderers}
+            {status === "ready" && previewMode === "video" && objectUrl && (
+                <div className="px-6 pb-4">
+                    <video controls className="w-full rounded" src={objectUrl} />
+                </div>
+            )}
+            {status === "ready" && previewMode === "audio" && objectUrl && (
+                <div className="px-6 pb-4">
+                    <audio controls className="w-full" src={objectUrl} />
+                </div>
+            )}
+            {status === "ready" && previewMode === "html" && objectUrl && (
+                <iframe
+                    src={objectUrl}
+                    sandbox="allow-same-origin"
+                    className="w-full border-0"
                     style={{ minHeight: 520 }}
-                    config={{ header: { disableHeader: true } }}
+                    title={filename}
                 />
+            )}
+            {status === "ready" && previewMode === "docviewer" && objectUrl && (
+                <DocViewerMemo objectUrl={objectUrl} filename={filename} mode={mode} />
             )}
         </div>
     );
