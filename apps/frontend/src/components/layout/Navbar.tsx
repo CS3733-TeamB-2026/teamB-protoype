@@ -16,6 +16,7 @@ import { useAuth0 } from "@auth0/auth0-react"
 import { useUser } from "@/hooks/use-user.ts"
 import {useLocale} from "@/languageSupport/localeContext.tsx";
 import {useTranslation} from "@/languageSupport/useTranslation.ts";
+import DisclaimerAlert from "@/components/layout/DisclaimerAlert"
 
 const LOCALES = [
     { code: "en_us", label: "English" },
@@ -44,11 +45,14 @@ function Navbar() {
                         <Menu size={28} />
                         <span className="text-xl font-semibold relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-current after:transition-all group-hover:after:w-full group-hover:after:opacity-80">{ts('nav.menu')}</span>
                     </button>
+
                     <hr className="h-8 w-px bg-primary-foreground border-none ml-1" />
 
                     <Link to="/">
-                        <img src={logo} alt="logo" className="shrink-0 h-10 w-auto brightness-0 invert mx-3" />
+                        <img src={logo} alt="logo" className="shrink-0 h-10 w-auto brightness-0 invert ml-3 mr-2" />
                     </Link>
+
+                    <DisclaimerAlert />
                 </div>
 
                 <div className="flex-1" />
