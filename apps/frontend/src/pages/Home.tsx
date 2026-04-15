@@ -13,45 +13,49 @@ import {
 import { teamPhotos } from "@/components/ui/team-photos.tsx";
 import { Hero } from "@/components/shared/Hero.tsx";
 import { Home as HomeIcon, LucideFolder, User, GraduationCap } from "lucide-react";
+import { useLocale } from "@/languageSupport/localeContext";
+import { useTranslation } from "@/languageSupport/useTranslation";
+import type {TranslationKey} from "@/languageSupport/keys.ts";
 
 function Home() {
-
+    const { locale } = useLocale();
+    const { ts } = useTranslation(locale);
     //team member data
     type ImageKey = keyof typeof teamPhotos;
     type TeamMember = {
         name: string;
         initials: string;
-        role: string;
+        role: TranslationKey;
         photo: ImageKey;
     }
 
     //members list, for displaying cards
     const members: TeamMember[] = [
-        { name: "Dylan Zickus", initials: "DZ", role: "Lead Software Engineer", photo: "dylan" },
-        { name: "Oscar Stomberg", initials: "OS", role: "Assistant Lead Software Engineer", photo: "oscar" },
-        { name: "Jake Swanson", initials: "JS", role: "Assistant Lead Software Engineer", photo: "jake" },
-        { name: "Hayden Schultz", initials: "HS", role: "Assistant Lead Software Engineer & Scrum Master", photo: "hayden" },
-        { name: "Luke Ciarletta", initials: "LC", role: "Full Time Software Engineer", photo: "luke" },
-        { name: "Nick Houghton", initials: "NH", role: "Full Time Software Engineer", photo: "nicholas" },
-        { name: "Cameron Pietraski", initials: "CP", role: "Full Time Software Engineer", photo: "cameron" },
-        { name: "Philip Ostrowski", initials: "PO", role: "PT Software Engineer & Project Manager", photo: "philip" },
-        { name: "Joseph Hemmerle", initials: "JH", role: "PT Software Engineer & Project Owner", photo: "joey" },
-        { name: "Ricardo Guzman Volpe", initials: "RG", role: "PT Software Engineer & Documentation Analyst", photo: "ricardo" }
+        { name: "Dylan Zickus", initials: "DZ", role: 'role.lead', photo: "dylan" },
+        { name: "Oscar Stomberg", initials: "OS", role: 'role.assistantLead', photo: "oscar" },
+        { name: "Jake Swanson", initials: "JS", role: 'role.assistantLead', photo: "jake" },
+        { name: "Hayden Schultz", initials: "HS", role: 'role.assistantLeadAndScrumMaster', photo: "hayden" },
+        { name: "Luke Ciarletta", initials: "LC", role: 'role.fullTime', photo: "luke" },
+        { name: "Nick Houghton", initials: "NH", role: 'role.fullTime', photo: "nicholas" },
+        { name: "Cameron Pietraski", initials: "CP", role: 'role.fullTime', photo: "cameron" },
+        { name: "Philip Ostrowski", initials: "PO", role: 'role.ptManager', photo: "philip" },
+        { name: "Joseph Hemmerle", initials: "JH", role: 'role.ptOwner', photo: "joey" },
+        { name: "Ricardo Guzman Volpe", initials: "RG", role: 'role.ptAnalyst', photo: "ricardo" }
     ]
 
     return (
         <>
             <Hero
                 icon={HomeIcon}
-                title="Hanover Insurance - Content Management Application"
-                description="CS3733 Team B D26"
+                title={ts('home.header')}
+                description={ts('home.subheader')}
             />
 
             {/*Main Paragraph*/}
             <Card id="content" className="scroll-mt-25 shadow-lg max-w-5xl mx-auto mt-8 text-center py-8">
                 <CardHeader>
-                    <CardTitle className="text-4xl text-primary">Welcome to iBank.</CardTitle>
-                    <CardDescription className="text-lg">One place to manage your files.</CardDescription>
+                    <CardTitle className="text-4xl text-primary">{ts('home.mainHeader')}</CardTitle>
+                    <CardDescription className="text-lg">{ts('home.subheader')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="grid grid-cols-2 gap-4 w-fit mx-auto">
@@ -75,8 +79,8 @@ function Home() {
                         </div>
 
                     </div>
-                    <p className="text-md mt-4">Disclaimer: This website has been created for WPI’s CS 3733 Software Engineering as a class project and is not in use by Hanover Insurance.</p>
-                    <p className="text-md mt-4">Created by Team B, D26.</p>
+                    <p className="text-md mt-4">{ts('home.disclaimer')}</p>
+                    <p className="text-md mt-4">{ts('home.appBy')}</p>
 
                     <br />
 
@@ -85,7 +89,7 @@ function Home() {
 
             {/*team member cards*/}
             <section className="mt-12 max-w-7xl mx-auto mb-12">
-                <h1 className="text-2xl font-bold text-primary text-center mb-8" >Meet The Team</h1>
+                <h1 className="text-2xl font-bold text-primary text-center mb-8" >{ts('home.meetTheTeam')}</h1>
                 <div className="flex flex-wrap md:grid-cols-5 gap-6 justify-center">
 
                     {members.map((member: TeamMember) => (
@@ -102,7 +106,7 @@ function Home() {
                                 </Avatar>
                                 <div>
                                     <h2 className="font-semibold text-lg">{member.name}</h2>
-                                    <p className="text-muted-foreground">{member.role}</p>
+                                    <p className="text-muted-foreground">{ts(member.role)}</p>
                                 </div>
                             </CardContent>
                         </Card>
