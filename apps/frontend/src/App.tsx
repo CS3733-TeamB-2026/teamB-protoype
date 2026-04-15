@@ -15,13 +15,14 @@ import ViewContent from "@/pages/ViewContent.tsx";
 import { ViewSingleFile } from "@/pages/VIewSingleFile.tsx";
 import SidebarOverlay from "./components/layout/SidebarOverlay.tsx";
 import { Route, Routes} from "react-router-dom";
+import {LocaleProvider} from "@/languageSupport/localeContext.tsx";
 
 function App() {
     // Your application must be wrapped with the BrowserRouter component to enable routing
     return (
 
         <BrowserRouter>
-
+        <LocaleProvider>
             <SidebarProvider defaultOpen={false}>
                 <AppSidebar />
                 <SidebarOverlay />
@@ -46,7 +47,7 @@ function App() {
                 </div>
 
             </SidebarProvider>
-
+        </LocaleProvider>
         </BrowserRouter>
     )
 }

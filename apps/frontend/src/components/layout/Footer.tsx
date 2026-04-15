@@ -1,17 +1,21 @@
 import FacebookIcon from "@/assets/facebook-logo.png";
 import InstagramIcon from "@/assets/instagram-icon.png";
 import TwitterIcon from "@/assets/twitter-icon.png";
+import {useLocale} from "@/languageSupport/localeContext.tsx";
+import {useTranslation} from "@/languageSupport/useTranslation.ts";
 
 //Global footer, this displays across ALL pages.
 function Footer (){
+    const { locale } = useLocale();
+    const { ts } = useTranslation(locale);
     return (
         <>
             {}
             <footer className="shrink-0 bg-primary text-primary-foreground mt-auto py-8 px-6">
                 <div className="w-full mx-auto grid grid-cols-1 md:grid-cols-3 items-center gap-6">
                     <div className="text-center md:text-left justify-self-start">
-                        <h3 className="font-bold text-lg">Hanover Content Manager</h3>
-                        <p className="text-sm text-primary-foreground/70">&copy; 2026 Team B. All Rights Reserved.</p>
+                        <h3 className="font-bold text-lg">{ts('footer.hanoverContentManager')}</h3>
+                        <p className="text-sm text-primary-foreground/70">&copy; {ts('footer.rightsReserved')}.</p>
                     </div>
                     <div className="flex items-center justify-center gap-5">
                         <a href="https://www.facebook.com/hanoverinsurance/">
@@ -25,8 +29,8 @@ function Footer (){
                         </a>
                     </div>
                     <div className="text-center md:text-right justify-self-end">
-                        <h3 className="font-bold text-lg">Not an official Hanover website</h3>
-                        <p className="text-sm text-primary-foreground/70">CS3733 at Worcester Polytechnic Institute</p>
+                        <h3 className="font-bold text-lg">{ts('footer.notice')}</h3>
+                        <p className="text-sm text-primary-foreground/70">{ts('footer.WPI')}</p>
                     </div>
                 </div>
             </footer>
