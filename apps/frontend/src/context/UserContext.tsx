@@ -7,6 +7,7 @@ export interface User {
     lastName: string;
     userName: string;
     persona: "underwriter" | "businessAnalyst" | "admin";
+    profilePhotoURI: string;
 }
 
 const UserContext = createContext<User | null>(null);

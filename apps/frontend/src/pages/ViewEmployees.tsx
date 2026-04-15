@@ -14,13 +14,14 @@ import {PersonaBadge} from "@/components/shared/PersonaBadge.tsx";
 import { useUser } from "@/hooks/use-user.ts";
 import { findMatches, /*highlight,*/ highlightRange } from "@/lib/highlight.tsx";
 import { useAuth0 } from "@auth0/auth0-react";
-import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx";
+import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
 
 export type Employee = {
     firstName: string;
     lastName: string;
     id: number;
     persona: string;
+    profilePhotoURI: string;
     login?: {
         userName: string;
     };
@@ -163,7 +164,12 @@ function ViewEmployees() {
                                     <TableRow key={employee.id}>
                                         <TableCell>
                                             <Avatar className="cursor-pointer w-10 h-10 ">
-                                                <AvatarFallback className="bg-accent text-primary-foreground">{" " + employee?.firstName[0] + employee?.lastName[0]}</AvatarFallback>
+                                                {
+                                                    employee.profilePhotoURI?
+                                                        <AvatarImage src={employee.profilePhotoURI} />
+                                                        :
+                                                        <AvatarFallback className="bg-accent text-primary-foreground">{" " + employee?.firstName[0] + employee?.lastName[0]}</AvatarFallback>
+                                                }
                                             </Avatar>
                                         </TableCell>
                                         <TableCell className="text-right pr-4">{employee.id}</TableCell>

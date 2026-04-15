@@ -2,7 +2,7 @@
 import { useSidebar } from "@/components/ui/sidebar.tsx";
 import { Menu, Loader2 } from "lucide-react";
 import logo from "../../assets/hanover_logo.svg"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import {
     Popover,
     PopoverContent,
@@ -67,7 +67,13 @@ function Navbar() {
                                         { isAuthenticated ? user?.firstName + " " + user?.lastName : ts('nav.login')}
                                     </span>
                                     <Avatar className="cursor-pointer w-10 h-10 ">
-                                        <AvatarFallback className="bg-accent text-primary-foreground">{isAuthenticated ? " " + user?.firstName[0] + user?.lastName[0] : <UserIcon />}</AvatarFallback>
+                                        {
+                                            user?.profilePhotoURI?
+                                                <AvatarImage src={user?.profilePhotoURI} />
+                                                :
+                                                <AvatarFallback className="bg-accent text-primary-foreground">{isAuthenticated ? " " + user?.firstName[0] + user?.lastName[0] : <UserIcon />}</AvatarFallback>
+                                        }
+
                                     </Avatar>
                                 </button>
 
@@ -82,7 +88,12 @@ function Navbar() {
                                 <div className="flex flex-col gap-3">
                                     <div className="flex items-center gap-3">
                                         <Avatar className="cursor-pointer w-10 h-10 ">
-                                            <AvatarFallback className="bg-accent text-primary-foreground">{"" + user?.firstName[0] + user?.lastName[0]}</AvatarFallback>
+                                            {
+                                                user?.profilePhotoURI?
+                                                    <AvatarImage src={user?.profilePhotoURI} />
+                                                    :
+                                                    <AvatarFallback className="bg-accent text-primary-foreground">{isAuthenticated ? " " + user?.firstName[0] + user?.lastName[0] : <UserIcon />}</AvatarFallback>
+                                            }
                                         </Avatar>
                                         <div>
                                             <p className="font-semibold text-lg text-primary">{user?.firstName + " " + user?.lastName}</p>

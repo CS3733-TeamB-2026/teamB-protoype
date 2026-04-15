@@ -24,11 +24,12 @@ model Login {
 }
 
 model Employee {
-  id        Int     @id
-  auth0Id   String? @unique
-  firstName String
-  lastName  String
-  persona   Persona
+  id              Int     @id
+  auth0Id         String? @unique
+  firstName       String
+  lastName        String
+  persona         Persona
+  profilePhotoURI String?
 
   ownedContent      Content[] @relation("Owned")
   checkedOutContent Content[] @relation("CheckedOut")
