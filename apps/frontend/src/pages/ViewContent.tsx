@@ -98,7 +98,7 @@ function ViewContent() {
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [bookmarks, setBookmarks] = useState<BookmarkRecord[]>([]);
     const [deleteTarget, setDeleteTarget] = useState<ContentItem | null>(null);
-    const [sort, toggleSort] = useSortState<"name" | "owner" | "status" | "contentType" | "persona">({
+    const [sort, toggleSort] = useSortState<"name" | "owner" | "status" | "contentType" | "persona" | "docType">({
         column: "name",
         direction: "asc"
     });
@@ -438,7 +438,7 @@ function ViewContent() {
                                         className="cursor-pointer p-0! gap-0! border-0! flex items-center  rounded-full hover:bg-accent-dark hover:text-primary-foreground active:brightness-80 transition-all bg-accent text-primary-foreground w-12 h-12 text-lg">
                                     <span className="flex items-center justify-center min-w-12 h-12">
                                         <RefreshCcw className="w-8! h-8! text-primary-foreground"
-                                                    style={refreshing ? { animation: "spin 1.5s ease-in-out reverse" } : undefined}/>
+                                                    style={refreshing ? {animation: "spin 1.5s ease-in-out reverse"} : undefined}/>
                                     </span>
                                 </Button>
                                 <Button onClick={() => setAddOpen(true)}
@@ -595,9 +595,11 @@ function ViewContent() {
                                             <SortableHead column="contentType" label="Kind" sort={sort}
                                                           onSort={toggleSort} className="hidden sm:table-cell"/>
                                             <SortableHead column="persona" label="Persona" sort={sort}
-                                                          onSort={toggleSort} className="hidden sm:table-cell"/>
-                                            <TableHead
-                                                className="hidden sm:table-cell uppercase tracking-wider text-muted-foreground select-none text-center">Type</TableHead>
+                                                          onSort={toggleSort}
+                                                          className="hidden sm:table-cell"/><SortableHead
+                                            column="docType" label="Type" sort={sort} onSort={toggleSort}
+                                            className="hidden sm:table-cell"/>
+
                                             <TableHead
                                                 className="uppercase tracking-wider text-muted-foreground select-none text-center">Actions</TableHead>
                                         </TableRow>
@@ -609,6 +611,7 @@ function ViewContent() {
                                             if (col === "status") return item.status ?? "";
                                             if (col === "contentType") return item.contentType;
                                             if (col === "persona") return item.targetPersona;
+                                            if (col === "docType") return item.fileURI ? (getExtension(getOriginalFilename(item.fileURI!)) ?? getCategory(null, getOriginalFilename(item.fileURI!))) : (item.linkURL ? "link" : "");
                                         }).map((item) => {
                                             const isFile = !!item.fileURI;
                                             const isLink = !!item.linkURL;
