@@ -13,6 +13,7 @@ import {Button} from "@/components/ui/button.tsx";
 import {Hero} from "@/components/shared/Hero.tsx";
 import {LayoutDashboard, User, Clock, Users, UserPlus, FolderOpen, Plus} from "lucide-react"
 import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx";
+import MyFiles from "@/components/shared/MyFiles.tsx";
 import BookmarkedFiles from "@/components/shared/BookmarkedFiles.tsx";
 
 function EmployeeHome() {
@@ -86,8 +87,7 @@ function EmployeeHome() {
                 <Card className="shadow-lg hover:scale-101 transition-transform md:col-span- px-4 py-8">
                     <CardHeader className="text-left text-2xl! font-semibold">My Files: </CardHeader>
                     <CardContent>
-                        <RecentFiles />
-                        <p>Temporary</p>
+                        <MyFiles/>
                     </CardContent>
                 </Card>
 
@@ -143,7 +143,7 @@ function EmployeeHome() {
                     <CardContent>
                         <RecentFiles />
                         <Link to="/files" className="w-full">
-                            <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
+                            <Button className="mt-5 w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-primary hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
                                 <FolderOpen className="w-4 h-4 shrink-0" />
                                 View Files
                             </Button>
