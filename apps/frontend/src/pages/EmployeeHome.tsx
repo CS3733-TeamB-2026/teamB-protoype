@@ -13,6 +13,7 @@ import {Button} from "@/components/ui/button.tsx";
 import {Hero} from "@/components/shared/Hero.tsx";
 import {LayoutDashboard, User, Clock, Users, UserPlus, FolderOpen, Plus} from "lucide-react"
 import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx";
+import BookmarkedFiles from "@/components/shared/BookmarkedFiles.tsx";
 
 function EmployeeHome() {
     const user = useUser();
@@ -75,10 +76,9 @@ function EmployeeHome() {
 
                 {/* Expiring Soon */}
                 <Card className="shadow-lg hover:scale-101 transition-transform md:col-span-1 px-4 py-8">
-                    <CardHeader className="text-left text-2xl! font-semibold">Expiring Soon: </CardHeader>
+                    <CardHeader className="text-left text-2xl! font-semibold">Bookmarked: </CardHeader>
                     <CardContent>
-                        <RecentFiles />
-                        <p>Temporary</p>
+                        <BookmarkedFiles />
                     </CardContent>
                 </Card>
 
