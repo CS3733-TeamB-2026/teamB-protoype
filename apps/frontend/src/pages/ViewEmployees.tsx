@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.tsx";
 import { useEffect, useState } from "react";
-import {Loader2, Pencil, Trash2, Search, Plus} from "lucide-react";
+import {Loader2, Pencil, Trash2, Search, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { Link } from "react-router-dom";
 import { Hero } from "@/components/shared/Hero.tsx";
@@ -14,6 +14,7 @@ import {PersonaBadge} from "@/components/shared/PersonaBadge.tsx";
 import { useUser } from "@/hooks/use-user.ts";
 import { findMatches, /*highlight,*/ highlightRange } from "@/lib/highlight.tsx";
 import { useAuth0 } from "@auth0/auth0-react";
+import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx";
 
 export type Employee = {
     firstName: string;
@@ -101,23 +102,13 @@ function ViewEmployees() {
                 description="View, update, and delete employees."
             />
 
-            <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center">
+            <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center px-4">
                 <CardHeader>
                     <CardTitle className="text-3xl text-primary mt-4">All Employees</CardTitle>
                     <CardDescription>Total Employees: {employees.length}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="flex items-center justify-between mb-4">
-                        <div>
-                            <Link to="/employeeform">
-                                <Button className="cursor-pointer p-0! gap-0! border-0! group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-48 hover:bg-primary-dark hover:text-primary-foreground active:brightness-80 transition-all bg-primary text-primary-foreground w-12 h-12 text-lg justify-start">
-                                <span className="flex items-center justify-center min-w-12 h-12">
-                                    <Plus className="w-8! h-8! text-primary-foreground " />
-                                </span>
-                                    <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Add Employees</span>
-                                </Button>
-                            </Link>
-                        </div>
                         <div className="relative">
                             <Search
                                 className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 pointer-events-none"
@@ -130,6 +121,16 @@ function ViewEmployees() {
                                 className="w-64 h-10 text-lg! pl-2! pr-8 border border-gray-700 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-gray-500"
                             />
                         </div>
+                        <div>
+                            <Link to="/employeeform">
+                                <Button className="cursor-pointer p-0! gap-0! border-0! group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-48 hover:bg-accent-dark hover:text-primary-foreground active:brightness-80 transition-all bg-accent text-primary-foreground w-12 h-12 text-lg justify-start">
+                                <span className="flex items-center justify-center min-w-12 h-12">
+                                    <Plus className="w-8! h-8! text-primary-foreground " />
+                                </span>
+                                    <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Add Employees</span>
+                                </Button>
+                            </Link>
+                        </div>
                     </div>
                     {loading ? (
                         <div className="flex items-center justify-center py-16 gap-3 text-muted-foreground">
@@ -140,6 +141,7 @@ function ViewEmployees() {
                         <Table className="text-left">
                             <TableHeader>
                                 <TableRow className="hover:bg-transparent">
+                                    <TableHead className="uppercase tracking-wider text-muted-foreground select-none">Avatar</TableHead>
                                     <SortableHead column="id" label="ID" sort={sort} onSort={toggleSort} />
                                     <SortableHead column="firstName" label="First Name" sort={sort} onSort={toggleSort} />
                                     <SortableHead column="lastName" label="Last Name" sort={sort} onSort={toggleSort} className="w-full" />
@@ -159,6 +161,11 @@ function ViewEmployees() {
                                     const matches = findMatches(employee.firstName+employee.lastName, searchTerm);
                                     return (
                                     <TableRow key={employee.id}>
+                                        <TableCell>
+                                            <Avatar className="cursor-pointer w-10 h-10 ">
+                                                <AvatarFallback className="bg-accent text-primary-foreground">{" " + employee?.firstName[0] + employee?.lastName[0]}</AvatarFallback>
+                                            </Avatar>
+                                        </TableCell>
                                         <TableCell className="text-right pr-4">{employee.id}</TableCell>
                                         <TableCell className="font-medium">{highlightRange(employee.firstName, 0, matches)}</TableCell>
                                         <TableCell className="font-medium">{highlightRange(employee.lastName, employee.firstName.length, matches)}</TableCell>

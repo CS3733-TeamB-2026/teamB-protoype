@@ -18,6 +18,9 @@ import {
 } from "@/components/ui/collapsible.tsx"
 import { Button } from "@/components/ui/button.tsx"
 import { useUser } from "@/hooks/use-user.ts"
+import type {TranslationKey} from "@/languageSupport/keys.ts";
+import {useLocale} from "@/languageSupport/localeContext.tsx";
+import {useTranslation} from "@/languageSupport/useTranslation.ts";
 
 type NavItem = {
     title: string;
@@ -25,28 +28,30 @@ type NavItem = {
     href: string;
     children: NavItem[];
     access: string[];
+    langKey: TranslationKey;
 }
 
 /*
 Add pages here, icons imported from lucide react
 For dropdowns, add more items in children array, leave the array empty for single items
  */
-const navItems = [
-    { title: "Home", icon: Home, href: "/", children: [], access: [] },
-    { title: "Dashboard", icon: LayoutDashboard, href: "/employeehome", children: [], access: ["admin", "underwriter", "businessAnalyst"] },
-    { title: "Manage Content", icon: Library, href: "/files", children: [], access: ["admin", "underwriter", "businessAnalyst"] },
+const navItems: NavItem[] = [
+    { title: "Home", icon: Home, href: "/", children: [], access: [], langKey: 'sidebar.home' },
+    { title: "Dashboard", icon: LayoutDashboard, href: "/employeehome", children: [], access: ["admin", "underwriter", "businessAnalyst"], langKey: 'sidebar.dashboard' },
+    { title: "Manage Content", icon: Library, href: "/files", children: [], access: ["admin", "underwriter", "businessAnalyst"], langKey: 'sidebar.manageContent' },
     { title: "Manage Employees", icon: UserCog, href: "/", children: [
-            { title: "View Employees", icon: Users, href: "/usermanagement", children: [], access: ["admin"] },
-            { title: "Add Employees", icon: UserPlus, href: "/employeeform", children: [], access: ["admin"] },
-        ], access: ["admin"] },
+            { title: "View Employees", icon: Users, href: "/usermanagement", children: [], access: ["admin"], langKey: 'sidebar.viewEmployees' },
+            { title: "Add Employees", icon: UserPlus, href: "/employeeform", children: [], access: ["admin"], langKey: 'sidebar.addEmployees' },
+        ], access: ["admin"], langKey: 'sidebar.manageEmployees' },
     { title: "Personas", icon: User, href: "/", children: [
-            {title: "Underwriter", icon: User, href: "/underwriter", children: [], access: []},
-            {title: "Business Analyst", icon: User, href: "/businessanalyst", children: [], access: []},
-        ], access: [] },
+            {title: "Underwriter", icon: User, href: "/underwriter", children: [], access: [], langKey: 'sidebar.underwriter'},
+            {title: "Business Analyst", icon: User, href: "/businessanalyst", children: [], access: [], langKey: "sidebar.businessAnalyst"},
+        ], access: [], langKey: "sidebar.personas" },
 ]
 
 function AppSidebar() {
-
+    const { locale } = useLocale();
+    const { ts } = useTranslation(locale);
     const user = useUser();
     const {toggleSidebar} = useSidebar();
 
@@ -57,7 +62,7 @@ function AppSidebar() {
                 <div className="flex flex-row items-center justify-between">
                     <div>
                         <h1 className="text-lg font-semibold tracking-tight">Hanover CMA</h1>
-                        <p className="text-sm text-muted-foreground">Team B - D26</p>
+                        <p className="text-sm text-muted-foreground">{ts('sidebar.team')}</p>
                     </div>
                     <Button onClick={ () => toggleSidebar()} className="cursor-pointer bg-transparent hover:bg-transparent hover:opcacity-80 transition-opacity">
                         <X className="w-5! h-5! text-primary"></X>
@@ -82,7 +87,7 @@ function AppSidebar() {
                                     <CollapsibleTrigger asChild>
                                         <SidebarMenuButton className="active:scale-[0.98] shrink-0 px-2 py-4 my-1 text-md transition-all duration-200 hover:opacity-80">
                                             <item.icon />
-                                            <span>{item.title}</span>
+                                            <span>{ts(item.langKey)}</span>
                                             <ChevronDown className="transition-transform duration-200 [[data-state=open]>&]:rotate-180"/>
                                         </SidebarMenuButton>
                                     </CollapsibleTrigger>
@@ -97,7 +102,7 @@ function AppSidebar() {
                                                     <SidebarMenuButton onClick={ () => toggleSidebar() } className= "active:scale-[0.98] shrink-0 px-2 py-4 my-1 text-md transition-all duration-200 hover:opacity-80" asChild>
                                                         <Link to={childItem.href}>
                                                             <childItem.icon />
-                                                            <span>{childItem.title}</span>
+                                                            <span>{ts(childItem.langKey)}</span>
                                                         </Link>
                                                     </SidebarMenuButton>
                                                 </SidebarMenuItem>
@@ -113,7 +118,7 @@ function AppSidebar() {
                                 <SidebarMenuButton onClick={ () => toggleSidebar() } className="active:scale-[0.98] shrink-0 px-2 py-4 my-1 text-md transition-all duration-200 hover:opacity-90 hover: group/item" asChild>
                                     <Link to={item.href}>
                                         <item.icon />
-                                        <span className="">{item.title}</span>
+                                        <span className="">{ts(item.langKey)}</span>
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>

@@ -18,6 +18,7 @@ import { Route, Routes } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import {LocaleProvider} from "@/languageSupport/localeContext.tsx";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const { isAuthenticated } = useAuth0();
@@ -26,6 +27,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
     return <>{children}</>;
 };
+
 
 function App() {
 
@@ -41,7 +43,7 @@ function App() {
     return (
 
         <BrowserRouter>
-
+        <LocaleProvider>
             <SidebarProvider defaultOpen={false}>
                 <AppSidebar />
                 <SidebarOverlay />
@@ -66,7 +68,7 @@ function App() {
 
             </SidebarProvider>
             <Toaster />
-
+        </LocaleProvider>
         </BrowserRouter>
     )
 }
