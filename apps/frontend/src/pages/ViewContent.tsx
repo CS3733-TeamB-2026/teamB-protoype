@@ -661,7 +661,7 @@ function ViewContent() {
                                                                     src={
                                                                         linkPreviews[
                                                                             item.id
-                                                                            ].favicon!
+                                                                            ]!.favicon!
                                                                     }
                                                                     alt=""
                                                                     className="w-5 h-5 shrink-0"
