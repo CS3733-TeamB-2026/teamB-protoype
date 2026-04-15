@@ -89,6 +89,7 @@ export function ViewSingleFile() {
                                     filename={originalFilename}
                                     src={`/api/content/download/${item.id}`}
                                     infoSrc={`/api/content/info/${item.id}`}
+                                    mode="full"
                                 />
                             )}
                         </div>
