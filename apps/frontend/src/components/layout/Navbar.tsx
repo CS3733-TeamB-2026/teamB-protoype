@@ -36,8 +36,8 @@ function Navbar() {
     return (
         <>
             {/* header */}
-            <nav className="flex items-center bg-primary text-primary-foreground p-4 w-full shrink-0 sticky top-0 z-50"
-                 style={{ background: "linear-gradient(to right, var(--primary-dark), var(--primary), #2E6AA3)" }}>
+            <nav className="shadow-xl flex items-center bg-primary text-primary-foreground p-4 w-full shrink-0 sticky top-0 z-50"
+                 style={{ background: "linear-gradient(to right, var(--primary-dark) 25%, var(--primary), #2E6AA3)" }}>
                 <div className="flex items-center gap-4 min-w-fit z-10">
                     {/* AppSidebar dropdown */}
                     <button onClick={toggleSidebar} className="group cursor-pointer active:scale-[0.96] shrink-0 px-2 py-2 text-xl flex items-center gap-3 transition-all duration-200 hover:opacity-80">
@@ -82,7 +82,7 @@ function Navbar() {
                                 <div className="flex flex-col gap-3">
                                     <div className="flex items-center gap-3">
                                         <Avatar className="cursor-pointer w-10 h-10 ">
-                                            <AvatarFallback className="bg-primary-dark text-primary-foreground">{"" + user?.firstName[0] + user?.lastName[0]}</AvatarFallback>
+                                            <AvatarFallback className="bg-accent text-primary-foreground">{"" + user?.firstName[0] + user?.lastName[0]}</AvatarFallback>
                                         </Avatar>
                                         <div>
                                             <p className="font-semibold text-lg text-primary">{user?.firstName + " " + user?.lastName}</p>
@@ -139,7 +139,7 @@ function Navbar() {
                                     onClick={() => setLocale(code)}
                                     className={`w-full text-center px-3 py-2 rounded-lg text-sm transition-colors
                       ${locale === code
-                                        ? "bg-primary text-primary-foreground"
+                                        ? "bg-accent text-primary-foreground"
                                         : "hover:bg-secondary"
                                     }`}
                                 >

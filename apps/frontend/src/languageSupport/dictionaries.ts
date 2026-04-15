@@ -49,6 +49,9 @@ export const en_us: Record<TranslationKey, string> = {
     'home.studentProject': "This is a student project",
     'home.notLoggedIn': "Log in to begin",
     'home.manageFiles': 'Manage Files',
+    'home.bubble1': 'Log in above to begin.',
+    'home.bubble2': 'Manage all your files.',
+    'home.bubble3': 'Made by WPI students.',
 };
 
 export const sp_sp: Partial<Record<TranslationKey, string>> = {
@@ -100,4 +103,7 @@ export const sp_sp: Partial<Record<TranslationKey, string>> = {
     'home.studentProject': "Este es un proyecto estudiantil",
     'home.notLoggedIn': "Inicia sesión para comenzar",
     'home.manageFiles': 'Gestionar Archivos',
+    'home.bubble1': 'Inicia sesión arriba para comenzar.',
+    'home.bubble2': 'Administra todos tus archivos.',
+    'home.bubble3': 'Hecho por estudiantes de WPI.',
 };

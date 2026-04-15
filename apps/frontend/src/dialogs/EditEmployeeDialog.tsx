@@ -126,6 +126,7 @@ export function EditEmployeeDialog({ content, open, onOpenChange, onSave }: Prop
                     <div>
                         <Label className="my-2">Username</Label>
                         <Input
+                            disabled
                             defaultValue={content.login?.userName}
                             className="bg-secondary"
                             placeholder="Enter Employee Username"
