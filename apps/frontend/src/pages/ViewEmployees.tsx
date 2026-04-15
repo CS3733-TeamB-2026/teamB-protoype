@@ -101,7 +101,7 @@ function ViewEmployees() {
                 description="View, update, and delete employees."
             />
 
-            <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center">
+            <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center px-4">
                 <CardHeader>
                     <CardTitle className="text-3xl text-primary mt-4">All Employees</CardTitle>
                     <CardDescription>Total Employees: {employees.length}</CardDescription>
@@ -110,7 +110,7 @@ function ViewEmployees() {
                     <div className="flex items-center justify-between mb-4">
                         <div>
                             <Link to="/employeeform">
-                                <Button className="cursor-pointer p-0! gap-0! border-0! group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-48 hover:bg-primary-dark hover:text-primary-foreground active:brightness-80 transition-all bg-primary text-primary-foreground w-12 h-12 text-lg justify-start">
+                                <Button className="cursor-pointer p-0! gap-0! border-0! group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-48 hover:bg-accent-dark hover:text-primary-foreground active:brightness-80 transition-all bg-accent text-primary-foreground w-12 h-12 text-lg justify-start">
                                 <span className="flex items-center justify-center min-w-12 h-12">
                                     <Plus className="w-8! h-8! text-primary-foreground " />
                                 </span>
