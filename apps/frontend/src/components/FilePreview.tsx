@@ -14,19 +14,39 @@ function formatBytes(bytes: number): string {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+/**
+ * Controls how much vertical space the preview occupies.
+ * - `"inline"` — compact preview inside an expanded table row (ViewContent)
+ * - `"full"`   — full-page viewer used in ViewSingleFile
+ */
 type DisplayMode = "inline" | "full";
 
 interface Props {
+    /** Original filename including extension (e.g. `"report.pdf"`). Used to
+     *  determine the preview mode and as the suggested download filename. */
     filename: string;
+    /** Authenticated API URL to fetch the file content, e.g.
+     *  `"/api/content/download/5"`. Also used as the cache key. */
     src: string;
+    /** Optional API URL to fetch file metadata (currently just `size`), e.g.
+     *  `"/api/content/info/5"`. When omitted the file size is not shown. */
     infoSrc?: string;
+    /** Display density. Defaults to `"inline"`. */
     mode?: DisplayMode;
 }
 
+/** Tracks whether the file fetch is in progress, done, or failed. */
 type FetchStatus = "loading" | "ready" | "error";
 
-// Memoized so DocViewer only re-renders (and resets its internal page state)
-// when the URI or filename actually changes, not on every parent re-render.
+/**
+ * Thin wrapper around `@iamjariwala/react-doc-viewer` that is memoized by its
+ * `objectUrl` and `filename` props.
+ *
+ * DocViewer resets its internal page number whenever it re-renders, so without
+ * memoization the user's scroll/page position would be lost every time the
+ * parent (ViewContent) re-renders — for example when the 15-second polling
+ * interval fires.
+ */
 const DocViewerMemo = memo(function DocViewerMemo({
     objectUrl, filename, mode,
 }: {
@@ -46,6 +66,28 @@ const DocViewerMemo = memo(function DocViewerMemo({
     );
 });
 
+/**
+ * Renders a file preview panel with a download button.
+ *
+ * The preview format is chosen automatically by `getPreviewMode` based on the
+ * filename extension:
+ *  - `"text"`      → `<pre>` block (plain text, code, etc.)
+ *  - `"image"`     → `<img>` tag
+ *  - `"table"`     → HTML table parsed from an Excel/CSV file via SheetJS
+ *  - `"video"`     → `<video>` element
+ *  - `"audio"`     → `<audio>` element
+ *  - `"html"`      → sandboxed `<iframe>`
+ *  - `"docviewer"` → PDF/DOCX/Markdown via react-doc-viewer ({@link DocViewerMemo})
+ *  - `"none"`      → "No preview available" message
+ *
+ * Binary formats (everything except `"text"`) are fetched as a `Blob` and
+ * converted to an object URL for display. Both text and blob results are stored
+ * in the module-level caches in `lib/file-cache.ts` so navigating away and
+ * back doesn't trigger a second network request.
+ *
+ * The object URL is created when the effect runs and revoked in the cleanup
+ * function to avoid memory leaks.
+ */
 export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) {
     const previewMode = getPreviewMode(null, filename);
 

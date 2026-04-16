@@ -12,7 +12,19 @@ import { getOriginalFilename } from "@/lib/mime.ts";
 import type { ContentItem } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 
+/**
+ * Full-page file viewer for a single content item.
+ *
+ * Reachable at `/file/:id` (linked from the open-external icon in ViewContent).
+ * Fetches the content item's metadata from `/api/content/:id`, then delegates
+ * rendering to {@link FilePreview} with `mode="full"` so the PDF/DOCX viewer
+ * scrolls vertically and images are displayed at larger size.
+ *
+ * File bytes themselves are fetched and cached by FilePreview — this page only
+ * needs the item metadata to resolve the original filename and pass it down.
+ */
 export function ViewSingleFile() {
+    /** Content item ID from the URL parameter. */
     const { id } = useParams<{ id: string }>();
     const [item, setItem] = useState<ContentItem | null>(null);
     const [loading, setLoading] = useState(true);
@@ -20,6 +32,8 @@ export function ViewSingleFile() {
 
     const { getAccessTokenSilently } = useAuth0();
 
+    // Fetch the content item's metadata on mount (or when the URL id changes).
+    // The file bytes are not fetched here — FilePreview handles that separately.
     useEffect(() => {
         const fetchItem = async () => {
             try {
