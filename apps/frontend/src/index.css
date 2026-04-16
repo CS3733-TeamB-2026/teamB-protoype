@@ -17,6 +17,10 @@
   --popover-foreground: oklch(0.145 0 0);
   --primary: oklch(0.343 0.07 252.435);
   --primary-dark: oklch(0.283 0.061 256.007);
+  --primary-light: oklch(0.513 0.11 249.85);
+  --primary-surface: oklch(0.343 0.07 252.435);
+  --primary-surface-dark: oklch(0.283 0.061 256.007);
+  --primary-surface-light: oklch(0.513 0.11 249.85);
   --primary-foreground: oklch(0.977 0.013 236.62);
   --secondary: oklch(0.882 0 89.876);
   --secondary-foreground: oklch(0.21 0.006 285.885);
@@ -52,13 +56,19 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.443 0.11 240.79);
+  --primary: oklch(0.55 0.10 250);
+  --primary-dark: oklch(0.45 0.09 252);
+  --primary-light: oklch(0.65 0.11 248);
+  --primary-surface: oklch(0.25 0.05 252);
+  --primary-surface-dark: oklch(0.20 0.04 254);
+  --primary-surface-light: oklch(0.30 0.06 252);
   --primary-foreground: oklch(0.977 0.013 236.62);
-  --secondary: oklch(0.274 0.006 286.033);
+  --secondary: oklch(0.249 0.004 286.125);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
   --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.598 0.096 77.871);
+  --accent: oklch(0.60 0.10 72);
+  --accent-dark: oklch(0.50 0.09 70);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
@@ -109,6 +119,10 @@
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
   --color-primary-dark:  var(--primary-dark);
+  --color-primary-light: var(--primary-light);
+  --color-primary-surface: var(--primary-surface);
+  --color-primary-surface-light: var(--primary-surface-light);
+  --color-primary-surface-dark: var(--primary-surface-dark);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -128,7 +142,7 @@
   --color-labellight1: #FFD4A0;
   --color-labellight2: #FFE8CC;
   --color-labellight3: #DBBA8E;
-  --color-labeltext: #87603E;
+  --color-labeltext: var(--secondary-foreground);
   --color-labellight4: #E8CBA8;
   --color-labellight5: #FAF0E2;
 

@@ -15,8 +15,12 @@ import {LayoutDashboard, Clock, Users, UserPlus, FolderOpen, Plus} from "lucide-
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
 import MyFiles from "@/components/shared/MyFiles.tsx";
 import BookmarkedFiles from "@/components/shared/BookmarkedFiles.tsx";
+import { usePageTitle } from "@/hooks/use-page-title.ts";
 
 function EmployeeHome() {
+
+    usePageTitle("Dashboard");
+
     const user = useUser();
 
     const [currentDateTime, setCurrentDateTime] = useState({
