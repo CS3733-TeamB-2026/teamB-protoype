@@ -1,5 +1,16 @@
 import type { ContentItem } from "@/lib/types.ts";
 
+/**
+ * Shared form state for both Add and Edit content dialogs.
+ *
+ * `contentType` and `status` use `"none"` as a sentinel for "not selected" so
+ * that shadcn `<Select>` can show a placeholder item — the backend receives an
+ * empty string for these when `"none"` is submitted (see `buildContentFormData`).
+ *
+ * `dateModified` + `lastModifiedTime` are kept separate because the date
+ * picker returns a `Date` and the time input returns an HH:MM:SS string; they
+ * are merged into a single ISO timestamp only in `buildContentFormData`.
+ */
 export type ContentFormValues = {
     name: string;
     linkUrl: string;
@@ -10,7 +21,7 @@ export type ContentFormValues = {
     uploadMode: "url" | "file";
     file: File | null;
     dateModified: Date | undefined;
-    lastModifiedTime: string;
+    lastModifiedTime: string; // HH:MM:SS string from <input type="time" step="1">
     dateExpiration: Date | undefined;
 };
 
@@ -22,6 +33,13 @@ export function isValidUrl(url: string): boolean {
     try { new URL(url); return true; } catch { return false; }
 }
 
+/**
+ * Returns a map of field name → error message for any invalid fields.
+ * An empty object means the form is valid.
+ *
+ * `isEdit` relaxes the file requirement: existing content can be saved
+ * without re-uploading a file (the server keeps the current file).
+ */
 export function getErrors(values: ContentFormValues, isEdit = false): Record<string, string> {
     const e: Record<string, string> = {};
     if (!values.name.trim()) e.name = "Name is required.";
@@ -60,6 +78,7 @@ export function buildContentFormData(values: ContentFormValues): FormData {
     formData.append("contentType", values.contentType === "none" ? "" : values.contentType);
     formData.append("status", values.status === "none" ? "" : values.status);
 
+    // Merge the date picker value and the separate time input into one timestamp.
     const lastModifiedDate = values.dateModified ? new Date(values.dateModified) : new Date();
     const [lmh, lmm, lms] = values.lastModifiedTime.split(":").map(Number);
     lastModifiedDate.setHours(lmh, lmm, lms ?? 0, 0);
