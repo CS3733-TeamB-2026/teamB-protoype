@@ -24,7 +24,7 @@ function RecentFiles() {
 
     useEffect(() => {
         if (!user) return;
-        const fetchContent = async () => {
+        const run = async () => {
             try {
                 const token = await getAccessTokenSilently();
                 const res = await fetch(`/api/content?persona=${encodeURIComponent(user.persona)}`, {
@@ -39,7 +39,7 @@ function RecentFiles() {
                 setLoading(false);
             }
         }
-        fetchContent();
+        void run();
     }, [user, getAccessTokenSilently]);
 
     //sort by lastModified (newest first) and take top 5
