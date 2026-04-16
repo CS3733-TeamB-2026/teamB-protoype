@@ -410,8 +410,11 @@ function ViewContent() {
 
     }
 
+    // Total column count used for colSpan on the expanded detail rows.
     const NUM_COLS = 8;
 
+    // UserProvider hasn't resolved yet — show a full-screen spinner rather than
+    // rendering the page without a user (which would break permission checks).
     if (!user) return (
         <div className="flex items-center justify-center min-h-screen bg-secondary">
             <Loader2 className="w-10 h-10 text-primary animate-spin"/>
@@ -429,11 +432,10 @@ function ViewContent() {
             <Card className="shadow-lg max-w-6xl mx-auto my-8 text-center px-4">
                 <CardHeader>
                     <CardTitle className="text-3xl text-primary mt-4">
-                        {user.persona === "underwriter" ? "Underwriter" :
-                            user.persona === "businessAnalyst" ? "Business Analyst" :
-                                "All"} Content
+                        {user.persona === "admin" ? "All" : formatLabel(user.persona)} Content
                     </CardTitle>
                     <CardDescription>
+                        {/* Show "X of Y items" when filters are active, "X items" otherwise */}
                         {advancedFilteredContent.length === content.length
                             ? `${content.length} item${content.length !== 1 ? "s" : ""}`
                             : `${advancedFilteredContent.length} of ${content.length} items`}
@@ -493,6 +495,9 @@ function ViewContent() {
                             </div>
 
                             <div className="flex flex-row gap-2">
+                                {/* Refresh button — runs refreshContent and a 1.5s minimum
+                                    delay in parallel so the spin animation always completes
+                                    a full cycle even when the fetch is very fast */}
                                 <Button onClick={async () => {
                                     setRefreshing(true);
                                     await Promise.all([
@@ -671,6 +676,11 @@ function ViewContent() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
+                                        {/* Sort the filtered list, then render one React.Fragment
+                                            per item (main row + up to two conditional expansion rows).
+                                            The sort key extractor for "docType" derives the file
+                                            extension when available, falling back to category, so that
+                                            e.g. all PDFs sort together. */}
                                         {applySortState(advancedFilteredContent, sort, (item, col) => {
                                             if (col === "name") return item.displayName;
                                             if (col === "owner") return formatName(item.owner);
@@ -679,6 +689,8 @@ function ViewContent() {
                                             if (col === "persona") return item.targetPersona;
                                             if (col === "docType") return item.fileURI ? (getExtension(getOriginalFilename(item.fileURI!)) ?? getCategory(null, getOriginalFilename(item.fileURI!))) : (item.linkURL ? "link" : "");
                                         }).map((item) => {
+                                            // Derive display values once per row to avoid repeating
+                                            // the same lookups in multiple cells below.
                                             const isFile = !!item.fileURI;
                                             const isLink = !!item.linkURL;
                                             const originalFilename = isFile
@@ -704,6 +716,9 @@ function ViewContent() {
                                                             }
                                                         }}
                                                     >
+                                                        {/* Icon cell: use the site's favicon when
+                                                            the link preview has loaded one, otherwise
+                                                            fall back to the generic ContentIcon */}
                                                         <TableCell className="w-8 pr-0">
                                                             {isLink &&
                                                             linkPreviews[item.id]
@@ -771,6 +786,11 @@ function ViewContent() {
 
                                                         <TableCell>
                                                             <div className="flex justify-end gap-1">
+                                                                {/* Open button — an IIFE so we can use early-return
+                                                                    logic without a separate named function.
+                                                                    File → router link to ViewSingleFile.
+                                                                    Link → external anchor (new tab).
+                                                                    Neither → disabled button. */}
                                                                 {(() => {
                                                                     const icon = <HugeiconsIcon icon={LinkSquare01Icon} className="w-4 h-4" />;
                                                                     const btnClass = "w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground";
@@ -868,7 +888,12 @@ function ViewContent() {
                                                 </TableRow>
                                             )}
 
-                                            {/* Expanded: link preview */}
+                                            {/* Expanded: link preview strip.
+                                                Maps the linkPreviews entry to the three
+                                                UrlPreviewLink statuses:
+                                                  key absent   → "loading"  (fetch still in flight)
+                                                  value null   → "unreachable" (fetch failed)
+                                                  value object → "ok" */}
                                             {isExpanded && isLink && (
                                                 <TableRow className="hover:bg-transparent">
                                                     <TableCell colSpan={NUM_COLS} className="p-0">
@@ -931,6 +956,9 @@ function ViewContent() {
                 onConfirm={() => handleDelete(deleteTarget!.id)}
             />
 
+            {/* AddContentDialog: after saving, append the new item to local state and
+                immediately fetch its link preview (same cache-first logic as fetchPreviews)
+                so the preview strip is ready when the user expands the new row. */}
             <AddContentDialog
                 open={addOpen}
                 onOpenChange={setAddOpen}
@@ -956,6 +984,11 @@ function ViewContent() {
                 }}
             />
 
+            {/* EditContentDialog: only mounted while editingContent is set (i.e. after a
+                successful checkout). The key forces a full remount if the same item is
+                edited twice in a row, resetting all form state. On save, invalidate the
+                file cache so the next inline preview fetches the updated file, then
+                refresh the list to pick up the server's new lastModified/lock state. */}
             {editingContent && (
                 <EditContentDialog
                     key={`${editingContent.id}-${editOpen}`}
