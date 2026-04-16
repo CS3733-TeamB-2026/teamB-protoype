@@ -1,5 +1,9 @@
 import React, {useCallback, useEffect, useState} from "react";
 import {
+    Alert,
+    AlertDescription,
+} from "@/components/ui/alert.tsx";
+import {
     AlertCircle,
     Bookmark,
     BookmarkCheck,
@@ -174,7 +178,7 @@ function ViewContent() {
             const data: BookmarkRecord[] = await res.json();
             setBookmarks(data);
         } catch {
-            setError("Failed to update bookmarks.");
+            toast.error("Failed to update bookmarks.");
         }
     }, [getAccessTokenSilently]);
 
@@ -187,7 +191,7 @@ function ViewContent() {
             fetchPreviews(data);
             await updateBookmarks();
         } catch {
-            setError("Failed to refresh content.");
+            toast.error("Failed to refresh content.");
         }
     }, [getAccessTokenSilently, fetchPreviews, updateBookmarks]);
 
@@ -315,7 +319,7 @@ function ViewContent() {
             });
             const data = await res.json();
             if (!res.ok) {
-                setError(data.message || "Someone else is editing");
+                toast.error(data.message || "Someone else is editing.");
                 return;
             }
             setContent((prev) =>
@@ -323,7 +327,7 @@ function ViewContent() {
             setEditingContent({...item, ...data});
             setEditOpen(true);
         } catch {
-            setError("Someone else is editing");
+            toast.error("Someone else is editing.");
         }
 
     }
@@ -368,10 +372,10 @@ function ViewContent() {
                         </div>
                     )}
                     {error && (
-                        <div className="flex flex-col items-center justify-center py-16 gap-3 text-destructive">
-                            <AlertCircle className="w-8 h-8"/>
-                            <p className="text-sm font-medium">{error}</p>
-                        </div>
+                        <Alert variant="destructive" className="my-4">
+                            <AlertCircle />
+                            <AlertDescription>{error}</AlertDescription>
+                        </Alert>
                     )}
                     {!loading && !error && content.length === 0 && (
                         <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">

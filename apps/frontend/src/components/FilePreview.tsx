@@ -1,5 +1,6 @@
 import { memo, useEffect, useRef, useState } from "react";
-import { Download, Loader2 } from "lucide-react";
+import { AlertCircle, Download, Loader2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import * as XLSX from "xlsx";
 import DocViewer, { PDFRenderer, DocxRenderer, MarkdownRenderer } from "@iamjariwala/react-doc-viewer";
 import "@iamjariwala/react-doc-viewer/dist/index.css";
@@ -174,7 +175,10 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
                 </div>
             )}
             {status === "error" && (
-                <p className="px-6 py-4 text-sm text-destructive">Failed to load preview.</p>
+                <Alert variant="destructive" className="mx-6 my-4">
+                    <AlertCircle />
+                    <AlertDescription>Failed to load preview.</AlertDescription>
+                </Alert>
             )}
             {status === "ready" && previewMode === "none" && (
                 <p className="px-6 py-4 text-sm text-muted-foreground">No preview available for this file type.</p>

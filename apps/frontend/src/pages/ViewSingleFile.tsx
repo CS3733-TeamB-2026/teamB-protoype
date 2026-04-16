@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { AlertCircle, ArrowLeft, FileText, Loader2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Hero } from "@/components/shared/Hero.tsx";
 import { FilePreview } from "@/components/FilePreview.tsx";
@@ -66,10 +67,10 @@ export function ViewSingleFile() {
                         </div>
                     )}
                     {error && (
-                        <div className="flex flex-col items-center justify-center py-16 gap-3 text-destructive">
-                            <AlertCircle className="w-8 h-8" />
-                            <p className="text-sm font-medium">{error}</p>
-                        </div>
+                        <Alert variant="destructive" className="my-4">
+                            <AlertCircle />
+                            <AlertDescription>{error}</AlertDescription>
+                        </Alert>
                     )}
                     {item && (
                         <div className="space-y-4">
