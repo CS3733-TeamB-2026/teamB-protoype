@@ -68,8 +68,12 @@ import {highlight} from "@/lib/highlight.tsx";
 import {toast} from "sonner";
 import type { ContentItem, BookmarkRecord } from "@/lib/types.ts";
 import type { UrlPreview } from "@/lib/types.ts";
+import { usePageTitle } from "@/hooks/use-page-title.ts";
 
 function ViewContent() {
+
+    usePageTitle("Manage Content");
+
     const [content, setContent] = useState<ContentItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [addOpen, setAddOpen] = useState(false);

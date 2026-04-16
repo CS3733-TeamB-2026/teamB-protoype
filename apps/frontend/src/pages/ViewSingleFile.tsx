@@ -10,12 +10,15 @@ import { PersonaBadge } from "@/components/shared/PersonaBadge.tsx";
 import { getOriginalFilename } from "@/lib/mime.ts";
 import type { ContentItem } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react";
+import { usePageTitle } from "@/hooks/use-page-title.ts";
 
 export function ViewSingleFile() {
     const { id } = useParams<{ id: string }>();
     const [item, setItem] = useState<ContentItem | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    usePageTitle("View File");
 
     const { getAccessTokenSilently } = useAuth0();
 

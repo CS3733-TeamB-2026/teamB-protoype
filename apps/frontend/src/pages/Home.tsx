@@ -16,8 +16,12 @@ import { Home as HomeIcon, LucideFolder, User, GraduationCap } from "lucide-reac
 import { useLocale } from "@/languageSupport/localeContext";
 import { useTranslation } from "@/languageSupport/useTranslation";
 import type {TranslationKey} from "@/languageSupport/keys.ts";
+import { usePageTitle } from "@/hooks/use-page-title.ts";
 
 function Home() {
+
+    usePageTitle("Home");
+
     const { locale } = useLocale();
     const { ts } = useTranslation(locale);
     //team member data

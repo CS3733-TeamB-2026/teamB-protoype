@@ -38,7 +38,7 @@ function Navbar() {
         <>
             {/* header */}
             <nav className="shadow-xl flex items-center bg-primary text-primary-foreground p-4 w-full shrink-0 sticky top-0 z-50"
-                 style={{ background: "linear-gradient(to right, var(--primary-dark) 25%, var(--primary), #2E6AA3)" }}>
+                 style={{ background: "linear-gradient(to right, var(--primary-surface-dark) 25%, var(--primary-surface), var(--primary-surface-light)" }}>
                 <div className="flex items-center gap-4 min-w-fit z-10">
                     {/* AppSidebar dropdown */}
                     <button onClick={toggleSidebar} className="group cursor-pointer active:scale-[0.96] shrink-0 px-2 py-2 text-xl flex items-center gap-3 transition-all duration-200 hover:opacity-80">
