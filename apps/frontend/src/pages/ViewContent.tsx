@@ -69,10 +69,30 @@ import { getCachedPreview, setCachedPreview } from "@/lib/preview-cache.ts";
 import { invalidateFileCacheById } from "@/lib/file-cache.ts";
 import { useAuth0 } from "@auth0/auth0-react"
 import {highlight} from "@/lib/highlight.tsx";
+import {formatLabel, formatName} from "@/lib/utils.ts";
 import {toast} from "sonner";
 import type { ContentItem, BookmarkRecord } from "@/lib/types.ts";
 import type { UrlPreview } from "@/lib/types.ts";
 
+/**
+ * Main content list page — the primary view for browsing, searching, filtering,
+ * and managing content items.
+ *
+ * Key behaviours:
+ * - Fetches all content the current user has access to from `/api/content` on
+ *   mount, then polls every 15 seconds to pick up lock state changes made by
+ *   other users.
+ * - Each row is expandable. Expanding a file row renders an inline
+ *   {@link FilePreview}; expanding a link row renders a {@link UrlPreviewLink}
+ *   with Open Graph metadata fetched from `/api/preview`.
+ * - Link previews are fetched in parallel after the content list loads and
+ *   stored in `preview-cache.ts` so they survive re-renders and refreshes.
+ * - Editing requires a checkout (pessimistic lock). The lock auto-expires after
+ *   2 minutes on the backend. After a successful edit the file cache entry is
+ *   invalidated so the next inline preview re-fetches the updated file.
+ * - Bookmarks are optimistically updated: the UI reflects the change
+ *   immediately and rolls back if the API call fails.
+ */
 function ViewContent() {
     const [content, setContent] = useState<ContentItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -80,13 +100,24 @@ function ViewContent() {
     const [editOpen, setEditOpen] = useState(false);
     const [editingContent, setEditingContent] = useState<ContentItem | null>(null);
     const [error, setError] = useState<string | null>(null);
+    /** ID of the currently expanded row, or `null` if all rows are collapsed. */
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const [bookmarks, setBookmarks] = useState<BookmarkRecord[]>([]);
+    /** Content item staged for the delete confirmation dialog. */
     const [deleteTarget, setDeleteTarget] = useState<ContentItem | null>(null);
     const [sort, toggleSort] = useSortState<"name" | "owner" | "status" | "contentType" | "persona" | "docType">({column: "name", direction: "asc"});
+    /**
+     * Map from content item ID to its fetched link preview (or `null` if the
+     * URL was unreachable). Items with no entry are still loading.
+     */
     const [linkPreviews, setLinkPreviews] = useState<Record<number, UrlPreview | null>>({});
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
+    /**
+     * Checkbox state for the filter sidebar. An empty array for a multi-select
+     * field means "no filter applied" (all values pass). The two boolean flags
+     * are additional single-checkbox filters.
+     */
     const [advancedFilters, setAdvancedFilters] = useState({
         status: [] as Array<"new" | "inProgress" | "complete">,
         contentType: [] as Array<"reference" | "workflow">,
@@ -97,11 +128,14 @@ function ViewContent() {
 
     const user = useUser();
     const [searchTerm, setSearchTerm] = useState("");
+    // First pass: filter by the search box (case-insensitive display name match).
     const searchedContent = content.filter((item) =>
         item.displayName.toLowerCase().includes(searchTerm.toLowerCase())
     );
     const [refreshing, setRefreshing] = useState(false);
 
+    // Second pass: apply the sidebar checkboxes on top of the search results.
+    // Each condition is skipped (passes everything) when no options are selected.
     const advancedFilteredContent = searchedContent.filter((item) => {
         const matchesStatus =
             advancedFilters.status.length === 0 ||
@@ -130,6 +164,7 @@ function ViewContent() {
         );
     });
 
+    // Total number of active filter conditions — shown in the "Filters (N)" button label.
     const activeFilterCount =
         advancedFilters.status.length +
         advancedFilters.contentType.length +
@@ -139,6 +174,14 @@ function ViewContent() {
 
     const {getAccessTokenSilently} = useAuth0();
 
+    /**
+     * Fetches Open Graph previews for all link-type items in `data`.
+     *
+     * Already-cached URLs are applied synchronously (no spinner). Uncached URLs
+     * are fetched in parallel via `/api/preview` — a server-side proxy that
+     * reads Open Graph tags from the target page. Each result is stored in
+     * `preview-cache.ts` so re-renders and the 15-second poll don't re-fetch.
+     */
     const fetchPreviews = useCallback((data: ContentItem[]) => {
         const linkItems = data.filter((item) => item.linkURL);
 
@@ -171,6 +214,11 @@ function ViewContent() {
         });
     }, []);
 
+    /**
+     * Re-fetches the current user's bookmark list from the server and replaces
+     * local state. Called on initial load and after every `refreshContent` poll
+     * so the bookmark icons stay in sync if another browser tab changes them.
+     */
     const updateBookmarks = useCallback(async () => {
         try {
             const token = await getAccessTokenSilently();
@@ -182,6 +230,11 @@ function ViewContent() {
         }
     }, [getAccessTokenSilently]);
 
+    /**
+     * Silently re-fetches the content list, link previews, and bookmarks without
+     * showing the full-page loading spinner. Used by the manual refresh button
+     * and the 15-second polling interval.
+     */
     const refreshContent = useCallback(async () => {
         try {
             const token = await getAccessTokenSilently();
@@ -223,10 +276,22 @@ function ViewContent() {
         return () => clearInterval(id);
     }, [refreshContent]);
 
+    /** Expands the clicked row, or collapses it if it's already open. */
     function toggleExpand(id: number) {
         setExpandedId((prev) => (prev === id ? null : id));
     }
 
+    /**
+     * Toggles the bookmark for content item `id`.
+     *
+     * Uses an optimistic update: the bookmark icon flips immediately in the UI,
+     * and the `DELETE` or `POST` to `/api/bookmark/:id` is sent in the background.
+     * If the request fails, the local state is rolled back to its previous value
+     * and an error toast is shown.
+     *
+     * `e.stopPropagation()` prevents the click from also expanding/collapsing
+     * the row.
+     */
     async function toggleBookmark(id: number, e: React.MouseEvent) {
         e.stopPropagation();
         const isCurrentlyBookmarked = bookmarks.some((b) => b.bookmarkedContentId === id);
@@ -258,16 +323,27 @@ function ViewContent() {
         }
     }
 
+    /**
+     * Returns true if the current user is allowed to edit `item`.
+     * Admins can edit everything; other personas can only edit content
+     * that targets their own persona or that they own.
+     */
     function canEdit(item: ContentItem): boolean {
         if (user!.persona === "admin") return true;
         return item.targetPersona === user!.persona || item.ownerId === user!.id;
     }
 
+    /**
+     * Returns true if `item` is checked out by someone *other* than the
+     * current user. A checkout by the current user does not block editing
+     * (they're already in the edit dialog).
+     */
     function isCheckedOut(item: ContentItem): boolean {
         if (item.checkedOutById === null) return false;
         return item.checkedOutById !== user!.id;
     }
 
+    /** Returns a human-readable tooltip for a locked item. */
     function lockLabel(item: ContentItem): string {
         if (!item.checkedOutBy) {
             return "This content is currently being modified.";
@@ -275,18 +351,10 @@ function ViewContent() {
         return `${item.checkedOutBy.firstName} ${item.checkedOutBy.lastName} is currently modifying this content.`;
     }
 
-    function formatName(item: ContentItem): string {
-        return item.owner
-            ? `${item.owner.lastName}, ${item.owner.firstName}`
-            : ""
-    }
-
-    function formatLabel(value: string): string {
-        return value
-            .replace(/([A-Z])/g, ' $1')  //split camelCase
-            .replace(/^./, (c) => c.toUpperCase()); //capitalize first letter
-    }
-
+    /**
+     * Deletes the content item with the given ID and removes it from local
+     * state. Called by `ConfirmDeleteDialog` after the user confirms.
+     */
     const handleDelete = async (id: number) => {
         const token = await getAccessTokenSilently();
         const res = await fetch(`/api/content/${id}`, {
@@ -299,6 +367,16 @@ function ViewContent() {
         setDeleteTarget(null);
     };
 
+    /**
+     * Acquires an edit lock (checkout) for `item`, then opens the edit dialog.
+     *
+     * The backend issues a pessimistic lock via `POST /api/content/checkout`.
+     * If another user already holds the lock the server returns a non-OK
+     * response and we show an error toast instead of opening the dialog.
+     * On success the lock metadata (checkedOutById, checkedOutAt) returned by
+     * the server is merged into the local content list so the lock icon appears
+     * immediately without waiting for the next poll.
+     */
     const handleStartEdit = async (item: ContentItem, e: React.MouseEvent) => {
         e.stopPropagation();
         if (!canEdit(item)) {
@@ -332,9 +410,11 @@ function ViewContent() {
 
     }
 
-
+    // Total column count used for colSpan on the expanded detail rows.
     const NUM_COLS = 8;
 
+    // UserProvider hasn't resolved yet — show a full-screen spinner rather than
+    // rendering the page without a user (which would break permission checks).
     if (!user) return (
         <div className="flex items-center justify-center min-h-screen bg-secondary">
             <Loader2 className="w-10 h-10 text-primary animate-spin"/>
@@ -352,11 +432,10 @@ function ViewContent() {
             <Card className="shadow-lg max-w-6xl mx-auto my-8 text-center px-4">
                 <CardHeader>
                     <CardTitle className="text-3xl text-primary mt-4">
-                        {user.persona === "underwriter" ? "Underwriter" :
-                            user.persona === "businessAnalyst" ? "Business Analyst" :
-                                "All"} Content
+                        {user.persona === "admin" ? "All" : formatLabel(user.persona)} Content
                     </CardTitle>
                     <CardDescription>
+                        {/* Show "X of Y items" when filters are active, "X items" otherwise */}
                         {advancedFilteredContent.length === content.length
                             ? `${content.length} item${content.length !== 1 ? "s" : ""}`
                             : `${advancedFilteredContent.length} of ${content.length} items`}
@@ -416,6 +495,9 @@ function ViewContent() {
                             </div>
 
                             <div className="flex flex-row gap-2">
+                                {/* Refresh button — runs refreshContent and a 1.5s minimum
+                                    delay in parallel so the spin animation always completes
+                                    a full cycle even when the fetch is very fast */}
                                 <Button onClick={async () => {
                                     setRefreshing(true);
                                     await Promise.all([
@@ -594,14 +676,21 @@ function ViewContent() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
+                                        {/* Sort the filtered list, then render one React.Fragment
+                                            per item (main row + up to two conditional expansion rows).
+                                            The sort key extractor for "docType" derives the file
+                                            extension when available, falling back to category, so that
+                                            e.g. all PDFs sort together. */}
                                         {applySortState(advancedFilteredContent, sort, (item, col) => {
                                             if (col === "name") return item.displayName;
-                                            if (col === "owner") return formatName(item);
+                                            if (col === "owner") return formatName(item.owner);
                                             if (col === "status") return item.status ?? "";
                                             if (col === "contentType") return item.contentType;
                                             if (col === "persona") return item.targetPersona;
                                             if (col === "docType") return item.fileURI ? (getExtension(getOriginalFilename(item.fileURI!)) ?? getCategory(null, getOriginalFilename(item.fileURI!))) : (item.linkURL ? "link" : "");
                                         }).map((item) => {
+                                            // Derive display values once per row to avoid repeating
+                                            // the same lookups in multiple cells below.
                                             const isFile = !!item.fileURI;
                                             const isLink = !!item.linkURL;
                                             const originalFilename = isFile
@@ -627,6 +716,9 @@ function ViewContent() {
                                                             }
                                                         }}
                                                     >
+                                                        {/* Icon cell: use the site's favicon when
+                                                            the link preview has loaded one, otherwise
+                                                            fall back to the generic ContentIcon */}
                                                         <TableCell className="w-8 pr-0">
                                                             {isLink &&
                                                             linkPreviews[item.id]
@@ -665,7 +757,7 @@ function ViewContent() {
                                                         </TableCell>
 
                                                         <TableCell className="hidden sm:table-cell text-foreground">
-                                                            {formatName(item)}
+                                                            {formatName(item.owner)}
                                                         </TableCell>
 
                                                         <TableCell className="hidden sm:table-cell text-center">
@@ -694,6 +786,11 @@ function ViewContent() {
 
                                                         <TableCell>
                                                             <div className="flex justify-end gap-1">
+                                                                {/* Open button — an IIFE so we can use early-return
+                                                                    logic without a separate named function.
+                                                                    File → router link to ViewSingleFile.
+                                                                    Link → external anchor (new tab).
+                                                                    Neither → disabled button. */}
                                                                 {(() => {
                                                                     const icon = <HugeiconsIcon icon={LinkSquare01Icon} className="w-4 h-4" />;
                                                                     const btnClass = "w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground";
@@ -791,7 +888,12 @@ function ViewContent() {
                                                 </TableRow>
                                             )}
 
-                                            {/* Expanded: link preview */}
+                                            {/* Expanded: link preview strip.
+                                                Maps the linkPreviews entry to the three
+                                                UrlPreviewLink statuses:
+                                                  key absent   → "loading"  (fetch still in flight)
+                                                  value null   → "unreachable" (fetch failed)
+                                                  value object → "ok" */}
                                             {isExpanded && isLink && (
                                                 <TableRow className="hover:bg-transparent">
                                                     <TableCell colSpan={NUM_COLS} className="p-0">
@@ -854,6 +956,9 @@ function ViewContent() {
                 onConfirm={() => handleDelete(deleteTarget!.id)}
             />
 
+            {/* AddContentDialog: after saving, append the new item to local state and
+                immediately fetch its link preview (same cache-first logic as fetchPreviews)
+                so the preview strip is ready when the user expands the new row. */}
             <AddContentDialog
                 open={addOpen}
                 onOpenChange={setAddOpen}
@@ -879,6 +984,11 @@ function ViewContent() {
                 }}
             />
 
+            {/* EditContentDialog: only mounted while editingContent is set (i.e. after a
+                successful checkout). The key forces a full remount if the same item is
+                edited twice in a row, resetting all form state. On save, invalidate the
+                file cache so the next inline preview fetches the updated file, then
+                refresh the list to pick up the server's new lastModified/lock state. */}
             {editingContent && (
                 <EditContentDialog
                     key={`${editingContent.id}-${editOpen}`}

@@ -1,18 +1,21 @@
-// Single source of truth for file types this app supports.
-//
-// Philosophy: instead of trying to classify every possible MIME type, we keep
-// an explicit allowlist. Every entry on this list is known to have:
-//   - a working preview mode in FilesPage,
-//   - a category with an icon and color,
-//   - acceptable browser support for upload.
-//
-// Files whose type isn't on the allowlist are rejected at upload time, so
-// the viewer never has to deal with an unknown type. To add support for a
-// new file type:
-//   1. Add an entry to ALLOWED_TYPES below.
-//   2. Make sure its `category` has an icon/color in FilesPage's CATEGORY_COLORS.
-//   3. Make sure its `previewMode` has a working renderer in FilesPage.
+/**
+ * Single source of truth for file types this app supports.
+ *
+ * Philosophy: instead of trying to classify every possible MIME type, we keep
+ * an explicit allowlist. Every entry on this list is known to have:
+ *   - a working preview mode in FilesPage,
+ *   - a category with an icon and color,
+ *   - acceptable browser support for upload.
+ *
+ * Files whose type isn't on the allowlist are rejected at upload time, so
+ * the viewer never has to deal with an unknown type. To add support for a
+ * new file type:
+ *   1. Add an entry to ALLOWED_TYPES below.
+ *   2. Make sure its `category` has an icon/color in CATEGORY_COLORS.
+ *   3. Make sure its `previewMode` has a working renderer in FilePreview.
+ */
 
+/** Visual grouping for a file — drives the icon and color shown in the list. */
 export type Category =
     | "pdf"
     | "document"
@@ -24,6 +27,17 @@ export type Category =
     | "code"
     | "other";
 
+/**
+ * Which renderer {@link FilePreview} should use for a file.
+ * - `"docviewer"` — PDF / DOCX / Markdown via react-doc-viewer
+ * - `"image"`     — `<img>` tag
+ * - `"audio"`     — `<audio>` element
+ * - `"video"`     — `<video>` element
+ * - `"text"`      — `<pre>` block (plain text, code, etc.)
+ * - `"table"`     — HTML table parsed from Excel/CSV via SheetJS
+ * - `"html"`      — sandboxed `<iframe>`
+ * - `"none"`      — no preview, download-only
+ */
 export type PreviewMode = "docviewer" | "image" | "audio" | "video" | "text" | "table" | "html" | "none";
 
 export interface AllowedType {

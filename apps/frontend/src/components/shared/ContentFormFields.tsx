@@ -22,9 +22,27 @@ interface Props {
     showLastModified?: boolean;
 }
 
+/**
+ * Shared field set rendered by both `AddContentDialog` and `EditContentDialog`.
+ *
+ * Receives all form state via props (`values`, `patch`, `errors`) so it owns
+ * no form logic itself — it is purely presentational. The parent passes a
+ * `key` tied to `formKey` from `useContentForm` so this component remounts on
+ * reset, clearing the local `filePickError` state below.
+ *
+ * The Last Modified date and time inputs are disabled when a file is selected
+ * because the file's own `lastModified` timestamp is used instead. Switching
+ * back to URL mode re-enables them.
+ *
+ * `showLastModified` is false by default; the Add and Edit dialogs both pass
+ * `true`. The prop exists so the field set could be embedded in a context
+ * where the last-modified date is not user-editable.
+ */
 export function ContentFormFields({ values, patch, errors, showLastModified = false }: Props) {
     const [openModifiedDate, setOpenModifiedDate] = React.useState(false);
     const [openExpirationDate, setOpenExpirationDate] = React.useState(false);
+    // Kept local (not in useContentForm) because it comes from client-side MIME
+    // validation that runs before the file enters form state.
     const [filePickError, setFilePickError] = useState<string | null>(null);
 
     const handleFileChange = (file: File | null) => {
@@ -38,6 +56,8 @@ export function ContentFormFields({ values, patch, errors, showLastModified = fa
             return;
         }
 
+        // Auto-fill name and last-modified from the file's own metadata so the
+        // user doesn't have to enter them manually.
         const lastMod = new Date(file.lastModified);
         patch({
             file,
