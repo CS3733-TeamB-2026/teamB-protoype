@@ -69,6 +69,7 @@ import { getCachedPreview, setCachedPreview } from "@/lib/preview-cache.ts";
 import { invalidateFileCacheById } from "@/lib/file-cache.ts";
 import { useAuth0 } from "@auth0/auth0-react"
 import {highlight} from "@/lib/highlight.tsx";
+import {formatLabel, formatName} from "@/lib/utils.ts";
 import {toast} from "sonner";
 import type { ContentItem, BookmarkRecord } from "@/lib/types.ts";
 import type { UrlPreview } from "@/lib/types.ts";
@@ -348,24 +349,6 @@ function ViewContent() {
             return "This content is currently being modified.";
         }
         return `${item.checkedOutBy.firstName} ${item.checkedOutBy.lastName} is currently modifying this content.`;
-    }
-
-    /** Formats the owner's name as "Last, First" for the table column. */
-    function formatName(item: ContentItem): string {
-        return item.owner
-            ? `${item.owner.lastName}, ${item.owner.firstName}`
-            : ""
-    }
-
-    /**
-     * Converts a camelCase enum value to a human-readable label.
-     * e.g. `"inProgress"` → `"In Progress"`, `"businessAnalyst"` → `"Business Analyst"`.
-     * Used to render filter checkbox labels in the sidebar.
-     */
-    function formatLabel(value: string): string {
-        return value
-            .replace(/([A-Z])/g, ' $1')  //split camelCase
-            .replace(/^./, (c) => c.toUpperCase()); //capitalize first letter
     }
 
     /**
@@ -690,7 +673,7 @@ function ViewContent() {
                                     <TableBody>
                                         {applySortState(advancedFilteredContent, sort, (item, col) => {
                                             if (col === "name") return item.displayName;
-                                            if (col === "owner") return formatName(item);
+                                            if (col === "owner") return formatName(item.owner);
                                             if (col === "status") return item.status ?? "";
                                             if (col === "contentType") return item.contentType;
                                             if (col === "persona") return item.targetPersona;
@@ -759,7 +742,7 @@ function ViewContent() {
                                                         </TableCell>
 
                                                         <TableCell className="hidden sm:table-cell text-foreground">
-                                                            {formatName(item)}
+                                                            {formatName(item.owner)}
                                                         </TableCell>
 
                                                         <TableCell className="hidden sm:table-cell text-center">

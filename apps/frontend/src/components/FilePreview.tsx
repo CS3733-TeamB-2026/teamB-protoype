@@ -89,13 +89,16 @@ const DocViewerMemo = memo(function DocViewerMemo({
  * function to avoid memory leaks.
  */
 export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) {
+    // Derive the renderer once — this is pure (no async work) and drives both
+    // initial state and the fetch logic below.
     const previewMode = getPreviewMode(null, filename);
 
     const [fileSize, setFileSize] = useState<number | null>(null);
+    // "none" files have nothing to fetch, so we can skip straight to "ready".
     const [status, setStatus] = useState<FetchStatus>(previewMode === "none" ? "ready" : "loading");
-    const [content, setContent] = useState<string | null>(null);
-    const [objectUrl, setObjectUrl] = useState<string | null>(null);
-    const [tableData, setTableData] = useState<string[][] | null>(null);
+    const [content, setContent] = useState<string | null>(null);   // text mode
+    const [objectUrl, setObjectUrl] = useState<string | null>(null); // blob-backed renderers
+    const [tableData, setTableData] = useState<string[][] | null>(null); // table mode
     const { getAccessTokenSilently } = useAuth0();
     // Keep a ref so the fetch effect never needs getAccessTokenSilently as a dep.
     // Auth0 returns a new function reference on every render, which would otherwise
@@ -103,6 +106,10 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
     const getTokenRef = useRef(getAccessTokenSilently);
     useEffect(() => { getTokenRef.current = getAccessTokenSilently; });
 
+    // Triggers a real browser download by creating a temporary <a> element with
+    // the "download" attribute and clicking it programmatically. The object URL
+    // is immediately revoked after the click — the browser queues the download
+    // before the URL is invalidated.
     const handleDownload = async () => {
         const token = await getAccessTokenSilently();
         const res = await fetch(src, { headers: { Authorization: `Bearer ${token}` } });
@@ -116,13 +123,20 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
         URL.revokeObjectURL(url);
     };
 
+    // Main fetch effect. Runs whenever the file source, preview mode, or info
+    // URL changes (i.e. when a different file is expanded).
     useEffect(() => {
+        // localUrl is tracked in a local variable (not just state) so the cleanup
+        // function can revoke it even if the component unmounts before setObjectUrl
+        // is called.
         let localUrl: string | null = null;
 
         const run = async () => {
             try {
                 const token = await getTokenRef.current();
 
+                // Fetch file size metadata independently of the file content so
+                // the size can be shown even for "none" preview files.
                 if (infoSrc) {
                     const res = await fetch(infoSrc, { headers: { Authorization: `Bearer ${token}` } });
                     const meta = await res.json();
@@ -132,6 +146,7 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
                 if (previewMode === "none") return;
 
                 if (previewMode === "text") {
+                    // Text files are stored as strings — no object URL needed.
                     const cachedText = getCachedText(src);
                     if (cachedText !== undefined) {
                         setContent(cachedText);
@@ -146,6 +161,8 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
                     setStatus("ready");
 
                 } else if (previewMode === "table") {
+                    // SheetJS needs an ArrayBuffer, but we cache the raw Blob so
+                    // the same bytes can be reused without re-fetching.
                     const cachedBlob = getCachedBlob(src);
                     let buf: ArrayBuffer;
                     if (cachedBlob) {
@@ -157,6 +174,9 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
                         setCachedBlob(src, blob);
                         buf = await blob.arrayBuffer();
                     }
+                    // Parse just the first sheet and convert to a 2-D string array.
+                    // header:1 means "use row indices as headers" (i.e. return raw rows),
+                    // defval:"" fills empty cells with an empty string instead of undefined.
                     const wb = XLSX.read(buf, { type: "array" });
                     const ws = wb.Sheets[wb.SheetNames[0]];
                     const rows = XLSX.utils.sheet_to_json<string[]>(ws, { header: 1, defval: "" });
@@ -164,6 +184,8 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
                     setStatus("ready");
 
                 } else {
+                    // All remaining modes (image, video, audio, html, docviewer)
+                    // need an object URL pointing at the raw blob.
                     const cachedBlob = getCachedBlob(src);
                     let blob: Blob;
                     if (cachedBlob) {
@@ -185,6 +207,8 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
 
         void run();
 
+        // Cleanup: revoke the object URL when the component unmounts or when
+        // the effect re-runs for a new file, preventing memory leaks.
         return () => {
             if (localUrl) {
                 URL.revokeObjectURL(localUrl);
@@ -196,7 +220,7 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
 
     return (
         <div className="bg-background overflow-hidden">
-            {/* Header: filename, size, download */}
+            {/* Always-visible header row: filename, file size (if known), download link */}
             <div className="px-6 py-3 flex items-center gap-4">
                 <span className="text-sm font-medium text-foreground">{filename}</span>
                 {fileSize != null && (
@@ -210,6 +234,7 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
                 </button>
             </div>
 
+            {/* Loading / error states — shown while the fetch effect is running */}
             {status === "loading" && (
                 <div className="flex items-center gap-2 px-6 py-4 text-muted-foreground">
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -222,14 +247,20 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
                     <AlertDescription>Failed to load preview.</AlertDescription>
                 </Alert>
             )}
+
+            {/* Renderer selection — exactly one of these will match once status is "ready" */}
+
+            {/* No renderer available for this file type (archives, legacy Office, etc.) */}
             {status === "ready" && previewMode === "none" && (
                 <p className="px-6 py-4 text-sm text-muted-foreground">No preview available for this file type.</p>
             )}
+            {/* Plain text: rendered in a scrollable <pre> block */}
             {status === "ready" && previewMode === "text" && (
                 <pre className="px-6 pb-4 text-sm text-foreground overflow-auto max-h-130 whitespace-pre-wrap">
                     {content}
                 </pre>
             )}
+            {/* Image: rendered with an <img> tag pointed at the object URL */}
             {status === "ready" && previewMode === "image" && objectUrl && (
                 <div className="px-6 pb-4">
                     <img
@@ -239,6 +270,7 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
                     />
                 </div>
             )}
+            {/* Spreadsheet: first row treated as column headers, remaining rows as data */}
             {status === "ready" && previewMode === "table" && tableData != null && (
                 <div className="overflow-auto max-h-130 px-6 pb-4">
                     <table className="text-sm border-collapse">
@@ -265,6 +297,7 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
                     </table>
                 </div>
             )}
+            {/* Video / audio: native browser controls pointing at the object URL */}
             {status === "ready" && previewMode === "video" && objectUrl && (
                 <div className="px-6 pb-4">
                     <video controls className="w-full rounded" src={objectUrl} />
@@ -275,6 +308,8 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
                     <audio controls className="w-full" src={objectUrl} />
                 </div>
             )}
+            {/* HTML: sandboxed iframe — allow-same-origin lets relative asset paths
+                resolve, but scripts are blocked so the file can't escape the sandbox */}
             {status === "ready" && previewMode === "html" && objectUrl && (
                 <iframe
                     src={objectUrl}
@@ -284,6 +319,8 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
                     title={filename}
                 />
             )}
+            {/* PDF / DOCX / Markdown: delegated to DocViewerMemo (memoized to
+                preserve page position across parent re-renders) */}
             {status === "ready" && previewMode === "docviewer" && objectUrl && (
                 <DocViewerMemo objectUrl={objectUrl} filename={filename} mode={mode} />
             )}
