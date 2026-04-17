@@ -1,24 +1,42 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { AlertCircle, ArrowLeft, FileText, Loader2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Hero } from "@/components/shared/Hero.tsx";
-import { FilePreview } from "@/components/FilePreview.tsx";
-import { ContentStatusBadge } from "@/components/shared/ContentStatusBadge.tsx";
-import { ContentTypeBadge } from "@/components/shared/ContentTypeBadge.tsx";
+import { FilePreview } from "@/features/content/previews/FilePreview.tsx";
+import { ContentStatusBadge } from "@/features/content/components/ContentStatusBadge.tsx";
+import { ContentTypeBadge } from "@/features/content/components/ContentTypeBadge.tsx";
 import { PersonaBadge } from "@/components/shared/PersonaBadge.tsx";
 import { getOriginalFilename } from "@/lib/mime.ts";
-import type { ContentItem } from "@/pages/ViewContent.tsx";
+import type { ContentItem } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react";
+import { usePageTitle } from "@/hooks/use-page-title.ts";
 
+/**
+ * Full-page file viewer for a single content item.
+ *
+ * Reachable at `/file/:id` (linked from the open-external icon in ViewContent).
+ * Fetches the content item's metadata from `/api/content/:id`, then delegates
+ * rendering to {@link FilePreview} with `mode="full"` so the PDF/DOCX viewer
+ * scrolls vertically and images are displayed at larger size.
+ *
+ * File bytes themselves are fetched and cached by FilePreview — this page only
+ * needs the item metadata to resolve the original filename and pass it down.
+ */
 export function ViewSingleFile() {
+    /** Content item ID from the URL parameter. */
     const { id } = useParams<{ id: string }>();
     const [item, setItem] = useState<ContentItem | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    usePageTitle("View File");
+
     const { getAccessTokenSilently } = useAuth0();
 
+    // Fetch the content item's metadata on mount (or when the URL id changes).
+    // The file bytes are not fetched here — FilePreview handles that separately.
     useEffect(() => {
         const fetchItem = async () => {
             try {
@@ -66,10 +84,10 @@ export function ViewSingleFile() {
                         </div>
                     )}
                     {error && (
-                        <div className="flex flex-col items-center justify-center py-16 gap-3 text-destructive">
-                            <AlertCircle className="w-8 h-8" />
-                            <p className="text-sm font-medium">{error}</p>
-                        </div>
+                        <Alert variant="destructive" className="my-4">
+                            <AlertCircle />
+                            <AlertDescription>{error}</AlertDescription>
+                        </Alert>
                     )}
                     {item && (
                         <div className="space-y-4">
@@ -89,6 +107,7 @@ export function ViewSingleFile() {
                                     filename={originalFilename}
                                     src={`/api/content/download/${item.id}`}
                                     infoSrc={`/api/content/info/${item.id}`}
+                                    mode="full"
                                 />
                             )}
                         </div>

@@ -7,6 +7,7 @@ import {
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { useState } from "react";
+import { toast } from "sonner";
 
 type User = {
     id: number;
@@ -24,10 +25,8 @@ type LoginDialogProps = {
 function LoginDialog({ open, onOpenChange, onLogin }: LoginDialogProps) {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
-    const [error, setError] = useState(""); //For login errors ex. wrong password
 
     const handleLogin = async () => {
-        setError("");
         const res = await fetch("/api/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -47,7 +46,7 @@ function LoginDialog({ open, onOpenChange, onLogin }: LoginDialogProps) {
             //Unsuccessful login
             const err = await res.json();
             console.log(err);
-            setError(err.message || "Login failed");
+            toast.error(err.message || "Login failed");
         }
     }
 
@@ -59,7 +58,6 @@ function LoginDialog({ open, onOpenChange, onLogin }: LoginDialogProps) {
                     <DialogDescription className="text-sm">Enter your credentials to log in.</DialogDescription>
                 </DialogHeader>
                 <div className="flex flex-col gap-4">
-                    {error && <p className="text-sm text-destructive">{error}</p>}
                     <div>
                         <Label className="my-2">Username</Label>
                         <Input className="bg-secondary" placeholder="Enter Username" onChange={(e) => setUsername(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") handleLogin() }} />

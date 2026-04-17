@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useUser } from "@/hooks/use-user.ts";
 import { FolderOpen, Loader2 } from "lucide-react";
-import { ContentIcon } from "@/components/shared/ContentIcon.tsx";
+import { ContentIcon } from "@/features/content/components/ContentIcon.tsx";
 import { getCategory, getExtension, getOriginalFilename, lookupByFilename } from "@/lib/mime.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 
@@ -24,7 +24,7 @@ function RecentFiles() {
 
     useEffect(() => {
         if (!user) return;
-        const fetchContent = async () => {
+        const run = async () => {
             try {
                 const token = await getAccessTokenSilently();
                 const res = await fetch(`/api/content?persona=${encodeURIComponent(user.persona)}`, {
@@ -39,7 +39,7 @@ function RecentFiles() {
                 setLoading(false);
             }
         }
-        fetchContent();
+        void run();
     }, [user, getAccessTokenSilently]);
 
     //sort by lastModified (newest first) and take top 5

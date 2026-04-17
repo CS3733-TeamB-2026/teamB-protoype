@@ -6,13 +6,13 @@ import {BrowserRouter} from 'react-router-dom';
 import { SidebarProvider } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/layout/AppSidebar.tsx";
 import Home from "@/pages/Home.tsx";
-import AddEmployee from "@/pages/AddEmployee.tsx";
+import AddEmployee from "@/features/employees/AddEmployee.tsx";
 import UnderwriterPersona from "@/pages/UnderwriterPersona.tsx";
 import BusinessAnalystPersona from "@/pages/BusinessAnalystPersona.tsx";
-import EmployeeHome from "@/pages/EmployeeHome.tsx";
-import ViewEmployees from "@/pages/ViewEmployees.tsx";
-import ViewContent from "@/pages/ViewContent.tsx";
-import { ViewSingleFile } from "@/pages/ViewSingleFile.tsx";
+import Dashboard from "@/pages/Dashboard.tsx";
+import ViewEmployees from "@/features/employees/ViewEmployees.tsx";
+import ViewContent from "@/features/content/listing/ViewContent.tsx";
+import { ViewSingleFile } from "@/features/content/previews/ViewSingleFile.tsx";
 import SidebarOverlay from "./components/layout/SidebarOverlay.tsx";
 import { Route, Routes } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
@@ -59,7 +59,7 @@ function App() {
                             <Route path="/underwriter" element={<UnderwriterPersona/>}/>
                             <Route path="/businessanalyst" element={<BusinessAnalystPersona/>}/>
                             <Route path="/files" element={<ProtectedRoute><ViewContent/></ProtectedRoute>}/>
-                            <Route path="/employeehome" element={<ProtectedRoute><EmployeeHome/></ProtectedRoute>}/>
+                            <Route path="/employeehome" element={<ProtectedRoute><Dashboard/></ProtectedRoute>}/>
                             <Route path="/file/:id" element={<ProtectedRoute><ViewSingleFile/></ProtectedRoute>}/>
                         </Routes>
                     </main>

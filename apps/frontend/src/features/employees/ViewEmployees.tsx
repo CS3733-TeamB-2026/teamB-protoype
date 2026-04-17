@@ -5,8 +5,8 @@ import {Loader2, Pencil, Trash2, Search, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { Link } from "react-router-dom";
 import { Hero } from "@/components/shared/Hero.tsx";
-import { EditEmployeeDialog } from "@/dialogs/EditEmployeeDialog.tsx";
-import { ConfirmDeleteDialog } from "@/dialogs/ConfirmDeleteDialog.tsx";
+import { EditEmployeeDialog } from "@/features/employees/EditEmployeeDialog.tsx";
+import { ConfirmDeleteDialog } from "@/components/dialogs/ConfirmDeleteDialog.tsx";
 import { Users } from "lucide-react";
 import { SortableHead } from "@/components/shared/SortableHead.tsx";
 import { useSortState, applySortState } from "@/hooks/use-sort-state.ts";
@@ -15,19 +15,13 @@ import { useUser } from "@/hooks/use-user.ts";
 import { findMatches, /*highlight,*/ highlightRange } from "@/lib/highlight.tsx";
 import { useAuth0 } from "@auth0/auth0-react";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
-
-export type Employee = {
-    firstName: string;
-    lastName: string;
-    id: number;
-    persona: string;
-    profilePhotoURI: string;
-    login?: {
-        userName: string;
-    };
-};
+import type { Employee } from "@/lib/types.ts";
+import { usePageTitle } from "@/hooks/use-page-title.ts";
 
 function ViewEmployees() {
+
+    usePageTitle("Manage Employees");
+
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [loading, setLoading] = useState(true);
     const [editOpen, setEditOpen] = useState(false);

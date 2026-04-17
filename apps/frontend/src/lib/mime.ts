@@ -1,27 +1,44 @@
-// Single source of truth for file types this app supports.
-//
-// Philosophy: instead of trying to classify every possible MIME type, we keep
-// an explicit allowlist. Every entry on this list is known to have:
-//   - a working preview mode in FilesPage,
-//   - a category with an icon and color,
-//   - acceptable browser support for upload.
-//
-// Files whose type isn't on the allowlist are rejected at upload time, so
-// the viewer never has to deal with an unknown type. To add support for a
-// new file type:
-//   1. Add an entry to ALLOWED_TYPES below.
-//   2. Make sure its `category` has an icon/color in FilesPage's CATEGORY_COLORS.
-//   3. Make sure its `previewMode` has a working renderer in FilesPage.
+/**
+ * Single source of truth for file types this app supports.
+ *
+ * Philosophy: instead of trying to classify every possible MIME type, we keep
+ * an explicit allowlist. Every entry on this list is known to have:
+ *   - a working preview mode in FilesPage,
+ *   - a category with an icon and color,
+ *   - acceptable browser support for upload.
+ *
+ * Files whose type isn't on the allowlist are rejected at upload time, so
+ * the viewer never has to deal with an unknown type. To add support for a
+ * new file type:
+ *   1. Add an entry to ALLOWED_TYPES below.
+ *   2. Make sure its `category` has an icon/color in CATEGORY_COLORS.
+ *   3. Make sure its `previewMode` has a working renderer in FilePreview.
+ */
 
+/** Visual grouping for a file — drives the icon and color shown in the list. */
 export type Category =
     | "pdf"
     | "document"
     | "spreadsheet"
     | "image"
+    | "audio"
+    | "video"
     | "archive"
+    | "code"
     | "other";
 
-export type PreviewMode = "docviewer" | "image" | "text" | "markdown" | "table" | "none";
+/**
+ * Which renderer {@link FilePreview} should use for a file.
+ * - `"docviewer"` — PDF / DOCX / Markdown via react-doc-viewer
+ * - `"image"`     — `<img>` tag
+ * - `"audio"`     — `<audio>` element
+ * - `"video"`     — `<video>` element
+ * - `"text"`      — `<pre>` block (plain text, code, etc.)
+ * - `"table"`     — HTML table parsed from Excel/CSV via SheetJS
+ * - `"html"`      — sandboxed `<iframe>`
+ * - `"none"`      — no preview, download-only
+ */
+export type PreviewMode = "docviewer" | "image" | "audio" | "video" | "text" | "table" | "html" | "none";
 
 export interface AllowedType {
     /** Canonical MIME type. Lowercase. */
@@ -94,7 +111,7 @@ export const ALLOWED_TYPES: readonly AllowedType[] = [
         mimeType: "text/markdown",
         extensions: ["md", "markdown"],
         category: "document",
-        previewMode: "markdown",
+        previewMode: "docviewer",
         label: "Markdown",
     },
 
@@ -114,6 +131,75 @@ export const ALLOWED_TYPES: readonly AllowedType[] = [
         label: "CSV",
     },
 
+    // --- Video ---
+    {
+        mimeType: "video/mp4",
+        extensions: ["mp4"],
+        category: "video",
+        previewMode: "video",
+        label: "MP4",
+    },
+    {
+        mimeType: "video/webm",
+        extensions: ["webm"],
+        category: "video",
+        previewMode: "video",
+        label: "WebM Video",
+    },
+
+    // --- Audio ---
+    {
+        mimeType: "audio/mpeg",
+        extensions: ["mp3"],
+        category: "audio",
+        previewMode: "audio",
+        label: "MP3",
+    },
+    {
+        mimeType: "audio/wav",
+        extensions: ["wav"],
+        category: "audio",
+        previewMode: "audio",
+        label: "WAV",
+    },
+    {
+        mimeType: "audio/ogg",
+        extensions: ["ogg", "oga"],
+        category: "audio",
+        previewMode: "audio",
+        label: "OGG Audio",
+    },
+    {
+        mimeType: "audio/mp4",
+        extensions: ["m4a"],
+        category: "audio",
+        previewMode: "audio",
+        label: "M4A",
+    },
+    {
+        mimeType: "audio/aac",
+        extensions: ["aac"],
+        category: "audio",
+        previewMode: "audio",
+        label: "AAC",
+    },
+    {
+        mimeType: "audio/flac",
+        extensions: ["flac"],
+        category: "audio",
+        previewMode: "audio",
+        label: "FLAC",
+    },
+
+    // --- HTML (sandboxed iframe preview) ---
+    {
+        mimeType: "text/html",
+        extensions: ["html", "htm"],
+        category: "code",
+        previewMode: "html",
+        label: "HTML",
+    },
+
     // --- Archives (no preview, download only) ---
     {
         mimeType: "application/zip",
@@ -121,41 +207,6 @@ export const ALLOWED_TYPES: readonly AllowedType[] = [
         category: "archive",
         previewMode: "none",
         label: "ZIP",
-    },
-    {
-        mimeType: "application/x-tar",
-        extensions: ["tar"],
-        category: "archive",
-        previewMode: "none",
-        label: "TAR",
-    },
-    {
-        mimeType: "application/gzip",
-        extensions: ["gz", "tgz"],
-        category: "archive",
-        previewMode: "none",
-        label: "GZIP",
-    },
-    {
-        mimeType: "application/x-bzip2",
-        extensions: ["bz2"],
-        category: "archive",
-        previewMode: "none",
-        label: "BZIP2",
-    },
-    {
-        mimeType: "application/x-7z-compressed",
-        extensions: ["7z"],
-        category: "archive",
-        previewMode: "none",
-        label: "7-Zip",
-    },
-    {
-        mimeType: "application/vnd.rar",
-        extensions: ["rar"],
-        category: "archive",
-        previewMode: "none",
-        label: "RAR",
     },
 
     // --- Images (rendered with an <img> tag) ---
@@ -283,11 +334,13 @@ export const CATEGORY_COLORS: Record<
     pdf:          { badge: "bg-red-100 text-red-700",         icon: "text-red-500" },
     document:     { badge: "bg-blue-100 text-blue-700",      icon: "text-blue-500" },
     spreadsheet:  { badge: "bg-emerald-100 text-emerald-700", icon: "text-emerald-500" },
-
-    image:    { badge: "bg-pink-100 text-pink-700",   icon: "text-pink-500" },
-    archive:  { badge: "bg-yellow-100 text-yellow-700", icon: "text-yellow-500" },
-    other:    { badge: "bg-secondary text-secondary-foreground", icon: "text-muted-foreground" },
-    link:     { badge: "bg-violet-100 text-violet-700", icon: "text-violet-500" },
+    image:        { badge: "bg-pink-100 text-pink-700",   icon: "text-pink-500" },
+    audio:        { badge: "bg-teal-100 text-teal-700",    icon: "text-teal-500" },
+    video:        { badge: "bg-indigo-100 text-indigo-700", icon: "text-indigo-500" },
+    archive:      { badge: "bg-yellow-100 text-yellow-700", icon: "text-yellow-500" },
+    code:         { badge: "bg-orange-100 text-orange-700", icon: "text-orange-500" },
+    other:        { badge: "bg-secondary text-secondary-foreground", icon: "text-muted-foreground" },
+    link:         { badge: "bg-violet-100 text-violet-700", icon: "text-violet-500" },
 };
 
 // ---------- Upload validation ----------

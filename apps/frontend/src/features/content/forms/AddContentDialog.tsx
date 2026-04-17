@@ -9,11 +9,11 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { toast } from "sonner";
-import { ContentFormFields } from "@/components/shared/ContentFormFields.tsx";
-import { initialValues, buildContentFormData } from "@/lib/content-form.ts";
-import type { ContentItem } from "@/pages/ViewContent.tsx";
+import { ContentFormFields } from "@/features/content/forms/ContentFormFields.tsx";
+import { initialValues, buildContentFormData } from "@/features/content/forms/content-form.ts";
+import type { ContentItem } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react";
-import { useContentForm } from "@/hooks/use-content-form.ts";
+import { useContentForm } from "@/features/content/forms/use-content-form.ts";
 
 interface Props {
     open: boolean;
@@ -21,6 +21,17 @@ interface Props {
     onSave: (created: ContentItem) => void;
 }
 
+/**
+ * Dialog for creating a new content item via `POST /api/content`.
+ *
+ * After a successful save, calls `onSave` with the server-returned item so the
+ * parent (`ViewContent`) can append it to the list and immediately fetch its
+ * link preview without waiting for the next poll.
+ *
+ * The form is reset after each successful submission so the dialog is clean if
+ * the user opens it again. `formKey` forces `ContentFormFields` to remount on
+ * reset, clearing any local state inside that component (e.g., file picker errors).
+ */
 export function AddContentDialog({ open, onOpenChange, onSave }: Props) {
     const user = useUser();
     const { getAccessTokenSilently } = useAuth0();

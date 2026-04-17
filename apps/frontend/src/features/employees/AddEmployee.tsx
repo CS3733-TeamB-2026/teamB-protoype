@@ -27,6 +27,7 @@ import { Separator } from "@/components/ui/separator.tsx"
 
 import { Hero } from "@/components/shared/Hero.tsx"
 import { useAuth0 } from "@auth0/auth0-react";
+import { formatLabel } from "@/lib/utils.ts";
 
 function AddEmployee() {
     const [targetPersona, setTargetPersona] = useState("Select job position")
@@ -164,7 +165,7 @@ function AddEmployee() {
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="outline" className="bg-background justify-between">
-                                        {targetPersona === "underwriter" ? "Underwriter" : targetPersona === "businessAnalyst" ? "Business Analyst" : targetPersona === "admin" ? "Admin" : "Select job position"}
+                                        {targetPersona === "Select job position" ? "Select job position" : formatLabel(targetPersona)}
                                         <ChevronDown className="h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>

@@ -16,8 +16,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select.tsx";
-import type { Employee } from "@/pages/ViewEmployees.tsx";
+import type { Employee } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react";
+import { toast } from "sonner";
 
 interface Props {
     content: Employee;
@@ -28,15 +29,13 @@ interface Props {
 
 export function EditEmployeeDialog({ content, open, onOpenChange, onSave }: Props) {
     const [modified, setModified] = useState<Employee>(content);
-    const [error, setError] = useState("");
     const { getAccessTokenSilently } = useAuth0();
 
     async function handleApply() {
         if (!modified.firstName.trim() || !modified.lastName.trim() || !modified.persona.trim()) {
-            setError("Fields may not be empty.");
+            toast.error("Fields may not be empty.");
             return;
         }
-        setError("");
 
         const token = await getAccessTokenSilently();
         const empRes = await fetch("/api/employee", {
@@ -84,7 +83,6 @@ export function EditEmployeeDialog({ content, open, onOpenChange, onSave }: Prop
                     </DialogDescription>
                 </DialogHeader>
                 <div className="flex flex-col gap-2">
-                    {error && <p className="text-sm text-destructive">{error}</p>}
                     <div>
                         <Label className="my-2">Employee ID</Label>
                         <Input defaultValue={content.id} className="bg-secondary" disabled />

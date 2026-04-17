@@ -22,7 +22,7 @@ export function Hero(properties: { icon?: LucideIcon | null, title: string, desc
             <div
                 className="absolute inset-0"
                 style={{
-                    background: "linear-gradient(to right, var(--primary) 30%, rgba(27,58,92,0.75) 50%, transparent 100%)",
+                    background: "linear-gradient(to right, var(--primary-surface) 30%, rgba(27,58,92,0.75) 50%, transparent 100%)",
                 }}
             />
 

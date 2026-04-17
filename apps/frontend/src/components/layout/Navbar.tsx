@@ -16,6 +16,7 @@ import { useAuth0 } from "@auth0/auth0-react"
 import { useUser } from "@/hooks/use-user.ts"
 import {useLocale} from "@/languageSupport/localeContext.tsx";
 import {useTranslation} from "@/languageSupport/useTranslation.ts";
+import DisclaimerAlert from "@/components/layout/DisclaimerAlert"
 
 const LOCALES = [
     { code: "en_us", label: "English" },
@@ -37,18 +38,21 @@ function Navbar() {
         <>
             {/* header */}
             <nav className="shadow-xl flex items-center bg-primary text-primary-foreground p-4 w-full shrink-0 sticky top-0 z-50"
-                 style={{ background: "linear-gradient(to right, var(--primary-dark) 25%, var(--primary), #2E6AA3)" }}>
+                 style={{ background: "linear-gradient(to right, var(--primary-surface-dark) 25%, var(--primary-surface), var(--primary-surface-light)" }}>
                 <div className="flex items-center gap-4 min-w-fit z-10">
                     {/* AppSidebar dropdown */}
                     <button onClick={toggleSidebar} className="group cursor-pointer active:scale-[0.96] shrink-0 px-2 py-2 text-xl flex items-center gap-3 transition-all duration-200 hover:opacity-80">
                         <Menu size={28} />
                         <span className="text-xl font-semibold relative after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-0 after:bg-current after:transition-all group-hover:after:w-full group-hover:after:opacity-80">{ts('nav.menu')}</span>
                     </button>
+
                     <hr className="h-8 w-px bg-primary-foreground border-none ml-1" />
 
                     <Link to="/">
-                        <img src={logo} alt="logo" className="shrink-0 h-10 w-auto brightness-0 invert mx-3" />
+                        <img src={logo} alt="logo" className="shrink-0 h-10 w-auto brightness-0 invert ml-3 mr-2" />
                     </Link>
+
+                    <DisclaimerAlert />
                 </div>
 
                 <div className="flex-1" />

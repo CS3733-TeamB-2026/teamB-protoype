@@ -1,8 +1,11 @@
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import {Hero} from "@/components/shared/Hero.tsx";
 import {User} from "lucide-react";
+import { usePageTitle } from "@/hooks/use-page-title.ts";
 
 function BusinessAnalystPersona() {
+
+    usePageTitle("Business Analyst Persona");
 
     return (
         <>
