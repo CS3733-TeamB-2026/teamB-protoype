@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button.tsx";
 import { useUser } from "@/hooks/use-user.ts";
 import {
@@ -47,27 +46,11 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
 
     const handleReset = () => reset(fromContentItem(content));
 
-    const [expired, setExpired] = useState(false);
     const user = useUser();
     const { getAccessTokenSilently } = useAuth0();
 
     // Kick the user out if the checkout expires.
-    useEffect(() => {
-        if (!open) return;
-        const interval = setInterval(async () => {
-            const token = await getAccessTokenSilently();
-            const res = await fetch(`/api/content/${content.id}`, {
-                cache: "no-store",
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            const data = await res.json();
-            if (String(data.checkedOutById) !== String(user!.id)) {
-                setExpired(true);
-                setTimeout(() => onOpenChange(false), 2000);
-            }
-        }, 5 * 1000);
-        return () => clearInterval(interval);
-    }, [open, content.id, onOpenChange, user, getAccessTokenSilently]);
+
 
     const handleApply = async () => {
         if (!user) return;
@@ -96,23 +79,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
     };
 
     return (
-        <Dialog
-            open={open}
-            onOpenChange={async (nextOpen) => {
-                if (!nextOpen && user && !expired) {
-                    const token = await getAccessTokenSilently();
-                    await fetch("/api/content/checkin", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${token}`,
-                        },
-                        body: JSON.stringify({ id: content.id, employeeID: user.id }),
-                    });
-                }
-                onOpenChange(nextOpen);
-            }}
-        >
+        <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-2xl max-h-[80vh] flex flex-col">
                 <DialogHeader>
                     <DialogTitle>Modify Content</DialogTitle>
@@ -139,12 +106,6 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                         errors={errors}
                         showLastModified
                     />
-
-                    {expired && (
-                        <div className="rounded-md bg-destructive text-background px-2 py-1 text-sm text-center">
-                            Your editing time has expired, please try again.
-                        </div>
-                    )}
 
                 </div>
 

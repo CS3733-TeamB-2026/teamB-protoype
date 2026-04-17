@@ -18,7 +18,6 @@ app.use(cors());
 app.use(morgan("dev"));
 app.use(express.json());
 const upload = multer({ storage: multer.memoryStorage() });
-const LOCK_TIMEOUT_MS = 2 * 60 * 1000;
 
 const checkJwt = auth({
     audience: 'https://hanover-cma-api',
@@ -75,6 +74,3 @@ app.listen(3000, '0.0.0.0', () => {
         console.log(`    http://localhost:3000`);
 })
 
-setInterval(async () => {
-    await content.clearExpiredLocks();
-}, 30 * 1000);

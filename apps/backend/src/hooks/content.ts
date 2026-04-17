@@ -223,7 +223,3 @@ export const checkinContent = async (req: req, res: res) => {
     }
 }
 
-export const clearExpiredLocks = async () => {
-    const expiredCutoff = new Date(Date.now() - 2 * 60 * 1000);
-    await q.Content.clearExpiredLocks(expiredCutoff);
-};
