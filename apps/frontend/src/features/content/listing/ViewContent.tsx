@@ -19,6 +19,7 @@ import {
     Plus,
     Lock,
     RefreshCcw,
+    KeyRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -74,7 +75,8 @@ import {toast} from "sonner";
 import type { ContentItem, BookmarkRecord } from "@/lib/types.ts";
 import type { UrlPreview } from "@/lib/types.ts";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
-
+import { ConfirmCheckoutDialog } from "@/features/content/forms/ConfirmCheckoutDialog.tsx";
+import { ConfirmCheckinDialog } from "@/features/content/forms/ConfirmCheckinDialog.tsx";
 /**
  * Main content list page — the primary view for browsing, searching, filtering,
  * and managing content items.
@@ -252,6 +254,10 @@ function ViewContent() {
         }
     }, [getAccessTokenSilently, fetchPreviews, updateBookmarks]);
 
+    const [checkoutTarget, setCheckoutTarget] = useState<ContentItem | null>(null);
+    const [checkinTarget, setCheckinTarget] = useState<ContentItem | null>(null);
+
+
     // Initial load — shows spinner and fetches link previews
     useEffect(() => {
         if (!user) return;
@@ -372,47 +378,80 @@ function ViewContent() {
     };
 
     /**
-     * Acquires an edit lock (checkout) for `item`, then opens the edit dialog.
+     * Acquires an edit lock (checkout) for `item`.
      *
      * The backend issues a pessimistic lock via `POST /api/content/checkout`.
      * If another user already holds the lock the server returns a non-OK
-     * response and we show an error toast instead of opening the dialog.
-     * On success the lock metadata (checkedOutById, checkedOutAt) returned by
-     * the server is merged into the local content list so the lock icon appears
-     * immediately without waiting for the next poll.
+     * response and we show an error toast. On success the lock metadata
+     * (checkedOutById, checkedOutAt) returned by the server is merged into the
+     * local content list so the lock icon appears immediately without waiting
+     * for the next poll.
      */
-    const handleStartEdit = async (item: ContentItem, e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (!canEdit(item)) {
-            return;
-        }
+    const handleCheckout = async (item: ContentItem) => {
         try {
             const token = await getAccessTokenSilently();
-            const res = await fetch(`/api/content/checkout`, {
-                method: 'POST',
+            const res = await fetch("/api/content/checkout", {
+                method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
+                    Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({
-                    id: item.id,
-                    employeeID: user!.id,
-                }),
+                body: JSON.stringify({ id: item.id, employeeID: user!.id }),
             });
             const data = await res.json();
             if (!res.ok) {
-                toast.error(data.message || "Someone else is editing.");
+                toast.error(data.message || "Could not check out.");
                 return;
             }
-            setContent((prev) =>
-                prev.map((c) => (c.id === item.id ? {...c, ...data} : c)));
-            setEditingContent({...item, ...data});
-            setEditOpen(true);
+            setContent((prev) => prev.map((c) => c.id === item.id ? { ...c, ...data } : c));
+            toast.success("Successfully checked out. You can now edit or delete.");
         } catch {
-            toast.error("Someone else is editing.");
+            toast.error("Could not check out.");
         }
+    };
 
-    }
+    /**
+     * Releases the edit lock (checkin) for `item`.
+     *
+     * The backend releases the lock via `POST /api/content/checkin`. On success,
+     * the local content item is updated to remove the checkout information,
+     * hiding the lock icon and allowing other users to edit.
+     */
+    const handleCheckin = async (item: ContentItem) => {
+        try {
+            const token = await getAccessTokenSilently();
+            const res = await fetch("/api/content/checkin", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ id: item.id, employeeID: user!.id }),
+            });
+            if (res.ok) {
+                setContent((prev) => prev.map((c) => c.id === item.id
+                    ? { ...c, checkedOutById: null, checkedOutAt: null, checkedOutBy: null }
+                    : c
+                ));
+                toast.success("Checked in.");
+            }
+        } catch {
+            toast.error("Could not check in.");
+        }
+    };
+
+    /**
+     * Opens the edit dialog for `item`.
+     * This should only be called after a successful checkout. It sets the
+     * `editingContent` state, which triggers the `EditContentDialog` to mount
+     * and open. `e.stopPropagation()` prevents the click from also expanding
+     * or collapsing the row.
+     */
+    const handleStartEdit = async (item: ContentItem, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setEditingContent(item);
+        setEditOpen(true);
+    };
 
     // Total column count used for colSpan on the expanded detail rows.
     const NUM_COLS = 8;
@@ -710,7 +749,7 @@ function ViewContent() {
                                             return (
                                                 <React.Fragment key={item.id}>
                                                     <TableRow
-                                                        className={`cursor-pointer ${isExpanded ? "bg-muted/40 hover:bg-muted/40" : ""}`}
+                                                        className={`cursor-pointer ${isExpanded ? "bg-muted/40 hover:bg-muted/40" : ""} ${isCheckedOut(item) ? "opacity-50" : ""} ${item.checkedOutById === user!.id ? "bg-accent/10 border-l-4 border-l-accent" : ""}`}
                                                         onClick={() => toggleExpand(item.id)}
                                                         tabIndex={0}
                                                         onKeyDown={(e) => {
@@ -821,38 +860,68 @@ function ViewContent() {
                                                                         <Bookmark className="w-4 h-4" />
                                                                     )}
                                                                 </button>
-                                                                <DropdownMenu>
-                                                                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                                                        <button
-                                                                            className="w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground"
-                                                                            title="More actions"
-                                                                        >
-                                                                            <EllipsisVertical className="w-4 h-4" />
-                                                                        </button>
-                                                                    </DropdownMenuTrigger>
-                                                                    <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                                                                        <DropdownMenuItem
-                                                                    disabled={!canEdit(item) || isCheckedOut(item)}
-                                                                    title={isCheckedOut(item) ? lockLabel(item) : "Edit content"}
-                                                                    onClick={(e) => handleStartEdit(item, e)}
-                                                                >
-                                                                    {isCheckedOut(item) ? (
-                                                                        <Lock className="w-4 h-4" />
-                                                                    ) : (
-                                                                        <Pencil className="w-4 h-4" />
-                                                                    )}
-                                                                    {isCheckedOut(item) ? "Locked" : "Edit"}
-                                                                </DropdownMenuItem>
-                                                                <DropdownMenuItem
-                                                                    disabled={!canEdit(item)}
-                                                                    className="text-destructive focus:text-destructive"
-                                                                    onClick={(e) => { e.stopPropagation(); setDeleteTarget(item); }}
-                                                                >
-                                                                    <Trash2 className="w-4 h-4" />
-                                                                    Delete
-                                                                </DropdownMenuItem>
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
+                                                                {(() => {
+                                                                    if (item.checkedOutById === user!.id) {
+                                                                        return (
+                                                                            <DropdownMenu>
+                                                                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                                                                    <button
+                                                                                        className="w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground"
+                                                                                        title="More actions"
+                                                                                    >
+                                                                                        <EllipsisVertical className="w-4 h-4" />
+                                                                                    </button>
+                                                                                </DropdownMenuTrigger>
+                                                                                <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                                                                                    <DropdownMenuItem
+                                                                                        title="Edit content"
+                                                                                        onClick={(e) => handleStartEdit(item, e)}
+                                                                                    >
+                                                                                        <Pencil className="w-4 h-4" />
+                                                                                        Edit
+                                                                                    </DropdownMenuItem>
+                                                                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setCheckinTarget(item); }}>
+                                                                                        <KeyRound className="w-4 h-4" />
+                                                                                        Check In
+                                                                                    </DropdownMenuItem>
+                                                                                    <DropdownMenuItem
+                                                                                        className="text-destructive focus:text-destructive"
+                                                                                        onClick={(e) => { e.stopPropagation(); setDeleteTarget(item); }}
+                                                                                    >
+                                                                                        <Trash2 className="w-4 h-4" />
+                                                                                        Delete
+                                                                                    </DropdownMenuItem>
+                                                                                </DropdownMenuContent>
+                                                                            </DropdownMenu>
+                                                                        );
+                                                                    }
+
+                                                                    if (isCheckedOut(item)) {
+                                                                        return (
+                                                                            <button
+                                                                                className="w-8 h-8 flex items-center justify-center rounded-md opacity-50 cursor-not-allowed text-muted-foreground"
+                                                                                title={lockLabel(item)}
+                                                                                disabled
+                                                                            >
+                                                                                <Lock className="w-4 h-4" />
+                                                                            </button>
+                                                                        );
+                                                                    }
+
+                                                                    if (canEdit(item)) {
+                                                                        return (
+                                                                            <button
+                                                                                className="w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground"
+                                                                                title="Check out to edit or delete"
+                                                                                onClick={(e) => { e.stopPropagation(); setCheckoutTarget(item); }}
+                                                                            >
+                                                                                <KeyRound className="w-4 h-4" />
+                                                                            </button>
+                                                                        );
+                                                                    }
+
+                                                                    return null;
+                                                                })()}
                                                     </div>
                                                 </TableCell>
                                             </TableRow>
@@ -958,6 +1027,32 @@ function ViewContent() {
                 description={deleteTarget ?
                     <span>This will permanently delete <strong>"{deleteTarget.displayName}"</strong>.</span> : undefined}
                 onConfirm={() => handleDelete(deleteTarget!.id)}
+            />
+            <ConfirmCheckoutDialog
+                open={!!checkoutTarget}
+                onOpenChange={(open: boolean) => { if (!open) setCheckoutTarget(null); }}
+                description={checkoutTarget
+                    ? <span>Check out <strong>"{checkoutTarget.displayName}"</strong>? You'll be able to edit and delete it until you check it back in.</span>
+                    : undefined}
+                onConfirm={async () => {
+                    if (checkoutTarget) {
+                        await handleCheckout(checkoutTarget);
+                        setCheckoutTarget(null);
+                    }
+                }}
+            />
+            <ConfirmCheckinDialog
+                open={!!checkinTarget}
+                onOpenChange={(open: boolean) => { if (!open) setCheckinTarget(null); }}
+                description={checkinTarget
+                    ? <span>Check in <strong>"{checkinTarget.displayName}"</strong>? Other users will be able to edit and delete it.</span>
+                    : undefined}
+                onConfirm={async () => {
+                    if (checkinTarget) {
+                        await handleCheckin(checkinTarget);
+                        setCheckinTarget(null);
+                    }
+                }}
             />
 
             {/* AddContentDialog: after saving, append the new item to local state and
