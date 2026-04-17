@@ -10,10 +10,10 @@ import { Label } from "@/components/ui/label.tsx";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { ALLOWED_ACCEPT_STRING, validateFileForUpload, stripExtension } from "@/lib/mime.ts";
-import { UrlSourceField } from "@/components/shared/UrlSourceField.tsx";
+import { UrlSourceField } from "@/features/content/forms/UrlSourceField.tsx";
 import { FilePickerCard } from "@/components/shared/FilePickerCard.tsx";
 import { EmployeePicker } from "@/components/shared/EmployeePicker.tsx";
-import { type ContentFormValues, nowTimeString } from "@/lib/content-form.ts";
+import { type ContentFormValues, nowTimeString } from "@/features/content/forms/content-form.ts";
 
 interface Props {
     values: ContentFormValues;

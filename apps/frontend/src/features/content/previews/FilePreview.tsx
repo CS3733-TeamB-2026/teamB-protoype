@@ -5,7 +5,7 @@ import * as XLSX from "xlsx";
 import DocViewer, { PDFRenderer, DocxRenderer, MarkdownRenderer } from "@iamjariwala/react-doc-viewer";
 import "@iamjariwala/react-doc-viewer/dist/index.css";
 import { getPreviewMode } from "@/lib/mime.ts";
-import { getCachedText, setCachedText, getCachedBlob, setCachedBlob } from "@/lib/file-cache.ts";
+import { getCachedText, setCachedText, getCachedBlob, setCachedBlob } from "@/features/content/previews/file-cache.ts";
 import { useAuth0 } from "@auth0/auth0-react"
 
 function formatBytes(bytes: number): string {

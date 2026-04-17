@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useUser } from "@/hooks/use-user.ts";
 import { FolderOpen, Loader2 } from "lucide-react";
-import { ContentIcon } from "@/components/shared/ContentIcon.tsx";
+import { ContentIcon } from "@/features/content/components/ContentIcon.tsx";
 import { getCategory, getExtension, getOriginalFilename, lookupByFilename } from "@/lib/mime.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 

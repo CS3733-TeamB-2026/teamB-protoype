@@ -9,11 +9,11 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { toast } from "sonner";
-import { ContentFormFields } from "@/components/shared/ContentFormFields.tsx";
-import { initialValues, buildContentFormData } from "@/lib/content-form.ts";
+import { ContentFormFields } from "@/features/content/forms/ContentFormFields.tsx";
+import { initialValues, buildContentFormData } from "@/features/content/forms/content-form.ts";
 import type { ContentItem } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react";
-import { useContentForm } from "@/hooks/use-content-form.ts";
+import { useContentForm } from "@/features/content/forms/use-content-form.ts";
 
 interface Props {
     open: boolean;

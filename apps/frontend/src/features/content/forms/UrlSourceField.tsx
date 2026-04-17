@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input.tsx";
 import { UrlPreviewCard } from "@/components/shared/UrlPreviewCard.tsx";
 import type { UrlPreview } from "@/lib/types.ts";
-import { getCachedPreview, setCachedPreview } from "@/lib/preview-cache.ts";
+import { getCachedPreview, setCachedPreview } from "@/features/content/previews/preview-cache.ts";
 
 function isValidUrl(url: string): boolean {
     try { new URL(url); return true; } catch { return false; }
