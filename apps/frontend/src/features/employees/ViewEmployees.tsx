@@ -16,8 +16,12 @@ import { findMatches, /*highlight,*/ highlightRange } from "@/lib/highlight.tsx"
 import { useAuth0 } from "@auth0/auth0-react";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
 import type { Employee } from "@/lib/types.ts";
+import { usePageTitle } from "@/hooks/use-page-title.ts";
 
 function ViewEmployees() {
+
+    usePageTitle("Manage Employees");
+
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [loading, setLoading] = useState(true);
     const [editOpen, setEditOpen] = useState(false);
