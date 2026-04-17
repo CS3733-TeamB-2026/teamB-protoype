@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { type ContentFormValues, getErrors } from "@/lib/content-form.ts";
+import { type ContentFormValues, getErrors } from "@/features/content/forms/content-form.ts";
 
 /**
  * Shared form state and validation for Add and Edit content dialogs.

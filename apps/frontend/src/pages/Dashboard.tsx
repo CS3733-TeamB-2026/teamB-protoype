@@ -8,15 +8,15 @@ import {
 import {useEffect, useState} from "react";
 import { useUser } from "@/hooks/use-user.ts";
 import {Link} from "react-router-dom";
-import RecentFiles from "@/components/RecentFiles.tsx";
+import RecentFiles from "@/features/content/listing/RecentFiles.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {Hero} from "@/components/shared/Hero.tsx";
 import {LayoutDashboard, Clock, Users, UserPlus, FolderOpen, Plus} from "lucide-react"
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
-import MyFiles from "@/components/shared/MyFiles.tsx";
-import BookmarkedFiles from "@/components/shared/BookmarkedFiles.tsx";
+import MyFiles from "@/features/content/listing/MyFiles.tsx";
+import BookmarkedFiles from "@/features/content/listing/BookmarkedFiles.tsx";
 
-function EmployeeHome() {
+function Dashboard() {
     const user = useUser();
 
     const [currentDateTime, setCurrentDateTime] = useState({
@@ -161,4 +161,4 @@ function EmployeeHome() {
     )
 }
 
-export default EmployeeHome;
+export default Dashboard;

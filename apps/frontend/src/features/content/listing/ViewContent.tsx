@@ -47,8 +47,8 @@ import {
     TableRow,
 } from "@/components/ui/table.tsx";
 import {Hero} from "@/components/shared/Hero.tsx";
-import {ContentIcon} from "@/components/shared/ContentIcon.tsx";
-import {ConfirmDeleteDialog} from "@/dialogs/ConfirmDeleteDialog.tsx";
+import {ContentIcon} from "@/features/content/components/ContentIcon.tsx";
+import {ConfirmDeleteDialog} from "@/components/dialogs/ConfirmDeleteDialog.tsx";
 import {SortableHead} from "@/components/shared/SortableHead.tsx";
 import {useSortState, applySortState} from "@/hooks/use-sort-state.ts";
 import {useUser} from "@/hooks/use-user.ts";
@@ -57,16 +57,16 @@ import {
     getExtension,
     getOriginalFilename,
 } from "@/lib/mime.ts";
-import { ContentExtBadge } from "@/components/shared/ContentExtBadge.tsx";
-import { ContentStatusBadge } from "@/components/shared/ContentStatusBadge.tsx";
-import { ContentTypeBadge } from "@/components/shared/ContentTypeBadge.tsx";
+import { ContentExtBadge } from "@/features/content/components/ContentExtBadge.tsx";
+import { ContentStatusBadge } from "@/features/content/components/ContentStatusBadge.tsx";
+import { ContentTypeBadge } from "@/features/content/components/ContentTypeBadge.tsx";
 import { PersonaBadge } from "@/components/shared/PersonaBadge.tsx";
-import { EditContentDialog } from "@/dialogs/EditContentDialog.tsx";
-import { AddContentDialog } from "@/dialogs/AddContentDialog.tsx";
-import { FilePreview } from "@/components/FilePreview.tsx";
+import { EditContentDialog } from "@/features/content/forms/EditContentDialog.tsx";
+import { AddContentDialog } from "@/features/content/forms/AddContentDialog.tsx";
+import { FilePreview } from "@/features/content/previews/FilePreview.tsx";
 import { UrlPreviewLink } from "@/components/shared/UrlPreviewLink.tsx";
-import { getCachedPreview, setCachedPreview } from "@/lib/preview-cache.ts";
-import { invalidateFileCacheById } from "@/lib/file-cache.ts";
+import { getCachedPreview, setCachedPreview } from "@/features/content/previews/preview-cache.ts";
+import { invalidateFileCacheById } from "@/features/content/previews/file-cache.ts";
 import { useAuth0 } from "@auth0/auth0-react"
 import {highlight} from "@/lib/highlight.tsx";
 import {formatLabel, formatName} from "@/lib/utils.ts";

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card.tsx";
 import { Loader2, TriangleAlert } from "lucide-react";
-import { ContentIcon } from "@/components/shared/ContentIcon.tsx";
+import { ContentIcon } from "@/features/content/components/ContentIcon.tsx";
 import type { UrlPreview } from "@/lib/types.ts";
 
 interface Props {
