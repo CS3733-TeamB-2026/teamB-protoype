@@ -692,7 +692,7 @@ function ViewContent() {
                                             if (col === "contentType") return item.contentType;
                                             if (col === "persona") return item.targetPersona;
                                             if (col === "docType") return item.fileURI ? (getExtension(getOriginalFilename(item.fileURI!)) ?? getCategory(null, getOriginalFilename(item.fileURI!))) : (item.linkURL ? "link" : "");
-                                        }).map((item) => {
+                                        }).map((item, index) => {
                                             // Derive display values once per row to avoid repeating
                                             // the same lookups in multiple cells below.
                                             const isFile = !!item.fileURI;
@@ -710,7 +710,7 @@ function ViewContent() {
                                             return (
                                                 <React.Fragment key={item.id}>
                                                     <TableRow
-                                                        className={`cursor-pointer ${isExpanded ? "bg-muted/40 hover:bg-muted/40" : ""}`}
+                                                        className={`cursor-pointer ${index % 2 === 0 ? "bg-muted/10" : ""} ${isExpanded ? "bg-muted/80 hover:bg-muted/90" : ""}`}
                                                         onClick={() => toggleExpand(item.id)}
                                                         tabIndex={0}
                                                         onKeyDown={(e) => {
