@@ -749,7 +749,7 @@ function ViewContent() {
                                             return (
                                                 <React.Fragment key={item.id}>
                                                     <TableRow
-                                                        className={`cursor-pointer ${index % 2 === 0 ? "bg-muted/10" : ""} ${isExpanded ? "bg-muted/80 hover:bg-muted/90" : ""}`}
+                                                        className={`cursor-pointer ${item.checkedOutById === user!.id ? "bg-accent/10 border-l-4 border-l-accent" : index % 2 === 0 ? "bg-muted/10" : ""} ${isExpanded ? "bg-muted/80 hover:bg-muted/90" : ""} ${isCheckedOut(item) ? "opacity-50" : ""}`}
                                                         onClick={() => toggleExpand(item.id)}
                                                         tabIndex={0}
                                                         onKeyDown={(e) => {
