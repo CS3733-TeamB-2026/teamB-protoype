@@ -9,7 +9,7 @@ import Home from "@/pages/Home.tsx";
 import AddEmployee from "@/features/employees/AddEmployee.tsx";
 import UnderwriterPersona from "@/pages/UnderwriterPersona.tsx";
 import BusinessAnalystPersona from "@/pages/BusinessAnalystPersona.tsx";
-import Dashboard from "@/pages/Dashboard.tsx";
+import Dashboard from "@/features/dashboard/Dashboard.tsx";
 import ViewEmployees from "@/features/employees/ViewEmployees.tsx";
 import ViewContent from "@/features/content/listing/ViewContent.tsx";
 import { ViewSingleFile } from "@/features/content/previews/ViewSingleFile.tsx";
