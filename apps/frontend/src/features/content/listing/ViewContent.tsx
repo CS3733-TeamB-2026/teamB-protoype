@@ -77,6 +77,7 @@ import type { UrlPreview } from "@/lib/types.ts";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
 import { ConfirmCheckoutDialog } from "@/features/content/forms/ConfirmCheckoutDialog.tsx";
 import { ConfirmCheckinDialog } from "@/features/content/forms/ConfirmCheckinDialog.tsx";
+import { useContentFilters } from "@/hooks/use-content-filters.ts";
 /**
  * Main content list page — the primary view for browsing, searching, filtering,
  * and managing content items.
@@ -119,64 +120,24 @@ function ViewContent() {
     const [linkPreviews, setLinkPreviews] = useState<Record<number, UrlPreview | null>>({});
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
-    /**
-     * Checkbox state for the filter sidebar. An empty array for a multi-select
-     * field means "no filter applied" (all values pass). The two boolean flags
-     * are additional single-checkbox filters.
-     */
-    const [advancedFilters, setAdvancedFilters] = useState({
-        status: [] as Array<"new" | "inProgress" | "complete">,
-        contentType: [] as Array<"reference" | "workflow">,
-        persona: [] as Array<"underwriter" | "businessAnalyst" | "admin">,
-        bookmarkedOnly: false,
-        ownedByMe: false,
-    });
+
 
     const user = useUser();
-    const [searchTerm, setSearchTerm] = useState("");
-    // First pass: filter by the search box (case-insensitive display name match).
-    const searchedContent = content.filter((item) =>
-        item.displayName.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+
+    const {
+        searchTerm,
+        setSearchTerm,
+        advancedFilters,
+        setAdvancedFilters,
+        clearAdvancedFilters,
+        activeFilterCount,
+        filteredContent,
+    } = useContentFilters(content, bookmarks, user?.id);
+
     const [refreshing, setRefreshing] = useState(false);
 
-    // Second pass: apply the sidebar checkboxes on top of the search results.
-    // Each condition is skipped (passes everything) when no options are selected.
-    const advancedFilteredContent = searchedContent.filter((item) => {
-        const matchesStatus =
-            advancedFilters.status.length === 0 ||
-            (item.status !== null && advancedFilters.status.includes(item.status));
 
-        const matchesContentType =
-            advancedFilters.contentType.length === 0 ||
-            advancedFilters.contentType.includes(item.contentType);
 
-        const matchesPersona =
-            advancedFilters.persona.length === 0 ||
-            advancedFilters.persona.includes(item.targetPersona);
-
-        const matchesBookmark =
-            !advancedFilters.bookmarkedOnly || bookmarks.some((b) => b.bookmarkedContentId === item.id);
-
-        const matchesOwner =
-            !advancedFilters.ownedByMe || item.ownerId === user?.id;
-
-        return (
-            matchesStatus &&
-            matchesContentType &&
-            matchesPersona &&
-            matchesBookmark &&
-            matchesOwner
-        );
-    });
-
-    // Total number of active filter conditions — shown in the "Filters (N)" button label.
-    const activeFilterCount =
-        advancedFilters.status.length +
-        advancedFilters.contentType.length +
-        advancedFilters.persona.length +
-        (advancedFilters.bookmarkedOnly ? 1 : 0) +
-        (advancedFilters.ownedByMe ? 1 : 0);
 
     const {getAccessTokenSilently} = useAuth0();
 
@@ -479,9 +440,9 @@ function ViewContent() {
                     </CardTitle>
                     <CardDescription>
                         {/* Show "X of Y items" when filters are active, "X items" otherwise */}
-                        {advancedFilteredContent.length === content.length
+                        {filteredContent.length === content.length
                             ? `${content.length} item${content.length !== 1 ? "s" : ""}`
-                            : `${advancedFilteredContent.length} of ${content.length} items`}
+                            : `${filteredContent.length} of ${content.length} items`}
                     </CardDescription>
                 </CardHeader>
 
@@ -680,15 +641,7 @@ function ViewContent() {
                                             variant="secondary"
                                             size="sm"
                                             className="w-full"
-                                            onClick={() =>
-                                                setAdvancedFilters({
-                                                    status: [],
-                                                    contentType: [],
-                                                    persona: [],
-                                                    bookmarkedOnly: false,
-                                                    ownedByMe: false,
-                                                })
-                                            }
+                                            onClick={clearAdvancedFilters}
                                         >
                                             Clear Filters
                                         </Button>
@@ -724,7 +677,7 @@ function ViewContent() {
                                             The sort key extractor for "docType" derives the file
                                             extension when available, falling back to category, so that
                                             e.g. all PDFs sort together. */}
-                                        {applySortState(advancedFilteredContent, sort, (item, col) => {
+                                        {applySortState(filteredContent, sort, (item, col) => {
                                             if (col === "name") return item.displayName;
                                             if (col === "owner") return formatName(item.owner);
                                             if (col === "status") return item.status ?? "";
