@@ -1,5 +1,7 @@
-import { useState, } from "react";
-import type { ContentItem, BookmarkRecord } from "@/lib/types.ts";
+import {useState,} from "react";
+import type {ContentItem, BookmarkRecord} from "@/lib/types.ts";
+
+export type ContentTab = "all" | "bookmarks";
 
 export function useContentFilters(
     content: ContentItem[],
@@ -7,6 +9,7 @@ export function useContentFilters(
     currentUserId: number | undefined,
 ) {
     const [searchTerm, setSearchTerm] = useState("");
+    const [activeTab, setActiveTab] = useState<ContentTab>("all");
     // First pass: filter by the search box (case-insensitive display name match).
     const searchedContent = content.filter((item) =>
         item.displayName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -50,8 +53,11 @@ export function useContentFilters(
             advancedFilters.persona.length === 0 ||
             advancedFilters.persona.includes(item.targetPersona);
 
+// On the bookmarks tab, always require bookmarked.
+// Otherwise, respect the bookmarkedOnly checkbox.
+        const requireBookmark = activeTab === "bookmarks" || advancedFilters.bookmarkedOnly;
         const matchesBookmark =
-            !advancedFilters.bookmarkedOnly || bookmarks.some((b) => b.bookmarkedContentId === item.id);
+            !requireBookmark || bookmarks.some((b) => b.bookmarkedContentId === item.id);
 
         const matchesOwner =
             !advancedFilters.ownedByMe || item.ownerId === currentUserId;
@@ -74,6 +80,8 @@ export function useContentFilters(
         (advancedFilters.ownedByMe ? 1 : 0);
 
     return {
+        activeTab,
+        setActiveTab,
         searchTerm,
         setSearchTerm,
         advancedFilters,
