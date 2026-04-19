@@ -32,7 +32,7 @@ function categorize(filename: string) {
     return "Other";
 }
 
-function ContentTypeChart() {
+function ContentTypeChartCard() {
 
     const [content, setContent] = useState<ContentItem[]>([]);
     const { getAccessTokenSilently } = useAuth0();
@@ -60,6 +60,7 @@ function ContentTypeChart() {
         //Build file counts
         const counts = content
             .filter(item => {
+                //Filter files without extensions and links
                 const filename = item.fileURI ?? "";
                 return filename.includes(".") && !filename.endsWith(".");
             })
@@ -89,7 +90,7 @@ function ContentTypeChart() {
     return (
         <Card className="shadow-lg hover:scale-101 transition-transform md:col-span-2 flex flex-col">
             <CardHeader className="items-center pb-0">
-                <CardTitle>Content Type Breakdown</CardTitle>
+                <CardTitle className="capitalize text-2xl font-semibold">Content Type Breakdown</CardTitle>
                 <CardDescription>Current distribution of file types in database.</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 pb-0 pl-0 pr-4">
@@ -125,4 +126,4 @@ function ContentTypeChart() {
 
 }
 
-export default ContentTypeChart;
+export default ContentTypeChartCard;

@@ -25,7 +25,7 @@ const chartConfig = {
     admin: { label: "Administrators"},
 } satisfies ChartConfig;
 
-function EmployeeChart() {
+function EmployeeChartCard() {
 
     const [employees, setEmployees] = useState([]);
     const { getAccessTokenSilently } = useAuth0();
@@ -62,8 +62,8 @@ function EmployeeChart() {
     return (
         <Card className="shadow-lg hover:scale-101 transition-transform md:col-span-1 flex flex-col">
             <CardHeader className="items-center pb-0">
-                <CardTitle>Employee Department Breakdown</CardTitle>
-                <CardDescription>Current headcount by department</CardDescription>
+                <CardTitle className="capitalize text-2xl font-semibold">Department Breakdown</CardTitle>
+                <CardDescription>Current headcount by department.</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 pb-0">
                 <ChartContainer
@@ -91,4 +91,4 @@ function EmployeeChart() {
     );
 }
 
-export default EmployeeChart;
+export default EmployeeChartCard;

@@ -38,11 +38,11 @@
   --chart-3: oklch(0.55 0.10 250);
   --chart-4: oklch(0.45 0.09 252);
   --chart-5: oklch(0.35 0.08 253);
-  --chart-accent-1: oklch(0.75 0.10 74);
-  --chart-accent-2: oklch(0.68 0.10 73);
-  --chart-accent-3: oklch(0.60 0.10 72);
-  --chart-accent-4: oklch(0.50 0.09 70);
-  --chart-accent-5: oklch(0.40 0.08 68);
+  --chart-accent-1: oklch(0.80 0.13 65);
+  --chart-accent-2: oklch(0.74 0.15 62);
+  --chart-accent-3: oklch(0.68 0.16 59);
+  --chart-accent-4: oklch(0.60 0.15 57);
+  --chart-accent-5: oklch(0.51 0.14 55);
   --radius: 0.625rem;
   --sidebar: oklch(0.919 0 89.876);
   --sidebar-foreground: oklch(0.145 0 0);

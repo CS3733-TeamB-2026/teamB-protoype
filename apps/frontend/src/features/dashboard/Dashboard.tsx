@@ -8,14 +8,14 @@ import HelloCard from "@/features/dashboard/components/cards/HelloCard"
 import MyContentCard from "@/features/dashboard/components/cards/MyContentCard.tsx";
 import QuickLinksCard from "@/features/dashboard/components/cards/QuickLinksCard.tsx";
 import RecentFilesCard from "@/features/dashboard/components/cards/RecentFilesCard.tsx";
-import EmployeeChart from "@/features/dashboard/components/cards/EmployeeChart"
-import ContentTypeChart from "@/features/dashboard/components/cards/ContentTypeChart.tsx";
+import EmployeeChartCard from "@/features/dashboard/components/cards/EmployeeChartCard.tsx"
+import ContentTypeChartCard from "@/features/dashboard/components/cards/ContentTypeChartCard.tsx";
 
 const cards = [
     HelloCard,
     ClockCard,
-    EmployeeChart,
-    ContentTypeChart,
+    EmployeeChartCard,
+    ContentTypeChartCard,
     QuickLinksCard,
     BookmarkedCard,
     MyContentCard,
