@@ -9,11 +9,13 @@ import MyContentCard from "@/features/dashboard/components/cards/MyContentCard.t
 import QuickLinksCard from "@/features/dashboard/components/cards/QuickLinksCard.tsx";
 import RecentFilesCard from "@/features/dashboard/components/cards/RecentFilesCard.tsx";
 import EmployeeChart from "@/features/dashboard/components/cards/EmployeeChart"
+import ContentTypeChart from "@/features/dashboard/components/cards/ContentTypeChart.tsx";
 
 const cards = [
     HelloCard,
     ClockCard,
     EmployeeChart,
+    ContentTypeChart,
     BookmarkedCard,
     MyContentCard,
     QuickLinksCard,
