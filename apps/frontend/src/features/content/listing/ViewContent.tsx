@@ -5,8 +5,7 @@ import {
 } from "@/components/ui/alert.tsx";
 import {
     AlertCircle,
-    Bookmark,
-    BookmarkCheck,
+    Star,
     ChevronDown,
     ChevronRight,
     EllipsisVertical,
@@ -78,7 +77,9 @@ import {usePageTitle} from "@/hooks/use-page-title.ts";
 import {ConfirmCheckoutDialog} from "@/features/content/forms/ConfirmCheckoutDialog.tsx";
 import {ConfirmCheckinDialog} from "@/features/content/forms/ConfirmCheckinDialog.tsx";
 import {useContentFilters} from "@/hooks/use-content-filters.ts";
-import {Tabs, TabsContent, TabsList, TabsTrigger} from "@/components/ui/tabs"
+import {Tabs, TabsTrigger} from "@/components/ui/tabs"
+import { SlidingTabs } from "@/components/shared/SlidingTabs.tsx";
+
 
 /**
  * Main content list page — the primary view for browsing, searching, filtering,
@@ -283,9 +284,9 @@ function ViewContent() {
                 headers: {Authorization: `Bearer ${token}`},
             });
             if (isCurrentlyBookmarked) {
-                toast.success("Bookmark removed.");
+                toast.success("Favorite removed.");
             } else {
-                toast.success("Bookmark added.");
+                toast.success("Favorite added.");
             }
         } catch {
             // Roll back on error
@@ -444,7 +445,7 @@ function ViewContent() {
                     </CardTitle>
                     <CardDescription>
                         {activeTab === "bookmarks"
-                            ? `${filteredContent.length} bookmarked item${filteredContent.length !== 1 ? "s" : ""}`
+                            ? `${filteredContent.length} favorited item${filteredContent.length !== 1 ? "s" : ""}`
                             : filteredContent.length === content.length
                                 ? `${content.length} item${content.length !== 1 ? "s" : ""}`
                                 : `${filteredContent.length} of ${content.length} items`}
@@ -452,27 +453,28 @@ function ViewContent() {
                 </CardHeader>
 
                 <CardContent>
+                    {/* Top-level Tabs for filtering Content Items */}
+                    {/* activeTab controls whether "All Content" or "Bookmarks" view is shown */}
                     <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "all" | "bookmarks")}>
-                        <TabsList>
-                        <TabsTrigger
-                            value="all"
-                            className="transition-all duration-300 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                        <SlidingTabs
+                            activeTab={activeTab}
+                            indicatorColor={activeTab === "bookmarks" ? "bg-accent" : "bg-foreground"}
                         >
-                            All Content
-                            <span className="ml-2 text-xs opacity-70">
-            {content.length}
-        </span>
-                        </TabsTrigger>
-                        <TabsTrigger
-                            value="bookmarks"
-                            className="transition-all duration-300 data-[state=active]:bg-accent data-[state=active]:text-primary-foreground"
-                        >
-                            Bookmarks
-                            <span className="ml-2 text-xs opacity-70">
-            {bookmarks.length}
-        </span>
-                        </TabsTrigger>
-                    </TabsList>
+                            <TabsTrigger
+                                value="all"
+                                className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0"
+                            >
+                                All Content
+                                <span className="ml-2 text-xs opacity-70">{content.length}</span>
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="bookmarks"
+                                className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0"
+                            >
+                                Favorites
+                                <span className="ml-2 text-xs opacity-70">{bookmarks.length}</span>
+                            </TabsTrigger>
+                        </SlidingTabs>
                     </Tabs>
 
                     {loading && (
@@ -841,15 +843,11 @@ function ViewContent() {
                                                                         disabled>{icon}</button>;
                                                                 })()}
                                                                 <button
-                                                                    className={`w-8 h-8 flex items-center justify-center rounded-md transition-colors ${isBookmarked ? "text-primary hover:text-primary/70" : "text-muted-foreground hover:text-foreground"}`}
+                                                                    className={`w-8 h-8 flex items-center justify-center rounded-md transition-colors ${isBookmarked ? "text-accent hover:text-accent/70" : "text-muted-foreground hover:text-foreground"}`}
                                                                     onClick={(e) => toggleBookmark(item.id, e)}
                                                                     aria-label={isBookmarked ? "Remove bookmark" : "Bookmark"}
                                                                 >
-                                                                    {isBookmarked ? (
-                                                                        <BookmarkCheck className="w-4 h-4"/>
-                                                                    ) : (
-                                                                        <Bookmark className="w-4 h-4"/>
-                                                                    )}
+                                                                    <Star className="w-4 h-4" fill={isBookmarked ? "currentColor" : "none"} />
                                                                 </button>
                                                                 {(() => {
                                                                     if (item.checkedOutById === user!.id) {
