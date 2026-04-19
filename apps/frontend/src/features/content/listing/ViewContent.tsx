@@ -1017,7 +1017,7 @@ function ViewContent() {
                             <span className="font-medium text-primary">
                                 {bookmarks.length}
                             </span>{" "}
-                                item{bookmarks.length !== 1 ? "s" : ""} bookmarked
+                                item{bookmarks.length !== 1 ? "s" : ""} favorited
                             </div>
                         )}
                     </>}
