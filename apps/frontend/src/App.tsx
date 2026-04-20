@@ -2,7 +2,6 @@ import './App.css'
 import { Toaster } from "@/components/ui/sonner.tsx";
 import Navbar from './components/layout/Navbar.tsx'
 import Footer from './components/layout/Footer.tsx'
-import {BrowserRouter} from 'react-router-dom';
 import { SidebarProvider } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/layout/AppSidebar.tsx";
 import Home from "@/pages/Home.tsx";
@@ -42,7 +41,6 @@ function App() {
     // Your application must be wrapped with the BrowserRouter component to enable routing
     return (
 
-        <BrowserRouter>
         <LocaleProvider>
             <SidebarProvider defaultOpen={false}>
                 <AppSidebar />
@@ -69,7 +67,7 @@ function App() {
             </SidebarProvider>
             <Toaster />
         </LocaleProvider>
-        </BrowserRouter>
+
     )
 }
 export default App

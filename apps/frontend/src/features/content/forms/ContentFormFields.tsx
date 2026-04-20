@@ -147,26 +147,26 @@ export function ContentFormFields({ values, patch, errors, showLastModified = fa
                     />
                 </Field>
 
-                <Separator className="bg-primary mx-2" orientation="vertical" />
-
-                <Field className="bg-background">
-                    <FieldLabel className="text-primary text-lg mb-1">
-                        Target Persona <span className="text-destructive">*</span>
-                    </FieldLabel>
-                    <Select
-                        value={values.jobPosition} onValueChange={(v) => patch({ jobPosition: v })}
-                    >
-                        <SelectTrigger className="bg-background h-12! text-sm">
-                            <SelectValue placeholder="Select job position" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="underwriter">Underwriter</SelectItem>
-                            <SelectItem value="businessAnalyst">Business Analyst</SelectItem>
-                            <SelectItem value="admin">Admin</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    {errors.persona && <FieldDescription className="text-destructive">{errors.persona}</FieldDescription>}
-                </Field>
+            {/* Target Persona */}
+            <Field className="bg-background">
+                <FieldLabel className="text-primary">
+                    Target Persona <span className="text-destructive">*</span>
+                </FieldLabel>
+                <Select value={values.jobPosition} onValueChange={(v) => patch({ jobPosition: v })}>
+                    <SelectTrigger className="bg-background">
+                        <SelectValue placeholder="Select job position" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="underwriter">Underwriter</SelectItem>
+                        <SelectItem value="businessAnalyst">Business Analyst</SelectItem>
+                        <SelectItem value="actuarialAnalyst">Actuarial Analyst</SelectItem>
+                        <SelectItem value="EXLOperator">EXL Operations</SelectItem>
+                        <SelectItem value="businessOps">Business Ops</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                </Select>
+                {errors.persona && <FieldDescription className="text-destructive">{errors.persona}</FieldDescription>}
+            </Field>
 
             </div>
 
