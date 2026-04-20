@@ -81,7 +81,7 @@ import { ConfirmCheckinDialog } from "@/features/content/forms/ConfirmCheckinDia
  * Main content list page — the primary view for browsing, searching, filtering,
  * and managing content items.
  *
- * Key behaviours:
+ * Key behaviors:
  * - Fetches all content the current user has access to from `/api/content` on
  *   mount, then polls every 15 seconds to pick up lock state changes made by
  *   other users.
