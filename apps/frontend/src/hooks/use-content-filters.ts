@@ -1,6 +1,6 @@
 import {useState,} from "react";
 import type {ContentItem, BookmarkRecord} from "@/lib/types.ts";
-
+{/*CHANGE THIS TO ADD MORE TABS!!*/}
 export type ContentTab = "all" | "bookmarks";
 
 export function useContentFilters(
@@ -22,7 +22,7 @@ export function useContentFilters(
     const [advancedFilters, setAdvancedFilters] = useState({
         status: [] as Array<"new" | "inProgress" | "complete">,
         contentType: [] as Array<"reference" | "workflow">,
-        persona: [] as Array<"underwriter" | "businessAnalyst" | "admin">,
+        persona: [] as Array<"underwriter" | "businessAnalyst" | "actuarialAnalyst" | "EXLOperator" | "businessOps" | "admin">,
         bookmarkedOnly: false,
         ownedByMe: false,
     });
@@ -58,17 +58,20 @@ export function useContentFilters(
         const requireBookmark = activeTab === "bookmarks" || advancedFilters.bookmarkedOnly;
         const matchesBookmark =
             !requireBookmark || bookmarks.some((b) => b.bookmarkedContentId === item.id);
-
+        {/*ADD A MATCHES ____ FOR MORE TABS!!!!*/}
         const matchesOwner =
             !advancedFilters.ownedByMe || item.ownerId === currentUserId;
 
+
+
+        {/*ADD A MATCHES ____  RETURN FOR MORE TABS!!!!*/}
         return (
             matchesStatus &&
             matchesContentType &&
             matchesPersona &&
             matchesBookmark &&
             matchesOwner
-        );
+    );
     });
 
     // Total number of active filter conditions — shown in the "Filters (N)" button label.

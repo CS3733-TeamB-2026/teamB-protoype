@@ -3,9 +3,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useEffect, useState } from "react";
 import {Loader2, Pencil, Trash2, Search, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
-import { Link } from "react-router-dom";
 import { Hero } from "@/components/shared/Hero.tsx";
 import { EditEmployeeDialog } from "@/features/employees/EditEmployeeDialog.tsx";
+import { AddEmployeeDialog } from "@/features/employees/AddEmployeeDialog.tsx";
 import { ConfirmDeleteDialog } from "@/components/dialogs/ConfirmDeleteDialog.tsx";
 import { Users } from "lucide-react";
 import { SortableHead } from "@/components/shared/SortableHead.tsx";
@@ -27,6 +27,7 @@ function ViewEmployees() {
     const [editOpen, setEditOpen] = useState(false);
     const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<Employee | null>(null);
+    const [addOpen, setAddOpen] = useState(false);  // <-- new
     const user = useUser();
     const [sort, toggleSort] = useSortState<"id" | "firstName" | "lastName" | "persona" | "userName">({column: "id", direction: "asc"});
     const [searchTerm, setSearchTerm] = useState("");
@@ -117,14 +118,16 @@ function ViewEmployees() {
                             />
                         </div>
                         <div>
-                            <Link to="/employeeform">
-                                <Button className="cursor-pointer p-0! gap-0! border-0! group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-48 hover:bg-accent-dark hover:text-primary-foreground active:brightness-80 transition-all bg-accent text-primary-foreground w-12 h-12 text-lg justify-start">
+                            {/* Opens AddEmployeeDialog instead of navigating away */}
+                            <Button
+                                onClick={() => setAddOpen(true)}
+                                className="cursor-pointer p-0! gap-0! border-0! group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-48 hover:bg-accent-dark hover:text-primary-foreground active:brightness-80 transition-all bg-accent text-primary-foreground w-12 h-12 text-lg justify-start"
+                            >
                                 <span className="flex items-center justify-center min-w-12 h-12">
-                                    <Plus className="w-8! h-8! text-primary-foreground " />
+                                    <Plus className="w-8! h-8! text-primary-foreground" />
                                 </span>
-                                    <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Add Employees</span>
-                                </Button>
-                            </Link>
+                                <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Add Employees</span>
+                            </Button>
                         </div>
                     </div>
                     {loading ? (
@@ -140,7 +143,6 @@ function ViewEmployees() {
                                     <SortableHead column="id" label="ID" sort={sort} onSort={toggleSort} />
                                     <SortableHead column="firstName" label="First Name" sort={sort} onSort={toggleSort} />
                                     <SortableHead column="lastName" label="Last Name" sort={sort} onSort={toggleSort} className="w-full" />
-                                    {/*<SortableHead column="userName" label="User Name" sort={sort} onSort={toggleSort} className="w-full" />*/}
                                     <SortableHead column="persona" label="Persona" sort={sort} onSort={toggleSort} />
                                     <TableHead className="uppercase tracking-wider text-muted-foreground select-none">Actions</TableHead>
                                 </TableRow>
@@ -151,55 +153,53 @@ function ViewEmployees() {
                                     if (col === "firstName") return e.firstName;
                                     if (col === "lastName") return e.lastName;
                                     if (col === "persona") return e.persona;
-                                    //if (col === "userName") return auth0User?.username ?? "";
                                 }).map((employee) => {
                                     const matches = findMatches(employee.firstName+employee.lastName, searchTerm);
                                     return (
-                                    <TableRow key={employee.id}>
-                                        <TableCell>
-                                            <Avatar className="cursor-pointer w-10 h-10 ">
-                                                {
-                                                    employee.profilePhotoURI?
-                                                        <AvatarImage src={employee.profilePhotoURI} />
-                                                        :
-                                                        <AvatarFallback className="bg-accent text-primary-foreground">{" " + employee?.firstName[0] + employee?.lastName[0]}</AvatarFallback>
-                                                }
-                                            </Avatar>
-                                        </TableCell>
-                                        <TableCell className="text-right pr-4">{employee.id}</TableCell>
-                                        <TableCell className="font-medium">{highlightRange(employee.firstName, 0, matches)}</TableCell>
-                                        <TableCell className="font-medium">{highlightRange(employee.lastName, employee.firstName.length, matches)}</TableCell>
-                                        {/*<TableCell>{highlight(auth0User?.nickname || "—", searchTerm)}</TableCell>*/}
-                                        <TableCell  className="text-center">
-                                            <PersonaBadge
-                                                persona={employee.persona}
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex justify-center gap-2">
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    disabled={employee.id === user?.id}
-                                                    onClick={() => {
-                                                        setEditingEmployee(employee);
-                                                        setEditOpen(true);
-                                                    }}
-                                                >
-                                                    <Pencil className="w-4 h-4" />
-                                                </Button>
-                                                <Button
-                                                    variant="destructive"
-                                                    size="sm"
-                                                    disabled={employee.id === user?.id}
-                                                    onClick={() => setDeleteTarget(employee)}
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                )})}
+                                        <TableRow key={employee.id}>
+                                            <TableCell>
+                                                <Avatar className="cursor-pointer w-10 h-10 ">
+                                                    {
+                                                        employee.profilePhotoURI?
+                                                            <AvatarImage src={employee.profilePhotoURI} />
+                                                            :
+                                                            <AvatarFallback className="bg-accent text-primary-foreground">{" " + employee?.firstName[0] + employee?.lastName[0]}</AvatarFallback>
+                                                    }
+                                                </Avatar>
+                                            </TableCell>
+                                            <TableCell className="text-right pr-4">{employee.id}</TableCell>
+                                            <TableCell className="font-medium">{highlightRange(employee.firstName, 0, matches)}</TableCell>
+                                            <TableCell className="font-medium">{highlightRange(employee.lastName, employee.firstName.length, matches)}</TableCell>
+                                            <TableCell  className="text-center">
+                                                <PersonaBadge
+                                                    persona={employee.persona}
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex justify-center gap-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        disabled={employee.id === user?.id}
+                                                        onClick={() => {
+                                                            setEditingEmployee(employee);
+                                                            setEditOpen(true);
+                                                        }}
+                                                    >
+                                                        <Pencil className="w-4 h-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="destructive"
+                                                        size="sm"
+                                                        disabled={employee.id === user?.id}
+                                                        onClick={() => setDeleteTarget(employee)}
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    )})}
                             </TableBody>
                         </Table>
                     )}
@@ -226,6 +226,13 @@ function ViewEmployees() {
                     }
                 />
             )}
+
+            {/* Add employee dialog — appends new employee to the table on success */}
+            <AddEmployeeDialog
+                open={addOpen}
+                onOpenChange={setAddOpen}
+                onSave={(created) => setEmployees((prev) => [...prev, created])}
+            />
         </>
     );
 }
