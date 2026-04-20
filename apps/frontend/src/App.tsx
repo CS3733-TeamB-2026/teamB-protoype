@@ -42,7 +42,6 @@ function App() {
     // Your application must be wrapped with the BrowserRouter component to enable routing
     return (
 
-        <BrowserRouter>
         <LocaleProvider>
             <SidebarProvider defaultOpen={false}>
                 <AppSidebar />
@@ -69,7 +68,7 @@ function App() {
             </SidebarProvider>
             <Toaster />
         </LocaleProvider>
-        </BrowserRouter>
+
     )
 }
 export default App
