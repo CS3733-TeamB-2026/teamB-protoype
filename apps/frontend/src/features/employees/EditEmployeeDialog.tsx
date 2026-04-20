@@ -115,9 +115,12 @@ export function EditEmployeeDialog({ content, open, onOpenChange, onSave }: Prop
                                 <SelectValue placeholder="Select Persona" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="admin">Admin</SelectItem>
                                 <SelectItem value="underwriter">Underwriter</SelectItem>
                                 <SelectItem value="businessAnalyst">Business Analyst</SelectItem>
+                                <SelectItem value="actuarialAnalyst">Actuarial Analyst</SelectItem>
+                                <SelectItem value="EXLOperator">EXL Operations</SelectItem>
+                                <SelectItem value="businessOps">Business Ops</SelectItem>
+                                <SelectItem value="admin">Admin</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
