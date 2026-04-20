@@ -22,6 +22,7 @@ export interface ContentItem {
     contentType: "reference" | "workflow";
     targetPersona: "underwriter" | "businessAnalyst" | "admin";
     status: "new" | "inProgress" | "complete" | null;
+    tags: string[];
 }
 
 export interface BookmarkRecord {

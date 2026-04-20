@@ -15,6 +15,7 @@ export class Content {
         _lastModified: Date,
         _expiration: Date | null,
         _targetPersona: string,
+        _tags: string[],
         _checkedOutById: number,
     ): Promise<p.Content> {
         const _personaTyped: p.Persona | null = Helper.personaHelper(_targetPersona)
@@ -34,8 +35,6 @@ export class Content {
             throw new Error("You do not have this content checked out.")
         }
 
-
-
         return prisma.content.update({
             where: {id: id},
             data: {
@@ -48,6 +47,7 @@ export class Content {
                 lastModified: _lastModified,
                 expiration: _expiration,
                 targetPersona: _personaTyped,
+                tags: _tags,
             }
         });
     }
@@ -62,6 +62,7 @@ export class Content {
         _lastModified: Date,
         _expiration: Date | null,
         _targetPersona: string,
+        _tags: string[] = [],
     ): Promise<p.Content> {
         if (!_linkURL && !_fileURI) {
             throw new Error("Content must have either a linkURL or a fileURI")
@@ -85,6 +86,7 @@ export class Content {
                 lastModified: _lastModified,
                 expiration: _expiration,
                 targetPersona: _personaTyped,
+                tags: _tags,
             }
         })
     }

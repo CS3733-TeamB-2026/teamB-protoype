@@ -140,6 +140,7 @@ export const uploadFile = async (req: req, res: res) => {
             new Date(payload.lastModified),
             payload.expiration ? new Date(payload.expiration) : null,
             payload.targetPersona,
+            JSON.parse(payload.tags || "[]"),
         );
         return res.status(201).json(result);
     } catch (error) {
@@ -177,6 +178,7 @@ export const updateContent = async (req: req, res: res) => {
             payload.lastModified ? new Date(payload.lastModified) : new Date(),
             payload.expiration ? new Date(payload.expiration) : null,
             payload.targetPersona,
+            JSON.parse(payload.tags || "[]"),
             parseInt(payload.employeeID),
         );
         if (oldURI && (uploaded || linkURL)) {
