@@ -1,15 +1,16 @@
 import {useState,} from "react";
 import type {ContentItem, BookmarkRecord} from "@/lib/types.ts";
 {/*CHANGE THIS TO ADD MORE TABS!!*/}
-export type ContentTab = "all" | "bookmarks";
+export type ContentTab = "forYou" | "all" | "owned" | "bookmarks";
 
 export function useContentFilters(
     content: ContentItem[],
     bookmarks: BookmarkRecord[],
     currentUserId: number | undefined,
+    currentUserPersona: "underwriter" | "businessAnalyst" | "admin" | undefined,
 ) {
     const [searchTerm, setSearchTerm] = useState("");
-    const [activeTab, setActiveTab] = useState<ContentTab>("all");
+    const [activeTab, setActiveTab] = useState<ContentTab>("forYou");
     // First pass: filter by the search box (case-insensitive display name match).
     const searchedContent = content.filter((item) =>
         item.displayName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -59,8 +60,12 @@ export function useContentFilters(
         const matchesBookmark =
             !requireBookmark || bookmarks.some((b) => b.bookmarkedContentId === item.id);
         {/*ADD A MATCHES ____ FOR MORE TABS!!!!*/}
+        const requireOwned = activeTab === "owned" || advancedFilters.ownedByMe;
         const matchesOwner =
-            !advancedFilters.ownedByMe || item.ownerId === currentUserId;
+            !requireOwned || item.ownerId === currentUserId;
+        const matchesForYou =
+            activeTab !== "forYou" || item.targetPersona === currentUserPersona;
+
 
 
 
@@ -70,7 +75,8 @@ export function useContentFilters(
             matchesContentType &&
             matchesPersona &&
             matchesBookmark &&
-            matchesOwner
+            matchesOwner &&
+                matchesForYou
     );
     });
 
