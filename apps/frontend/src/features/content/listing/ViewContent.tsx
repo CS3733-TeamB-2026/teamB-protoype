@@ -5,8 +5,7 @@ import {
 } from "@/components/ui/alert.tsx";
 import {
     AlertCircle,
-    Bookmark,
-    BookmarkCheck,
+    Star,
     ChevronDown,
     ChevronRight,
     EllipsisVertical,
@@ -21,17 +20,17 @@ import {
     RefreshCcw,
     KeyRound,
 } from "lucide-react";
-import { Button } from "@/components/ui/button.tsx";
+import {Button} from "@/components/ui/button.tsx";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
-import { Input } from "@/components/ui/input.tsx";
-import { Link } from "react-router-dom";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { LinkSquare01Icon } from "@hugeicons/core-free-icons";
+import {Input} from "@/components/ui/input.tsx";
+import {Link} from "react-router-dom";
+import {HugeiconsIcon} from "@hugeicons/react";
+import {LinkSquare01Icon} from "@hugeicons/core-free-icons";
 import {
     Card,
     CardContent,
@@ -58,25 +57,30 @@ import {
     getExtension,
     getOriginalFilename,
 } from "@/lib/mime.ts";
-import { ContentExtBadge } from "@/features/content/components/ContentExtBadge.tsx";
-import { ContentStatusBadge } from "@/features/content/components/ContentStatusBadge.tsx";
-import { ContentTypeBadge } from "@/features/content/components/ContentTypeBadge.tsx";
-import { PersonaBadge } from "@/components/shared/PersonaBadge.tsx";
-import { EditContentDialog } from "@/features/content/forms/EditContentDialog.tsx";
-import { AddContentDialog } from "@/features/content/forms/AddContentDialog.tsx";
-import { FilePreview } from "@/features/content/previews/FilePreview.tsx";
-import { UrlPreviewLink } from "@/components/shared/UrlPreviewLink.tsx";
-import { getCachedPreview, setCachedPreview } from "@/features/content/previews/preview-cache.ts";
-import { invalidateFileCacheById } from "@/features/content/previews/file-cache.ts";
-import { useAuth0 } from "@auth0/auth0-react"
+import {ContentExtBadge} from "@/features/content/components/ContentExtBadge.tsx";
+import {ContentStatusBadge} from "@/features/content/components/ContentStatusBadge.tsx";
+import {ContentTypeBadge} from "@/features/content/components/ContentTypeBadge.tsx";
+import {PersonaBadge} from "@/components/shared/PersonaBadge.tsx";
+import {EditContentDialog} from "@/features/content/forms/EditContentDialog.tsx";
+import {AddContentDialog} from "@/features/content/forms/AddContentDialog.tsx";
+import {FilePreview} from "@/features/content/previews/FilePreview.tsx";
+import {UrlPreviewLink} from "@/components/shared/UrlPreviewLink.tsx";
+import {getCachedPreview, setCachedPreview} from "@/features/content/previews/preview-cache.ts";
+import {invalidateFileCacheById} from "@/features/content/previews/file-cache.ts";
+import {useAuth0} from "@auth0/auth0-react"
 import {highlight} from "@/lib/highlight.tsx";
 import {formatLabel, formatName} from "@/lib/utils.ts";
 import {toast} from "sonner";
-import type { ContentItem, BookmarkRecord } from "@/lib/types.ts";
-import type { UrlPreview } from "@/lib/types.ts";
-import { usePageTitle } from "@/hooks/use-page-title.ts";
-import { ConfirmCheckoutDialog } from "@/features/content/forms/ConfirmCheckoutDialog.tsx";
-import { ConfirmCheckinDialog } from "@/features/content/forms/ConfirmCheckinDialog.tsx";
+import type {ContentItem, BookmarkRecord} from "@/lib/types.ts";
+import type {UrlPreview} from "@/lib/types.ts";
+import {usePageTitle} from "@/hooks/use-page-title.ts";
+import {ConfirmCheckoutDialog} from "@/features/content/forms/ConfirmCheckoutDialog.tsx";
+import {ConfirmCheckinDialog} from "@/features/content/forms/ConfirmCheckinDialog.tsx";
+import {useContentFilters} from "@/hooks/use-content-filters.ts";
+import {Tabs, TabsTrigger} from "@/components/ui/tabs"
+import { SlidingTabs } from "@/components/shared/SlidingTabs.tsx";
+
+
 /**
  * Main content list page — the primary view for browsing, searching, filtering,
  * and managing content items.
@@ -111,7 +115,10 @@ function ViewContent() {
     const [bookmarks, setBookmarks] = useState<BookmarkRecord[]>([]);
     /** Content item staged for the delete confirmation dialog. */
     const [deleteTarget, setDeleteTarget] = useState<ContentItem | null>(null);
-    const [sort, toggleSort] = useSortState<"name" | "owner" | "status" | "contentType" | "persona" | "docType">({column: "name", direction: "asc"});
+    const [sort, toggleSort] = useSortState<"name" | "owner" | "status" | "contentType" | "persona" | "docType">({
+        column: "name",
+        direction: "asc"
+    });
     /**
      * Map from content item ID to its fetched link preview (or `null` if the
      * URL was unreachable). Items with no entry are still loading.
@@ -119,64 +126,23 @@ function ViewContent() {
     const [linkPreviews, setLinkPreviews] = useState<Record<number, UrlPreview | null>>({});
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
-    /**
-     * Checkbox state for the filter sidebar. An empty array for a multi-select
-     * field means "no filter applied" (all values pass). The two boolean flags
-     * are additional single-checkbox filters.
-     */
-    const [advancedFilters, setAdvancedFilters] = useState({
-        status: [] as Array<"new" | "inProgress" | "complete">,
-        contentType: [] as Array<"reference" | "workflow">,
-        persona: [] as Array<"underwriter" | "businessAnalyst" | "admin">,
-        bookmarkedOnly: false,
-        ownedByMe: false,
-    });
 
     const user = useUser();
-    const [searchTerm, setSearchTerm] = useState("");
-    // First pass: filter by the search box (case-insensitive display name match).
-    const searchedContent = content.filter((item) =>
-        item.displayName.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+
+    const {
+        activeTab,
+        setActiveTab,
+        searchTerm,
+        setSearchTerm,
+        advancedFilters,
+        setAdvancedFilters,
+        clearAdvancedFilters,
+        activeFilterCount,
+        filteredContent,
+    } = useContentFilters(content, bookmarks, user?.id);
+
     const [refreshing, setRefreshing] = useState(false);
 
-    // Second pass: apply the sidebar checkboxes on top of the search results.
-    // Each condition is skipped (passes everything) when no options are selected.
-    const advancedFilteredContent = searchedContent.filter((item) => {
-        const matchesStatus =
-            advancedFilters.status.length === 0 ||
-            (item.status !== null && advancedFilters.status.includes(item.status));
-
-        const matchesContentType =
-            advancedFilters.contentType.length === 0 ||
-            advancedFilters.contentType.includes(item.contentType);
-
-        const matchesPersona =
-            advancedFilters.persona.length === 0 ||
-            advancedFilters.persona.includes(item.targetPersona);
-
-        const matchesBookmark =
-            !advancedFilters.bookmarkedOnly || bookmarks.some((b) => b.bookmarkedContentId === item.id);
-
-        const matchesOwner =
-            !advancedFilters.ownedByMe || item.ownerId === user?.id;
-
-        return (
-            matchesStatus &&
-            matchesContentType &&
-            matchesPersona &&
-            matchesBookmark &&
-            matchesOwner
-        );
-    });
-
-    // Total number of active filter conditions — shown in the "Filters (N)" button label.
-    const activeFilterCount =
-        advancedFilters.status.length +
-        advancedFilters.contentType.length +
-        advancedFilters.persona.length +
-        (advancedFilters.bookmarkedOnly ? 1 : 0) +
-        (advancedFilters.ownedByMe ? 1 : 0);
 
     const {getAccessTokenSilently} = useAuth0();
 
@@ -203,7 +169,7 @@ function ViewContent() {
             }
         }
         if (Object.keys(fromCache).length > 0) {
-            setLinkPreviews((prev) => ({ ...prev, ...fromCache }));
+            setLinkPreviews((prev) => ({...prev, ...fromCache}));
         }
 
         uncached.forEach((item) => {
@@ -211,11 +177,11 @@ function ViewContent() {
                 .then((res) => (res.ok ? res.json() : Promise.reject()))
                 .then((preview: UrlPreview) => {
                     setCachedPreview(item.linkURL!, preview);
-                    setLinkPreviews((prev) => ({ ...prev, [item.id]: preview }));
+                    setLinkPreviews((prev) => ({...prev, [item.id]: preview}));
                 })
                 .catch(() => {
                     setCachedPreview(item.linkURL!, null);
-                    setLinkPreviews((prev) => ({ ...prev, [item.id]: null }));
+                    setLinkPreviews((prev) => ({...prev, [item.id]: null}));
                 });
         });
     }, []);
@@ -318,9 +284,9 @@ function ViewContent() {
                 headers: {Authorization: `Bearer ${token}`},
             });
             if (isCurrentlyBookmarked) {
-                toast.success("Bookmark removed.");
+                toast.success("Favorite removed.");
             } else {
-                toast.success("Bookmark added.");
+                toast.success("Favorite added.");
             }
         } catch {
             // Roll back on error
@@ -396,14 +362,14 @@ function ViewContent() {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ id: item.id, employeeID: user!.id }),
+                body: JSON.stringify({id: item.id, employeeID: user!.id}),
             });
             const data = await res.json();
             if (!res.ok) {
                 toast.error(data.message || "Could not check out.");
                 return;
             }
-            setContent((prev) => prev.map((c) => c.id === item.id ? { ...c, ...data } : c));
+            setContent((prev) => prev.map((c) => c.id === item.id ? {...c, ...data} : c));
             toast.success("Successfully checked out. You can now edit or delete.");
         } catch {
             toast.error("Could not check out.");
@@ -426,11 +392,11 @@ function ViewContent() {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ id: item.id, employeeID: user!.id }),
+                body: JSON.stringify({id: item.id, employeeID: user!.id}),
             });
             if (res.ok) {
                 setContent((prev) => prev.map((c) => c.id === item.id
-                    ? { ...c, checkedOutById: null, checkedOutAt: null, checkedOutBy: null }
+                    ? {...c, checkedOutById: null, checkedOutAt: null, checkedOutBy: null}
                     : c
                 ));
                 toast.success("Checked in.");
@@ -478,14 +444,38 @@ function ViewContent() {
                         {user.persona === "admin" ? "All" : formatLabel(user.persona)} Content
                     </CardTitle>
                     <CardDescription>
-                        {/* Show "X of Y items" when filters are active, "X items" otherwise */}
-                        {advancedFilteredContent.length === content.length
-                            ? `${content.length} item${content.length !== 1 ? "s" : ""}`
-                            : `${advancedFilteredContent.length} of ${content.length} items`}
+                        {activeTab === "bookmarks"
+                            ? `${filteredContent.length} favorited item${filteredContent.length !== 1 ? "s" : ""}`
+                            : filteredContent.length === content.length
+                                ? `${content.length} item${content.length !== 1 ? "s" : ""}`
+                                : `${filteredContent.length} of ${content.length} items`}
                     </CardDescription>
                 </CardHeader>
 
                 <CardContent>
+                    {/* Top-level Tabs for filtering Content Items */}
+                    {/* activeTab controls whether "All Content" or "Bookmarks" view is shown */}
+                    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "all" | "bookmarks")}>
+                        <SlidingTabs
+                            activeTab={activeTab}
+                            indicatorColor={activeTab === "bookmarks" ? "bg-accent" : "bg-foreground"}
+                        >
+                            <TabsTrigger
+                                value="all"
+                                className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0"
+                            >
+                                All Content
+                                <span className="ml-2 text-xs opacity-70">{content.length}</span>
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="bookmarks"
+                                className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0"
+                            >
+                                Favorites
+                                <span className="ml-2 text-xs opacity-70">{bookmarks.length}</span>
+                            </TabsTrigger>
+                        </SlidingTabs>
+                    </Tabs>
 
                     {loading && (
                         <div className="flex items-center justify-center py-16 gap-3 text-muted-foreground">
@@ -495,7 +485,7 @@ function ViewContent() {
                     )}
                     {error && (
                         <Alert variant="destructive" className="my-4">
-                            <AlertCircle />
+                            <AlertCircle/>
                             <AlertDescription>{error}</AlertDescription>
                         </Alert>
                     )}
@@ -645,6 +635,7 @@ function ViewContent() {
                                         <div>
                                             <p className="font-medium mb-2">Other</p>
                                             <div className="flex flex-col gap-1.5">
+                                                {activeTab !== "bookmarks" && (
                                                 <label className="flex items-center gap-2">
                                                     <input
                                                         type="checkbox"
@@ -658,6 +649,7 @@ function ViewContent() {
                                                     />
                                                     <span>Bookmarked</span>
                                                 </label>
+                                                )}
                                                 <label className="flex items-center gap-2">
                                                     <input
                                                         type="checkbox"
@@ -680,15 +672,7 @@ function ViewContent() {
                                             variant="secondary"
                                             size="sm"
                                             className="w-full"
-                                            onClick={() =>
-                                                setAdvancedFilters({
-                                                    status: [],
-                                                    contentType: [],
-                                                    persona: [],
-                                                    bookmarkedOnly: false,
-                                                    ownedByMe: false,
-                                                })
-                                            }
+                                            onClick={clearAdvancedFilters}
                                         >
                                             Clear Filters
                                         </Button>
@@ -724,7 +708,7 @@ function ViewContent() {
                                             The sort key extractor for "docType" derives the file
                                             extension when available, falling back to category, so that
                                             e.g. all PDFs sort together. */}
-                                        {applySortState(advancedFilteredContent, sort, (item, col) => {
+                                        {applySortState(filteredContent, sort, (item, col) => {
                                             if (col === "name") return item.displayName;
                                             if (col === "owner") return formatName(item.owner);
                                             if (col === "status") return item.status ?? "";
@@ -835,60 +819,74 @@ function ViewContent() {
                                                                     Link → external anchor (new tab).
                                                                     Neither → disabled button. */}
                                                                 {(() => {
-                                                                    const icon = <HugeiconsIcon icon={LinkSquare01Icon} className="w-4 h-4" />;
+                                                                    const icon = <HugeiconsIcon icon={LinkSquare01Icon}
+                                                                                                className="w-4 h-4"/>;
                                                                     const btnClass = "w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground";
                                                                     if (item.fileURI) return (
-                                                                        <Link to={`/file/${item.id}`} onClick={(e) => e.stopPropagation()}>
-                                                                            <button className={btnClass} title="View file">{icon}</button>
+                                                                        <Link to={`/file/${item.id}`}
+                                                                              onClick={(e) => e.stopPropagation()}>
+                                                                            <button className={btnClass}
+                                                                                    title="View file">{icon}</button>
                                                                         </Link>
                                                                     );
                                                                     if (item.linkURL) return (
-                                                                        <a href={item.linkURL} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
-                                                                            <button className={btnClass} title="Open link">{icon}</button>
+                                                                        <a href={item.linkURL} target="_blank"
+                                                                           rel="noopener noreferrer"
+                                                                           onClick={(e) => e.stopPropagation()}>
+                                                                            <button className={btnClass}
+                                                                                    title="Open link">{icon}</button>
                                                                         </a>
                                                                     );
-                                                                    return <button className="w-8 h-8 flex items-center justify-center rounded-md opacity-30 cursor-not-allowed text-muted-foreground" title="No file or link" disabled>{icon}</button>;
+                                                                    return <button
+                                                                        className="w-8 h-8 flex items-center justify-center rounded-md opacity-30 cursor-not-allowed text-muted-foreground"
+                                                                        title="No file or link"
+                                                                        disabled>{icon}</button>;
                                                                 })()}
                                                                 <button
-                                                                    className={`w-8 h-8 flex items-center justify-center rounded-md transition-colors ${isBookmarked ? "text-primary hover:text-primary/70" : "text-muted-foreground hover:text-foreground"}`}
+                                                                    className={`w-8 h-8 flex items-center justify-center rounded-md transition-colors ${isBookmarked ? "text-accent hover:text-accent/70" : "text-muted-foreground hover:text-foreground"}`}
                                                                     onClick={(e) => toggleBookmark(item.id, e)}
                                                                     aria-label={isBookmarked ? "Remove bookmark" : "Bookmark"}
                                                                 >
-                                                                    {isBookmarked ? (
-                                                                        <BookmarkCheck className="w-4 h-4" />
-                                                                    ) : (
-                                                                        <Bookmark className="w-4 h-4" />
-                                                                    )}
+                                                                    <Star className="w-4 h-4" fill={isBookmarked ? "currentColor" : "none"} />
                                                                 </button>
                                                                 {(() => {
                                                                     if (item.checkedOutById === user!.id) {
                                                                         return (
                                                                             <DropdownMenu>
-                                                                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                                                                <DropdownMenuTrigger asChild
+                                                                                                     onClick={(e) => e.stopPropagation()}>
                                                                                     <button
                                                                                         className="w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground"
                                                                                         title="More actions"
                                                                                     >
-                                                                                        <EllipsisVertical className="w-4 h-4" />
+                                                                                        <EllipsisVertical
+                                                                                            className="w-4 h-4"/>
                                                                                     </button>
                                                                                 </DropdownMenuTrigger>
-                                                                                <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                                                                                <DropdownMenuContent align="end"
+                                                                                                     onClick={(e) => e.stopPropagation()}>
                                                                                     <DropdownMenuItem
                                                                                         title="Edit content"
                                                                                         onClick={(e) => handleStartEdit(item, e)}
                                                                                     >
-                                                                                        <Pencil className="w-4 h-4" />
+                                                                                        <Pencil className="w-4 h-4"/>
                                                                                         Edit
                                                                                     </DropdownMenuItem>
-                                                                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setCheckinTarget(item); }}>
-                                                                                        <KeyRound className="w-4 h-4" />
+                                                                                    <DropdownMenuItem onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        setCheckinTarget(item);
+                                                                                    }}>
+                                                                                        <KeyRound className="w-4 h-4"/>
                                                                                         Check In
                                                                                     </DropdownMenuItem>
                                                                                     <DropdownMenuItem
                                                                                         className="text-destructive focus:text-destructive"
-                                                                                        onClick={(e) => { e.stopPropagation(); setDeleteTarget(item); }}
+                                                                                        onClick={(e) => {
+                                                                                            e.stopPropagation();
+                                                                                            setDeleteTarget(item);
+                                                                                        }}
                                                                                     >
-                                                                                        <Trash2 className="w-4 h-4" />
+                                                                                        <Trash2 className="w-4 h-4"/>
                                                                                         Delete
                                                                                     </DropdownMenuItem>
                                                                                 </DropdownMenuContent>
@@ -903,7 +901,7 @@ function ViewContent() {
                                                                                 title={lockLabel(item)}
                                                                                 disabled
                                                                             >
-                                                                                <Lock className="w-4 h-4" />
+                                                                                <Lock className="w-4 h-4"/>
                                                                             </button>
                                                                         );
                                                                     }
@@ -913,79 +911,86 @@ function ViewContent() {
                                                                             <button
                                                                                 className="w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground"
                                                                                 title="Check out to edit or delete"
-                                                                                onClick={(e) => { e.stopPropagation(); setCheckoutTarget(item); }}
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    setCheckoutTarget(item);
+                                                                                }}
                                                                             >
-                                                                                <KeyRound className="w-4 h-4" />
+                                                                                <KeyRound className="w-4 h-4"/>
                                                                             </button>
                                                                         );
                                                                     }
 
                                                                     return null;
                                                                 })()}
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
 
-                                            {/* Expanded: dates */}
-                                            {isExpanded && (
-                                                <TableRow className="hover:bg-transparent">
-                                                    <TableCell
-                                                        colSpan={NUM_COLS}
-                                                        className="px-6 py-2 bg-muted/10 border-t border-border"
-                                                    >
-                                                        <div className="flex gap-6 text-xs text-muted-foreground">
-                                                            {item.checkedOutBy && (
-                                                                <span>
-                                                                    <span className="font-medium text-foreground">Editing </span>
-                                                                    {item.checkedOutBy.firstName} {item.checkedOutBy.lastName}
+                                                    {/* Expanded: dates */}
+                                                    {isExpanded && (
+                                                        <TableRow className="hover:bg-transparent">
+                                                            <TableCell
+                                                                colSpan={NUM_COLS}
+                                                                className="px-6 py-2 bg-muted/10 border-t border-border"
+                                                            >
+                                                                <div
+                                                                    className="flex gap-6 text-xs text-muted-foreground">
+                                                                    {item.checkedOutBy && (
+                                                                        <span>
+                                                                    <span
+                                                                        className="font-medium text-foreground">Editing </span>
+                                                                            {item.checkedOutBy.firstName} {item.checkedOutBy.lastName}
                                                                 </span>
-                                                            )}
-                                                            <span>
-                                                                <span className="font-medium text-foreground">Modified:{" "}</span>
-                                                                {new Date(item.lastModified).toLocaleString()}
+                                                                    )}
+                                                                    <span>
+                                                                <span
+                                                                    className="font-medium text-foreground">Modified:{" "}</span>
+                                                                        {new Date(item.lastModified).toLocaleString()}
                                                             </span>
-                                                            {item.expiration && (
-                                                                <span>
-                                                                    <span className="font-medium text-foreground">Expires:{" "}</span>
-                                                                    {new Date(item.expiration).toLocaleString()}
+                                                                    {item.expiration && (
+                                                                        <span>
+                                                                    <span
+                                                                        className="font-medium text-foreground">Expires:{" "}</span>
+                                                                            {new Date(item.expiration).toLocaleString()}
                                                                 </span>
-                                                            )}
-                                                            {item.expiration && (
-                                                                <span>
+                                                                    )}
+                                                                    {item.expiration && (
+                                                                        <span>
                                                                     <span className="font-medium text-foreground">Days left:{" "}</span>
-                                                                    {Math.ceil((new Date(item.expiration).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)).toLocaleString()}
+                                                                            {Math.ceil((new Date(item.expiration).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)).toLocaleString()}
                                                                 </span>
-                                                            )}
-                                                        </div>
-                                                    </TableCell>
-                                                </TableRow>
-                                            )}
+                                                                    )}
+                                                                </div>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    )}
 
-                                            {/* Expanded: link preview strip.
+                                                    {/* Expanded: link preview strip.
                                                 Maps the linkPreviews entry to the three
                                                 UrlPreviewLink statuses:
                                                   key absent   → "loading"  (fetch still in flight)
                                                   value null   → "unreachable" (fetch failed)
                                                   value object → "ok" */}
-                                            {isExpanded && isLink && (
-                                                <TableRow className="hover:bg-transparent">
-                                                    <TableCell colSpan={NUM_COLS} className="p-0">
-                                                        <UrlPreviewLink
-                                                            href={item.linkURL!}
-                                                            status={
-                                                                !(item.id in linkPreviews)
-                                                                    ? "loading"
-                                                                    : linkPreviews[item.id] === null
-                                                                      ? "unreachable"
-                                                                      : "ok"
-                                                            }
-                                                            preview={linkPreviews[item.id] ?? null}
-                                                        />
-                                                    </TableCell>
-                                                </TableRow>
-                                            )}
+                                                    {isExpanded && isLink && (
+                                                        <TableRow className="hover:bg-transparent">
+                                                            <TableCell colSpan={NUM_COLS} className="p-0">
+                                                                <UrlPreviewLink
+                                                                    href={item.linkURL!}
+                                                                    status={
+                                                                        !(item.id in linkPreviews)
+                                                                            ? "loading"
+                                                                            : linkPreviews[item.id] === null
+                                                                                ? "unreachable"
+                                                                                : "ok"
+                                                                    }
+                                                                    preview={linkPreviews[item.id] ?? null}
+                                                                />
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    )}
 
-                                            {/* Expanded: file preview */}
+                                                    {/* Expanded: file preview */}
                                                     {isExpanded && isFile && (
                                                         <TableRow className="hover:bg-transparent">
                                                             <TableCell colSpan={NUM_COLS}
@@ -1012,7 +1017,7 @@ function ViewContent() {
                             <span className="font-medium text-primary">
                                 {bookmarks.length}
                             </span>{" "}
-                                item{bookmarks.length !== 1 ? "s" : ""} bookmarked
+                                item{bookmarks.length !== 1 ? "s" : ""} favorited
                             </div>
                         )}
                     </>}
@@ -1030,7 +1035,9 @@ function ViewContent() {
             />
             <ConfirmCheckoutDialog
                 open={!!checkoutTarget}
-                onOpenChange={(open: boolean) => { if (!open) setCheckoutTarget(null); }}
+                onOpenChange={(open: boolean) => {
+                    if (!open) setCheckoutTarget(null);
+                }}
                 description={checkoutTarget
                     ? <span>Check out <strong>"{checkoutTarget.displayName}"</strong>? You'll be able to edit and delete it until you check it back in.</span>
                     : undefined}
@@ -1043,9 +1050,12 @@ function ViewContent() {
             />
             <ConfirmCheckinDialog
                 open={!!checkinTarget}
-                onOpenChange={(open: boolean) => { if (!open) setCheckinTarget(null); }}
+                onOpenChange={(open: boolean) => {
+                    if (!open) setCheckinTarget(null);
+                }}
                 description={checkinTarget
-                    ? <span>Check in <strong>"{checkinTarget.displayName}"</strong>? Other users will be able to edit and delete it.</span>
+                    ?
+                    <span>Check in <strong>"{checkinTarget.displayName}"</strong>? Other users will be able to edit and delete it.</span>
                     : undefined}
                 onConfirm={async () => {
                     if (checkinTarget) {
@@ -1066,17 +1076,17 @@ function ViewContent() {
                     if (created.linkURL) {
                         const cached = getCachedPreview(created.linkURL);
                         if (cached !== undefined) {
-                            setLinkPreviews((prev) => ({ ...prev, [created.id]: cached }));
+                            setLinkPreviews((prev) => ({...prev, [created.id]: cached}));
                         } else {
                             fetch(`/api/preview?url=${encodeURIComponent(created.linkURL)}`)
                                 .then((r) => r.ok ? r.json() : null)
                                 .then((preview: UrlPreview | null) => {
                                     setCachedPreview(created.linkURL!, preview);
-                                    setLinkPreviews((prev) => ({ ...prev, [created.id]: preview }));
+                                    setLinkPreviews((prev) => ({...prev, [created.id]: preview}));
                                 })
                                 .catch(() => {
                                     setCachedPreview(created.linkURL!, null);
-                                    setLinkPreviews((prev) => ({ ...prev, [created.id]: null }));
+                                    setLinkPreviews((prev) => ({...prev, [created.id]: null}));
                                 });
                         }
                     }
