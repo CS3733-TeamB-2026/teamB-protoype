@@ -6,6 +6,12 @@ export class Helper {
             return p.Persona.underwriter
         } else if (_persona == "businessAnalyst") {
             return p.Persona.businessAnalyst
+        } else if (_persona == "actuarialAnalyst") {
+            return p.Persona.actuarialAnalyst
+        } else if (_persona == "EXLOperator") {
+            return p.Persona.EXLOperator
+        } else if (_persona == "businessOperator") {
+            return p.Persona.businessOperator
         } else if (_persona == "admin") {
             return p.Persona.admin
         } else {
