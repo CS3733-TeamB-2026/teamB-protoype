@@ -3,14 +3,32 @@ import { Loader2, TriangleAlert } from "lucide-react";
 import type { UrlPreview } from "@/lib/types.ts";
 
 interface Props {
+    /** The URL to open when the strip is clicked. */
     href: string;
+    /**
+     * Current fetch state for the preview metadata.
+     * There is no `"idle"` state here — the strip is only rendered once the
+     * row is expanded and a fetch is already in flight or complete.
+     */
     status: "loading" | "unreachable" | "ok";
+    /** The preview metadata to display when `status === "ok"`. */
     preview: UrlPreview | null;
 }
 
-// Full-width clickable link preview strip used in expanded table rows.
-// For the form card variant, see UrlPreviewCard.
+/**
+ * Full-width clickable link preview strip shown inside an expanded table row
+ * in {@link ViewContent}.
+ *
+ * Renders the URL's Open Graph image/favicon alongside its title, site name,
+ * and description. Falls back gracefully when images fail to load (tracked per
+ * URL so stale error state doesn't bleed into a different link's preview).
+ *
+ * For the card variant used inside the Add/Edit content form, see
+ * {@link UrlPreviewCard}.
+ */
 export function UrlPreviewLink({ href, status, preview }: Props) {
+    // Track which specific image URL triggered a load error. This prevents an
+    // error for one URL from incorrectly hiding the image for a different URL.
     const [ogImageErrorSrc, setOgImageErrorSrc] = useState<string | null>(null);
     const [faviconErrorSrc, setFaviconErrorSrc] = useState<string | null>(null);
 

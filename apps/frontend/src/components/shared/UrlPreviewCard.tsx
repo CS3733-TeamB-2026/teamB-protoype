@@ -1,16 +1,29 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card.tsx";
 import { Loader2, TriangleAlert } from "lucide-react";
-import { ContentIcon } from "@/components/shared/ContentIcon.tsx";
+import { ContentIcon } from "@/features/content/components/ContentIcon.tsx";
 import type { UrlPreview } from "@/lib/types.ts";
 
 interface Props {
+    /** Current fetch state for the preview. `"idle"` renders nothing. */
     status: "idle" | "loading" | "unreachable" | "ok";
+    /** The preview metadata to display when `status === "ok"`. */
     preview: UrlPreview | null;
 }
 
+/**
+ * Card-style URL preview used in the Add/Edit content form.
+ *
+ * Displays Open Graph metadata (title, description, image/favicon) for a URL
+ * typed into the link field. Renders nothing while `status === "idle"`, a
+ * spinner while loading, a warning when the URL is unreachable, and the full
+ * card once the metadata arrives.
+ *
+ * For the table-row strip variant used in ViewContent, see {@link UrlPreviewLink}.
+ */
 export function UrlPreviewCard({ status, preview }: Props) {
-    // Track which specific URL failed, so the error doesn't carry over when the preview changes.
+    // Track which specific image URL triggered an error so the broken-image
+    // state doesn't carry over when the user edits the URL and a new preview loads.
     const [ogImageErrorSrc, setOgImageErrorSrc] = useState<string | null>(null);
     const [faviconErrorSrc, setFaviconErrorSrc] = useState<string | null>(null);
 
