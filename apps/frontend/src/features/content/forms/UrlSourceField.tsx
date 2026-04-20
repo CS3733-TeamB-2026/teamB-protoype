@@ -68,13 +68,14 @@ export function UrlSourceField({ value, onChange, onPreviewLoaded, error }: Prop
     const displayPreview = value ? urlPreview : null;
 
     return (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 py-1">
             <Input
                 type="text"
                 placeholder="Enter the URL of the link"
                 value={value}
                 onChange={(e) => handleChange(e.target.value)}
                 onBlur={() => void fetchPreview(value)}
+                className="mb-1 md:text-sm"
             />
             {error && <p className="text-sm text-destructive">{error}</p>}
             <UrlPreviewCard status={displayStatus} preview={displayPreview} />

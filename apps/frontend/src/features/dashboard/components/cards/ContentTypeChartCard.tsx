@@ -20,6 +20,7 @@ const chartConfig = {
     count: { label: "Files" },
 } satisfies ChartConfig
 
+// Maps a filename to a human-readable category based on its extension. Returns "Other" for unrecognized types.
 function categorize(filename: string) {
     const ext = filename.split(".").pop()?.toLowerCase() ?? "";
     if (["jpg", "jpeg", "png", "gif", "webp", "svg"].includes(ext)) return "Images";
@@ -32,6 +33,11 @@ function categorize(filename: string) {
     return "Other";
 }
 
+/**
+ * Dashboard card showing a horizontal bar chart of content file type distribution.
+ * Fetches all content items on mount, categorizes each by file extension, and
+ * renders bars sorted ascending by count.
+ */
 function ContentTypeChartCard() {
 
     const [content, setContent] = useState<ContentItem[]>([]);
