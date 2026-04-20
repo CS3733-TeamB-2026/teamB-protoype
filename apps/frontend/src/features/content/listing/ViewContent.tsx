@@ -612,16 +612,16 @@ function ViewContent() {
                                         <div>
                                             <p className="font-medium mb-2">Persona</p>
                                             <div className="flex flex-col gap-1.5">
-                                                {["underwriter", "businessAnalyst", "admin"].map((persona) => (
+                                                {["underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps", "admin"].map((persona) => (
                                                     <label key={persona} className="flex items-center gap-2">
                                                         <input
                                                             type="checkbox"
-                                                            checked={advancedFilters.persona.includes(persona as "underwriter" | "businessAnalyst" | "admin")}
+                                                            checked={advancedFilters.persona.includes(persona as "underwriter" | "businessAnalyst" | "actuarialAnalyst" | "EXLOperator" | "businessOps" | "admin")}
                                                             onChange={(e) => {
                                                                 setAdvancedFilters((prev) => ({
                                                                     ...prev,
                                                                     persona: e.target.checked
-                                                                        ? [...prev.persona, persona as "underwriter" | "businessAnalyst" | "admin"]
+                                                                        ? [...prev.persona, persona as "underwriter" | "businessAnalyst" | "actuarialAnalyst" | "EXLOperator" | "businessOps" | "admin"]
                                                                         : prev.persona.filter((p) => p !== persona),
                                                                 }));
                                                             }}
