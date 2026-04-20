@@ -179,7 +179,7 @@ export function ContentFormFields({ values, patch, errors, showLastModified = fa
                         <Field className="bg-background flex-1">
                             <FieldLabel className="text-primary text-lg" htmlFor="date-modified">
                                 Last Modified Date
-                          ContentFormFields  </FieldLabel>
+                            </FieldLabel>
                             <Popover open={openModifiedDate} onOpenChange={setOpenModifiedDate}>
                                 <PopoverTrigger asChild>
                                     <Button

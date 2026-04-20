@@ -69,8 +69,8 @@ export function AddContentDialog({ open, onOpenChange, onSave }: Props) {
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-2xl max-h-[80vh] flex flex-col">
                 <DialogHeader>
-                    <DialogTitle className="text-2xl">Add Content</DialogTitle>
-                    <DialogDescription className="text-muted-foreground mb-2">
+                    <DialogTitle className="text-2xl text-primary text-center">Add Content</DialogTitle>
+                    <DialogDescription className="text-muted-foreground mb-2 text-center">
                         Add a new piece of content.
                     </DialogDescription>
                     <Separator />

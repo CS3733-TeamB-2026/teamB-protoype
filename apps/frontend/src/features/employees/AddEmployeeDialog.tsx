@@ -4,7 +4,7 @@ import * as React from "react"
 import { useState } from "react"
 import {
     Dialog,
-    DialogContent,
+    DialogContent, DialogDescription, DialogFooter,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog.tsx"
@@ -98,6 +98,14 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
 
             setSubmitResult("success")
 
+            onSave({
+                firstName: firstName,
+                lastName: lastName,
+                id: parseInt(id),
+                persona: targetPersona,
+                profilePhotoURI: ""
+            })
+
             setTargetPersona("Select job position")
             setFirstName("")
             setLastName("")
@@ -106,6 +114,7 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
             setConfirmPassword("")
             setEmail("")
             setID("")
+
         } catch {
             setSubmitResult("error")
         }
@@ -114,142 +123,156 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+
                 <DialogHeader>
-                    <DialogTitle className="text-primary text-2xl font-semibold">Add Employee</DialogTitle>
+                    <DialogTitle className="text-2xl text-primary text-center">Add Employee</DialogTitle>
+                    <DialogDescription className="text-muted-foreground mb-2 text-center">
+                        Add a new employee with associated user.
+                    </DialogDescription>
+                    <Separator />
                 </DialogHeader>
 
-                <Separator className="bg-primary" />
+                <div className="overflow-y-auto flex-1 flex flex-col gap-2 min-w-0 pr-2">
 
-                <div className="flex flex-wrap items-end gap-4">
-                    <Field className="flex-2">
-                        <FieldLabel className="text-primary" htmlFor="add-first-name">First Name</FieldLabel>
-                        <Input
-                            value={firstName}
-                            onChange={(e) => setFirstName(e.target.value)}
-                            id="add-first-name"
-                            type="text"
-                            placeholder="Enter first name"
-                        />
+                    <div className="flex flex-wrap items-end gap-4">
+                        <Field className="flex-2">
+                            <FieldLabel className="text-primary" htmlFor="add-first-name">First Name</FieldLabel>
+                            <Input
+                                value={firstName}
+                                onChange={(e) => setFirstName(e.target.value)}
+                                id="add-first-name"
+                                type="text"
+                                placeholder="Enter first name"
+                            />
+                        </Field>
+                        <Field className="flex-2">
+                            <FieldLabel className="text-primary" htmlFor="add-last-name">Last Name</FieldLabel>
+                            <Input
+                                value={lastName}
+                                onChange={(e) => setLastName(e.target.value)}
+                                id="add-last-name"
+                                type="text"
+                                placeholder="Enter last name"
+                            />
+                        </Field>
+                        <Field className="flex-1">
+                            <FieldLabel className="text-primary" htmlFor="add-employee-id">Employee ID</FieldLabel>
+                            <Input
+                                value={id}
+                                onChange={(e) => setID(e.target.value)}
+                                id="add-employee-id"
+                                type="number"
+                                placeholder="000000"
+                            />
+                        </Field>
+                    </div>
+
+                    <Separator className="bg-primary" />
+
+                    <Field>
+                        <FieldLabel className="text-primary">Job Position</FieldLabel>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" className="bg-background justify-between">
+                                    {targetPersona === "Select job position" ? "Select job position" : formatLabel(targetPersona)}
+                                    <ChevronDown className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuGroup>
+                                    <DropdownMenuLabel>Job Position</DropdownMenuLabel>
+                                    <DropdownMenuRadioGroup value={targetPersona} onValueChange={setTargetPersona}>
+                                        <DropdownMenuRadioItem value="underwriter">Underwriter</DropdownMenuRadioItem>
+                                        <DropdownMenuRadioItem value="businessAnalyst">Business Analyst</DropdownMenuRadioItem>
+                                        <DropdownMenuRadioItem value="admin">Admin</DropdownMenuRadioItem>
+                                    </DropdownMenuRadioGroup>
+                                </DropdownMenuGroup>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </Field>
-                    <Field className="flex-2">
-                        <FieldLabel className="text-primary" htmlFor="add-last-name">Last Name</FieldLabel>
-                        <Input
-                            value={lastName}
-                            onChange={(e) => setLastName(e.target.value)}
-                            id="add-last-name"
-                            type="text"
-                            placeholder="Enter last name"
-                        />
-                    </Field>
-                    <Field className="flex-1">
-                        <FieldLabel className="text-primary" htmlFor="add-employee-id">Employee ID</FieldLabel>
-                        <Input
-                            value={id}
-                            onChange={(e) => setID(e.target.value)}
-                            id="add-employee-id"
-                            type="number"
-                            placeholder="000000"
-                        />
-                    </Field>
+
+                    <Separator className="bg-primary" />
+
+                    <div className="flex flex-wrap items-end gap-4">
+                        <Field className="flex-1">
+                            <FieldLabel className="text-primary" htmlFor="add-username">Username</FieldLabel>
+                            <Input
+                                value={userName}
+                                onChange={(e) => setUserName(e.target.value)}
+                                id="add-username"
+                                type="text"
+                                placeholder="Enter username"
+                            />
+                        </Field>
+                        <Field className="flex-2">
+                            <FieldLabel className="text-primary" htmlFor="add-email">Email</FieldLabel>
+                            <Input
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                id="add-email"
+                                type="email"
+                                placeholder="Enter email"
+                            />
+                        </Field>
+                    </div>
+                    <div className="flex flex-wrap items-end gap-4">
+                        <Field className="flex-1">
+                            <FieldLabel className="text-primary" htmlFor="add-password">Password</FieldLabel>
+                            <Input
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                id="add-password"
+                                type="password"
+                                placeholder="Enter password"
+                            />
+                        </Field>
+                        <Field className="flex-1">
+                            <FieldLabel className="text-primary" htmlFor="add-password">Confirm Password</FieldLabel>
+                            <Input
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                id="add-password"
+                                type="password"
+                                placeholder="Enter password again"
+                            />
+                        </Field>
+                    </div>
+
+                    {submitResult === "success" && (
+                        <div className="rounded-md bg-chart-1 border-chart-2 px-3 py-2">
+                            Employee created successfully!
+                        </div>
+                    )}
+                    {submitResult === "error" && (
+                        <div className="rounded-md bg-destructive border-destructive text-background px-3 py-2">
+                            Error creating employee. Please fill in all fields and try again.
+                        </div>
+                    )}
+                    {submitResult === "mismatch" && (
+                        <div className="rounded-md bg-destructive border-destructive text-background px-3 py-2">
+                            Passwords do not match.
+                        </div>
+                    )}
+
                 </div>
 
-                <Separator className="bg-primary" />
-
-                <Field>
-                    <FieldLabel className="text-primary">Job Position</FieldLabel>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="bg-background justify-between">
-                                {targetPersona === "Select job position" ? "Select job position" : formatLabel(targetPersona)}
-                                <ChevronDown className="h-4 w-4" />
+                <DialogFooter>
+                    <div className="flex flex-col justify-center! items-center gap-4 mt-0 w-full">
+                        <Separator />
+                        <div className="flex flex-row gap-2">
+                            <Button variant="outline" onClick={resetForm}>
+                                Reset
                             </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            <DropdownMenuGroup>
-                                <DropdownMenuLabel>Job Position</DropdownMenuLabel>
-                                <DropdownMenuRadioGroup value={targetPersona} onValueChange={setTargetPersona}>
-                                    <DropdownMenuRadioItem value="underwriter">Underwriter</DropdownMenuRadioItem>
-                                    <DropdownMenuRadioItem value="businessAnalyst">Business Analyst</DropdownMenuRadioItem>
-                                    <DropdownMenuRadioItem value="admin">Admin</DropdownMenuRadioItem>
-                                </DropdownMenuRadioGroup>
-                            </DropdownMenuGroup>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </Field>
-
-                <Separator className="bg-primary" />
-
-                <div className="flex flex-wrap items-end gap-4">
-                    <Field className="flex-1">
-                        <FieldLabel className="text-primary" htmlFor="add-username">Username</FieldLabel>
-                        <Input
-                            value={userName}
-                            onChange={(e) => setUserName(e.target.value)}
-                            id="add-username"
-                            type="text"
-                            placeholder="Enter username"
-                        />
-                    </Field>
-                    <Field className="flex-2">
-                        <FieldLabel className="text-primary" htmlFor="add-email">Email</FieldLabel>
-                        <Input
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            id="add-email"
-                            type="email"
-                            placeholder="Enter email"
-                        />
-                    </Field>
-                </div>
-                <div className="flex flex-wrap items-end gap-4">
-                    <Field className="flex-1">
-                        <FieldLabel className="text-primary" htmlFor="add-password">Password</FieldLabel>
-                        <Input
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            id="add-password"
-                            type="password"
-                            placeholder="Enter password"
-                        />
-                    </Field>
-                    <Field className="flex-1">
-                        <FieldLabel className="text-primary" htmlFor="add-password">Confirm Password</FieldLabel>
-                        <Input
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            id="add-password"
-                            type="password"
-                            placeholder="Enter password again"
-                        />
-                    </Field>
-                </div>
-
-                {submitResult === "success" && (
-                    <div className="rounded-md bg-chart-1 border-chart-2 px-3 py-2">
-                        Employee created successfully!
+                            <Button
+                                className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground rounded-lg px-4 py-1"
+                                onClick={handleSubmit}
+                            >
+                                Submit
+                            </Button>
+                        </div>
                     </div>
-                )}
-                {submitResult === "error" && (
-                    <div className="rounded-md bg-destructive border-destructive text-background px-3 py-2">
-                        Error creating employee. Please fill in all fields and try again.
-                    </div>
-                )}
-                {submitResult === "mismatch" && (
-                    <div className="rounded-md bg-destructive border-destructive text-background px-3 py-2">
-                        Passwords do not match.
-                    </div>
-                )}
+                </DialogFooter>
 
-                <div className="flex justify-center pt-2">
-                    <Button
-                        onClick={handleSubmit}
-                        className="bg-accent text-lg text-white hover:bg-accent-dark hover:text-white px-10 py-6"
-                        variant="outline"
-                        size="lg"
-                    >
-                        Submit
-                    </Button>
-                </div>
             </DialogContent>
         </Dialog>
     )
