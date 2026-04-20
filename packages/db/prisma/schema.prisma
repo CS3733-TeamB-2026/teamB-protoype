@@ -64,6 +64,8 @@ model Content {
   status        Status?
   bookmarks     Bookmark[]
 
+  tags String[]
+
   @@schema("public")
 }
 

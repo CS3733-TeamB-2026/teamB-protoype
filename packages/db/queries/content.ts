@@ -98,7 +98,6 @@ export class Content {
     public static async queryAllContent() {
         return prisma.content.findMany({
             include: {owner: true, checkedOutBy: true,},
-
         })
     }
 

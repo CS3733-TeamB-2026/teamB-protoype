@@ -53,6 +53,17 @@ export const getAllContent = async (req: req, res: res) => {
     }
 };
 
+export const getAllTags = async (req: req, res: res) => {
+    try {
+        const content = await q.Content.queryAllContent();
+        const tags = [...new Set(content.flatMap((item) => item.tags ?? []))];
+        return res.status(200).json(tags);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
 export const getContentById = async (req: req, res: res) => {
     try {
         const id = parseInt(req.params.id);
