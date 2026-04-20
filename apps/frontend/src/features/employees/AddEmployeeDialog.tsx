@@ -1,0 +1,256 @@
+"use client"
+import { ChevronDown } from "lucide-react"
+import * as React from "react"
+import { useState } from "react"
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog.tsx"
+import {
+    Field,
+    FieldLabel,
+} from "@/components/ui/field.tsx"
+import { Input } from "@/components/ui/input.tsx"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuLabel,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu.tsx"
+import { Button } from "@/components/ui/button.tsx"
+import { Separator } from "@/components/ui/separator.tsx"
+import { useAuth0 } from "@auth0/auth0-react"
+import { formatLabel } from "@/lib/utils.ts"
+import type { Employee } from "@/lib/types.ts"
+
+interface AddEmployeeDialogProps {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    onSave: (created: Employee) => void
+}
+
+export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDialogProps) {
+    const [targetPersona, setTargetPersona] = useState("Select job position")
+    const [firstName, setFirstName] = React.useState("")
+    const [lastName, setLastName] = React.useState("")
+    const [userName, setUserName] = React.useState("")
+    const [password, setPassword] = React.useState("")
+    const [confirmPassword, setConfirmPassword] = React.useState("")
+    const [email, setEmail] = React.useState("")
+    const [id, setID] = React.useState("")
+    const [submitResult, setSubmitResult] = useState<"success" | "error" | "mismatch" | null>(null)
+    const { getAccessTokenSilently } = useAuth0()
+
+    const resetForm = () => {
+        setTargetPersona("Select job position")
+        setFirstName("")
+        setLastName("")
+        setUserName("")
+        setPassword("")
+        setConfirmPassword("")
+        setEmail("")
+        setID("")
+        setSubmitResult(null)
+    }
+
+    const handleOpenChange = (next: boolean) => {
+        if (!next) resetForm()
+        onOpenChange(next)
+    }
+
+    const handleSubmit = async () => {
+        {/*TODO: This forces the user to enter all the fields, should probably do this on backend later */}
+        if (!firstName || !lastName || !id || !userName || !password || targetPersona === "Select job position") {
+            setSubmitResult("error")
+            return
+        }
+        if (password !== confirmPassword) {
+            setSubmitResult("mismatch")
+            return
+        }
+        try {
+            const token = await getAccessTokenSilently();
+            const empRes =  await fetch('/api/employee/auth', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    firstName: firstName,
+                    lastName: lastName,
+                    id: parseInt(id),
+                    persona: targetPersona,
+                    username: userName,
+                    email: email,
+                    password: password,
+                })
+            })
+            if (!empRes.ok) {
+                setSubmitResult("error");
+                return
+            }
+
+            setSubmitResult("success")
+
+            setTargetPersona("Select job position")
+            setFirstName("")
+            setLastName("")
+            setUserName("")
+            setPassword("")
+            setConfirmPassword("")
+            setEmail("")
+            setID("")
+        } catch {
+            setSubmitResult("error")
+        }
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={handleOpenChange}>
+            <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                    <DialogTitle className="text-primary text-2xl font-semibold">Add Employee</DialogTitle>
+                </DialogHeader>
+
+                <Separator className="bg-primary" />
+
+                <div className="flex flex-wrap items-end gap-4">
+                    <Field className="flex-2">
+                        <FieldLabel className="text-primary" htmlFor="add-first-name">First Name</FieldLabel>
+                        <Input
+                            value={firstName}
+                            onChange={(e) => setFirstName(e.target.value)}
+                            id="add-first-name"
+                            type="text"
+                            placeholder="Enter first name"
+                        />
+                    </Field>
+                    <Field className="flex-2">
+                        <FieldLabel className="text-primary" htmlFor="add-last-name">Last Name</FieldLabel>
+                        <Input
+                            value={lastName}
+                            onChange={(e) => setLastName(e.target.value)}
+                            id="add-last-name"
+                            type="text"
+                            placeholder="Enter last name"
+                        />
+                    </Field>
+                    <Field className="flex-1">
+                        <FieldLabel className="text-primary" htmlFor="add-employee-id">Employee ID</FieldLabel>
+                        <Input
+                            value={id}
+                            onChange={(e) => setID(e.target.value)}
+                            id="add-employee-id"
+                            type="number"
+                            placeholder="000000"
+                        />
+                    </Field>
+                </div>
+
+                <Separator className="bg-primary" />
+
+                <Field>
+                    <FieldLabel className="text-primary">Job Position</FieldLabel>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="bg-background justify-between">
+                                {targetPersona === "Select job position" ? "Select job position" : formatLabel(targetPersona)}
+                                <ChevronDown className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                            <DropdownMenuGroup>
+                                <DropdownMenuLabel>Job Position</DropdownMenuLabel>
+                                <DropdownMenuRadioGroup value={targetPersona} onValueChange={setTargetPersona}>
+                                    <DropdownMenuRadioItem value="underwriter">Underwriter</DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="businessAnalyst">Business Analyst</DropdownMenuRadioItem>
+                                    <DropdownMenuRadioItem value="admin">Admin</DropdownMenuRadioItem>
+                                </DropdownMenuRadioGroup>
+                            </DropdownMenuGroup>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </Field>
+
+                <Separator className="bg-primary" />
+
+                <div className="flex flex-wrap items-end gap-4">
+                    <Field className="flex-1">
+                        <FieldLabel className="text-primary" htmlFor="add-username">Username</FieldLabel>
+                        <Input
+                            value={userName}
+                            onChange={(e) => setUserName(e.target.value)}
+                            id="add-username"
+                            type="text"
+                            placeholder="Enter username"
+                        />
+                    </Field>
+                    <Field className="flex-2">
+                        <FieldLabel className="text-primary" htmlFor="add-email">Email</FieldLabel>
+                        <Input
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            id="add-email"
+                            type="email"
+                            placeholder="Enter email"
+                        />
+                    </Field>
+                </div>
+                <div className="flex flex-wrap items-end gap-4">
+                    <Field className="flex-1">
+                        <FieldLabel className="text-primary" htmlFor="add-password">Password</FieldLabel>
+                        <Input
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            id="add-password"
+                            type="password"
+                            placeholder="Enter password"
+                        />
+                    </Field>
+                    <Field className="flex-1">
+                        <FieldLabel className="text-primary" htmlFor="add-password">Confirm Password</FieldLabel>
+                        <Input
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            id="add-password"
+                            type="password"
+                            placeholder="Enter password again"
+                        />
+                    </Field>
+                </div>
+
+                {submitResult === "success" && (
+                    <div className="rounded-md bg-chart-1 border-chart-2 px-3 py-2">
+                        Employee created successfully!
+                    </div>
+                )}
+                {submitResult === "error" && (
+                    <div className="rounded-md bg-destructive border-destructive text-background px-3 py-2">
+                        Error creating employee. Please fill in all fields and try again.
+                    </div>
+                )}
+                {submitResult === "mismatch" && (
+                    <div className="rounded-md bg-destructive border-destructive text-background px-3 py-2">
+                        Passwords do not match.
+                    </div>
+                )}
+
+                <div className="flex justify-center pt-2">
+                    <Button
+                        onClick={handleSubmit}
+                        className="bg-accent text-lg text-white hover:bg-accent-dark hover:text-white px-10 py-6"
+                        variant="outline"
+                        size="lg"
+                    >
+                        Submit
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
+    )
+}

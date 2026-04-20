@@ -76,9 +76,9 @@ import type {UrlPreview} from "@/lib/types.ts";
 import {usePageTitle} from "@/hooks/use-page-title.ts";
 import {ConfirmCheckoutDialog} from "@/features/content/forms/ConfirmCheckoutDialog.tsx";
 import {ConfirmCheckinDialog} from "@/features/content/forms/ConfirmCheckinDialog.tsx";
-import {useContentFilters} from "@/hooks/use-content-filters.ts";
 import {Tabs, TabsTrigger} from "@/components/ui/tabs"
 import { SlidingTabs } from "@/components/shared/SlidingTabs.tsx";
+import { useContentFilters, type ContentTab } from "@/hooks/use-content-filters.ts";
 
 
 /**
@@ -455,7 +455,7 @@ function ViewContent() {
                 <CardContent>
                     {/* Top-level Tabs for filtering Content Items */}
                     {/* activeTab controls whether "All Content" or "Bookmarks" view is shown */}
-                    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "all" | "bookmarks")}>
+                    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ContentTab)}>
                         <SlidingTabs
                             activeTab={activeTab}
                             indicatorColor={activeTab === "bookmarks" ? "bg-accent" : "bg-foreground"}
@@ -474,6 +474,7 @@ function ViewContent() {
                                 Favorites
                                 <span className="ml-2 text-xs opacity-70">{bookmarks.length}</span>
                             </TabsTrigger>
+                            {/*THEN ADD MORE TAB TRIGGERs FOR MORE TABS!!*/}
                         </SlidingTabs>
                     </Tabs>
 
