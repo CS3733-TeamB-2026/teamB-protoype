@@ -77,6 +77,7 @@ const DocViewerMemo = memo(function DocViewerMemo({
  *  - `"video"`     → `<video>` element
  *  - `"audio"`     → `<audio>` element
  *  - `"html"`      → sandboxed `<iframe>`
+ *  - `"slideshow"` → //TODO
  *  - `"docviewer"` → PDF/DOCX/Markdown via react-doc-viewer ({@link DocViewerMemo})
  *  - `"none"`      → "No preview available" message
  *

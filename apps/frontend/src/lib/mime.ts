@@ -38,7 +38,7 @@ export type Category =
  * - `"html"`      — sandboxed `<iframe>`
  * - `"none"`      — no preview, download-only
  */
-export type PreviewMode = "docviewer" | "image" | "audio" | "video" | "text" | "table" | "html" | "none";
+export type PreviewMode = "docviewer" | "slideshow" | "image" | "audio" | "video" | "text" | "table" | "html" | "none";
 
 export interface AllowedType {
     /** Canonical MIME type. Lowercase. */
@@ -104,7 +104,7 @@ export const ALLOWED_TYPES: readonly AllowedType[] = [
             "application/vnd.openxmlformats-officedocument.presentationml.presentation",
         extensions: ["pptx"],
         category: "other",
-        previewMode: "none",
+        previewMode: "slideshow",
         label: "PowerPoint",
     },
     {
