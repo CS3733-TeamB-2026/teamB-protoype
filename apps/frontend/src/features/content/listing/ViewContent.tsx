@@ -116,7 +116,7 @@ function ViewContent() {
     /** Content item staged for the delete confirmation dialog. */
     const [deleteTarget, setDeleteTarget] = useState<ContentItem | null>(null);
     const [sort, toggleSort] = useSortState<"name" | "owner" | "status" | "contentType" | "persona" | "docType">({
-        column: "name",
+        column: "persona",
         direction: "asc"
     });
     /**
@@ -694,9 +694,9 @@ function ViewContent() {
                                                           onSort={toggleSort} className="hidden sm:table-cell"/>
                                             <SortableHead column="persona" label="Persona" sort={sort}
                                                           onSort={toggleSort}
-                                                          className="hidden sm:table-cell"/><SortableHead
-                                            column="docType" label="Type" sort={sort} onSort={toggleSort}
-                                            className="hidden sm:table-cell"/>
+                                                          className="hidden sm:table-cell"/>
+                                            <SortableHead column="docType" label="Type" sort={sort} onSort={toggleSort}
+                                                          className="hidden sm:table-cell"/>
 
                                             <TableHead
                                                 className="uppercase tracking-wider text-muted-foreground select-none text-center">Actions</TableHead>
