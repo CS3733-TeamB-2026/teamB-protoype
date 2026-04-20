@@ -14,6 +14,7 @@ import { UrlSourceField } from "@/features/content/forms/UrlSourceField.tsx";
 import { FilePickerCard } from "@/components/shared/FilePickerCard.tsx";
 import { EmployeePicker } from "@/components/shared/EmployeePicker.tsx";
 import { type ContentFormValues, nowTimeString } from "@/features/content/forms/content-form.ts";
+import { TagInput } from "@/features/content/tags/TagInput.tsx";
 
 interface Props {
     values: ContentFormValues;
@@ -243,6 +244,14 @@ export function ContentFormFields({ values, patch, errors, showLastModified = fa
                     </Popover>
                 </Field>
             </div>
+
+            <div className="py-6"><Separator className="bg-primary" /></div>
+
+            {/* Tags */}
+            <Field className="bg-background">
+                <FieldLabel className="text-primary text-lg">Tags</FieldLabel>
+                <TagInput value={values.tags} onChange={(tags) => patch({ tags })} />
+            </Field>
 
             <div className="py-6"><Separator className="bg-primary" /></div>
 
