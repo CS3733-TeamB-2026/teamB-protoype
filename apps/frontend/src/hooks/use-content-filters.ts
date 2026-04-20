@@ -22,7 +22,7 @@ export function useContentFilters(
     const [advancedFilters, setAdvancedFilters] = useState({
         status: [] as Array<"new" | "inProgress" | "complete">,
         contentType: [] as Array<"reference" | "workflow">,
-        persona: [] as Array<"underwriter" | "businessAnalyst" | "admin">,
+        persona: [] as Array<"underwriter" | "businessAnalyst" | "actuarialAnalyst" | "EXLOperator" | "businessOps" | "admin">,
         bookmarkedOnly: false,
         ownedByMe: false,
     });

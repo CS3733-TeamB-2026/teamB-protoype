@@ -4,10 +4,11 @@ import './index.css'
 import App from './App.tsx'
 import { Auth0Provider } from '@auth0/auth0-react';
 import { UserProvider } from '@/context/UserContext.tsx';
+import { BrowserRouter, useNavigate } from 'react-router-dom';
 
-createRoot(document.getElementById('root')!).render(
-
-    <StrictMode>
+function Auth0ProviderWithNavigate({ children }: { children: React.ReactNode }) {
+    const navigate = useNavigate();
+    return (
         <Auth0Provider
             domain="dev-s638hh1d5ry67sv6.us.auth0.com"
             clientId="uInLEc9TqrOiGyZi4QrhhN70WFS52N3I"
@@ -16,12 +17,22 @@ createRoot(document.getElementById('root')!).render(
                 audience: "https://hanover-cma-api"
             }}
             onRedirectCallback={(appState) => {
-                window.location.replace(appState?.returnTo || '/employeehome')
+                navigate(appState?.returnTo || '/employeehome');
             }}
         >
-            <UserProvider>
-                <App />
-            </UserProvider>
+            {children}
         </Auth0Provider>
-    </StrictMode>,
-)
+    );
+}
+
+createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+        <BrowserRouter>
+            <Auth0ProviderWithNavigate>
+                <UserProvider>
+                    <App />
+                </UserProvider>
+            </Auth0ProviderWithNavigate>
+        </BrowserRouter>
+    </StrictMode>
+);

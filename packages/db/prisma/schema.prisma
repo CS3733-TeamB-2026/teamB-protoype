@@ -98,6 +98,9 @@ model Bookmark {
 enum Persona {
   underwriter
   businessAnalyst
+  actuarialAnalyst
+  EXLOperator
+  businessOperator
   admin
 
   @@schema("public")
