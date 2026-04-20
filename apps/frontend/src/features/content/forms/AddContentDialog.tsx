@@ -69,8 +69,8 @@ export function AddContentDialog({ open, onOpenChange, onSave }: Props) {
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-2xl max-h-[80vh] flex flex-col">
                 <DialogHeader>
-                    <DialogTitle>Add Content</DialogTitle>
-                    <DialogDescription className="text-muted-foreground">
+                    <DialogTitle className="text-2xl">Add Content</DialogTitle>
+                    <DialogDescription className="text-muted-foreground mb-2">
                         Add a new piece of content.
                     </DialogDescription>
                     <Separator />
@@ -89,7 +89,7 @@ export function AddContentDialog({ open, onOpenChange, onSave }: Props) {
                 </div>
 
                 <DialogFooter>
-                    <div className="flex flex-col justify-center! items-center gap-4 mt-5 w-full">
+                    <div className="flex flex-col justify-center! items-center gap-4 mt-0 w-full">
                         <Separator />
                         <div className="flex flex-row gap-2">
                             <Button variant="outline" onClick={handleReset}>

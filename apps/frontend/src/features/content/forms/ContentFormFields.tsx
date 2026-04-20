@@ -68,13 +68,14 @@ export function ContentFormFields({ values, patch, errors, showLastModified = fa
     };
 
     return (
-        <>
+        <div className="mx-4">
             {/* Name */}
             <Field className="bg-background">
-                <FieldLabel className="text-primary" htmlFor="input-field-name">
+                <FieldLabel className="text-primary text-lg" htmlFor="input-field-name">
                     Name <span className="text-destructive">*</span>
                 </FieldLabel>
                 <Input
+                    className="h-8 md:text-sm"
                     id="input-field-name"
                     type="text"
                     placeholder="Enter document name"
@@ -84,11 +85,11 @@ export function ContentFormFields({ values, patch, errors, showLastModified = fa
                 {errors.name && <FieldDescription className="text-destructive">{errors.name}</FieldDescription>}
             </Field>
 
-            <div className="py-2"><Separator className="bg-primary" /></div>
+            <div className="py-4"><Separator className="bg-primary" /></div>
 
             {/* Content Source */}
             <Field className="bg-background">
-                <FieldLabel className="text-primary">
+                <FieldLabel className="text-primary text-lg mb-4">
                     Content Source <span className="text-destructive">*</span>
                 </FieldLabel>
                 <RadioGroup
@@ -100,15 +101,15 @@ export function ContentFormFields({ values, patch, errors, showLastModified = fa
                             handleFileChange(values.file);
                         }
                     }}
-                    className="flex gap-6"
+                    className="flex gap-6 pb-2"
                 >
                     <div className="flex items-center gap-2">
                         <RadioGroupItem value="url" id="mode-url" />
-                        <Label htmlFor="mode-url">URL</Label>
+                        <Label htmlFor="mode-url" className="md:text-sm">URL</Label>
                     </div>
                     <div className="flex items-center gap-2">
                         <RadioGroupItem value="file" id="mode-file" />
-                        <Label htmlFor="mode-file">File Upload</Label>
+                        <Label htmlFor="mode-file" className="md:text-sm">File Upload</Label>
                     </div>
                 </RadioGroup>
 
@@ -133,18 +134,18 @@ export function ContentFormFields({ values, patch, errors, showLastModified = fa
                 )}
             </Field>
 
-            <div className="py-2"><Separator className="bg-primary" /></div>
+            <div className="py-6"><Separator className="bg-primary" /></div>
 
-            {/* Owner */}
-            <Field className="bg-background">
-                <FieldLabel className="text-primary">Owner Employee</FieldLabel>
-                <EmployeePicker
-                    selectedId={values.ownerID}
-                    onSelect={(id) => patch({ ownerID: id ?? null })}
-                />
-            </Field>
+            <div className="flex flex-row gap-2 justify-center">
 
-            <div className="py-2"><Separator className="bg-primary" /></div>
+                {/* Owner */}
+                <Field className="bg-background">
+                    <FieldLabel className="text-primary text-lg mb-1">Owner Employee</FieldLabel>
+                    <EmployeePicker
+                        selectedId={values.ownerID}
+                        onSelect={(id) => patch({ ownerID: id ?? null })}
+                    />
+                </Field>
 
             {/* Target Persona */}
             <Field className="bg-background">
@@ -167,22 +168,24 @@ export function ContentFormFields({ values, patch, errors, showLastModified = fa
                 {errors.persona && <FieldDescription className="text-destructive">{errors.persona}</FieldDescription>}
             </Field>
 
-            <div className="py-2"><Separator className="bg-primary" /></div>
+            </div>
+
+            <div className="py-6"><Separator className="bg-primary" /></div>
 
             {/* Dates */}
             <div className="flex flex-wrap items-end gap-4 bg-background py-4">
                 {showLastModified && (
                     <>
                         <Field className="bg-background flex-1">
-                            <FieldLabel className="text-primary" htmlFor="date-modified">
+                            <FieldLabel className="text-primary text-lg" htmlFor="date-modified">
                                 Last Modified Date
-                            </FieldLabel>
+                          ContentFormFields  </FieldLabel>
                             <Popover open={openModifiedDate} onOpenChange={setOpenModifiedDate}>
                                 <PopoverTrigger asChild>
                                     <Button
                                         variant="outline"
                                         id="date-modified"
-                                        className="justify-start font-normal"
+                                        className="justify-start font-normal text-sm h-10"
                                         disabled={values.uploadMode === "file" && values.file !== null}
                                     >
                                         {values.dateModified ? values.dateModified.toLocaleDateString() : "Select date"}
@@ -201,7 +204,7 @@ export function ContentFormFields({ values, patch, errors, showLastModified = fa
                         </Field>
 
                         <Field className="w-32">
-                            <FieldLabel className="text-primary" htmlFor="time-lastmodified">
+                            <FieldLabel className="text-primary text-lg" htmlFor="time-lastmodified">
                                 Time
                             </FieldLabel>
                             <Input
@@ -211,21 +214,20 @@ export function ContentFormFields({ values, patch, errors, showLastModified = fa
                                 value={values.lastModifiedTime}
                                 onChange={(e) => patch({ lastModifiedTime: e.target.value })}
                                 disabled={values.uploadMode === "file" && values.file !== null}
-                                className="appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                                className="font-normal md:text-sm h-10! appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
                             />
                         </Field>
 
-                        <Separator className="bg-primary" orientation="vertical" />
                     </>
                 )}
 
                 <Field className="bg-background flex-1">
-                    <FieldLabel className="text-primary" htmlFor="date-expiration">
+                    <FieldLabel className="text-primary text-lg" htmlFor="date-expiration">
                         Expiration Date
                     </FieldLabel>
                     <Popover open={openExpirationDate} onOpenChange={setOpenExpirationDate}>
                         <PopoverTrigger asChild>
-                            <Button variant="outline" id="date-expiration" className="justify-start font-normal">
+                            <Button variant="outline" id="date-expiration" className="justify-start font-normal font-normal text-sm h-10">
                                 {values.dateExpiration ? values.dateExpiration.toLocaleDateString() : "Select date"}
                             </Button>
                         </PopoverTrigger>
@@ -242,38 +244,43 @@ export function ContentFormFields({ values, patch, errors, showLastModified = fa
                 </Field>
             </div>
 
-            <div className="py-2"><Separator className="bg-primary" /></div>
+            <div className="py-6"><Separator className="bg-primary" /></div>
 
-            {/* Document Type */}
-            <Field className="bg-background">
-                <FieldLabel className="text-primary">Type of Document</FieldLabel>
-                <Select value={values.contentType} onValueChange={(v) => patch({ contentType: v as ContentFormValues["contentType"] })}>
-                    <SelectTrigger className="bg-background">
-                        <SelectValue placeholder="Select document type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        <SelectItem value="reference">Reference Content</SelectItem>
-                        <SelectItem value="workflow">Workflow Content</SelectItem>
-                    </SelectContent>
-                </Select>
-            </Field>
+            <div className="flex flex-row gap-2">
+                {/* Document Type */}
+                <Field className="bg-background">
+                    <FieldLabel className="text-primary text-lg">Type of Document</FieldLabel>
+                    <Select value={values.contentType} onValueChange={(v) => patch({ contentType: v as ContentFormValues["contentType"] })}>
+                        <SelectTrigger className="bg-background h-10! text-sm">
+                            <SelectValue placeholder="Select document type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            <SelectItem value="reference">Reference Content</SelectItem>
+                            <SelectItem value="workflow">Workflow Content</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </Field>
 
-            {/* Document Status */}
-            <Field className="bg-background">
-                <FieldLabel className="text-primary">Document Status</FieldLabel>
-                <Select value={values.status} onValueChange={(v) => patch({ status: v as ContentFormValues["status"] })}>
-                    <SelectTrigger className="bg-background">
-                        <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
-                        <SelectItem value="new">New</SelectItem>
-                        <SelectItem value="inProgress">In Progress</SelectItem>
-                        <SelectItem value="complete">Complete</SelectItem>
-                    </SelectContent>
-                </Select>
-            </Field>
-        </>
+                <Separator className="bg-primary mx-2" orientation="vertical" />
+
+                {/* Document Status */}
+                <Field className="bg-background">
+                    <FieldLabel className="text-primary text-lg">Document Status</FieldLabel>
+                    <Select value={values.status} onValueChange={(v) => patch({ status: v as ContentFormValues["status"] })}>
+                        <SelectTrigger className="bg-background h-10! text-sm">
+                            <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            <SelectItem value="new">New</SelectItem>
+                            <SelectItem value="inProgress">In Progress</SelectItem>
+                            <SelectItem value="complete">Complete</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </Field>
+            </div>
+
+        </div>
     );
 }

@@ -76,16 +76,16 @@ import type {UrlPreview} from "@/lib/types.ts";
 import {usePageTitle} from "@/hooks/use-page-title.ts";
 import {ConfirmCheckoutDialog} from "@/features/content/forms/ConfirmCheckoutDialog.tsx";
 import {ConfirmCheckinDialog} from "@/features/content/forms/ConfirmCheckinDialog.tsx";
-import {useContentFilters} from "@/hooks/use-content-filters.ts";
 import {Tabs, TabsTrigger} from "@/components/ui/tabs"
 import { SlidingTabs } from "@/components/shared/SlidingTabs.tsx";
+import { useContentFilters, type ContentTab } from "@/hooks/use-content-filters.ts";
 
 
 /**
  * Main content list page — the primary view for browsing, searching, filtering,
  * and managing content items.
  *
- * Key behaviours:
+ * Key behaviors:
  * - Fetches all content the current user has access to from `/api/content` on
  *   mount, then polls every 15 seconds to pick up lock state changes made by
  *   other users.
@@ -116,7 +116,7 @@ function ViewContent() {
     /** Content item staged for the delete confirmation dialog. */
     const [deleteTarget, setDeleteTarget] = useState<ContentItem | null>(null);
     const [sort, toggleSort] = useSortState<"name" | "owner" | "status" | "contentType" | "persona" | "docType">({
-        column: "name",
+        column: "persona",
         direction: "asc"
     });
     /**
@@ -455,7 +455,7 @@ function ViewContent() {
                 <CardContent>
                     {/* Top-level Tabs for filtering Content Items */}
                     {/* activeTab controls whether "All Content" or "Bookmarks" view is shown */}
-                    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "all" | "bookmarks")}>
+                    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ContentTab)}>
                         <SlidingTabs
                             activeTab={activeTab}
                             indicatorColor={activeTab === "bookmarks" ? "bg-accent" : "bg-foreground"}
@@ -474,6 +474,7 @@ function ViewContent() {
                                 Favorites
                                 <span className="ml-2 text-xs opacity-70">{bookmarks.length}</span>
                             </TabsTrigger>
+                            {/*THEN ADD MORE TAB TRIGGERs FOR MORE TABS!!*/}
                         </SlidingTabs>
                     </Tabs>
 
@@ -694,54 +695,57 @@ function ViewContent() {
                                                           onSort={toggleSort} className="hidden sm:table-cell"/>
                                             <SortableHead column="persona" label="Persona" sort={sort}
                                                           onSort={toggleSort}
-                                                          className="hidden sm:table-cell"/><SortableHead
-                                            column="docType" label="Type" sort={sort} onSort={toggleSort}
-                                            className="hidden sm:table-cell"/>
+                                                          className="hidden sm:table-cell"/>
+                                            <SortableHead column="docType" label="Type" sort={sort} onSort={toggleSort}
+                                                          className="hidden sm:table-cell"/>
 
                                             <TableHead
                                                 className="uppercase tracking-wider text-muted-foreground select-none text-center">Actions</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {/* Sort the filtered list, then render one React.Fragment
+                                                    {/* Sort the filtered list, then render one React.Fragment
                                             per item (main row + up to two conditional expansion rows).
                                             The sort key extractor for "docType" derives the file
                                             extension when available, falling back to category, so that
                                             e.g. all PDFs sort together. */}
-                                        {applySortState(filteredContent, sort, (item, col) => {
-                                            if (col === "name") return item.displayName;
-                                            if (col === "owner") return formatName(item.owner);
-                                            if (col === "status") return item.status ?? "";
-                                            if (col === "contentType") return item.contentType;
-                                            if (col === "persona") return item.targetPersona;
-                                            if (col === "docType") return item.fileURI ? (getExtension(getOriginalFilename(item.fileURI!)) ?? getCategory(null, getOriginalFilename(item.fileURI!))) : (item.linkURL ? "link" : "");
-                                        }).map((item, index) => {
-                                            // Derive display values once per row to avoid repeating
-                                            // the same lookups in multiple cells below.
-                                            const isFile = !!item.fileURI;
-                                            const isLink = !!item.linkURL;
-                                            const originalFilename = isFile
-                                                ? getOriginalFilename(item.fileURI!)
-                                                : null;
-                                            const category = getCategory(null, originalFilename);
-                                            const ext = originalFilename
-                                                ? getExtension(originalFilename)
-                                                : null;
-                                            const isExpanded = expandedId === item.id;
-                                            const isBookmarked = bookmarks.some((b) => b.bookmarkedContentId === item.id);
+                                                    {applySortState(filteredContent, sort, (item, col) => {
+                                                        let primarySort //Backup sort is by Persona so items are naturally clustered by persona
+                                                        if (col === "persona") primarySort = item.targetPersona;
+                                                        else if (col === "name") primarySort = item.displayName;
+                                                        else if (col === "owner") primarySort = formatName(item.owner);
+                                                        else if (col === "status") primarySort = item.status ?? "";
+                                                        else if (col === "contentType") primarySort = item.contentType;
+                                                        else if (col === "docType") primarySort = item.fileURI ? (getExtension(getOriginalFilename(item.fileURI!)) ?? getCategory(null, getOriginalFilename(item.fileURI!))) : (item.linkURL ? "link" : "");
 
-                                            return (
-                                                <React.Fragment key={item.id}>
-                                                    <TableRow
-                                                        className={`cursor-pointer ${item.checkedOutById === user!.id ? "bg-accent/10 border-l-4 border-l-accent" : index % 2 === 0 ? "bg-muted/10" : ""} ${isExpanded ? "bg-muted/80 hover:bg-muted/90" : ""} ${isCheckedOut(item) ? "opacity-50" : ""}`}
-                                                        onClick={() => toggleExpand(item.id)}
-                                                        tabIndex={0}
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === "Enter" || e.key === " ") {
-                                                                e.preventDefault();
-                                                                toggleExpand(item.id);
-                                                            }
-                                                        }}
+                                                        return `${primarySort}|||${item.targetPersona}` //Sorts first by the column, then by Persona
+                                                    }).map((item, index) => {
+                                                        // Derive display values once per row to avoid repeating
+                                                        // the same lookups in multiple cells below.
+                                                        const isFile = !!item.fileURI;
+                                                        const isLink = !!item.linkURL;
+                                                        const originalFilename = isFile
+                                                            ? getOriginalFilename(item.fileURI!)
+                                                            : null;
+                                                        const category = getCategory(null, originalFilename);
+                                                        const ext = originalFilename
+                                                            ? getExtension(originalFilename)
+                                                            : null;
+                                                        const isExpanded = expandedId === item.id;
+                                                        const isBookmarked = bookmarks.some((b) => b.bookmarkedContentId === item.id);
+
+                                                        return (
+                                                            <React.Fragment key={item.id}>
+                                                                <TableRow
+                                                                    className={`cursor-pointer ${item.checkedOutById === user!.id ? "bg-accent/10 border-l-4 border-l-accent" : index % 2 === 0 ? "bg-muted/10" : ""} ${isExpanded ? "bg-muted/80 hover:bg-muted/90" : ""} ${isCheckedOut(item) ? "opacity-50" : ""}`}
+                                                                    onClick={() => toggleExpand(item.id)}
+                                                                    tabIndex={0}
+                                                                    onKeyDown={(e) => {
+                                                                        if (e.key === "Enter" || e.key === " ") {
+                                                                            e.preventDefault();
+                                                                            toggleExpand(item.id);
+                                                                        }
+                                                                    }}
                                                     >
                                                         {/* Icon cell: use the site's favicon when
                                                             the link preview has loaded one, otherwise
