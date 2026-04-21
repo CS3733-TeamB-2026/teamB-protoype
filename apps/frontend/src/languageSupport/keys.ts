@@ -16,6 +16,8 @@ export type TranslationKey =
     | 'sidebar.home'
     | 'sidebar.dashboard'
     | 'sidebar.manageContent'
+    | 'sidebar.contentLibrary'
+    | 'sidebar.bulkUpload'
     | 'sidebar.addContent'
     | 'sidebar.viewContent'
     | 'sidebar.addEmployees'
