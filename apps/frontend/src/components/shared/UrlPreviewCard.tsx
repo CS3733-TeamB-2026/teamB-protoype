@@ -59,14 +59,14 @@ export function UrlPreviewCard({ status, preview }: Props) {
                     <img
                         src={preview.image}
                         alt=""
-                        className="w-16 h-16 rounded object-cover shrink-0"
+                        className="w-auto h-16 rounded object-cover shrink-0"
                         onError={() => setOgImageErrorSrc(preview.image)}
                     />
                 ) : preview.favicon && !faviconFailed ? (
                     <img
                         src={preview.favicon}
                         alt=""
-                        className="w-8 h-8 rounded shrink-0"
+                        className="w-8 h-8 rounded shrink-0 object-contain"
                         onError={() => setFaviconErrorSrc(preview.favicon)}
                     />
                 ) : (
