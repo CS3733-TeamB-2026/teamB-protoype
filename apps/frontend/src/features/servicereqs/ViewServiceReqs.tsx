@@ -133,8 +133,6 @@ function ViewServiceReqs() {
                         <Table className="text-left">
                             <TableHeader>
                                 <TableRow className="hover:bg-transparent">
-                                    <TableHead className="uppercase tracking-wider text-muted-foreground select-none">Avatar</TableHead>
-                                    {/*Update me*/}
                                     <SortableHead column="id" label="ID" sort={sort} onSort={toggleSort} />
                                     <SortableHead column="type" label="Type" sort={sort} onSort={toggleSort} />
                                     <SortableHead column="created" label="Created" sort={sort} onSort={toggleSort} className="w-full" />

@@ -59,9 +59,7 @@ export const updateServiceReq = async (req: req, res: res) => {
 export const deleteServiceReq = async (req: req, res: res) => {
     const payload = req.body;
     try {
-        const result = await q.ServiceReqs.deleteServiceReq(
-            payload.id,
-        )
+        const result = await q.ServiceReqs.deleteServiceReq(payload.id)
         return res.status(204).json(result);
     } catch (error) {
         console.error(error);
