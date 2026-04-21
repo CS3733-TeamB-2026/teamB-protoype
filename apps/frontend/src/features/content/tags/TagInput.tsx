@@ -12,6 +12,7 @@ interface Props {
     creatable?: boolean;
 }
 
+/** Normalizes a raw string to Title Case, collapsing internal whitespace. */
 function toTitleCase(str: string): string {
     return str
         .trim()
@@ -21,6 +22,20 @@ function toTitleCase(str: string): string {
         .join(" ");
 }
 
+/**
+ * Chip-style tag input that combines selection from existing tags and free-form creation.
+ *
+ * Fetches the full tag list from `GET /api/content/tags` on mount and uses it to
+ * populate suggestions. When `creatable` is false (filter contexts), the "Create" option
+ * is suppressed so users can only pick from existing tags.
+ *
+ * Input is restricted to letters and spaces; title-casing is applied at the moment a tag
+ * is committed (Enter, comma, or clicking a suggestion) — not while typing.
+ *
+ * Uses `PopoverAnchor` instead of `PopoverTrigger` so the dropdown is positioned relative
+ * to the chip container without inheriting toggle-on-click behaviour. `onFocusOutside` is
+ * suppressed to keep the native input focused while the suggestion list is open.
+ */
 export function TagInput({ value, onChange, creatable = true }: Props) {
     const [input, setInput] = useState("");
     const [availableTags, setAvailableTags] = useState<string[]>([]);
@@ -62,10 +77,11 @@ export function TagInput({ value, onChange, creatable = true }: Props) {
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter" || e.key === ",") {
-            e.preventDefault();
+            e.preventDefault(); // prevent form submission and comma insertion
             if (input.trim()) addTag(input);
         }
         if (e.key === "Backspace" && !input && value.length > 0) {
+            // Remove the last chip when the input is already empty, matching standard tag-input UX
             removeTag(value[value.length - 1]);
         }
         if (e.key === "Escape") {
@@ -131,7 +147,8 @@ export function TagInput({ value, onChange, creatable = true }: Props) {
                                 type="button"
                                 variant="ghost"
                                 className="w-full justify-start rounded-none border-b border-border font-medium h-9 px-3 text-sm"
-                                onMouseDown={(e) => { e.preventDefault(); addTag(input); }}
+                                // preventDefault keeps focus in the input so typing can continue after selection
+                    onMouseDown={(e) => { e.preventDefault(); addTag(input); }}
                             >
                                 <Plus className="w-3.5 h-3.5 shrink-0" />
                                 Create &ldquo;{titleCasedInput}&rdquo;
