@@ -190,6 +190,12 @@ export const updateContent = async (req: req, res: res) => {
             await q.Bucket.deleteFile(newFileURI).catch(console.error);
         }
         console.error(error);
+        // The DB-layer updateContent throws "You do not have this content checked out."
+        // when the caller's employeeID doesn't match the row's checkedOutById.
+        // This happens after a force check-in, a lock expiry, or a check-in from another tab.
+        if (error instanceof Error && error.message === "You do not have this content checked out.") {
+            return res.status(409).json({ lockReleased: true, message: "This item has been forcibly checked in." });
+        }
         return res.status(500).end();
     }
 };
@@ -198,8 +204,12 @@ export const deleteContent = async (req: req, res: res) => {
     try {
         const id = parseInt(req.params.id);
         const content = await q.Content.queryContentById(id);
+        const employeeID = req.query.employeeID ? parseInt(req.query.employeeID as string) : null;
         if (!content) {
             return res.status(404).json({ message: "File not found" });
+        }
+        if (content.checkedOutById === null || content.checkedOutById !== employeeID) {
+            return res.status(409).json({ lockReleased: true, message: "This item has been forcibly checked in." });
         }
         if (content.fileURI) {
             await q.Bucket.deleteFile(content.fileURI)
