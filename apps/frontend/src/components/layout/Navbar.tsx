@@ -17,6 +17,7 @@ import { useUser } from "@/hooks/use-user.ts"
 import {useLocale} from "@/languageSupport/localeContext.tsx";
 import {useTranslation} from "@/languageSupport/useTranslation.ts";
 import DisclaimerAlert from "@/components/layout/DisclaimerAlert"
+import DarkmodeButton from "@/components/layout/DarkmodeButton"
 import {useState} from "react";
 
 const LOCALES = [
@@ -55,6 +56,8 @@ function Navbar() {
                     <Link to="/">
                         <img src={logo} alt="logo" className="shrink-0 h-10 w-auto brightness-0 invert ml-3 mr-2" />
                     </Link>
+
+                    <DarkmodeButton/>
 
                     <DisclaimerAlert />
                 </div>
