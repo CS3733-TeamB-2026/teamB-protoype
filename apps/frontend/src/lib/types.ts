@@ -23,6 +23,7 @@ export interface ContentItem {
     targetPersona: "underwriter" | "businessAnalyst" | "admin";
     status: "new" | "inProgress" | "complete" | null;
     docType: DocType;
+    tags: string[];
 }
 
 // Y'all I couldn't find a way to do it as a part of ContentItem, sorry. -Ricardo

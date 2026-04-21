@@ -19,6 +19,7 @@ import {
     Lock,
     RefreshCcw,
     KeyRound,
+    Ban,
 } from "lucide-react";
 import {Button} from "@/components/ui/button.tsx";
 import {
@@ -76,6 +77,7 @@ import type {UrlPreview} from "@/lib/types.ts";
 import {usePageTitle} from "@/hooks/use-page-title.ts";
 import {ConfirmCheckoutDialog} from "@/features/content/forms/ConfirmCheckoutDialog.tsx";
 import {ConfirmCheckinDialog} from "@/features/content/forms/ConfirmCheckinDialog.tsx";
+import {TagInput} from "@/features/content/tags/TagInput.tsx";
 import {Tabs, TabsTrigger} from "@/components/ui/tabs"
 import { SlidingTabs } from "@/components/shared/SlidingTabs.tsx";
 import { useContentFilters, type ContentTab } from "@/hooks/use-content-filters.ts";
@@ -139,7 +141,7 @@ function ViewContent() {
         clearAdvancedFilters,
         activeFilterCount,
         filteredContent,
-    } = useContentFilters(content, bookmarks, user?.id);
+    } = useContentFilters(content, bookmarks, user?.id, user?.persona);
 
     const [refreshing, setRefreshing] = useState(false);
 
@@ -472,11 +474,26 @@ function ViewContent() {
                             indicatorColor={activeTab === "bookmarks" ? "bg-accent" : "bg-foreground"}
                         >
                             <TabsTrigger
+                                value="forYou"
+                                className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0"
+                            >
+                                For You
+                                <span className="ml-2 text-xs opacity-70"> {content.filter(c => c.targetPersona === user.persona
+                                ).length}</span>
+                            </TabsTrigger>
+                            <TabsTrigger
                                 value="all"
                                 className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0"
                             >
                                 All Content
                                 <span className="ml-2 text-xs opacity-70">{content.length}</span>
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="owned"
+                                className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0"
+                            >
+                                Owned By Me
+                                <span className="ml-2 text-xs opacity-70">{content.filter(c => c.ownerId === user.id).length}</span>
                             </TabsTrigger>
                             <TabsTrigger
                                 value="bookmarks"
@@ -624,16 +641,16 @@ function ViewContent() {
                                         <div>
                                             <p className="font-medium mb-2">Persona</p>
                                             <div className="flex flex-col gap-1.5">
-                                                {["underwriter", "businessAnalyst", "admin"].map((persona) => (
+                                                {["underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps", "admin"].map((persona) => (
                                                     <label key={persona} className="flex items-center gap-2">
                                                         <input
                                                             type="checkbox"
-                                                            checked={advancedFilters.persona.includes(persona as "underwriter" | "businessAnalyst" | "admin")}
+                                                            checked={advancedFilters.persona.includes(persona as "underwriter" | "businessAnalyst" | "actuarialAnalyst" | "EXLOperator" | "businessOps" | "admin")}
                                                             onChange={(e) => {
                                                                 setAdvancedFilters((prev) => ({
                                                                     ...prev,
                                                                     persona: e.target.checked
-                                                                        ? [...prev.persona, persona as "underwriter" | "businessAnalyst" | "admin"]
+                                                                        ? [...prev.persona, persona as "underwriter" | "businessAnalyst" | "actuarialAnalyst" | "EXLOperator" | "businessOps" | "admin"]
                                                                         : prev.persona.filter((p) => p !== persona),
                                                                 }));
                                                             }}
@@ -669,6 +686,12 @@ function ViewContent() {
                                                     )
                                                 })}
                                             </div>
+                                            <p className="font-medium mb-2">Tags</p>
+                                            <TagInput
+                                                value={advancedFilters.tags}
+                                                onChange={(tags) => setAdvancedFilters((prev) => ({ ...prev, tags }))}
+                                                creatable={false}
+                                            />
                                         </div>
 
                                         <div>
@@ -963,7 +986,15 @@ function ViewContent() {
                                                                         );
                                                                     }
 
-                                                                    return null;
+                                                                    return (
+                                                                        <button
+                                                                            className="w-8 h-8 flex items-center justify-center rounded-md opacity-50 cursor-not-allowed text-muted-foreground"
+                                                                            title="You don't have permission to checkout this item"
+                                                                            disabled
+                                                                        >
+                                                                            <Ban className="w-4 h-4" />
+                                                                        </button>
+                                                                    );
                                                                 })()}
                                                             </div>
                                                         </TableCell>
@@ -1002,6 +1033,12 @@ function ViewContent() {
                                                                     <span className="font-medium text-foreground">Days left:{" "}</span>
                                                                             {Math.ceil((new Date(item.expiration).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)).toLocaleString()}
                                                                 </span>
+                                                                    )}
+                                                                    {item.tags.length > 0 && (
+                                                                        <span>
+                                                                            <span className="font-medium text-foreground">Tags:{" "}</span>
+                                                                            {item.tags.join(", ")}
+                                                                        </span>
                                                                     )}
                                                                 </div>
                                                             </TableCell>
@@ -1053,15 +1090,7 @@ function ViewContent() {
                             </div>
 
                         </div>
-                        {bookmarks.length > 0 && (
-                            <div
-                                className="mt-4 px-3 py-2 rounded-md bg-primary/5 border border-primary/20 text-xs text-muted-foreground">
-                            <span className="font-medium text-primary">
-                                {bookmarks.length}
-                            </span>{" "}
-                                item{bookmarks.length !== 1 ? "s" : ""} favorited
-                            </div>
-                        )}
+
                     </>}
                 </CardContent>
             </Card>

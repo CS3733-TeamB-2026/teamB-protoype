@@ -175,6 +175,9 @@ function AddEmployee() {
                                         <DropdownMenuRadioGroup value={targetPersona} onValueChange={setTargetPersona}>
                                             <DropdownMenuRadioItem value="underwriter">Underwriter</DropdownMenuRadioItem>
                                             <DropdownMenuRadioItem value="businessAnalyst">Business analyst</DropdownMenuRadioItem>
+                                            <DropdownMenuRadioItem value="actuarialAnalyst">Actuarial analyst</DropdownMenuRadioItem>
+                                            <DropdownMenuRadioItem value="EXLOperator">EXL operations</DropdownMenuRadioItem>
+                                            <DropdownMenuRadioItem value="businessOperator">Business operator</DropdownMenuRadioItem>
                                             <DropdownMenuRadioItem value={"admin"}>Admin</DropdownMenuRadioItem>
                                         </DropdownMenuRadioGroup>
                                     </DropdownMenuGroup>
