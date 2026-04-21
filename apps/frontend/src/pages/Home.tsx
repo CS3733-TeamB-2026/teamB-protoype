@@ -66,7 +66,7 @@ function Home() {
                     </div>
 
                     <div className="flex flex-col items-center gap-0.5 px-4">
-                        <span className="text-3xl font-bold">3</span>
+                        <span className="text-3xl font-bold">6</span>
                         <span className="text-xs text-primary-foreground/70 uppercase tracking-widest">
                 Personas
             </span>
