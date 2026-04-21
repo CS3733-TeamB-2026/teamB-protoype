@@ -728,39 +728,6 @@ function ViewContent() {
                                             />
                                         </div>
 
-                                        <div>
-                                            <p className="font-medium mb-2">Other</p>
-                                            <div className="flex flex-col gap-1.5">
-                                                {activeTab !== "bookmarks" && (
-                                                <label className="flex items-center gap-2">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={advancedFilters.bookmarkedOnly}
-                                                        onChange={(e) =>
-                                                            setAdvancedFilters((prev) => ({
-                                                                ...prev,
-                                                                bookmarkedOnly: e.target.checked,
-                                                            }))
-                                                        }
-                                                    />
-                                                    <span>Bookmarked</span>
-                                                </label>
-                                                )}
-                                                <label className="flex items-center gap-2">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={advancedFilters.ownedByMe}
-                                                        onChange={(e) =>
-                                                            setAdvancedFilters((prev) => ({
-                                                                ...prev,
-                                                                ownedByMe: e.target.checked,
-                                                            }))
-                                                        }
-                                                    />
-                                                    <span>Owned By Me</span>
-                                                </label>
-                                            </div>
-                                        </div>
                                     </div>
 
                                     <div className="mt-4">

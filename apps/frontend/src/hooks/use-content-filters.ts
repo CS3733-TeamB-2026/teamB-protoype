@@ -31,16 +31,13 @@ export function useContentFilters(
     );
     /**
      * Checkbox state for the filter sidebar. An empty array for a multi-select
-     * field means "no filter applied" (all values pass). The two boolean flags
-     * are additional single-checkbox filters.
+     * field means "no filter applied" (all values pass).
      */
     const [advancedFilters, setAdvancedFilters] = useState({
         status: [] as ContentStatus[],
         contentType: [] as ContentType[],
         persona: [] as Persona[],
         tags: [] as string[],
-        bookmarkedOnly: false,
-        ownedByMe: false,
         docType: [] as DocType[]
     });
 
@@ -52,8 +49,6 @@ export function useContentFilters(
         contentType: [],
         persona: [],
         tags: [],
-        bookmarkedOnly: false,
-        ownedByMe: false,
         docType: [],
     });
 
@@ -79,13 +74,9 @@ export function useContentFilters(
                 item.tags.some((t) => t.toLowerCase() === ft.toLowerCase())
             );
 
-// On the bookmarks tab, always require bookmarked.
-// Otherwise, respect the bookmarkedOnly checkbox.
-        const requireBookmark = activeTab === "bookmarks" || advancedFilters.bookmarkedOnly;
         const matchesBookmark =
-            !requireBookmark || bookmarks.some((b) => b.bookmarkedContentId === item.id);
-        {/*ADD A MATCHES ____ FOR MORE TABS!!!!*/
-        }
+            activeTab !== "bookmarks" || bookmarks.some((b) => b.bookmarkedContentId === item.id);
+
         const ext = item.fileURI
             ? getExtension(getOriginalFilename(item.fileURI))
             : null
@@ -98,9 +89,8 @@ export function useContentFilters(
             advancedFilters.docType.length === 0 ||
             (docType !== null && advancedFilters.docType.includes(docType))
 
-        const requireOwned = activeTab === "owned" || advancedFilters.ownedByMe;
         const matchesOwner =
-            !requireOwned || item.ownerId === currentUserId;
+            activeTab !== "owned" || item.ownerId === currentUserId;
         const matchesForYou =
             activeTab !== "forYou" || item.targetPersona === currentUserPersona;
 
@@ -125,9 +115,7 @@ export function useContentFilters(
         advancedFilters.contentType.length +
         advancedFilters.persona.length +
         advancedFilters.docType.length +
-        advancedFilters.tags.length +
-        (advancedFilters.bookmarkedOnly ? 1 : 0) +
-        (advancedFilters.ownedByMe ? 1 : 0);
+        advancedFilters.tags.length;
 
     return {
         activeTab,
