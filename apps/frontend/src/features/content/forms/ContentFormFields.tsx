@@ -147,13 +147,14 @@ export function ContentFormFields({ values, patch, errors, showLastModified = fa
                     />
                 </Field>
 
+                <div className="mx-1"/>
             {/* Target Persona */}
             <Field className="bg-background">
-                <FieldLabel className="text-primary">
+                <FieldLabel className="text-primary text-lg mb-1">
                     Target Persona <span className="text-destructive">*</span>
                 </FieldLabel>
                 <Select value={values.jobPosition} onValueChange={(v) => patch({ jobPosition: v })}>
-                    <SelectTrigger className="bg-background">
+                    <SelectTrigger className="bg-background h-12! text-sm!">
                         <SelectValue placeholder="Select job position" />
                     </SelectTrigger>
                     <SelectContent>
@@ -262,7 +263,7 @@ export function ContentFormFields({ values, patch, errors, showLastModified = fa
                     </Select>
                 </Field>
 
-                <Separator className="bg-primary mx-2" orientation="vertical" />
+                <div className="mx-1"/>
 
                 {/* Document Status */}
                 <Field className="bg-background">
