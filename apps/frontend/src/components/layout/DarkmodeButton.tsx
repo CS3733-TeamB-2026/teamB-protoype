@@ -13,7 +13,7 @@ function DarkmodeButton() {
     const IconComponent = isDark ? Moon : Sun;
 
     return (
-        <div className="relative flex items-center">
+        <div className="relative flex items-center mr-8">
             <div className={`absolute flex items-center`}
                  onClick={handleClick}
             >
