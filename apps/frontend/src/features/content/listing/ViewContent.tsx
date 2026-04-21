@@ -20,7 +20,7 @@ import {
     Lock,
     RefreshCcw,
     KeyRound,
-    Ban,
+    Ban, ChevronsLeft, ChevronsRight, ChevronLeft,
 } from "lucide-react";
 import {Button} from "@/components/ui/button.tsx";
 import {
@@ -73,7 +73,7 @@ import {useAuth0} from "@auth0/auth0-react"
 import {highlight} from "@/lib/highlight.tsx";
 import {formatLabel, formatName} from "@/lib/utils.ts";
 import {toast} from "sonner";
-import type {ContentItem, BookmarkRecord} from "@/lib/types.ts";
+import type { ContentItem, BookmarkRecord, DocType } from "@/lib/types.ts";
 import type {UrlPreview} from "@/lib/types.ts";
 import {usePageTitle} from "@/hooks/use-page-title.ts";
 import {ConfirmCheckoutDialog} from "@/features/content/forms/ConfirmCheckoutDialog.tsx";
@@ -146,7 +146,13 @@ function ViewContent() {
     } = useContentFilters(content, bookmarks, user?.id, user?.persona);
 
     const [refreshing, setRefreshing] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(25);
+    //default amount of content shown is 25
 
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [activeTab, searchTerm, advancedFilters, sort]);
 
     const {getAccessTokenSilently} = useAuth0();
 
@@ -423,6 +429,17 @@ function ViewContent() {
         setEditOpen(true);
     };
 
+    const docTypeLabels: Record<DocType, string> = {
+        office: "Office (PDF, Word..)",
+        audio: "Audio",
+        video: "Video",
+        images: "Images",
+        html: "HTML",
+        zip: "ZIP",
+        "plain text": "Plain Text",
+        links: "Links"
+    }
+
     // Total column count used for colSpan on the expanded detail rows.
     const NUM_COLS = 8;
 
@@ -432,6 +449,25 @@ function ViewContent() {
         <div className="flex items-center justify-center min-h-screen bg-secondary">
             <Loader2 className="w-10 h-10 text-primary animate-spin"/>
         </div>
+    );
+
+    const sortedContent = applySortState(filteredContent, sort, (item, col) => {
+        let primarySort;
+        if (col === "persona") primarySort = item.targetPersona;
+        else if (col === "name") primarySort = item.displayName;
+        else if (col === "owner") primarySort = formatName(item.owner);
+        else if (col === "status") primarySort = item.status ?? "";
+        else if (col === "contentType") primarySort = item.contentType;
+        else if (col === "docType") primarySort = item.fileURI
+            ? (getExtension(getOriginalFilename(item.fileURI!)) ?? getCategory(null, getOriginalFilename(item.fileURI!)))
+            : (item.linkURL ? "link" : "");
+        return `${primarySort}|||${item.targetPersona}`;
+    });
+
+    const totalPages = Math.max(1, Math.ceil(sortedContent.length / pageSize));
+    const paginatedContent = sortedContent.slice(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize
     );
 
     return (
@@ -661,6 +697,30 @@ function ViewContent() {
                                         </div>
 
                                         <div>
+                                            <p className="font-medium mb-2">File Type</p>
+                                            <div className="flex flex-col gap-1.5">
+                                                {Object.entries(docTypeLabels).map(([key, label]) => {
+                                                    const dt = key as DocType
+
+                                                    return (
+                                                        <label key={dt} className="flex items-center gap-2">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={advancedFilters.docType.includes(dt)}
+                                                                onChange={(e) => {
+                                                                    setAdvancedFilters((prev) => ({
+                                                                        ...prev,
+                                                                        docType: e.target.checked
+                                                                            ? [...prev.docType, dt]
+                                                                            : prev.docType.filter((t) => t !== dt),
+                                                                    }))
+                                                                }}
+                                                            />
+                                                            <span>{label}</span>
+                                                        </label>
+                                                    )
+                                                })}
+                                            </div>
                                             <p className="font-medium mb-2">Tags</p>
                                             <TagInput
                                                 value={advancedFilters.tags}
@@ -740,109 +800,76 @@ function ViewContent() {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                                    {/* Sort the filtered list, then render one React.Fragment
-                                            per item (main row + up to two conditional expansion rows).
-                                            The sort key extractor for "docType" derives the file
-                                            extension when available, falling back to category, so that
-                                            e.g. all PDFs sort together. */}
-                                                    {applySortState(filteredContent, sort, (item, col) => {
-                                                        let primarySort //Backup sort is by Persona so items are naturally clustered by persona
-                                                        if (col === "persona") primarySort = item.targetPersona;
-                                                        else if (col === "name") primarySort = item.displayName;
-                                                        else if (col === "owner") primarySort = formatName(item.owner);
-                                                        else if (col === "status") primarySort = item.status ?? "";
-                                                        else if (col === "contentType") primarySort = item.contentType;
-                                                        else if (col === "docType") primarySort = item.fileURI ? (getExtension(getOriginalFilename(item.fileURI!)) ?? getCategory(null, getOriginalFilename(item.fileURI!))) : (item.linkURL ? "link" : "");
+                                        {/* pre sorts the content */}
+                                        {paginatedContent.map((item) => {
+                                            const isFile = !!item.fileURI;
+                                            const isLink = !!item.linkURL;
+                                            const originalFilename = isFile
+                                                ? getOriginalFilename(item.fileURI!)
+                                                : null;
+                                            const category = getCategory(null, originalFilename);
+                                            const ext = originalFilename
+                                                ? getExtension(originalFilename)
+                                                : null;
+                                            const isExpanded = expandedId === item.id;
+                                            const isBookmarked = bookmarks.some((b) => b.bookmarkedContentId === item.id);
 
-                                                        return `${primarySort}|||${item.targetPersona}` //Sorts first by the column, then by Persona
-                                                    }).map((item, index) => {
-                                                        // Derive display values once per row to avoid repeating
-                                                        // the same lookups in multiple cells below.
-                                                        const isFile = !!item.fileURI;
-                                                        const isLink = !!item.linkURL;
-                                                        const originalFilename = isFile
-                                                            ? getOriginalFilename(item.fileURI!)
-                                                            : null;
-                                                        const category = getCategory(null, originalFilename);
-                                                        const ext = originalFilename
-                                                            ? getExtension(originalFilename)
-                                                            : null;
-                                                        const isExpanded = expandedId === item.id;
-                                                        const isBookmarked = bookmarks.some((b) => b.bookmarkedContentId === item.id);
-
-                                                        return (
-                                                            <React.Fragment key={item.id}>
-                                                                <TableRow
-                                                                    className={`cursor-pointer ${item.checkedOutById === user!.id ? "bg-accent/10 border-l-4 border-l-accent" : index % 2 === 0 ? "bg-muted/10" : ""} ${isExpanded ? "bg-muted/80 hover:bg-muted/90" : ""} ${isCheckedOut(item) ? "opacity-50" : ""}`}
-                                                                    onClick={() => toggleExpand(item.id)}
-                                                                    tabIndex={0}
-                                                                    onKeyDown={(e) => {
-                                                                        if (e.key === "Enter" || e.key === " ") {
-                                                                            e.preventDefault();
-                                                                            toggleExpand(item.id);
-                                                                        }
-                                                                    }}
+                                            return (
+                                                <React.Fragment key={item.id}>
+                                                    <TableRow
+                                                        className={`cursor-pointer ${item.checkedOutById === user!.id ? "bg-accent/10 border-l-4 border-l-accent" : ""} ${isExpanded ? "bg-muted/80 hover:bg-muted/90" : ""} ${isCheckedOut(item) ? "opacity-50" : ""}`}
+                                                        onClick={() => toggleExpand(item.id)}
+                                                        tabIndex={0}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Enter" || e.key === " ") {
+                                                                e.preventDefault();
+                                                                toggleExpand(item.id);
+                                                            }
+                                                        }}
                                                     >
-                                                        {/* Icon cell: use the site's favicon when
-                                                            the link preview has loaded one, otherwise
-                                                            fall back to the generic ContentIcon */}
                                                         <TableCell className="w-8 pr-0">
-                                                            {isLink &&
-                                                            linkPreviews[item.id]
-                                                                ?.favicon ? (
-                                                                <img
-                                                                    src={
-                                                                        linkPreviews[
-                                                                            item.id
-                                                                            ]!.favicon!
-                                                                    }
+                                                            {isLink && linkPreviews[item.id]?.favicon ? (<img
+                                                                    src={linkPreviews[item.id]!.favicon!}
                                                                     alt=""
                                                                     className="w-5 h-5 shrink-0"
                                                                 />
-                                                            ) : (
-                                                                <ContentIcon
+                                                                ) : (<ContentIcon
                                                                     category={category}
                                                                     isLink={isLink}
                                                                     className="w-5 h-5"
                                                                 />
                                                             )}
                                                         </TableCell>
-
                                                         <TableCell className="w-full max-w-0">
                                                             <div className="flex items-center gap-2">
-                                                    <span className="truncate font-medium text-foreground">
-                                                        {highlight(item.displayName, searchTerm)}
-                                                    </span>
+                                                                <span className="truncate font-medium text-foreground">
+                                                                    {highlight(item.displayName, searchTerm)}
+                                                                </span>
                                                                 <span className="text-muted-foreground shrink-0">
-                                                        {isExpanded ? (
-                                                            <ChevronDown className="w-4 h-4"/>
-                                                        ) : (
-                                                            <ChevronRight className="w-4 h-4"/>
-                                                        )}
-                                                    </span>
+                                                                    {isExpanded ? (<ChevronDown className="w-4 h-4"/>
+                                                                    ) : (<ChevronRight className="w-4 h-4"/>
+                                                                    )}
+                                                                </span>
                                                             </div>
                                                         </TableCell>
-
+                                                        {/* This section just defines all the little label
+                                                        cells in the top of the previewer */}
+                                                        {/* owner */}
                                                         <TableCell className="hidden sm:table-cell text-foreground">
                                                             {formatName(item.owner)}
                                                         </TableCell>
-
+                                                        {/* status */}
                                                         <TableCell className="hidden sm:table-cell text-center">
-                                                            <ContentStatusBadge
-                                                                status={item.status}
-                                                            />
+                                                            <ContentStatusBadge status={item.status}/>
                                                         </TableCell>
-
+                                                        {/* type */}
                                                         <TableCell className="hidden sm:table-cell text-center">
-                                                            <ContentTypeBadge
-                                                                contentType={item.contentType}
-                                                            />
+                                                            <ContentTypeBadge contentType={item.contentType}/>
                                                         </TableCell>
-
+                                                        {/* persona */}
                                                         <TableCell className="hidden sm:table-cell text-center">
                                                             <PersonaBadge persona={item.targetPersona}/>
                                                         </TableCell>
-
                                                         <TableCell className="hidden sm:table-cell text-center">
                                                             <ContentExtBadge
                                                                 category={category}
@@ -850,61 +877,50 @@ function ViewContent() {
                                                                 isLink={isLink}
                                                             />
                                                         </TableCell>
-
                                                         <TableCell>
                                                             <div className="flex justify-end gap-1">
-                                                                {/* Open button — an IIFE so we can use early-return
-                                                                    logic without a separate named function.
-                                                                    File → router link to ViewSingleFile.
-                                                                    Link → external anchor (new tab).
-                                                                    Neither → disabled button. */}
                                                                 {(() => {
-                                                                    const icon = <HugeiconsIcon icon={LinkSquare01Icon}
-                                                                                                className="w-4 h-4"/>;
+                                                                    const icon = <HugeiconsIcon icon={LinkSquare01Icon} className="w-4 h-4"/>;
                                                                     const btnClass = "w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground";
                                                                     if (item.fileURI) return (
-                                                                        <Link to={`/file/${item.id}`}
-                                                                              onClick={(e) => e.stopPropagation()}>
-                                                                            <button className={btnClass}
-                                                                                    title="View file">{icon}</button>
+                                                                        <Link to={`/file/${item.id}`} onClick={(e) => e.stopPropagation()}>
+                                                                            <button className={btnClass} title="View file">{icon}</button>
                                                                         </Link>
                                                                     );
                                                                     if (item.linkURL) return (
-                                                                        <a href={item.linkURL} target="_blank"
-                                                                           rel="noopener noreferrer"
+                                                                        <a href={item.linkURL} target="_blank" rel="noopener noreferrer"
                                                                            onClick={(e) => e.stopPropagation()}>
-                                                                            <button className={btnClass}
-                                                                                    title="Open link">{icon}</button>
+                                                                            <button className={btnClass} title="Open link">{icon}</button>
                                                                         </a>
                                                                     );
-                                                                    return <button
-                                                                        className="w-8 h-8 flex items-center justify-center rounded-md opacity-30 cursor-not-allowed text-muted-foreground"
-                                                                        title="No file or link"
-                                                                        disabled>{icon}</button>;
+                                                                    return (
+                                                                        <button
+                                                                            className="w-8 h-8 flex items-center justify-center rounded-md opacity-30 cursor-not-allowed text-muted-foreground"
+                                                                            title="No file or link"
+                                                                            disabled
+                                                                        >{icon}</button>
+                                                                    );
                                                                 })()}
                                                                 <button
                                                                     className={`w-8 h-8 flex items-center justify-center rounded-md transition-colors ${isBookmarked ? "text-accent hover:text-accent/70" : "text-muted-foreground hover:text-foreground"}`}
                                                                     onClick={(e) => toggleBookmark(item.id, e)}
                                                                     aria-label={isBookmarked ? "Remove bookmark" : "Bookmark"}
                                                                 >
-                                                                    <Star className="w-4 h-4" fill={isBookmarked ? "currentColor" : "none"} />
+                                                                    <Star className="w-4 h-4" fill={isBookmarked ? "currentColor" : "none"}/>
                                                                 </button>
                                                                 {(() => {
                                                                     if (item.checkedOutById === user!.id) {
                                                                         return (
                                                                             <DropdownMenu>
-                                                                                <DropdownMenuTrigger asChild
-                                                                                                     onClick={(e) => e.stopPropagation()}>
+                                                                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                                                                                     <button
                                                                                         className="w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground"
                                                                                         title="More actions"
                                                                                     >
-                                                                                        <EllipsisVertical
-                                                                                            className="w-4 h-4"/>
+                                                                                        <EllipsisVertical className="w-4 h-4"/>
                                                                                     </button>
                                                                                 </DropdownMenuTrigger>
-                                                                                <DropdownMenuContent align="end"
-                                                                                                     onClick={(e) => e.stopPropagation()}>
+                                                                                <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                                                                                     <DropdownMenuItem
                                                                                         title="Edit content"
                                                                                         onClick={(e) => handleStartEdit(item, e)}
@@ -967,65 +983,52 @@ function ViewContent() {
                                                                             title="You don't have permission to checkout this item"
                                                                             disabled
                                                                         >
-                                                                            <Ban className="w-4 h-4" />
+                                                                            <Ban className="w-4 h-4"/>
                                                                         </button>
                                                                     );
                                                                 })()}
                                                             </div>
                                                         </TableCell>
                                                     </TableRow>
-
-                                                    {/* Expanded: dates */}
+                                                    {/* expanded dates */}
                                                     {isExpanded && (
                                                         <TableRow className="hover:bg-transparent">
                                                             <TableCell
                                                                 colSpan={NUM_COLS}
-                                                                className="px-6 py-2 bg-muted/10 border-t border-border"
-                                                            >
-                                                                <div
-                                                                    className="flex gap-6 text-xs text-muted-foreground">
+                                                                className="px-6 py-2 bg-muted/10 border-t border-border">
+                                                                <div className="flex gap-6 text-xs text-muted-foreground">
                                                                     {item.checkedOutBy && (
                                                                         <span>
-                                                                    <span
-                                                                        className="font-medium text-foreground">Editing </span>
+                                                                            <span className="font-medium text-foreground">Editing </span>
                                                                             {item.checkedOutBy.firstName} {item.checkedOutBy.lastName}
-                                                                </span>
-                                                                    )}
-                                                                    <span>
-                                                                <span
-                                                                    className="font-medium text-foreground">Modified:{" "}</span>
-                                                                        {new Date(item.lastModified).toLocaleString()}
-                                                            </span>
-                                                                    {item.expiration && (
-                                                                        <span>
-                                                                    <span
-                                                                        className="font-medium text-foreground">Expires:{" "}</span>
-                                                                            {new Date(item.expiration).toLocaleString()}
-                                                                </span>
-                                                                    )}
-                                                                    {item.expiration && (
-                                                                        <span>
-                                                                    <span className="font-medium text-foreground">Days left:{" "}</span>
-                                                                            {Math.ceil((new Date(item.expiration).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)).toLocaleString()}
-                                                                </span>
-                                                                    )}
-                                                                    {item.tags.length > 0 && (
-                                                                        <span>
-                                                                            <span className="font-medium text-foreground">Tags:{" "}</span>
-                                                                            {item.tags.join(", ")}
                                                                         </span>
                                                                     )}
-                                                                </div>
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    )}
-
-                                                    {/* Expanded: link preview strip.
-                                                Maps the linkPreviews entry to the three
-                                                UrlPreviewLink statuses:
-                                                  key absent   → "loading"  (fetch still in flight)
-                                                  value null   → "unreachable" (fetch failed)
-                                                  value object → "ok" */}
+                                                                    <span>
+                                                                        <span className="font-medium text-foreground">Modified:{" "}</span>
+                                                                        {new Date(item.lastModified).toLocaleString()}
+                                                                    </span>
+                                                                    {item.expiration && (
+                                                                        <span>
+                                                                            <span className="font-medium text-foreground">Expires:{" "}</span>
+                                                                                {new Date(item.expiration).toLocaleString()}
+                                                                            </span>
+                                                                            )}
+                                                                            {item.expiration && (
+                                                                            <span>
+                                                                                <span className="font-medium text-foreground">Days left:{" "}</span>
+                                                                                    {Math.ceil((new Date(item.expiration).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)).toLocaleString()}
+                                                                                </span>
+                                                                                )}
+                                                                                {item.tags.length > 0 && (
+                                                                            <span>
+                                                                                <span className="font-medium text-foreground">Tags:{" "}</span>
+                                                                                    {item.tags.join(", ")}
+                                                                            </span>)}
+                                                                        </div>
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            )}
+                                                    {/* link preview */}
                                                     {isExpanded && isLink && (
                                                         <TableRow className="hover:bg-transparent">
                                                             <TableCell colSpan={NUM_COLS} className="p-0">
@@ -1043,12 +1046,10 @@ function ViewContent() {
                                                             </TableCell>
                                                         </TableRow>
                                                     )}
-
-                                                    {/* Expanded: file preview */}
+                                                    {/* file preview */}
                                                     {isExpanded && isFile && (
                                                         <TableRow className="hover:bg-transparent">
-                                                            <TableCell colSpan={NUM_COLS}
-                                                                       className="p-0 max-w-0 overflow-hidden">
+                                                            <TableCell colSpan={NUM_COLS} className="p-0 max-w-0 overflow-hidden">
                                                                 <FilePreview
                                                                     filename={originalFilename!}
                                                                     src={`/api/content/download/${item.id}`}
@@ -1062,6 +1063,67 @@ function ViewContent() {
                                         })}
                                     </TableBody>
                                 </Table>
+                                {sortedContent.length > 0 && (
+                                    <div className="flex items-center justify-between mt-4 px-1 text-sm text-muted-foreground">
+                                        <div className="flex items-center gap-2">
+                                            <span>Rows per page:</span>
+                                            <select
+                                                value={pageSize}
+                                                onChange={(e) => {
+                                                    setPageSize(Number(e.target.value));
+                                                    setCurrentPage(1);
+                                                }}
+                                                className="border border-border rounded px-2 py-1 bg-background text-foreground text-sm">
+                                                {[10, 25, 50, 100].map((size) => (
+                                                    <option key={size} value={size}>{size}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div className="flex items-center gap-3">
+                                            <span>
+                                                {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filteredContent.length)} of {filteredContent.length}
+                                            </span>
+                                            <div className="flex items-center gap-1">
+                                                <button
+                                                    onClick={() => setCurrentPage(1)}
+                                                    disabled={currentPage === 1}
+                                                    className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
+                                                    title="First page"
+                                                >
+                                                    <ChevronsLeft className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                                                    disabled={currentPage === 1}
+                                                    className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
+                                                    title="Previous page"
+                                                >
+                                                    <ChevronLeft className="w-4 h-4" />
+                                                </button>
+                                                <span className="px-2">
+                    Page {currentPage} of {totalPages}
+                </span>
+                                                <button
+                                                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                                                    disabled={currentPage === totalPages}
+                                                    className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
+                                                    title="Next page"
+                                                >
+                                                    <ChevronRight className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => setCurrentPage(totalPages)}
+                                                    disabled={currentPage === totalPages}
+                                                    className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
+                                                    title="Last page"
+                                                >
+                                                    <ChevronsRight className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                         </div>

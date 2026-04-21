@@ -1,5 +1,7 @@
-import {useState,} from "react";
-import type {ContentItem, BookmarkRecord} from "@/lib/types.ts";
+import {useState} from "react";
+import type { ContentItem, BookmarkRecord, DocType } from "@/lib/types.ts";
+import {getExtension, getOriginalFilename } from "@/lib/mime.ts";
+import { mapExtensionToDocType } from "@/lib/docTypeMap.ts";
 {/*CHANGE THIS TO ADD MORE TABS!!*/}
 export type ContentTab = "forYou" | "all" | "owned" | "bookmarks";
 
@@ -39,6 +41,7 @@ export function useContentFilters(
         tags: [] as string[],
         bookmarkedOnly: false,
         ownedByMe: false,
+        docType: [] as DocType[]
     });
 
     /**
@@ -51,6 +54,7 @@ export function useContentFilters(
         tags: [],
         bookmarkedOnly: false,
         ownedByMe: false,
+        docType: [],
     });
 
     // Second pass: apply the sidebar checkboxes on top of the search results.
@@ -80,7 +84,20 @@ export function useContentFilters(
         const requireBookmark = activeTab === "bookmarks" || advancedFilters.bookmarkedOnly;
         const matchesBookmark =
             !requireBookmark || bookmarks.some((b) => b.bookmarkedContentId === item.id);
-        {/*ADD A MATCHES ____ FOR MORE TABS!!!!*/}
+        {/*ADD A MATCHES ____ FOR MORE TABS!!!!*/
+        }
+        const ext = item.fileURI
+            ? getExtension(getOriginalFilename(item.fileURI))
+            : null
+        const docType: DocType | null = ext
+            ? mapExtensionToDocType(ext)
+            : item.linkURL
+                ? "links"
+                : null
+        const matchesDocType =
+            advancedFilters.docType.length === 0 ||
+            (docType !== null && advancedFilters.docType.includes(docType))
+
         const requireOwned = activeTab === "owned" || advancedFilters.ownedByMe;
         const matchesOwner =
             !requireOwned || item.ownerId === currentUserId;
@@ -88,15 +105,15 @@ export function useContentFilters(
             activeTab !== "forYou" || item.targetPersona === currentUserPersona;
 
 
-
-
-        {/*ADD A MATCHES ____  RETURN FOR MORE TABS!!!!*/}
+        {/*ADD A MATCHES ____  RETURN FOR MORE TABS!!!!*/
+        }
         return (
             matchesStatus &&
             matchesContentType &&
             matchesPersona &&
             matchesTags &&
             matchesBookmark &&
+            matchesDocType &&
             matchesOwner &&
             matchesForYou
         );
@@ -107,6 +124,7 @@ export function useContentFilters(
         advancedFilters.status.length +
         advancedFilters.contentType.length +
         advancedFilters.persona.length +
+        advancedFilters.docType.length +
         advancedFilters.tags.length +
         (advancedFilters.bookmarkedOnly ? 1 : 0) +
         (advancedFilters.ownedByMe ? 1 : 0);
