@@ -77,6 +77,7 @@ import type {UrlPreview} from "@/lib/types.ts";
 import {usePageTitle} from "@/hooks/use-page-title.ts";
 import {ConfirmCheckoutDialog} from "@/features/content/forms/ConfirmCheckoutDialog.tsx";
 import {ConfirmCheckinDialog} from "@/features/content/forms/ConfirmCheckinDialog.tsx";
+import {TagInput} from "@/features/content/tags/TagInput.tsx";
 import {Tabs, TabsTrigger} from "@/components/ui/tabs"
 import { SlidingTabs } from "@/components/shared/SlidingTabs.tsx";
 import { useContentFilters, type ContentTab } from "@/hooks/use-content-filters.ts";
@@ -647,6 +648,15 @@ function ViewContent() {
                                                     </label>
                                                 ))}
                                             </div>
+                                        </div>
+
+                                        <div>
+                                            <p className="font-medium mb-2">Tags</p>
+                                            <TagInput
+                                                value={advancedFilters.tags}
+                                                onChange={(tags) => setAdvancedFilters((prev) => ({ ...prev, tags }))}
+                                                creatable={false}
+                                            />
                                         </div>
 
                                         <div>

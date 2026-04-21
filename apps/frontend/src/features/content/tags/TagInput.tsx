@@ -8,6 +8,8 @@ import { X, Plus } from "lucide-react";
 interface Props {
     value: string[];
     onChange: (tags: string[]) => void;
+    /** When false, the "Create" option is hidden — use for filter contexts. Default true. */
+    creatable?: boolean;
 }
 
 function toTitleCase(str: string): string {
@@ -19,7 +21,7 @@ function toTitleCase(str: string): string {
         .join(" ");
 }
 
-export function TagInput({ value, onChange }: Props) {
+export function TagInput({ value, onChange, creatable = true }: Props) {
     const [input, setInput] = useState("");
     const [availableTags, setAvailableTags] = useState<string[]>([]);
     const [open, setOpen] = useState(false);
@@ -43,7 +45,7 @@ export function TagInput({ value, onChange }: Props) {
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const cleaned = e.target.value.replace(/[^a-zA-Z ]/g, "");
         setInput(cleaned);
-        setOpen(cleaned.trim().length > 0);
+        setOpen(true);
     };
 
     const addTag = (raw: string) => {
@@ -79,6 +81,7 @@ export function TagInput({ value, onChange }: Props) {
 
     const titleCasedInput = input.trim() ? toTitleCase(input) : "";
     const showCreate =
+        creatable &&
         !!titleCasedInput &&
         !value.some((t) => t.toLowerCase() === titleCasedInput.toLowerCase()) &&
         !availableTags.some((t) => t.toLowerCase() === titleCasedInput.toLowerCase());
@@ -108,7 +111,7 @@ export function TagInput({ value, onChange }: Props) {
                         value={input}
                         onChange={handleInputChange}
                         onKeyDown={handleKeyDown}
-                        onFocus={() => { if (input.trim()) setOpen(true); }}
+                        onFocus={() => setOpen(true)}
                         placeholder={value.length === 0 ? "Add a tag..." : ""}
                         className="flex-1 min-w-24 bg-transparent outline-none placeholder:text-muted-foreground text-sm"
                     />
@@ -118,7 +121,7 @@ export function TagInput({ value, onChange }: Props) {
             {(showCreate || suggestions.length > 0) && (
                 <PopoverContent
                     align="start"
-                    className="p-0 gap-0 w-(--radix-popover-anchor-width)"
+                    className="p-0 gap-0 w-(--radix-popover-anchor-width) overflow-hidden"
                     onOpenAutoFocus={(e) => e.preventDefault()}
                     onFocusOutside={(e) => e.preventDefault()}
                 >
@@ -127,19 +130,19 @@ export function TagInput({ value, onChange }: Props) {
                             <Button
                                 type="button"
                                 variant="ghost"
-                                className="w-full justify-start rounded-none rounded-t-lg border-b border-border font-medium h-9 px-3 text-sm"
+                                className="w-full justify-start rounded-none border-b border-border font-medium h-9 px-3 text-sm"
                                 onMouseDown={(e) => { e.preventDefault(); addTag(input); }}
                             >
                                 <Plus className="w-3.5 h-3.5 shrink-0" />
                                 Create &ldquo;{titleCasedInput}&rdquo;
                             </Button>
                         )}
-                        {suggestions.map((tag, i) => (
+                        {suggestions.map((tag) => (
                             <Button
                                 key={tag}
                                 type="button"
                                 variant="ghost"
-                                className={`w-full justify-start rounded-none h-9 px-3 text-sm font-normal ${i === suggestions.length - 1 ? "rounded-b-lg" : ""}`}
+                                className="w-full justify-start rounded-none h-9 px-3 text-sm font-normal"
                                 onMouseDown={(e) => { e.preventDefault(); addTag(tag); }}
                             >
                                 {tag}
