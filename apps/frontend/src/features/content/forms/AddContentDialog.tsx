@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { useUser } from "@/hooks/use-user.ts";
 import {
@@ -44,6 +45,7 @@ export function AddContentDialog({ open, onOpenChange, onSave }: Props) {
     const { values, patch, setSubmitted, errors, hasErrors, formKey, reset } =
         useContentForm(initialValues(user?.id ?? 0, user?.persona ?? ""));
 
+    const [submitting, setSubmitting] = useState(false);
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
     const abortRef = useRef<AbortController | null>(null);
 
@@ -75,6 +77,7 @@ export function AddContentDialog({ open, onOpenChange, onSave }: Props) {
                     controller.signal,
                 );
             } else {
+                setSubmitting(true);
                 const r = await fetch("/api/content", {
                     method: "POST",
                     headers: { Authorization: `Bearer ${token}` },
@@ -95,6 +98,7 @@ export function AddContentDialog({ open, onOpenChange, onSave }: Props) {
                 toast.error("Error creating content.");
             }
         } finally {
+            setSubmitting(false);
             setUploadProgress(null);
             abortRef.current = null;
         }
@@ -103,7 +107,7 @@ export function AddContentDialog({ open, onOpenChange, onSave }: Props) {
     const uploading = uploadProgress !== null;
 
     return (
-        <Dialog open={open} onOpenChange={(o) => { if (!uploading) onOpenChange(o); }}>
+        <Dialog open={open} onOpenChange={(o) => { if (!uploading && !submitting) onOpenChange(o); }}>
             <DialogContent className="sm:max-w-2xl max-h-[80vh] flex flex-col">
                 <DialogHeader>
                     <DialogTitle className="text-2xl">Add Content</DialogTitle>
@@ -137,13 +141,13 @@ export function AddContentDialog({ open, onOpenChange, onSave }: Props) {
                             </div>
                         ) : (
                             <div className="flex flex-row gap-2">
-                                <Button variant="outline" onClick={handleReset}>Reset</Button>
+                                <Button variant="outline" onClick={handleReset} disabled={submitting}>Reset</Button>
                                 <Button
                                     className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground rounded-lg px-4 py-1"
                                     onClick={handleSubmit}
-                                    disabled={hasErrors}
+                                    disabled={hasErrors || submitting}
                                 >
-                                    Submit
+                                    {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Submit"}
                                 </Button>
                             </div>
                         )}

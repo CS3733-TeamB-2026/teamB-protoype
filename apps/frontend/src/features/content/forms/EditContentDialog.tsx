@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { useUser } from "@/hooks/use-user.ts";
 import {
@@ -54,6 +55,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
     const user = useUser();
     const { getAccessTokenSilently } = useAuth0();
 
+    const [submitting, setSubmitting] = useState(false);
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
     const abortRef = useRef<AbortController | null>(null);
 
@@ -86,6 +88,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                     controller.signal,
                 );
             } else {
+                setSubmitting(true);
                 const r = await fetch("/api/content", {
                     method: "PUT",
                     headers: { Authorization: `Bearer ${token}` },
@@ -105,6 +108,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                 toast.error("Error updating content.");
             }
         } finally {
+            setSubmitting(false);
             setUploadProgress(null);
             abortRef.current = null;
         }
@@ -113,7 +117,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
     const uploading = uploadProgress !== null;
 
     return (
-        <Dialog open={open} onOpenChange={(o) => { if (!uploading) onOpenChange(o); }}>
+        <Dialog open={open} onOpenChange={(o) => { if (!uploading && !submitting) onOpenChange(o); }}>
             <DialogContent className="sm:max-w-2xl max-h-[80vh] flex flex-col">
                 <DialogHeader>
                     <DialogTitle>Modify Content</DialogTitle>
@@ -156,13 +160,13 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                             </div>
                         ) : (
                             <div className="flex flex-row gap-2">
-                                <Button variant="outline" onClick={handleReset}>Reset</Button>
+                                <Button variant="outline" onClick={handleReset} disabled={submitting}>Reset</Button>
                                 <Button
                                     className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground rounded-lg px-4 py-1"
                                     onClick={handleApply}
-                                    disabled={hasErrors}
+                                    disabled={hasErrors || submitting}
                                 >
-                                    Apply
+                                    {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
                                 </Button>
                             </div>
                         )}
