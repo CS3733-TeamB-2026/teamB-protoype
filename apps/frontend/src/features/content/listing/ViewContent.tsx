@@ -16,6 +16,7 @@ import {
     LucideFolders,
     Search,
     Plus,
+    Upload,
     Lock,
     RefreshCcw,
     KeyRound,
@@ -29,7 +30,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx";
 import {Input} from "@/components/ui/input.tsx";
-import {Link} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import {HugeiconsIcon} from "@hugeicons/react";
 import {LinkSquare01Icon} from "@hugeicons/core-free-icons";
 import {
@@ -130,6 +131,7 @@ function ViewContent() {
 
 
     const user = useUser();
+    const navigate = useNavigate();
 
     const {
         activeTab,
@@ -606,6 +608,14 @@ function ViewContent() {
                                     </span>
                                     <span
                                         className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Add Content</span>
+                                </Button>
+                                <Button onClick={() => navigate("/files/bulk")}
+                                        className="cursor-pointer p-0! gap-0! border-0! group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-42 hover:bg-acent-dark hover:text-primary-foreground active:brightness-80 transition-all bg-accent text-primary-foreground w-12 h-12 text-lg justify-start">
+                                    <span className="flex items-center justify-center min-w-12 h-12">
+                                        <Upload className="w-6! h-6! text-primary-foreground"/>
+                                    </span>
+                                    <span
+                                        className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Bulk Upload</span>
                                 </Button>
 
 

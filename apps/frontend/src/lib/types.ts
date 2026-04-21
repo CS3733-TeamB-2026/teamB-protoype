@@ -21,7 +21,7 @@ export interface ContentItem {
     expiration: string | null;
     contentType: "reference" | "workflow";
     targetPersona: "underwriter" | "businessAnalyst" | "admin";
-    status: "new" | "inProgress" | "complete" | null;
+    status: "new" | "inProgress" | "complete";
     docType: DocType;
     tags: string[];
 }

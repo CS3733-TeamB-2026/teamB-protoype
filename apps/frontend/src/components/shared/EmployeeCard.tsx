@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card.tsx";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar.tsx";
+import {formatLabel} from "@/lib/utils.ts";
 
 export type EmployeeCardData = {
     id: number;
@@ -29,7 +30,7 @@ export function EmployeeCard({ employee, compact = false }: Props) {
                     <p className="font-semibold text-sm leading-none">
                         {employee.firstName} {employee.lastName}
                     </p>
-                    <p className="text-xs text-muted-foreground capitalize">{employee.persona}</p>
+                    <p className="text-xs text-muted-foreground capitalize">{formatLabel(employee.persona)}</p>
                 </div>
             </div>
         );

@@ -5,6 +5,18 @@ import { mapExtensionToDocType } from "@/lib/docTypeMap.ts";
 {/*CHANGE THIS TO ADD MORE TABS!!*/}
 export type ContentTab = "forYou" | "all" | "owned" | "bookmarks";
 
+/**
+ * Single source of truth for all content list filtering in `ViewContent`.
+ *
+ * Filtering runs in two passes: search (display name substring) then the sidebar
+ * checkboxes. Each multi-select filter uses an empty array to mean "no filter applied"
+ * so adding a new option never hides content unexpectedly. Tag filtering is OR — an item
+ * passes if it carries *any* of the selected tags.
+ *
+ * Tab state drives implicit filters: "forYou" restricts to the current user's persona,
+ * "owned" restricts to content they own, "bookmarks" restricts to bookmarked items —
+ * all without touching `advancedFilters`.
+ */
 export function useContentFilters(
     content: ContentItem[],
     bookmarks: BookmarkRecord[],
