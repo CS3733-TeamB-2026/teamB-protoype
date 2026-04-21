@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useEffect } from "react";
+import {useEffect, useState} from "react";
 import { toast } from "sonner";
 import SettingsSection from "../SettingsSection";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -17,6 +17,11 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import { useUser } from "@/context/UserContext";
+import {
+    Avatar,
+    AvatarImage,
+    AvatarFallback,
+} from "@/components/ui/avatar";
 
 const profileSchema = z.object({
     firstName: z
@@ -33,7 +38,34 @@ type ProfileFormValues = z.infer<typeof profileSchema>
 
 function ProfileSettings() {
 
-    const { user, updateUser } = useUser();
+    const { user, updateUser, uploadProfilePhoto } = useUser();
+    const [uploading, setUploading] = useState(false);
+
+    const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            toast.error("Please select an image");
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error("Image must be under 5MB");
+            return;
+        }
+
+        setUploading(true);
+        try {
+            await uploadProfilePhoto(file);
+            toast.success("Profile photo successfully uploaded!");
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to upload photo")
+        } finally {
+            setUploading(false);
+            e.target.value = "";
+        }
+    }
 
     const form = useForm<ProfileFormValues>({
         resolver: zodResolver(profileSchema),
@@ -68,10 +100,39 @@ function ProfileSettings() {
             title="Profile"
             description="Update your personal information."
         >
+
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)}>
                     <Card>
                         <CardContent className="pt-6 space-y-6">
+                            <div className="flex items-center gap-6 pb-2">
+                                <Avatar className="h-20 w-20">
+                                    <AvatarImage src={user?.profilePhotoURI ?? undefined} />
+                                    <AvatarFallback className="text-lg">
+                                        {user?.firstName?.[0]}{user?.lastName?.[0]}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div className="space-y-1">
+                                    <h1 className="text-lg font-medium">Profile Photo</h1>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handlePhotoChange}
+                                        className="hidden"
+                                        id="profile-photo-upload"
+                                        disabled={uploading}
+                                    />
+                                    <Button asChild variant="outline" disabled={uploading}>
+                                        <label htmlFor="profile-photo-upload" className="cursor-pointer">
+                                            {uploading ? "Uploading..." : "Change photo"}
+                                        </label>
+                                    </Button>
+                                    <p className="text-sm text-muted-foreground">
+                                        JPG, PNG, or GIF. Max 5MB.
+                                    </p>
+                                </div>
+                            </div>
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField
                                     control={form.control}

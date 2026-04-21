@@ -129,7 +129,7 @@ function Navbar() {
                                         >
                                             <LayoutDashboard />
                                         </button>
-                                        <button className=" text-sm w-full active:scale-97 bg-secondary font-semibold rounded-lg px-2 py-2 transition-colors hover:bg-accent hover:text-primary-foreground" onClick={() => {
+                                        <button className=" text-sm w-full active:scale-97 bg-secondary font-semibold rounded-full h-10 px-2 py-2 transition-colors hover:bg-accent hover:text-primary-foreground" onClick={() => {
                                             logout({ logoutParams: { returnTo: window.location.origin } })
                                         }}>
                                             <div className="flex flex-row items-center justify-center gap-2">

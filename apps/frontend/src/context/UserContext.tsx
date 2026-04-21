@@ -14,6 +14,7 @@ type UserContextValue = {
     user: User | null;
     loading: boolean;
     updateUser: (updates: Partial<User>) => Promise<void>;
+    uploadProfilePhoto: (file: File) => Promise<void>;
     refetch: () => Promise<void>;
 };
 
@@ -78,8 +79,24 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         [user, getAccessTokenSilently]
     );
 
+    const uploadProfilePhoto = useCallback(async (file: File) => {
+        const token = await getAccessTokenSilently();
+        const formData = new FormData();
+        formData.append("photo", file);  // must match upload.single("photo") on backend
+
+        const res = await fetch("/api/employee/photo", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+            // IMPORTANT: do NOT set Content-Type. Browser sets it with the correct boundary for FormData.
+            body: formData,
+        });
+        if (!res.ok) throw new Error("Upload failed");
+        await fetchUser();
+        
+    }, [fetchUser, getAccessTokenSilently]);
+
     return (
-        <UserContext.Provider value={{ user, loading, updateUser, refetch: fetchUser }}>
+        <UserContext.Provider value={{ user, loading, updateUser, uploadProfilePhoto, refetch: fetchUser }}>
             {children}
         </UserContext.Provider>
     );
