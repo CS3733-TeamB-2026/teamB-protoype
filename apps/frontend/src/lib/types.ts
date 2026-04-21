@@ -54,6 +54,6 @@ export type ServiceReq = {
     created: string;
     deadline: string;
     type: string;
-    assignee: number;
-    owner: number;
+    assigneeId: number;
+    ownerId: number;
 }

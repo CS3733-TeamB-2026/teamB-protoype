@@ -38,8 +38,8 @@ export function AddServiceReqDialog({ open, onOpenChange, onSave }: AddServiceRe
     const [type, setType] = useState("Select service req type")
     const [created, setCreated] = React.useState("")
     const [deadline, setDeadline] = React.useState("")
-    const [assignee, setAssignee] = React.useState("")
-    const [owner, setOwner] = React.useState("")
+    const [assigneeId, setAssigneeId] = React.useState("")
+    const [ownerId, setOwnerId] = React.useState("")
     const [submitResult, setSubmitResult] = useState<"success" | "error" | null>(null)
     const { getAccessTokenSilently } = useAuth0()
 
@@ -47,8 +47,8 @@ export function AddServiceReqDialog({ open, onOpenChange, onSave }: AddServiceRe
         setType("Select service req type")
         setCreated("")
         setDeadline("")
-        setAssignee("")
-        setOwner("")
+        setAssigneeId("")
+        setOwnerId("")
         setSubmitResult(null)
     }
 
@@ -59,7 +59,7 @@ export function AddServiceReqDialog({ open, onOpenChange, onSave }: AddServiceRe
 
     const handleSubmit = async () => {
         {/*TODO: This forces the user to enter all the fields, should probably do this on backend later */}
-        if (!created || !deadline || !owner || !assignee || type === "Select service req type") {
+        if (!created || !deadline || !ownerId || !assigneeId || type === "Select service req type") {
             setSubmitResult("error")
             return
         }
@@ -75,8 +75,8 @@ export function AddServiceReqDialog({ open, onOpenChange, onSave }: AddServiceRe
                     created: created,
                     deadline: deadline,
                     type: type,
-                    assignee: Number(assignee),
-                    owner: Number(owner),
+                    assigneeId: Number(assigneeId),
+                    ownerId: Number(ownerId),
                 })
             })
             if (!empRes.ok) {
@@ -154,8 +154,8 @@ export function AddServiceReqDialog({ open, onOpenChange, onSave }: AddServiceRe
                     <Field className="flex-1">
                         <FieldLabel className="text-primary" htmlFor="add-assignee">Assignee ID</FieldLabel>
                         <Input
-                            value={assignee}
-                            onChange={(e) => setAssignee(e.target.value)}
+                            value={assigneeId}
+                            onChange={(e) => setAssigneeId(e.target.value)}
                             id="add-assignee"
                             type="number"
                             placeholder="000000"
@@ -164,8 +164,8 @@ export function AddServiceReqDialog({ open, onOpenChange, onSave }: AddServiceRe
                     <Field className="flex-2">
                         <FieldLabel className="text-primary" htmlFor="add-owner">Owner ID</FieldLabel>
                         <Input
-                            value={owner}
-                            onChange={(e) => setOwner(e.target.value)}
+                            value={ownerId}
+                            onChange={(e) => setOwnerId(e.target.value)}
                             id="add-owner"
                             type="number"
                             placeholder="000000"

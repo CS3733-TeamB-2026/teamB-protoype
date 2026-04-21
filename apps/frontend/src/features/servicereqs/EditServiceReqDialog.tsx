@@ -32,7 +32,7 @@ export function EditServiceReqDialog({ content, open, onOpenChange, onSave }: Pr
     const { getAccessTokenSilently } = useAuth0();
 
     async function handleApply() {
-        if (!modified.created.trim() || !modified.deadline.trim() || !modified.type.trim() || !modified.assignee || !modified.owner) {
+        if (!modified.created.trim() || !modified.deadline.trim() || !modified.type.trim() || !modified.assigneeId || !modified.ownerId) {
             toast.error("Fields may not be empty.");
             return;
         }
@@ -49,8 +49,8 @@ export function EditServiceReqDialog({ content, open, onOpenChange, onSave }: Pr
                 created: modified.created.trim(),
                 deadline: modified.deadline.trim(),
                 type: modified.type.trim(),
-                assignee: modified.assignee,
-                owner: modified.owner,
+                assigneeId: modified.assigneeId,
+                ownerId: modified.ownerId,
             }),
         });
 
@@ -107,19 +107,19 @@ export function EditServiceReqDialog({ content, open, onOpenChange, onSave }: Pr
                     <div>
                         <Label className="my-2">Assignee ID</Label>
                         <Input
-                            defaultValue={content.assignee}
+                            defaultValue={content.assigneeId}
                             className="bg-secondary"
                             placeholder="Enter Service Req Assignee ID"
-                            onChange={(s) => setModified((prev) => ({ ...prev, assignee: Number(s.target.value) }))}
+                            onChange={(s) => setModified((prev) => ({ ...prev, assigneeId: Number(s.target.value) }))}
                         />
                     </div>
                     <div>
                         <Label className="my-2">Owner ID</Label>
                         <Input
-                            defaultValue={content.owner}
+                            defaultValue={content.ownerId}
                             className="bg-secondary"
                             placeholder="Enter Service Req Owner ID"
-                            onChange={(s) => setModified((prev) => ({ ...prev, owner: Number(s.target.value) }))}
+                            onChange={(s) => setModified((prev) => ({ ...prev, ownerId: Number(s.target.value) }))}
                         />
                     </div>
                     <Button

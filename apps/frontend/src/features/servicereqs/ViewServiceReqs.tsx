@@ -26,7 +26,7 @@ function ViewServiceReqs() {
     const [deleteTarget, setDeleteTarget] = useState<ServiceReq | null>(null);
     const [addOpen, setAddOpen] = useState(false);  // <-- new
     const user = useUser();
-    /*Update*/const [sort, toggleSort] = useSortState<"id" | "created" | "deadline" | "type" | "assignee" | "owner">({column: "id", direction: "asc"});
+    const [sort, toggleSort] = useSortState<"id" | "created" | "deadline" | "type" | "assigneeId" | "ownerId">({column: "id", direction: "asc"});
     const [searchTerm, setSearchTerm] = useState("");
     const { getAccessTokenSilently } = useAuth0();
 
@@ -57,8 +57,8 @@ function ViewServiceReqs() {
         return (
             s.id.toString().includes(query) ||
             s.type.toLowerCase().includes(query) ||
-            s.assignee.toString().includes(query) ||
-            s.owner.toString().includes(query)
+            s.assigneeId.toString().includes(query) ||
+            s.ownerId.toString().includes(query)
         );
     });
 
@@ -137,8 +137,8 @@ function ViewServiceReqs() {
                                     <SortableHead column="type" label="Type" sort={sort} onSort={toggleSort} />
                                     <SortableHead column="created" label="Created" sort={sort} onSort={toggleSort} className="w-full" />
                                     <SortableHead column="deadline" label="Deadline" sort={sort} onSort={toggleSort} />
-                                    <SortableHead column="assignee" label="AssigneeID" sort={sort} onSort={toggleSort} />
-                                    <SortableHead column="owner" label="OwnerID" sort={sort} onSort={toggleSort} />
+                                    <SortableHead column="assigneeId" label="AssigneeID" sort={sort} onSort={toggleSort} />
+                                    <SortableHead column="ownerId" label="OwnerID" sort={sort} onSort={toggleSort} />
                                     <TableHead className="uppercase tracking-wider text-muted-foreground select-none">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -148,8 +148,8 @@ function ViewServiceReqs() {
                                     if (col === "type") return s.type;
                                     if (col === "created") return s.created;
                                     if (col === "deadline") return s.deadline;
-                                    if (col === "assignee") return s.assignee;
-                                    if (col === "owner") return s.owner;
+                                    if (col === "assigneeId") return s.assigneeId;
+                                    if (col === "ownerId") return s.ownerId;
                                 }).map((servicereq) => {
                                     return (
                                         <TableRow key={servicereq.id}>
@@ -157,8 +157,8 @@ function ViewServiceReqs() {
                                             <TableCell className="font-medium">{servicereq.type}</TableCell>
                                             <TableCell className="font-medium">{servicereq.created}</TableCell>
                                             <TableCell className="font-medium">{servicereq.deadline}</TableCell>
-                                            <TableCell className="font-medium">{servicereq.assignee}</TableCell>
-                                            <TableCell className="font-medium">{servicereq.owner}</TableCell>
+                                            <TableCell className="font-medium">{servicereq.assigneeId}</TableCell>
+                                            <TableCell className="font-medium">{servicereq.ownerId}</TableCell>
                                             <TableCell>
                                                 <div className="flex justify-center gap-2">
                                                     <Button
@@ -174,7 +174,6 @@ function ViewServiceReqs() {
                                                     <Button
                                                         variant="destructive"
                                                         size="sm"
-                                                        disabled={servicereq.id === user?.id}
                                                         onClick={() => setDeleteTarget(servicereq)}
                                                     >
                                                         <Trash2 className="w-4 h-4" />

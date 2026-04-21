@@ -4,8 +4,8 @@ export type ServiceReqFormValues = {
     created: string;
     deadline: string;
     type: string;
-    assignee: number;
-    owner: number;
+    assigneeId: number;
+    ownerId: number;
 }
 
 export function initialValues(): ServiceReqFormValues {
@@ -14,8 +14,8 @@ export function initialValues(): ServiceReqFormValues {
         created: "",
         deadline: "",
         type: "",
-        assignee: -1,
-        owner: -1
+        assigneeId: -1,
+        ownerId: -1
     }
 }
 
@@ -26,8 +26,8 @@ export function buildServiceReqFormData(values: ServiceReqFormValues): FormData 
     formData.append("created", values.created);
     formData.append("deadline", values.deadline);
     formData.append("type", values.type);
-    formData.append("assignee", values.assignee.toString());
-    formData.append("owner", values.owner.toString());
+    formData.append("assignee", values.assigneeId.toString());
+    formData.append("owner", values.ownerId.toString());
 
     return formData;
 }
