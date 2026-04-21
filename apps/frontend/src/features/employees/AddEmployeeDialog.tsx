@@ -27,6 +27,7 @@ import { Separator } from "@/components/ui/separator.tsx"
 import { useAuth0 } from "@auth0/auth0-react"
 import { formatLabel } from "@/lib/utils.ts"
 import type { Employee } from "@/lib/types.ts"
+import { toast } from "sonner";
 
 interface AddEmployeeDialogProps {
     open: boolean
@@ -66,11 +67,11 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
     const handleSubmit = async () => {
         {/*TODO: This forces the user to enter all the fields, should probably do this on backend later */}
         if (!firstName || !lastName || !id || !userName || !password || targetPersona === "Select job position") {
-            setSubmitResult("error")
+            toast.error("Please fill out all fields.");
             return
         }
         if (password !== confirmPassword) {
-            setSubmitResult("mismatch")
+            toast.error("Password fields must match.");
             return
         }
         try {
@@ -92,11 +93,11 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
                 })
             })
             if (!empRes.ok) {
-                setSubmitResult("error");
+                toast.error("Error employee user.");
                 return
             }
 
-            setSubmitResult("success")
+            toast.success("Employee user created successfully!");
 
             onSave({
                 firstName: firstName,
@@ -116,7 +117,7 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
             setID("")
 
         } catch {
-            setSubmitResult("error")
+            toast.error("Error creating employee user.");
         }
     }
 
@@ -132,48 +133,52 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
                     <Separator />
                 </DialogHeader>
 
-                <div className="overflow-y-auto flex-1 flex flex-col gap-2 min-w-0 pr-2">
+                <div className="overflow-y-auto flex-1 flex flex-col gap-2 min-w-0 pr-2 mx-2">
 
                     <div className="flex flex-wrap items-end gap-4">
                         <Field className="flex-2">
-                            <FieldLabel className="text-primary" htmlFor="add-first-name">First Name</FieldLabel>
+                            <FieldLabel className="text-primary text-lg" htmlFor="add-first-name">First Name</FieldLabel>
                             <Input
                                 value={firstName}
                                 onChange={(e) => setFirstName(e.target.value)}
                                 id="add-first-name"
                                 type="text"
                                 placeholder="Enter first name"
+                                className="h-8 text-sm!"
                             />
                         </Field>
                         <Field className="flex-2">
-                            <FieldLabel className="text-primary" htmlFor="add-last-name">Last Name</FieldLabel>
+                            <FieldLabel className="text-primary text-lg" htmlFor="add-last-name">Last Name</FieldLabel>
                             <Input
                                 value={lastName}
                                 onChange={(e) => setLastName(e.target.value)}
                                 id="add-last-name"
                                 type="text"
                                 placeholder="Enter last name"
+                                className="h-8 text-sm!"
                             />
                         </Field>
                         <Field className="flex-1">
-                            <FieldLabel className="text-primary" htmlFor="add-employee-id">Employee ID</FieldLabel>
+                            <FieldLabel className="text-primary text-lg" htmlFor="add-employee-id">
+                                ID</FieldLabel>
                             <Input
                                 value={id}
                                 onChange={(e) => setID(e.target.value)}
                                 id="add-employee-id"
                                 type="number"
                                 placeholder="000000"
+                                className="h-8 text-sm!"
                             />
                         </Field>
                     </div>
 
-                    <Separator className="bg-primary" />
+                    <Separator className="bg-primary my-3" />
 
                     <Field>
-                        <FieldLabel className="text-primary">Job Position</FieldLabel>
+                        <FieldLabel className="text-primary text-lg">Job Position</FieldLabel>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" className="bg-background justify-between">
+                                <Button variant="outline" className="bg-background justify-between h-8 text-sm">
                                     {targetPersona === "Select job position" ? "Select job position" : formatLabel(targetPersona)}
                                     <ChevronDown className="h-4 w-4" />
                                 </Button>
@@ -191,49 +196,54 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
                         </DropdownMenu>
                     </Field>
 
-                    <Separator className="bg-primary" />
+                    <Separator className="bg-primary my-3" />
 
-                    <div className="flex flex-wrap items-end gap-4">
+                    <div className="flex flex-wrap gap-4">
                         <Field className="flex-1">
-                            <FieldLabel className="text-primary" htmlFor="add-username">Username</FieldLabel>
+                            <FieldLabel className="text-primary text-lg" htmlFor="add-username">Username</FieldLabel>
                             <Input
                                 value={userName}
                                 onChange={(e) => setUserName(e.target.value)}
                                 id="add-username"
                                 type="text"
                                 placeholder="Enter username"
+                                className="h-8 text-sm!"
                             />
                         </Field>
-                        <Field className="flex-2">
-                            <FieldLabel className="text-primary" htmlFor="add-email">Email</FieldLabel>
+                        <Field className="flex-1">
+                            <FieldLabel className="text-primary text-lg" htmlFor="add-email">Email</FieldLabel>
                             <Input
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 id="add-email"
                                 type="email"
                                 placeholder="Enter email"
+                                className="h-8 text-sm!"
                             />
                         </Field>
                     </div>
+                    <div />
                     <div className="flex flex-wrap items-end gap-4">
                         <Field className="flex-1">
-                            <FieldLabel className="text-primary" htmlFor="add-password">Password</FieldLabel>
+                            <FieldLabel className="text-primary text-lg" htmlFor="add-password">Password</FieldLabel>
                             <Input
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 id="add-password"
                                 type="password"
                                 placeholder="Enter password"
+                                className="h-8 text-sm!"
                             />
                         </Field>
                         <Field className="flex-1">
-                            <FieldLabel className="text-primary" htmlFor="add-password">Confirm Password</FieldLabel>
+                            <FieldLabel className="text-primary text-lg" htmlFor="add-password">Confirm Password</FieldLabel>
                             <Input
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 id="add-password"
                                 type="password"
                                 placeholder="Enter password again"
+                                className="h-8 text-sm!"
                             />
                         </Field>
                     </div>
