@@ -83,7 +83,7 @@ function ContentTypeChartCard() {
                 count,
                 fill: `var(--chart-accent-${(i % 5) + 1})`
             }))
-            .sort((a, b) => a.count - b.count);
+            .sort((a, b) => b.count - a.count);
 
         console.log("CONTENT LENGTH:", content.length);
         console.log("COUNTS:", counts);
