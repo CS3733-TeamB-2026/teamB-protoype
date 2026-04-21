@@ -27,6 +27,9 @@ import { Separator } from "@/components/ui/separator.tsx"
 import { useAuth0 } from "@auth0/auth0-react"
 import { formatLabel } from "@/lib/utils.ts"
 import type { ServiceReq } from "@/lib/types.ts"
+import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover.tsx";
+import {Calendar} from "@/components/ui/calendar.tsx";
+import {nowTimeString} from "@/features/content/forms/content-form.ts";
 
 interface AddServiceReqDialog {
     open: boolean
@@ -35,9 +38,13 @@ interface AddServiceReqDialog {
 }
 
 export function AddServiceReqDialog({ open, onOpenChange, onSave }: AddServiceReqDialog) {
+    const [openModifiedDate, setOpenModifiedDate] = React.useState(false);
+    const [openExpirationDate, setOpenExpirationDate] = React.useState(false);
+
     const [type, setType] = useState("Select service req type")
-    const [created, setCreated] = React.useState("")
-    const [deadline, setDeadline] = React.useState("")
+    const [createdDate, setCreatedDate] = React.useState<Date | undefined>(new Date())
+    const [createdTime, setCreatedTime] = React.useState(nowTimeString())
+    const [deadline, setDeadline] = React.useState<Date>()
     const [assigneeId, setAssigneeId] = React.useState("")
     const [ownerId, setOwnerId] = React.useState("")
     const [submitResult, setSubmitResult] = useState<"success" | "error" | null>(null)
@@ -45,8 +52,9 @@ export function AddServiceReqDialog({ open, onOpenChange, onSave }: AddServiceRe
 
     const resetForm = () => {
         setType("Select service req type")
-        setCreated("")
-        setDeadline("")
+        setCreatedTime(nowTimeString())
+        setCreatedDate(new Date())
+        setDeadline(undefined)
         setAssigneeId("")
         setOwnerId("")
         setSubmitResult(null)
@@ -59,12 +67,22 @@ export function AddServiceReqDialog({ open, onOpenChange, onSave }: AddServiceRe
 
     const handleSubmit = async () => {
         {/*TODO: This forces the user to enter all the fields, should probably do this on backend later */}
-        if (!created || !deadline || !ownerId || !assigneeId || type === "Select service req type") {
+        if (!createdTime || !createdDate || !deadline || !ownerId || !assigneeId || type === "Select service req type") {
             setSubmitResult("error")
             return
         }
         try {
             const token = await getAccessTokenSilently();
+
+            // Merge the date picker value and the separate time input into one timestamp.
+            const lastModifiedDate = createdDate ? new Date(createdDate) : new Date();
+            const [lmh, lmm, lms] = createdTime.split(":").map(Number);
+            lastModifiedDate.setHours(lmh, lmm, lms ?? 0, 0);
+            const created = lastModifiedDate.toISOString();
+            const deadlineDate = new Date(deadline);
+            deadlineDate.setHours(0, 0, 0, 0);
+            const deadlineString = deadlineDate.toISOString();
+
             const empRes =  await fetch('/api/servicereqs', {
                 method: 'POST',
                 headers: {
@@ -73,7 +91,7 @@ export function AddServiceReqDialog({ open, onOpenChange, onSave }: AddServiceRe
                 },
                 body: JSON.stringify({
                     created: created,
-                    deadline: deadline,
+                    deadline: deadlineString,
                     type: type,
                     assigneeId: Number(assigneeId),
                     ownerId: Number(ownerId),
@@ -101,26 +119,73 @@ export function AddServiceReqDialog({ open, onOpenChange, onSave }: AddServiceRe
 
                 <Separator className="bg-primary" />
 
-                <div className="flex flex-wrap items-end gap-4">
-                    <Field className="flex-2">
-                        <FieldLabel className="text-primary" htmlFor="add-created">Created</FieldLabel>
-                        <Input
-                            value={created}
-                            onChange={(e) => setCreated(e.target.value)}
-                            id="add-created"
-                            type="text"
-                            placeholder="Enter created date"
-                        />
-                    </Field>
-                    <Field className="flex-2">
-                        <FieldLabel className="text-primary" htmlFor="add-deadline">Deadline</FieldLabel>
-                        <Input
-                            value={deadline}
-                            onChange={(e) => setDeadline(e.target.value)}
-                            id="add-deadline"
-                            type="text"
-                            placeholder="Enter deadline date"
-                        />
+                {/* Dates */}
+                <div className="flex flex-wrap items-end gap-4 bg-background py-4">
+                    {(
+                        <>
+                            <Field className="bg-background flex-1">
+                                <FieldLabel className="text-primary text-lg" htmlFor="date-modified">
+                                    Last Modified Date
+                                    ContentFormFields  </FieldLabel>
+                                <Popover open={openModifiedDate} onOpenChange={setOpenModifiedDate}>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            id="date-modified"
+                                            className="justify-start font-normal text-sm h-10"
+                                        >
+                                            {createdDate ? createdDate.toLocaleDateString() : "Select date"}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                                        <Calendar
+                                            mode="single"
+                                            selected={createdDate}
+                                            defaultMonth={createdDate}
+                                            captionLayout="dropdown"
+                                            onSelect={(date) => { setCreatedDate(date); setOpenModifiedDate(false); }}
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                            </Field>
+
+                            <Field className="w-32">
+                                <FieldLabel className="text-primary text-lg" htmlFor="time-lastmodified">
+                                    Time
+                                </FieldLabel>
+                                <Input
+                                    type="time"
+                                    id="time-lastmodified"
+                                    step="1"
+                                    value={createdTime}
+                                    onChange={(e) => setCreatedTime(e.target.value)}
+                                    className="font-normal md:text-sm h-10! appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                                />
+                            </Field>
+
+                        </>
+                    )}
+
+                    <Field className="bg-background flex-1">
+                        <FieldLabel className="text-primary text-lg" htmlFor="date-expiration">
+                            Expiration Date
+                        </FieldLabel>
+                        <Popover open={openExpirationDate} onOpenChange={setOpenExpirationDate}>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" id="date-expiration" className="justify-start font-normal text-sm h-10">
+                                    {deadline ? deadline.toLocaleDateString() : "Select date"}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                                <Calendar
+                                    mode="single"
+                                    selected={deadline}
+                                    defaultMonth={deadline}
+                                    captionLayout="dropdown"
+                                    onSelect={(date) => { setDeadline(date); setOpenExpirationDate(false); }}
+                                />
+                            </PopoverContent>
+                        </Popover>
                     </Field>
                 </div>
 
