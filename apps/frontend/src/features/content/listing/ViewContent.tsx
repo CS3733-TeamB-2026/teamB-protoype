@@ -989,6 +989,12 @@ function ViewContent() {
                                                                             {Math.ceil((new Date(item.expiration).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)).toLocaleString()}
                                                                 </span>
                                                                     )}
+                                                                    {item.tags.length > 0 && (
+                                                                        <span>
+                                                                            <span className="font-medium text-foreground">Tags:{" "}</span>
+                                                                            {item.tags.join(", ")}
+                                                                        </span>
+                                                                    )}
                                                                 </div>
                                                             </TableCell>
                                                         </TableRow>
