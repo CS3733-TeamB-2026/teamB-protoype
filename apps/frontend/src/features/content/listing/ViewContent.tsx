@@ -81,6 +81,9 @@ import {TagInput} from "@/features/content/tags/TagInput.tsx";
 import {Tabs, TabsTrigger} from "@/components/ui/tabs"
 import { SlidingTabs } from "@/components/shared/SlidingTabs.tsx";
 import { useContentFilters, type ContentTab } from "@/hooks/use-content-filters.ts";
+import {useLocale} from "@/languageSupport/localeContext.tsx";
+import {useTranslation} from "@/languageSupport/useTranslation.ts";
+import type {TranslationKey} from "@/languageSupport/keys.ts";
 
 
 /**
@@ -103,6 +106,9 @@ import { useContentFilters, type ContentTab } from "@/hooks/use-content-filters.
  *   immediately and rolls back if the API call fails.
  */
 function ViewContent() {
+
+    const { locale } = useLocale();
+    const { ts } = useTranslation(locale);
 
     usePageTitle("Manage Content");
 
@@ -148,6 +154,7 @@ function ViewContent() {
     const [pageSize, setPageSize] = useState(25);
     //default amount of content shown is 25
 
+    //whenever a new filter is applied it just resets the pages to page 1 to make sure content is always displayed
     useEffect(() => {
         setCurrentPage(1);
     }, [activeTab, searchTerm, advancedFilters, sort]);
@@ -472,21 +479,21 @@ function ViewContent() {
         <>
             <Hero
                 icon={LucideFolders}
-                title="View Content"
-                description="View, update, and delete content you have access to"
+                title={ts('content.view')}
+                description={ts('content.description')}
             />
 
             <Card className="shadow-lg max-w-6xl mx-auto my-8 text-center px-4">
                 <CardHeader>
                     <CardTitle className="text-3xl text-primary mt-4">
-                        {user.persona === "admin" ? "All" : formatLabel(user.persona)} Content
+                        {user.persona === "admin" ? "" : formatLabel(user.persona)} {ts('content')}
                     </CardTitle>
                     <CardDescription>
                         {activeTab === "bookmarks"
-                            ? `${filteredContent.length} favorited item${filteredContent.length !== 1 ? "s" : ""}`
+                            ? `${filteredContent.length} ${ts('content.favorite')} ${ts('item')}${filteredContent.length !== 1 ? "s" : ""}`
                             : filteredContent.length === content.length
-                                ? `${content.length} item${content.length !== 1 ? "s" : ""}`
-                                : `${filteredContent.length} of ${content.length} items`}
+                                ? `${content.length} ${ts('item')}${content.length !== 1 ? "s" : ""}`
+                                : `${filteredContent.length} ${ts('of')} ${content.length} ${ts('item')}s`}
                     </CardDescription>
                 </CardHeader>
 
@@ -502,7 +509,7 @@ function ViewContent() {
                                 value="forYou"
                                 className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0"
                             >
-                                For You
+                                {ts('content.forYou')}
                                 <span className="ml-2 text-xs opacity-70"> {content.filter(c => c.targetPersona === user.persona
                                 ).length}</span>
                             </TabsTrigger>
@@ -510,21 +517,21 @@ function ViewContent() {
                                 value="all"
                                 className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0"
                             >
-                                All Content
+                                {ts('content')}
                                 <span className="ml-2 text-xs opacity-70">{content.length}</span>
                             </TabsTrigger>
                             <TabsTrigger
                                 value="owned"
                                 className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0"
                             >
-                                Owned By Me
+                                {ts('content.ownedByMe')}
                                 <span className="ml-2 text-xs opacity-70">{content.filter(c => c.ownerId === user.id).length}</span>
                             </TabsTrigger>
                             <TabsTrigger
                                 value="bookmarks"
                                 className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0"
                             >
-                                Favorites
+                                {ts('content.favorites')}
                                 <span className="ml-2 text-xs opacity-70">{bookmarks.length}</span>
                             </TabsTrigger>
                             {/*THEN ADD MORE TAB TRIGGERs FOR MORE TABS!!*/}
@@ -573,7 +580,7 @@ function ViewContent() {
                                     />
                                     <Input
                                         type="text"
-                                        placeholder="Search by name..."
+                                        placeholder={ts('search.genericDialogue')}
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                         className="w-64 h-10 text-base pl-2! pr-8 border border-gray-700 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-gray-500"
@@ -618,7 +625,7 @@ function ViewContent() {
                                     className="mt-10 shrink-0 w-48 rounded-lg border p-3 bg-muted/20 text-left text-sm">
                                     <div className="flex flex-col gap-4">
                                         <div>
-                                            <p className="font-medium mb-2">Status</p>
+                                            <p className="font-medium mb-2">{(ts('status'))}</p>
                                             <div className="flex flex-col gap-1.5">
                                                 {["new", "inProgress", "complete"].map((status) => (
                                                     <label key={status} className="flex items-center gap-2">
@@ -634,14 +641,15 @@ function ViewContent() {
                                                                 }));
                                                             }}
                                                         />
-                                                        <span>{formatLabel(status)}</span>
+                                                        {/* works fine, feel free to "fix" the error, but not the main focus rn */}
+                                                        <span>{ts(`status.${status}` as TranslationKey)}</span>
                                                     </label>
                                                 ))}
                                             </div>
                                         </div>
 
                                         <div>
-                                            <p className="font-medium mb-2">Kind</p>
+                                            <p className="font-medium mb-2">{ts('kind')}</p>
                                             <div className="flex flex-col gap-1.5">
                                                 {["reference", "workflow"].map((type) => (
                                                     <label key={type} className="flex items-center gap-2">
@@ -657,14 +665,14 @@ function ViewContent() {
                                                                 }));
                                                             }}
                                                         />
-                                                        <span>{formatLabel(type)}</span>
+                                                        <span>{ts(`kind.${type}`  as TranslationKey)}</span>
                                                     </label>
                                                 ))}
                                             </div>
                                         </div>
 
                                         <div>
-                                            <p className="font-medium mb-2">Persona</p>
+                                            <p className="font-medium mb-2">{ts('persona')}</p>
                                             <div className="flex flex-col gap-1.5">
                                                 {["underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps", "admin"].map((persona) => (
                                                     <label key={persona} className="flex items-center gap-2">
@@ -680,16 +688,16 @@ function ViewContent() {
                                                                 }));
                                                             }}
                                                         />
-                                                        <span>{formatLabel(persona)}</span>
+                                                        <span>{ts(`persona.${persona}`  as TranslationKey)}</span>
                                                     </label>
                                                 ))}
                                             </div>
                                         </div>
 
                                         <div>
-                                            <p className="font-medium mb-2">File Type</p>
+                                            <p className="font-medium mb-2">{ts('file.type')}</p>
                                             <div className="flex flex-col gap-1.5">
-                                                {Object.entries(docTypeLabels).map(([key, label]) => {
+                                                {Object.entries(docTypeLabels).map(([key]) => {
                                                     const dt = key as DocType
 
                                                     return (
@@ -706,7 +714,7 @@ function ViewContent() {
                                                                     }))
                                                                 }}
                                                             />
-                                                            <span>{label}</span>
+                                                            <span>{ts(`file.${dt}`)}</span>
                                                         </label>
                                                     )
                                                 })}
@@ -720,7 +728,7 @@ function ViewContent() {
                                         </div>
 
                                         <div>
-                                            <p className="font-medium mb-2">Other</p>
+                                            <p className="font-medium mb-2">{ts('other')}</p>
                                             <div className="flex flex-col gap-1.5">
                                                 {activeTab !== "bookmarks" && (
                                                 <label className="flex items-center gap-2">
@@ -734,7 +742,7 @@ function ViewContent() {
                                                             }))
                                                         }
                                                     />
-                                                    <span>Bookmarked</span>
+                                                    <span>{ts('bookmarked')}</span>
                                                 </label>
                                                 )}
                                                 <label className="flex items-center gap-2">
@@ -748,7 +756,7 @@ function ViewContent() {
                                                             }))
                                                         }
                                                     />
-                                                    <span>Owned By Me</span>
+                                                    <span>{ts('content.ownedByMe')}</span>
                                                 </label>
                                             </div>
                                         </div>
@@ -772,21 +780,21 @@ function ViewContent() {
                                     <TableHeader>
                                         <TableRow className="hover:bg-transparent">
                                             <TableHead className="w-8"/>
-                                            <SortableHead column="name" label="Name" sort={sort} onSort={toggleSort}/>
-                                            <SortableHead column="owner" label="Owner" sort={sort} onSort={toggleSort}
+                                            <SortableHead column="name" label={ts('content.name')} sort={sort} onSort={toggleSort}/>
+                                            <SortableHead column="owner" label={ts('content.owner')} sort={sort} onSort={toggleSort}
                                                           className="hidden sm:table-cell"/>
-                                            <SortableHead column="status" label="Status" sort={sort} onSort={toggleSort}
+                                            <SortableHead column="status" label={ts('status')} sort={sort} onSort={toggleSort}
                                                           className="hidden sm:table-cell"/>
-                                            <SortableHead column="contentType" label="Kind" sort={sort}
+                                            <SortableHead column="contentType" label={ts('kind')} sort={sort}
                                                           onSort={toggleSort} className="hidden sm:table-cell"/>
-                                            <SortableHead column="persona" label="Persona" sort={sort}
+                                            <SortableHead column="persona" label={ts('persona')} sort={sort}
                                                           onSort={toggleSort}
                                                           className="hidden sm:table-cell"/>
-                                            <SortableHead column="docType" label="Type" sort={sort} onSort={toggleSort}
+                                            <SortableHead column="docType" label={ts('file.type')} sort={sort} onSort={toggleSort}
                                                           className="hidden sm:table-cell"/>
 
                                             <TableHead
-                                                className="uppercase tracking-wider text-muted-foreground select-none text-center">Actions</TableHead>
+                                                className="uppercase tracking-wider text-muted-foreground select-none text-center">{ts('content.actions')}</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -1056,7 +1064,7 @@ function ViewContent() {
                                 {sortedContent.length > 0 && (
                                     <div className="flex items-center justify-between mt-4 px-1 text-sm text-muted-foreground">
                                         <div className="flex items-center gap-2">
-                                            <span>Rows per page:</span>
+                                            <span>{ts('pages.rowsPerPage')}</span>
                                             <select
                                                 value={pageSize}
                                                 onChange={(e) => {
@@ -1092,7 +1100,7 @@ function ViewContent() {
                                                     <ChevronLeft className="w-4 h-4" />
                                                 </button>
                                                 <span className="px-2">
-                    Page {currentPage} of {totalPages}
+                    {ts('page')} {currentPage} {ts('of')} {totalPages}
                 </span>
                                                 <button
                                                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
@@ -1128,7 +1136,7 @@ function ViewContent() {
                     if (!open) setDeleteTarget(null);
                 }}
                 description={deleteTarget ?
-                    <span>This will permanently delete <strong>"{deleteTarget.displayName}"</strong>.</span> : undefined}
+                    <span>{ts('content.deleteDialogue')}<strong>"{deleteTarget.displayName}"</strong>.</span> : undefined}
                 onConfirm={() => handleDelete(deleteTarget!.id)}
             />
             <ConfirmCheckoutDialog
@@ -1137,7 +1145,7 @@ function ViewContent() {
                     if (!open) setCheckoutTarget(null);
                 }}
                 description={checkoutTarget
-                    ? <span>Check out <strong>"{checkoutTarget.displayName}"</strong>? You'll be able to edit and delete it until you check it back in.</span>
+                    ? <span>{ts('content.checkoutDesc1')}<strong>"{checkoutTarget.displayName}"</strong>{ts('content.checkoutDesc2')}</span>
                     : undefined}
                 onConfirm={async () => {
                     if (checkoutTarget) {
