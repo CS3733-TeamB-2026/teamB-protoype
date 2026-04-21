@@ -30,6 +30,7 @@
     "radix-ui": "^1.4.3",
     "react": "^19.2.4",
     "react-day-picker": "^9.14.0",
+    "react-doc-viewer": "^0.1.16",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.13.2",
     "recharts": "^3.8.1",

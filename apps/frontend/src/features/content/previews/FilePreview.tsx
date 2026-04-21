@@ -4,6 +4,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import * as XLSX from "xlsx";
 import DocViewer, { PDFRenderer, DocxRenderer, MarkdownRenderer } from "@iamjariwala/react-doc-viewer";
 import "@iamjariwala/react-doc-viewer/dist/index.css";
+import AltDocViewer, { DocViewerRenderers } from "react-doc-viewer"; //used for slideshows
 import { getPreviewMode } from "@/lib/mime.ts";
 import { getCachedText, setCachedText, getCachedBlob, setCachedBlob } from "@/features/content/previews/file-cache.ts";
 import { useAuth0 } from "@auth0/auth0-react"
@@ -100,6 +101,7 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
     const [content, setContent] = useState<string | null>(null);   // text mode
     const [objectUrl, setObjectUrl] = useState<string | null>(null); // blob-backed renderers
     const [tableData, setTableData] = useState<string[][] | null>(null); // table mode
+    const [publicUrl, setPublicUrl] = useState<string | null>(null) // slideshow mode
     const { getAccessTokenSilently } = useAuth0();
     // Keep a ref so the fetch effect never needs getAccessTokenSilently as a dep.
     // Auth0 returns a new function reference on every render, which would otherwise
@@ -123,6 +125,15 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
         a.click();
         URL.revokeObjectURL(url);
     };
+
+    const GetPublicUrl = async (contentId: string) => {
+        const token = await getAccessTokenSilently();
+        const res = await fetch(`/api/content/publicUrl/${contentId}`, {
+            headers: {Authorization: `Bearer ${token}`},
+        });
+        const data = await res.json();
+        setPublicUrl(data)
+    }
 
     // Main fetch effect. Runs whenever the file source, preview mode, or info
     // URL changes (i.e. when a different file is expanded).
@@ -199,6 +210,15 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
                     }
                     localUrl = URL.createObjectURL(blob);
                     setObjectUrl(localUrl);
+
+                    //slideshows need above setup and an additional call
+                    if(previewMode === "slideshow") {
+                        //get the content id by pulling it off the end of the API call url (kinda cursed, sorry)
+                        const contentId = infoSrc?.slice(18) ?? null
+                        if(!contentId) { return }
+                        await GetPublicUrl(contentId)
+                    }
+
                     setStatus("ready");
                 }
             } catch {
@@ -325,6 +345,13 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
             {status === "ready" && previewMode === "docviewer" && objectUrl && (
                 <DocViewerMemo objectUrl={objectUrl} filename={filename} mode={mode} />
             )}
+            {/* PPTX / PPT: TODO */}
+            {status === "ready" && previewMode === "slideshow" && objectUrl &&
+                <AltDocViewer
+                    documents={[{ uri: publicUrl, fileName: filename }]}
+                    pluginRenderers={DocViewerRenderers}
+                />
+            }
         </div>
     );
 }
