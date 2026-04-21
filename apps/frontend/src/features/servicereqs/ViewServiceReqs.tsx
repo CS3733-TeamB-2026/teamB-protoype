@@ -155,8 +155,8 @@ function ViewServiceReqs() {
                                         <TableRow key={servicereq.id}>
                                             <TableCell className="text-right pr-4">{servicereq.id}</TableCell>
                                             <TableCell className="font-medium">{servicereq.type}</TableCell>
-                                            <TableCell className="font-medium">{servicereq.created}</TableCell>
-                                            <TableCell className="font-medium">{servicereq.deadline}</TableCell>
+                                            <TableCell className="font-medium">{new Date(servicereq.created).toLocaleString()}</TableCell>
+                                            <TableCell className="font-medium">{new Date(servicereq.deadline).toLocaleString()}</TableCell>
                                             <TableCell className="font-medium">{servicereq.assigneeId}</TableCell>
                                             <TableCell className="font-medium">{servicereq.ownerId}</TableCell>
                                             <TableCell>
