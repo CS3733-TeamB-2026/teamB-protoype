@@ -40,21 +40,21 @@ export function UrlPreviewLink({ href, status, preview }: Props) {
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-4 px-6 py-3 bg-muted/20 hover:bg-muted/40 transition-colors"
+            className="flex items-center gap-4 px-6 py-3 w-full bg-muted/20 hover:bg-muted/40 transition-colors"
             onClick={(e) => e.stopPropagation()}
         >
             {status === "ok" && preview?.image && !ogImageFailed ? (
                 <img
                     src={preview.image}
                     alt=""
-                    className="w-16 h-16 rounded object-cover shrink-0"
+                    className="w-auto h-16 rounded object-cover shrink-0"
                     onError={() => setOgImageErrorSrc(preview.image)}
                 />
             ) : status === "ok" && preview?.favicon && !faviconFailed ? (
                 <img
                     src={preview.favicon}
                     alt=""
-                    className="w-8 h-8 rounded shrink-0"
+                    className="w-8 h-8 rounded shrink-0 object-contain"
                     onError={() => setFaviconErrorSrc(preview.favicon)}
                 />
             ) : null}
