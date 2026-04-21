@@ -75,8 +75,8 @@ export function AddServiceReqDialog({ open, onOpenChange, onSave }: AddServiceRe
                     created: created,
                     deadline: deadline,
                     type: type,
-                    assignee: assignee,
-                    owner: owner,
+                    assignee: Number(assignee),
+                    owner: Number(owner),
                 })
             })
             if (!empRes.ok) {
@@ -157,8 +157,8 @@ export function AddServiceReqDialog({ open, onOpenChange, onSave }: AddServiceRe
                             value={assignee}
                             onChange={(e) => setAssignee(e.target.value)}
                             id="add-assignee"
-                            type="text"
-                            placeholder="Enter assignee id"
+                            type="number"
+                            placeholder="000000"
                         />
                     </Field>
                     <Field className="flex-2">
@@ -167,8 +167,8 @@ export function AddServiceReqDialog({ open, onOpenChange, onSave }: AddServiceRe
                             value={owner}
                             onChange={(e) => setOwner(e.target.value)}
                             id="add-owner"
-                            type="text"
-                            placeholder="Enter owner id"
+                            type="number"
+                            placeholder="000000"
                         />
                     </Field>
                 </div>

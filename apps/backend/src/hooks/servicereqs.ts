@@ -28,8 +28,8 @@ export const createServiceReq = async (req: req, res: res) => {
             payload.created,
             payload.deadline,
             payload.type,
-            payload.assigneeId,
-            payload.ownerId
+            payload.assignee,
+            payload.owner
         );
         return res.status(201).json(result);
     } catch (error) {
