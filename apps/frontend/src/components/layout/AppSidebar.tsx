@@ -1,4 +1,4 @@
-import { Home, User, ChevronDown, Users, X, Library, LayoutDashboard } from "lucide-react"
+import { Home, User, ChevronDown, Users, X, Library, LayoutDashboard, Upload } from "lucide-react"
 import React from "react"
 import {Link} from "react-router-dom";
 import {
@@ -38,7 +38,8 @@ For dropdowns, add more items in children array, leave the array empty for singl
 const navItems: NavItem[] = [
     { title: "Home", icon: Home, href: "/", children: [], access: [], langKey: 'sidebar.home' },
     { title: "Dashboard", icon: LayoutDashboard, href: "/employeehome", children: [], access: ["admin", "underwriter", "businessAnalyst"], langKey: 'sidebar.dashboard' },
-    { title: "Manage Content", icon: Library, href: "/files", children: [], access: ["admin", "underwriter", "businessAnalyst"], langKey: 'sidebar.manageContent' },
+    { title: "Content Library", icon: Library, href: "/files", children: [], access: ["admin", "underwriter", "businessAnalyst"], langKey: 'sidebar.manageContent' },
+    { title: "Bulk Upload", icon: Upload, href: "/files/bulk", children: [], access: ["admin", "underwriter", "businessAnalyst"], langKey: 'sidebar.bulkUpload' },
     { title: "Manage Employees", icon: Users, href: "/usermanagement", children: [
         ], access: ["admin"], langKey: 'sidebar.manageEmployees' },
     { title: "Personas", icon: User, href: "/", children: [

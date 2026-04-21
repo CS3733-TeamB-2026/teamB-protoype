@@ -11,6 +11,7 @@ import BusinessAnalystPersona from "@/pages/BusinessAnalystPersona.tsx";
 import Dashboard from "@/features/dashboard/Dashboard.tsx";
 import ViewEmployees from "@/features/employees/ViewEmployees.tsx";
 import ViewContent from "@/features/content/listing/ViewContent.tsx";
+import { BulkUploadPage } from "@/features/content/bulk/BulkUploadPage.tsx";
 import { ViewSingleFile } from "@/features/content/previews/ViewSingleFile.tsx";
 import SidebarOverlay from "./components/layout/SidebarOverlay.tsx";
 import { Route, Routes } from "react-router-dom";
@@ -60,6 +61,7 @@ function App() {
                             <Route path="/underwriter" element={<UnderwriterPersona/>}/>
                             <Route path="/businessanalyst" element={<BusinessAnalystPersona/>}/>
                             <Route path="/files" element={<ProtectedRoute><ViewContent/></ProtectedRoute>}/>
+                            <Route path="/files/bulk" element={<ProtectedRoute><BulkUploadPage/></ProtectedRoute>}/>
                             <Route path="/employeehome" element={<ProtectedRoute><Dashboard/></ProtectedRoute>}/>
                             <Route path="/file/:id" element={<ProtectedRoute><ViewSingleFile/></ProtectedRoute>}/>
                             <Route path="/settings" element={<ProtectedRoute><SettingsLayout/></ProtectedRoute>}>

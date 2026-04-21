@@ -1,13 +1,27 @@
-import {useState,} from "react";
-import type {ContentItem, BookmarkRecord} from "@/lib/types.ts";
+import {useState} from "react";
+import type { ContentItem, BookmarkRecord, DocType, ContentStatus, ContentType, Persona } from "@/lib/types.ts";
+import {getExtension, getOriginalFilename } from "@/lib/mime.ts";
+import { mapExtensionToDocType } from "@/lib/docTypeMap.ts";
 {/*CHANGE THIS TO ADD MORE TABS!!*/}
 export type ContentTab = "forYou" | "all" | "owned" | "bookmarks";
 
+/**
+ * Single source of truth for all content list filtering in `ViewContent`.
+ *
+ * Filtering runs in two passes: search (display name substring) then the sidebar
+ * checkboxes. Each multi-select filter uses an empty array to mean "no filter applied"
+ * so adding a new option never hides content unexpectedly. Tag filtering is OR — an item
+ * passes if it carries *any* of the selected tags.
+ *
+ * Tab state drives implicit filters: "forYou" restricts to the current user's persona,
+ * "owned" restricts to content they own, "bookmarks" restricts to bookmarked items —
+ * all without touching `advancedFilters`.
+ */
 export function useContentFilters(
     content: ContentItem[],
     bookmarks: BookmarkRecord[],
     currentUserId: number | undefined,
-    currentUserPersona: "underwriter" | "businessAnalyst" | "admin" | undefined,
+    currentUserPersona: Persona | undefined,
 ) {
     const [searchTerm, setSearchTerm] = useState("");
     const [activeTab, setActiveTab] = useState<ContentTab>("forYou");
@@ -17,15 +31,14 @@ export function useContentFilters(
     );
     /**
      * Checkbox state for the filter sidebar. An empty array for a multi-select
-     * field means "no filter applied" (all values pass). The two boolean flags
-     * are additional single-checkbox filters.
+     * field means "no filter applied" (all values pass).
      */
     const [advancedFilters, setAdvancedFilters] = useState({
-        status: [] as Array<"new" | "inProgress" | "complete">,
-        contentType: [] as Array<"reference" | "workflow">,
-        persona: [] as Array<"underwriter" | "businessAnalyst" | "actuarialAnalyst" | "EXLOperator" | "businessOps" | "admin">,
-        bookmarkedOnly: false,
-        ownedByMe: false,
+        status: [] as ContentStatus[],
+        contentType: [] as ContentType[],
+        persona: [] as Persona[],
+        tags: [] as string[],
+        docType: [] as DocType[]
     });
 
     /**
@@ -35,8 +48,8 @@ export function useContentFilters(
         status: [],
         contentType: [],
         persona: [],
-        bookmarkedOnly: false,
-        ownedByMe: false,
+        tags: [],
+        docType: [],
     });
 
     // Second pass: apply the sidebar checkboxes on top of the search results.
@@ -54,30 +67,46 @@ export function useContentFilters(
             advancedFilters.persona.length === 0 ||
             advancedFilters.persona.includes(item.targetPersona);
 
-// On the bookmarks tab, always require bookmarked.
-// Otherwise, respect the bookmarkedOnly checkbox.
-        const requireBookmark = activeTab === "bookmarks" || advancedFilters.bookmarkedOnly;
+        // OR within tags: item passes if it has at least one of the selected filter tags.
+        const matchesTags =
+            advancedFilters.tags.length === 0 ||
+            advancedFilters.tags.some((ft) =>
+                item.tags.some((t) => t.toLowerCase() === ft.toLowerCase())
+            );
+
         const matchesBookmark =
-            !requireBookmark || bookmarks.some((b) => b.bookmarkedContentId === item.id);
-        {/*ADD A MATCHES ____ FOR MORE TABS!!!!*/}
-        const requireOwned = activeTab === "owned" || advancedFilters.ownedByMe;
+            activeTab !== "bookmarks" || bookmarks.some((b) => b.bookmarkedContentId === item.id);
+
+        const ext = item.fileURI
+            ? getExtension(getOriginalFilename(item.fileURI))
+            : null
+        const docType: DocType | null = ext
+            ? mapExtensionToDocType(ext)
+            : item.linkURL
+                ? "links"
+                : null
+        const matchesDocType =
+            advancedFilters.docType.length === 0 ||
+            (docType !== null && advancedFilters.docType.includes(docType))
+
         const matchesOwner =
-            !requireOwned || item.ownerId === currentUserId;
+            activeTab !== "owned" || item.ownerId === currentUserId;
         const matchesForYou =
             activeTab !== "forYou" || item.targetPersona === currentUserPersona;
 
 
-
-
-        {/*ADD A MATCHES ____  RETURN FOR MORE TABS!!!!*/}
+        {/*ADD A MATCHES ____  RETURN FOR MORE TABS!!!!*/
+        }
         return (
             matchesStatus &&
             matchesContentType &&
             matchesPersona &&
+            matchesTags &&
             matchesBookmark &&
+            matchesDocType &&
             matchesOwner &&
-                matchesForYou
-    );
+            matchesForYou
+        );
     });
 
     // Total number of active filter conditions — shown in the "Filters (N)" button label.
@@ -85,8 +114,8 @@ export function useContentFilters(
         advancedFilters.status.length +
         advancedFilters.contentType.length +
         advancedFilters.persona.length +
-        (advancedFilters.bookmarkedOnly ? 1 : 0) +
-        (advancedFilters.ownedByMe ? 1 : 0);
+        advancedFilters.docType.length +
+        advancedFilters.tags.length;
 
     return {
         activeTab,

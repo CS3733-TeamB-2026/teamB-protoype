@@ -4,15 +4,7 @@ import { FolderOpen, Loader2 } from "lucide-react";
 import { ContentIcon } from "@/features/content/components/ContentIcon.tsx";
 import { getCategory, getExtension, getOriginalFilename, lookupByFilename } from "@/lib/mime.ts";
 import { useAuth0 } from "@auth0/auth0-react";
-
-interface ContentItem {
-    id: number;
-    displayName: string;
-    linkURL: string | null;
-    fileURI: string | null;
-    lastModified: string;
-    ownerId: number | null;
-}
+import type { ContentItem } from "@/lib/types.ts";
 
 function MyFiles() {
     const [ownedItems, setOwnedItems] = useState<ContentItem[]>([]);

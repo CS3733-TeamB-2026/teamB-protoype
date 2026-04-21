@@ -1,3 +1,15 @@
+export type ContentType = "reference" | "workflow";
+
+export type ContentStatus = "new" | "inProgress" | "complete";
+
+export type Persona =
+    | "underwriter"
+    | "businessAnalyst"
+    | "actuarialAnalyst"
+    | "EXLOperator"
+    | "businessOps"
+    | "admin";
+
 // Matches the Content model from Prisma (with joined owner)
 export interface ContentItem {
     id: number;
@@ -19,10 +31,22 @@ export interface ContentItem {
     } | null;
     lastModified: string;
     expiration: string | null;
-    contentType: "reference" | "workflow";
-    targetPersona: "underwriter" | "businessAnalyst" | "admin";
-    status: "new" | "inProgress" | "complete" | null;
+    contentType: ContentType;
+    targetPersona: Persona;
+    status: ContentStatus;
+    tags: string[];
 }
+
+// Y'all I couldn't find a way to do it as a part of ContentItem, sorry. -Ricardo
+export type DocType =
+    | "office"
+    | "plain text"
+    | "video"
+    | "audio"
+    | "html"
+    | "zip"
+    | "images"
+    | "links";
 
 export interface BookmarkRecord {
     bookmarkerId: number;
@@ -33,7 +57,7 @@ export type Employee = {
     firstName: string;
     lastName: string;
     id: number;
-    persona: string;
+    persona: Persona;
     profilePhotoURI: string;
     login?: {
         userName: string;

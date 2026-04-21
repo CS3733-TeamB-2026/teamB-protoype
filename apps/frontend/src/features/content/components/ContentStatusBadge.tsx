@@ -1,8 +1,7 @@
 import { Badge } from "@/components/ui/badge.tsx";
+import type { ContentStatus } from "@/lib/types.ts";
 
-type Status = "new" | "inProgress" | "complete";
-
-const STATUS_STYLES: Record<Status, { label: string; className: string }> = {
+const STATUS_STYLES: Record<ContentStatus, { label: string; className: string }> = {
     new:        { label: "New",         className: "bg-labellight2a text-labeltext" },
     inProgress: { label: "In Progress", className: "bg-labellight1a text-labeltext" },
     complete:   { label: "Complete",    className: "bg-labellight4a  text-labeltext" },
@@ -10,7 +9,7 @@ const STATUS_STYLES: Record<Status, { label: string; className: string }> = {
 
 export function ContentStatusBadge({ status }: { status: string | null }) {
     if (!status) return null;
-    const style = STATUS_STYLES[status as Status];
+    const style = STATUS_STYLES[status as ContentStatus];
     if (!style) return null;
     return (
         <Badge className={`rounded-sm text-xs ${style.className}`}>
