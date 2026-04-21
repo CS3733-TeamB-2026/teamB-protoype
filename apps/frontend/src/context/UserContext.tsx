@@ -1,12 +1,13 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import type { Persona } from "@/lib/types.ts";
 
 export interface User {
     id: number;
     firstName: string;
     lastName: string;
     userName: string;
-    persona: "underwriter" | "businessAnalyst" | "admin";
+    persona: Persona;
     profilePhotoURI: string;
 }
 

@@ -73,8 +73,7 @@ import {useAuth0} from "@auth0/auth0-react"
 import {highlight} from "@/lib/highlight.tsx";
 import {formatLabel, formatName} from "@/lib/utils.ts";
 import {toast} from "sonner";
-import type { ContentItem, BookmarkRecord, DocType } from "@/lib/types.ts";
-import type {UrlPreview} from "@/lib/types.ts";
+import type { ContentItem, BookmarkRecord, DocType, ContentStatus, ContentType, Persona, UrlPreview } from "@/lib/types.ts";
 import {usePageTitle} from "@/hooks/use-page-title.ts";
 import {ConfirmCheckoutDialog} from "@/features/content/forms/ConfirmCheckoutDialog.tsx";
 import {ConfirmCheckinDialog} from "@/features/content/forms/ConfirmCheckinDialog.tsx";
@@ -634,12 +633,12 @@ function ViewContent() {
                                                     <label key={status} className="flex items-center gap-2">
                                                         <input
                                                             type="checkbox"
-                                                            checked={advancedFilters.status.includes(status as "new" | "inProgress" | "complete")}
+                                                            checked={advancedFilters.status.includes(status as ContentStatus)}
                                                             onChange={(e) => {
                                                                 setAdvancedFilters((prev) => ({
                                                                     ...prev,
                                                                     status: e.target.checked
-                                                                        ? [...prev.status, status as "new" | "inProgress" | "complete"]
+                                                                        ? [...prev.status, status as ContentStatus]
                                                                         : prev.status.filter((s) => s !== status),
                                                                 }));
                                                             }}
@@ -657,12 +656,12 @@ function ViewContent() {
                                                     <label key={type} className="flex items-center gap-2">
                                                         <input
                                                             type="checkbox"
-                                                            checked={advancedFilters.contentType.includes(type as "reference" | "workflow")}
+                                                            checked={advancedFilters.contentType.includes(type as ContentType)}
                                                             onChange={(e) => {
                                                                 setAdvancedFilters((prev) => ({
                                                                     ...prev,
                                                                     contentType: e.target.checked
-                                                                        ? [...prev.contentType, type as "reference" | "workflow"]
+                                                                        ? [...prev.contentType, type as ContentType]
                                                                         : prev.contentType.filter((t) => t !== type),
                                                                 }));
                                                             }}
@@ -680,12 +679,12 @@ function ViewContent() {
                                                     <label key={persona} className="flex items-center gap-2">
                                                         <input
                                                             type="checkbox"
-                                                            checked={advancedFilters.persona.includes(persona as "underwriter" | "businessAnalyst" | "actuarialAnalyst" | "EXLOperator" | "businessOps" | "admin")}
+                                                            checked={advancedFilters.persona.includes(persona as Persona)}
                                                             onChange={(e) => {
                                                                 setAdvancedFilters((prev) => ({
                                                                     ...prev,
                                                                     persona: e.target.checked
-                                                                        ? [...prev.persona, persona as "underwriter" | "businessAnalyst" | "actuarialAnalyst" | "EXLOperator" | "businessOps" | "admin"]
+                                                                        ? [...prev.persona, persona as Persona]
                                                                         : prev.persona.filter((p) => p !== persona),
                                                                 }));
                                                             }}

@@ -1,5 +1,5 @@
 import {useState} from "react";
-import type { ContentItem, BookmarkRecord, DocType } from "@/lib/types.ts";
+import type { ContentItem, BookmarkRecord, DocType, ContentStatus, ContentType, Persona } from "@/lib/types.ts";
 import {getExtension, getOriginalFilename } from "@/lib/mime.ts";
 import { mapExtensionToDocType } from "@/lib/docTypeMap.ts";
 {/*CHANGE THIS TO ADD MORE TABS!!*/}
@@ -21,7 +21,7 @@ export function useContentFilters(
     content: ContentItem[],
     bookmarks: BookmarkRecord[],
     currentUserId: number | undefined,
-    currentUserPersona: "underwriter" | "businessAnalyst" | "admin" | undefined,
+    currentUserPersona: Persona | undefined,
 ) {
     const [searchTerm, setSearchTerm] = useState("");
     const [activeTab, setActiveTab] = useState<ContentTab>("forYou");
@@ -35,9 +35,9 @@ export function useContentFilters(
      * are additional single-checkbox filters.
      */
     const [advancedFilters, setAdvancedFilters] = useState({
-        status: [] as Array<"new" | "inProgress" | "complete">,
-        contentType: [] as Array<"reference" | "workflow">,
-        persona: [] as Array<"underwriter" | "businessAnalyst" | "actuarialAnalyst" | "EXLOperator" | "businessOps" | "admin">,
+        status: [] as ContentStatus[],
+        contentType: [] as ContentType[],
+        persona: [] as Persona[],
         tags: [] as string[],
         bookmarkedOnly: false,
         ownedByMe: false,

@@ -1,4 +1,4 @@
-import type { ContentItem } from "@/lib/types.ts";
+import type { ContentItem, ContentType, ContentStatus } from "@/lib/types.ts";
 
 /**
  * Shared form state for both Add and Edit content dialogs.
@@ -21,8 +21,8 @@ export type ContentFormValues = {
     name: string;
     linkUrl: string;
     ownerID: number | null;
-    contentType: "reference" | "workflow" | "none";
-    status: "new" | "inProgress" | "complete" | "none";
+    contentType: ContentType | "none";
+    status: ContentStatus | "none";
     /** Matches the `targetPersona` enum on the backend / Prisma schema. */
     targetPersona: string;
     uploadMode: "url" | "file";
