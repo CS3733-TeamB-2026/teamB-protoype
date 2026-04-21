@@ -153,10 +153,10 @@ function ViewEmployees() {
                                     if (col === "firstName") return e.firstName;
                                     if (col === "lastName") return e.lastName;
                                     if (col === "persona") return e.persona;
-                                }).map((employee) => {
+                                }).map((employee, index) => {
                                     const matches = findMatches(employee.firstName+employee.lastName, searchTerm);
                                     return (
-                                        <TableRow key={employee.id}>
+                                        <TableRow key={employee.id} className={`${ index % 2 === 0 ? "bg-muted/10" : ""}`}>
                                             <TableCell>
                                                 <Avatar className="cursor-pointer w-10 h-10 ">
                                                     {
