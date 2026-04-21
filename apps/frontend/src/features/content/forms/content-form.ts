@@ -23,6 +23,7 @@ export type ContentFormValues = {
     dateModified: Date | undefined;
     lastModifiedTime: string; // HH:MM:SS string from <input type="time" step="1">
     dateExpiration: Date | undefined;
+    tags: string[];
 };
 
 export function nowTimeString(): string {
@@ -66,6 +67,7 @@ export function initialValues(userId: number): ContentFormValues {
         dateModified: new Date(),
         lastModifiedTime: nowTimeString(),
         dateExpiration: undefined,
+        tags: [],
     };
 }
 
@@ -92,6 +94,7 @@ export function buildContentFormData(values: ContentFormValues): FormData {
         formData.append("expiration", "");
     }
     formData.append("targetPersona", values.jobPosition);
+    formData.append("tags", JSON.stringify(values.tags));
     if (values.uploadMode === "file" && values.file) {
         formData.append("file", values.file);
     }
@@ -113,5 +116,6 @@ export function fromContentItem(item: ContentItem): ContentFormValues {
         dateModified: lastMod,
         lastModifiedTime: lastMod.toTimeString().substring(0, 8),
         dateExpiration: item.expiration ? new Date(item.expiration) : undefined,
+        tags: item.tags ?? [],
     };
 }
