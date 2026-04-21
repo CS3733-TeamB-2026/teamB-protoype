@@ -106,7 +106,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                         return;
                     }
                 } catch {
-                    // ignore JSON parse errors and fall through to generic error
+                //Generic error for now
                 }
              { toast.error("Error updating content."); return; }}
             const updated = await res.json() as ContentItem;

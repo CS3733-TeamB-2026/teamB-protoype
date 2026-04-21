@@ -190,7 +190,7 @@ export const updateContent = async (req: req, res: res) => {
             await q.Bucket.deleteFile(newFileURI).catch(console.error);
         }
         console.error(error);
-        // The DB-layer updateContent throws "You do not have this content checked out."
+        // updateContent throws "You do not have this content checked out."
         // when the caller's employeeID doesn't match the row's checkedOutById.
         // This happens after a force check-in, a lock expiry, or a check-in from another tab.
         if (error instanceof Error && error.message === "You do not have this content checked out.") {
