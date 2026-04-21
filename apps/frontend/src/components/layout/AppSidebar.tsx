@@ -47,6 +47,7 @@ const navItems: NavItem[] = [
             {title: "Underwriter", icon: User, href: "/underwriter", children: [], access: [], langKey: 'sidebar.underwriter'},
             {title: "Business Analyst", icon: User, href: "/businessanalyst", children: [], access: [], langKey: "sidebar.businessAnalyst"},
         ], access: [], langKey: "sidebar.personas" },
+    { title: "Service Requests", icon: Library, href: "/servicereqs", children: [], access: [], langKey: "sidebar.servicereqs"}
 ]
 
 function AppSidebar() {

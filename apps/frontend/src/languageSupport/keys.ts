@@ -22,6 +22,7 @@ export type TranslationKey =
     | 'sidebar.viewEmployees'
     | 'sidebar.manageEmployees'
     | 'sidebar.team'
+    | 'sidebar.servicereqs'
 
     | 'footer.hanoverContentManager'
     | 'footer.rightsReserved'
