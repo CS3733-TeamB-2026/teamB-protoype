@@ -33,7 +33,7 @@ const links: LinkItem[] = [
 ]
 
 function HelloCard() {
-    const user = useUser();
+    const {user} = useUser();
 
     return (
         <Card className="lg:col-span-1 py-8 px-4 shadow-lg hover:scale-101 transition-transform">
