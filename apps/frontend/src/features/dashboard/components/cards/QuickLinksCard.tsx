@@ -6,7 +6,7 @@ import { useUser } from "@/hooks/use-user.ts"
 
 function QuickLinksCard() {
 
-    const user = useUser();
+    const {user} = useUser();
 
     return (
         <Card className="shadow-lg hover:scale-101 transition-transform">
@@ -44,7 +44,7 @@ function QuickLinksCard() {
                             View Files
                         </Button>
                     </Link>
-                    <Link to="/manageform" className="w-full">
+                    <Link to="/files/bulk" className="w-full">
                         <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-accent hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
                             <Plus className="w-4 h-4 shrink-0" />
                             Add Content

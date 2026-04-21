@@ -39,7 +39,7 @@ interface Props {
  * progress can be tracked and the request can be cancelled mid-flight.
  */
 export function AddContentDialog({ open, onOpenChange, onSave }: Props) {
-    const user = useUser();
+    const {user} = useUser();
     const { getAccessTokenSilently } = useAuth0();
 
     const { values, patch, setSubmitted, errors, hasErrors, formKey, reset } =
@@ -110,8 +110,8 @@ export function AddContentDialog({ open, onOpenChange, onSave }: Props) {
         <Dialog open={open} onOpenChange={(o) => { if (!uploading && !submitting) onOpenChange(o); }}>
             <DialogContent className="sm:max-w-2xl max-h-[80vh] flex flex-col">
                 <DialogHeader>
-                    <DialogTitle className="text-2xl">Add Content</DialogTitle>
-                    <DialogDescription className="text-muted-foreground mb-2">
+                    <DialogTitle className="text-2xl text-primary text-center">Add Content</DialogTitle>
+                    <DialogDescription className="text-muted-foreground mb-2 text-center">
                         Add a new piece of content.
                     </DialogDescription>
                     <Separator />

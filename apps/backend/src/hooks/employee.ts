@@ -2,10 +2,69 @@ import * as q from "@softeng-app/db";
 import {req, res} from "./types"
 import { createAuth0User } from "../helpers/auth0Management";
 
+function buildPhotoURI(employeeId: number, filename:string): string {
+    return `${employeeId}/${crypto.randomUUID()}/${filename}`;
+}
+
+const PROFILE_BUCKET = "profiles"
+
+async function signPhotoUrl<T extends { profilePhotoURI: string | null }>(employee: T): Promise<T> {
+    if (!employee.profilePhotoURI) return employee;
+    const signedUrl = await q.Bucket.createSignedUrl(
+        employee.profilePhotoURI,
+        3600,
+        PROFILE_BUCKET
+    );
+    return { ...employee, profilePhotoURI: signedUrl };
+}
+
+export const uploadProfilePhoto = async (req: req, res: res)=> {
+    const auth0Id = req.auth?.payload.sub;
+    let fileURI: string | null = null;
+    let uploaded = false;
+
+    try {
+        if (!auth0Id) return res.status(401).end();
+        if (!req.file) return res.status(400).json({ message: "No file uploaded" });
+        if (!req.file.mimetype.startsWith("image/")) {
+            return res.status(400).json({ message: "File must be an image" });
+        }
+        if (req.file.size > 5 * 1024 * 1024) {
+            return res.status(400).json({ message: "File must be under 5MB" });
+        }
+
+        const employee = await q.Employee.queryEmployeeByAuth(auth0Id);
+        if (!employee) return res.status(404).json({ message: "No employee found" });
+
+        const oldURI = employee.profilePhotoURI;
+
+        fileURI = buildPhotoURI(employee.id, req.file.originalname);
+        const uploadResult = await q.Bucket.uploadFile(req.file.buffer, fileURI, PROFILE_BUCKET);
+        uploaded = true;
+        fileURI = uploadResult.path;
+
+        const updated = await q.Employee.updateProfilePhotoURI(employee.id, fileURI);
+
+        if (oldURI) {
+            await q.Bucket.deleteFile(oldURI, PROFILE_BUCKET).catch(console.error);
+        }
+
+        return res.status(200).json(updated);
+
+    } catch (error) {
+        if (uploaded && fileURI) {
+            await q.Bucket.deleteFile(fileURI, PROFILE_BUCKET).catch(console.error);
+        }
+        console.error(error);
+        return res.status(500).end();
+    }
+}
+
 export const getAllEmployeesWithLogin = async (req: req, res: res) => {
     try {
         const employees = await q.Employee.queryAllEmployeesWithLogin();
-        return res.status(200).json(employees);
+        const signed = await Promise.all(employees.map(signPhotoUrl));
+        return res.status(200).json(signed);
     } catch (error) {
         console.error(error);
         return res.status(500).end();
@@ -16,18 +75,41 @@ export const getMe = async (req: req, res: res) => {
 
     const auth0Id = req.auth?.payload.sub;
 
-    const employee = await q.Employee.queryEmployeeByAuth(auth0Id);
+    try {
+        if (!auth0Id) return res.status(401).end();
 
-    if (!employee) return res.status(404).json({error: "No employee found"});
+        const employee = await q.Employee.queryEmployeeByAuth(auth0Id);
 
-    return res.json(employee);
+        if (!employee) return res.status(404).json({error: "No employee found"});
+
+        let signedPhotoUrl: string | null = null;
+        if (employee.profilePhotoURI) {
+            signedPhotoUrl = await q.Bucket.createSignedUrl(
+                employee.profilePhotoURI,
+                3600,
+                PROFILE_BUCKET
+            )
+        }
+
+        return res.status(200).json({
+            ...employee,
+            profilePhotoURI: signedPhotoUrl,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+
 
 }
 
 export const getAllEmployees = async (req: req, res: res) => {
     try {
         const employees = await q.Employee.queryAllEmployees();
-        return res.status(200).json(employees);
+
+        const withSignedUrls = await Promise.all(employees.map(signPhotoUrl));
+
+        return res.status(200).json(withSignedUrls);
     } catch (error) {
         console.error(error);
         return res.status(500).end();
@@ -37,8 +119,11 @@ export const getAllEmployees = async (req: req, res: res) => {
 export const getEmployeeById = async (req: req, res: res) => {
     try {
         const id = parseInt(req.params.id);
-        const employees = await q.Employee.queryEmployeeById(id);
-        return res.status(200).json(employees);
+        const employee = await q.Employee.queryEmployeeById(id);
+        if (!employee) {
+            return res.status(404).json({ message: "Employee not found" });
+        }
+        return res.status(200).json(await signPhotoUrl(employee));
     } catch (error) {
         console.error(error);
         return res.status(500).end();

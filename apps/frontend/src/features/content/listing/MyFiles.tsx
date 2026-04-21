@@ -11,7 +11,7 @@ function MyFiles() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const user = useUser();
+    const {user} = useUser();
     const { getAccessTokenSilently } = useAuth0();
 
     useEffect(() => {

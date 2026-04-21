@@ -5,10 +5,10 @@ import { useUser } from "@/hooks/use-user.ts";
 
 function HelloCard() {
 
-    const user = useUser();
+    const {user} = useUser();
 
     return (
-        <Card className="lg:col-span-3 py-8 px-4 shadow-lg hover:scale-101 transition-transform">
+        <Card className="md:col-span-2 py-8 px-4 shadow-lg hover:scale-101 transition-transform">
             <CardHeader>
                 <div className="flex justify-between items-center">
                     <div className="flex flex-row gap-5 items-center">
