@@ -100,7 +100,7 @@ enum Persona {
   businessAnalyst
   actuarialAnalyst
   EXLOperator
-  businessOperator
+  businessOps
   admin
 
   @@schema("public")
