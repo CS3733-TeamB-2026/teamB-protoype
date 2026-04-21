@@ -10,9 +10,10 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog.tsx";
-import {useLocale} from "@/languageSupport/localeContext.tsx";
-import {useTranslation} from "@/languageSupport/useTranslation.ts";
 
+/**
+ * Props for the ConfirmCheckoutDialog component.
+ */
 interface Props {
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -20,13 +21,19 @@ interface Props {
     onConfirm: () => Promise<void>;
 }
 
-export function ConfirmDeleteDialog({ open, onOpenChange, description, onConfirm }: Props) {
+/**
+ * A confirmation dialog component for content checkout operations.
+ * Displays a warning to the user about locking content and handles the async confirmation process
+ * with a loading state.
+ */
+export function ConfirmCheckinDialog({ open, onOpenChange, description, onConfirm }: Props) {
     const [loading, setLoading] = useState(false);
-    const { locale } = useLocale();
-    const { ts } = useTranslation(locale);
 
+    /**
+     * Handles the confirm action, managing the loading state while the async operation completes.
+     */
     async function handleConfirm(e: React.MouseEvent) {
-        e.preventDefault(); // prevent AlertDialogAction from closing the dialog
+        e.preventDefault();
         setLoading(true);
         try {
             await onConfirm();
@@ -35,24 +42,24 @@ export function ConfirmDeleteDialog({ open, onOpenChange, description, onConfirm
         }
     }
 
+
     return (
         <AlertDialog open={open} onOpenChange={loading ? undefined : onOpenChange}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>{ts('content.deleteConfirmation')}</AlertDialogTitle>
+                    <AlertDialogTitle>Do you want to check in this content?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        {description ?? "This action cannot be undone."}
+                        {description ?? "You will not be able to edit or delete this content unless you check it back out."}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
                     <AlertDialogAction
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90 hover:text-primary-foreground!"
+                        className="bg-accent! text-white! hover:bg-accent/90!"
                         disabled={loading}
                         onClick={handleConfirm}
-                        variant="destructive"
                     >
-                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Delete"}
+                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Check in"}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

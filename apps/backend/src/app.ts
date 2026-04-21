@@ -18,7 +18,6 @@ app.use(cors());
 app.use(morgan("dev"));
 app.use(express.json());
 const upload = multer({ storage: multer.memoryStorage() });
-const LOCK_TIMEOUT_MS = 2 * 60 * 1000;
 
 const checkJwt = auth({
     audience: 'https://hanover-cma-api',
@@ -40,6 +39,7 @@ app.get("/api/servicereqs", servicereqs.allServiceReqs)
 app.get("/api/assigned", servicereqs.allAssignedReqs)
 // Content
 app.get("/api/content", content.getAllContent)
+app.get("/api/content/tags", content.getAllTags)
 app.post("/api/content/checkin", content.checkinContent)
 app.post("/api/content/checkout", content.checkoutContent)
 app.get("/api/content/info/:id", content.getContentInfo)
@@ -75,6 +75,3 @@ app.listen(3000, '0.0.0.0', () => {
         console.log(`    http://localhost:3000`);
 })
 
-setInterval(async () => {
-    await content.clearExpiredLocks();
-}, 30 * 1000);

@@ -2,7 +2,6 @@ import * as p from "../generated/prisma/client";
 import {prisma} from "../lib/prisma";
 import {Helper} from "./helper";
 
-const LOCK_TIMEOUT_MS = 2 * 60 * 1000;
 
 export class Content {
     public static async updateContent(
@@ -16,6 +15,7 @@ export class Content {
         _lastModified: Date,
         _expiration: Date | null,
         _targetPersona: string,
+        _tags: string[],
         _checkedOutById: number,
     ): Promise<p.Content> {
         const _personaTyped: p.Persona | null = Helper.personaHelper(_targetPersona)
@@ -35,10 +35,6 @@ export class Content {
             throw new Error("You do not have this content checked out.")
         }
 
-        if (Content.isLockExpired(content.checkedOutAt)) {
-            throw new Error("Your editing lock expired. Please close and try again.")
-        }
-
         return prisma.content.update({
             where: {id: id},
             data: {
@@ -51,8 +47,7 @@ export class Content {
                 lastModified: _lastModified,
                 expiration: _expiration,
                 targetPersona: _personaTyped,
-                checkedOutById: null,
-                checkedOutAt: null,
+                tags: _tags,
             }
         });
     }
@@ -67,6 +62,7 @@ export class Content {
         _lastModified: Date,
         _expiration: Date | null,
         _targetPersona: string,
+        _tags: string[] = [],
     ): Promise<p.Content> {
         if (!_linkURL && !_fileURI) {
             throw new Error("Content must have either a linkURL or a fileURI")
@@ -90,6 +86,7 @@ export class Content {
                 lastModified: _lastModified,
                 expiration: _expiration,
                 targetPersona: _personaTyped,
+                tags: _tags,
             }
         })
     }
@@ -103,7 +100,6 @@ export class Content {
     public static async queryAllContent() {
         return prisma.content.findMany({
             include: {owner: true, checkedOutBy: true,},
-
         })
     }
 
@@ -135,15 +131,13 @@ export class Content {
     public static async checkoutContent(id: number, employeeID: number){
         const content = await prisma.content.findUnique({
             where: {id: id},
-            include: {owner: true,
-            checkedOutBy: true,}
+            include: {owner: true, checkedOutBy: true,}
         })
         if (!content) {
             throw new Error("Content not found");
         }
         const locked = content.checkedOutById !== null && content.checkedOutById !== employeeID;
-        const expired = Content.isLockExpired(content.checkedOutAt);
-        if (locked && !expired) {
+        if (locked) {
             const first = content.checkedOutBy?.firstName ?? "Someone";
             const last = content.checkedOutBy?.lastName ?? "";
             throw new Error(`${first} ${last}`.trim() + " is currently modifying this content.");
@@ -161,10 +155,6 @@ export class Content {
         });
     }
 
-    private static isLockExpired(checkedOutAt: Date | null): boolean {
-        if (!checkedOutAt) return true;
-        return Date.now() - new Date(checkedOutAt).getTime() > LOCK_TIMEOUT_MS;
-    }
 
     public static async checkinContent(id: number, employeeID: number): Promise<void> {
         await prisma.content.update({
@@ -173,16 +163,5 @@ export class Content {
         })
     }
 
-    public static async clearExpiredLocks(before: Date): Promise<void> {
-        await prisma.content.updateMany({
-            where: {
-                checkedOutAt: { lt: before },
-                checkedOutById: { not: null }
-            },
-            data: {
-                checkedOutById: null,
-                checkedOutAt: null,
-            }
-        })
-    }
+
 }
