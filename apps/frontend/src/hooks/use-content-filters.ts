@@ -24,6 +24,7 @@ export function useContentFilters(
         status: [] as Array<"new" | "inProgress" | "complete">,
         contentType: [] as Array<"reference" | "workflow">,
         persona: [] as Array<"underwriter" | "businessAnalyst" | "actuarialAnalyst" | "EXLOperator" | "businessOps" | "admin">,
+        tags: [] as string[],
         bookmarkedOnly: false,
         ownedByMe: false,
     });
@@ -35,6 +36,7 @@ export function useContentFilters(
         status: [],
         contentType: [],
         persona: [],
+        tags: [],
         bookmarkedOnly: false,
         ownedByMe: false,
     });
@@ -53,6 +55,13 @@ export function useContentFilters(
         const matchesPersona =
             advancedFilters.persona.length === 0 ||
             advancedFilters.persona.includes(item.targetPersona);
+
+        // OR within tags: item passes if it has at least one of the selected filter tags.
+        const matchesTags =
+            advancedFilters.tags.length === 0 ||
+            advancedFilters.tags.some((ft) =>
+                item.tags.some((t) => t.toLowerCase() === ft.toLowerCase())
+            );
 
 // On the bookmarks tab, always require bookmarked.
 // Otherwise, respect the bookmarkedOnly checkbox.
@@ -74,10 +83,11 @@ export function useContentFilters(
             matchesStatus &&
             matchesContentType &&
             matchesPersona &&
+            matchesTags &&
             matchesBookmark &&
             matchesOwner &&
-                matchesForYou
-    );
+            matchesForYou
+        );
     });
 
     // Total number of active filter conditions — shown in the "Filters (N)" button label.
@@ -85,6 +95,7 @@ export function useContentFilters(
         advancedFilters.status.length +
         advancedFilters.contentType.length +
         advancedFilters.persona.length +
+        advancedFilters.tags.length +
         (advancedFilters.bookmarkedOnly ? 1 : 0) +
         (advancedFilters.ownedByMe ? 1 : 0);
 

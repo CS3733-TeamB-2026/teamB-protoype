@@ -77,6 +77,7 @@ import type {UrlPreview} from "@/lib/types.ts";
 import {usePageTitle} from "@/hooks/use-page-title.ts";
 import {ConfirmCheckoutDialog} from "@/features/content/forms/ConfirmCheckoutDialog.tsx";
 import {ConfirmCheckinDialog} from "@/features/content/forms/ConfirmCheckinDialog.tsx";
+import {TagInput} from "@/features/content/tags/TagInput.tsx";
 import {Tabs, TabsTrigger} from "@/components/ui/tabs"
 import { SlidingTabs } from "@/components/shared/SlidingTabs.tsx";
 import { useContentFilters, type ContentTab } from "@/hooks/use-content-filters.ts";
@@ -650,6 +651,15 @@ function ViewContent() {
                                         </div>
 
                                         <div>
+                                            <p className="font-medium mb-2">Tags</p>
+                                            <TagInput
+                                                value={advancedFilters.tags}
+                                                onChange={(tags) => setAdvancedFilters((prev) => ({ ...prev, tags }))}
+                                                creatable={false}
+                                            />
+                                        </div>
+
+                                        <div>
                                             <p className="font-medium mb-2">Other</p>
                                             <div className="flex flex-col gap-1.5">
                                                 {activeTab !== "bookmarks" && (
@@ -988,6 +998,12 @@ function ViewContent() {
                                                                     <span className="font-medium text-foreground">Days left:{" "}</span>
                                                                             {Math.ceil((new Date(item.expiration).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)).toLocaleString()}
                                                                 </span>
+                                                                    )}
+                                                                    {item.tags.length > 0 && (
+                                                                        <span>
+                                                                            <span className="font-medium text-foreground">Tags:{" "}</span>
+                                                                            {item.tags.join(", ")}
+                                                                        </span>
                                                                     )}
                                                                 </div>
                                                             </TableCell>

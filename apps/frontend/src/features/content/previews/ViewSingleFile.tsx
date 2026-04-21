@@ -100,6 +100,11 @@ export function ViewSingleFile() {
                                 <ContentStatusBadge status={item.status} />
                                 <ContentTypeBadge contentType={item.contentType} />
                                 <PersonaBadge persona={item.targetPersona} />
+                                {item.tags.length > 0 && (
+                                    <span className="text-muted-foreground">
+                                        Tags: <span className="text-foreground">{item.tags.join(", ")}</span>
+                                    </span>
+                                )}
                             </div>
 
                             {originalFilename && (
