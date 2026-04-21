@@ -12,10 +12,8 @@ function DisclaimerAlert() {
     const {isAuthenticated} = useAuth0();
 
     useEffect( () => {
-        console.log("DisclaimerAlert");
         const timer = setTimeout(() => {
             if (location.pathname == "/" && !hasShownAlert.current && !isAuthenticated) {
-                console.log("DisclaimerAlert2");
                 hasShownAlert.current = true;
                 setTimeout(() => setOpen(true), 1000);
                 setTimeout(() => setOpen(false), 6000);
@@ -30,7 +28,6 @@ function DisclaimerAlert() {
             <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
                  className={`absolute flex items-center overflow-hidden transition-all duration-900 ease-in-out ${ open || hovered ? "text-primary-foreground" : "text-primary-foreground/25"}`}
                  style={{maxWidth: open || hovered ? '800px' : '35px'}}
-                 onClick={() => { document.documentElement.classList.toggle('dark'); }}
             >
                 <Info className={`transition-colors duration-200 w-8! h-8! shrink-0 ${ open || hovered ? "text-accent" : "text-primary-foreground/15"}`}/>
                 <span className="ml-2 w-100 shrink-0 text-xs">

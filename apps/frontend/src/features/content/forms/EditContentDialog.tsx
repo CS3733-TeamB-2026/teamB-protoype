@@ -46,7 +46,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
 
     const handleReset = () => reset(fromContentItem(content));
 
-    const user = useUser();
+    const {user} = useUser();
     const { getAccessTokenSilently } = useAuth0();
 
     // Kick the user out if the checkout expires.

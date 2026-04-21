@@ -17,6 +17,7 @@ import { useUser } from "@/hooks/use-user.ts"
 import {useLocale} from "@/languageSupport/localeContext.tsx";
 import {useTranslation} from "@/languageSupport/useTranslation.ts";
 import DisclaimerAlert from "@/components/layout/DisclaimerAlert"
+import {useState} from "react";
 
 const LOCALES = [
     { code: "en_us", label: "English" },
@@ -27,12 +28,13 @@ function Navbar() {
     const { toggleSidebar } = useSidebar();
     //const [loginOpen, setLoginOpen] = React.useState(false);
     //const [user, setUser] = useUser();
+    const [userOpen, setUserOpen] = useState(false);
 
     const navigate = useNavigate();
 
     const { isAuthenticated, loginWithRedirect, logout } = useAuth0();
 
-    const user = useUser();
+    const {user} = useUser();
     const { locale, setLocale } = useLocale();
     const { ts } = useTranslation(locale);
 
@@ -60,7 +62,7 @@ function Navbar() {
                 <div className="flex-1" />
 
                 {/* user avatar popover */}
-                <Popover>
+                <Popover open={userOpen} onOpenChange={setUserOpen}>
                     <PopoverTrigger asChild>
                         {
                             isAuthenticated && !user ?
@@ -111,13 +113,19 @@ function Navbar() {
                                     <div className="flex flex-row items-center gap-3 mx-1">
                                         <button
                                             className="active:scale-97 bg-secondary rounded-full px-2 py-2 transition-colors hover:bg-accent hover:text-primary-foreground"
-                                            onClick={() => navigate("/settings")}
+                                            onClick={() => {
+                                                navigate("/settings");
+                                                setUserOpen(false);
+                                            }}
                                         >
                                             <Settings />
                                         </button>
                                         <button
                                             className="active:scale-97 bg-secondary rounded-full px-2 py-2 transition-colors hover:bg-accent hover:text-primary-foreground"
-                                            onClick={() => navigate("/employeehome")}
+                                            onClick={() => {
+                                                navigate("/employeehome");
+                                                setUserOpen(false);
+                                            }}
                                         >
                                             <LayoutDashboard />
                                         </button>

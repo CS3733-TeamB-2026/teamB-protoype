@@ -33,7 +33,7 @@ interface Props {
  * reset, clearing any local state inside that component (e.g., file picker errors).
  */
 export function AddContentDialog({ open, onOpenChange, onSave }: Props) {
-    const user = useUser();
+    const {user} = useUser();
     const { getAccessTokenSilently } = useAuth0();
 
     const { values, patch, setSubmitted, errors, hasErrors, formKey, reset } =

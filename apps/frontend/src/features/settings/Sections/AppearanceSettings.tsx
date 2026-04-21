@@ -16,7 +16,10 @@ function AppearanceSettings() {
             <Card>
                 <CardContent className="py-4 px-6">
                     <div className="space-y-3">
-                        <Label className="text-lg text-primary">Theme:</Label>
+                        <Label className="text-lg text-primary font-medium mb-1">
+                            Theme:
+                        </Label>
+                        <p className="text-muted-foreground">Set the color scheme of the application.</p>
                         <RadioGroup value={theme} onValueChange={setTheme}>
                             <div className="flex items-center space-x-2">
                                 <RadioGroupItem value="light" id="light" />

@@ -6,7 +6,7 @@ import { useUser } from "@/hooks/use-user.ts"
 
 function QuickLinksCard() {
 
-    const user = useUser();
+    const {user} = useUser();
 
     return (
         <Card className="shadow-lg hover:scale-101 transition-transform">

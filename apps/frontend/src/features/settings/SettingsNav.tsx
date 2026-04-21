@@ -19,8 +19,8 @@ function SettingsNav() {
                     className={({ isActive }) =>
                         cn(
                             "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
-                            "hover:bg-accent hover:text-accent-foreground",
-                            isActive && "bg-accent text-primary-foreground font-medium"
+                            "hover:bg-accent-dark/80 hover:text-primary-foreground",
+                            isActive && "bg-accent/80 text-primary-foreground font-medium"
                         )
                     }
                 >

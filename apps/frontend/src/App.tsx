@@ -19,7 +19,8 @@ import { Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import {LocaleProvider} from "@/languageSupport/localeContext.tsx";
 import SettingsLayout from "@/features/settings/SettingsLayout.tsx";
-import AppearanceSettings from "@/features/settings/Sections/AppearanceSettings.tsx";
+import AppearanceSettings from "@/features/settings/sections/AppearanceSettings.tsx";
+import ProfileSettings from "@/features/settings/sections/ProfileSettings.tsx"
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const { isAuthenticated } = useAuth0();
@@ -62,7 +63,9 @@ function App() {
                             <Route path="/employeehome" element={<ProtectedRoute><Dashboard/></ProtectedRoute>}/>
                             <Route path="/file/:id" element={<ProtectedRoute><ViewSingleFile/></ProtectedRoute>}/>
                             <Route path="/settings" element={<ProtectedRoute><SettingsLayout/></ProtectedRoute>}>
+                                <Route index element={<ProtectedRoute><Navigate to="profile" replace /></ProtectedRoute>} />
                                 <Route path="appearance" element={<ProtectedRoute><AppearanceSettings/></ProtectedRoute>} />
+                                <Route path="profile" element={<ProtectedRoute><ProfileSettings/></ProtectedRoute>} />
                             </Route>
                         </Routes>
                     </main>

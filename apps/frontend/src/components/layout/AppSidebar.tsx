@@ -50,7 +50,7 @@ const navItems: NavItem[] = [
 function AppSidebar() {
     const { locale } = useLocale();
     const { ts } = useTranslation(locale);
-    const user = useUser();
+    const {user} = useUser();
     const {toggleSidebar} = useSidebar();
 
     return (

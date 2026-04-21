@@ -18,7 +18,7 @@ function SettingsSection({
     return (
         <section className={cn("space-y-6", className)}>
             <div className="space-y-1">
-                <h2 className="text-xl font-semibold tracking-tight">{title}</h2>
+                <h2 className="text-xl font-semibold tracking-tight text-primary">{title}</h2>
                 {description && (
                     <p className="text-sm text-muted-foreground">{description}</p>
                 )}

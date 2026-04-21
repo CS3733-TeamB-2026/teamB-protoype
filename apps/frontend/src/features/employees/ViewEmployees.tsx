@@ -28,7 +28,7 @@ function ViewEmployees() {
     const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<Employee | null>(null);
     const [addOpen, setAddOpen] = useState(false);  // <-- new
-    const user = useUser();
+    const {user} = useUser();
     const [sort, toggleSort] = useSortState<"id" | "firstName" | "lastName" | "persona" | "userName">({column: "id", direction: "asc"});
     const [searchTerm, setSearchTerm] = useState("");
     const { getAccessTokenSilently } = useAuth0();

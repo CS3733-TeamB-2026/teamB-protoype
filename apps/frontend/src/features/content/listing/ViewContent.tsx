@@ -128,7 +128,7 @@ function ViewContent() {
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
 
-    const user = useUser();
+    const {user} = useUser();
 
     const {
         activeTab,
