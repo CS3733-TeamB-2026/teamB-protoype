@@ -72,7 +72,7 @@ import {useAuth0} from "@auth0/auth0-react"
 import {highlight} from "@/lib/highlight.tsx";
 import {formatLabel, formatName} from "@/lib/utils.ts";
 import {toast} from "sonner";
-import type {ContentItem, BookmarkRecord} from "@/lib/types.ts";
+import type { ContentItem, BookmarkRecord, DocType } from "@/lib/types.ts";
 import type {UrlPreview} from "@/lib/types.ts";
 import {usePageTitle} from "@/hooks/use-page-title.ts";
 import {ConfirmCheckoutDialog} from "@/features/content/forms/ConfirmCheckoutDialog.tsx";
@@ -421,6 +421,17 @@ function ViewContent() {
         setEditOpen(true);
     };
 
+    const docTypeLabels: Record<DocType, string> = {
+        office: "Office (PDF, Word..)",
+        audio: "Audio",
+        video: "Video",
+        images: "Images",
+        html: "HTML",
+        zip: "ZIP",
+        "plain text": "Plain Text",
+        links: "Links"
+    }
+
     // Total column count used for colSpan on the expanded detail rows.
     const NUM_COLS = 8;
 
@@ -651,6 +662,30 @@ function ViewContent() {
                                         </div>
 
                                         <div>
+                                            <p className="font-medium mb-2">File Type</p>
+                                            <div className="flex flex-col gap-1.5">
+                                                {Object.entries(docTypeLabels).map(([key, label]) => {
+                                                    const dt = key as DocType
+
+                                                    return (
+                                                        <label key={dt} className="flex items-center gap-2">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={advancedFilters.docType.includes(dt)}
+                                                                onChange={(e) => {
+                                                                    setAdvancedFilters((prev) => ({
+                                                                        ...prev,
+                                                                        docType: e.target.checked
+                                                                            ? [...prev.docType, dt]
+                                                                            : prev.docType.filter((t) => t !== dt),
+                                                                    }))
+                                                                }}
+                                                            />
+                                                            <span>{label}</span>
+                                                        </label>
+                                                    )
+                                                })}
+                                            </div>
                                             <p className="font-medium mb-2">Tags</p>
                                             <TagInput
                                                 value={advancedFilters.tags}
