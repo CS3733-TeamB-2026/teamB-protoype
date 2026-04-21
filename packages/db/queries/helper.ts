@@ -11,7 +11,7 @@ export class Helper {
         } else if (_persona == "EXLOperator") {
             return p.Persona.EXLOperator
         } else if (_persona == "businessOps") {
-            return p.Persona.businessOperator
+            return p.Persona.businessOps
         } else if (_persona == "admin") {
             return p.Persona.admin
         } else {
