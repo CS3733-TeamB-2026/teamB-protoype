@@ -35,4 +35,17 @@ export class Helper {
         }
 
     }
+
+    public static requestHelper(_type: string | null): p.RequestType | null {
+        if (_type == "reviewClaim") {
+            return p.RequestType.reviewClaim
+        } else if (_type == "requestAdjuster") {
+            return p.RequestType.requestAdjuster
+        } else if (_type == "checkClaim") {
+            return p.RequestType.checkClaim
+        } else {
+            console.log(_type)
+            return null
+        }
+    }
 }
