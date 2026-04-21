@@ -30,9 +30,7 @@ export class Helper {
         } else if (_status == "complete") {
             return p.Status.complete
         } else {
-            return p.Status.new
-            //TODO: figure out a default return
+            throw new Error("Invalid status: " + _status)
         }
-
     }
 }

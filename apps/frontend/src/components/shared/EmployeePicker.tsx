@@ -7,7 +7,7 @@ import { useAuth0 } from "@auth0/auth0-react"
 
 interface Props {
     selectedId: number | null;
-    onSelect: (id: number | null) => void;
+    onSelect: (id: number | null, employee: EmployeeCardData | null) => void;
 }
 
 export function EmployeePicker({ selectedId, onSelect }: Props) {
@@ -104,7 +104,7 @@ export function EmployeePicker({ selectedId, onSelect }: Props) {
                                     className={`w-full justify-start h-auto px-3 py-2 font-normal rounded-none text-muted-foreground ${
                                         selectedId === null ? "bg-accent" : ""
                                     }`}
-                                    onClick={() => { onSelect(null); setOpen(false); setSearch(""); }}
+                                    onClick={() => { onSelect(null, null); setOpen(false); setSearch(""); }}
                                 >
                                     None
                                 </Button>
@@ -122,7 +122,7 @@ export function EmployeePicker({ selectedId, onSelect }: Props) {
                                                 selectedId != null && emp.id === selectedId ? "bg-accent" : ""
                                             }`}
                                             onClick={() => {
-                                                onSelect(emp.id);
+                                                onSelect(emp.id, emp);
                                                 setOpen(false);
                                                 setSearch("");
                                             }}

@@ -61,7 +61,7 @@ model Content {
 
   contentType   ContentType
   targetPersona Persona
-  status        Status?
+  status        Status
   bookmarks     Bookmark[]
 
   tags String[]
