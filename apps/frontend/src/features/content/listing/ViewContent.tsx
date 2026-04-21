@@ -829,11 +829,14 @@ function ViewContent() {
                                                         }}
                                                     >
                                                         <TableCell className="w-8 pr-0">
-                                                            {isLink && linkPreviews[item.id]?.favicon ? (<img
-                                                                    src={linkPreviews[item.id]!.favicon!}
-                                                                    alt=""
-                                                                    className="w-5 h-5 shrink-0"
-                                                                />
+                                                            {isLink && linkPreviews[item.id]?.favicon ? (
+                                                                <div className="w-5 h-5 flex items-center justify-center">
+                                                                    <img
+                                                                        src={linkPreviews[item.id]!.favicon!}
+                                                                        alt=""
+                                                                        className="size-full object-contain"
+                                                                    />
+                                                                </div>
                                                                 ) : (<ContentIcon
                                                                     category={category}
                                                                     isLink={isLink}

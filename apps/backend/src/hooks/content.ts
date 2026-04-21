@@ -1,14 +1,61 @@
 import * as q from "@softeng-app/db";
 import mime from "mime-types";
 import * as cheerio from 'cheerio';
+import dns from "node:dns/promises";
 import {req, res} from "./types"
+
+/** Returns true if the IPv4/IPv6 address is a loopback, private, or link-local address. */
+function isPrivateIP(ip: string): boolean {
+    const v4 = [
+        /^127\./,                          // 127.0.0.0/8  loopback
+        /^10\./,                           // 10.0.0.0/8   RFC-1918
+        /^172\.(1[6-9]|2\d|3[01])\./,     // 172.16.0.0/12 RFC-1918
+        /^192\.168\./,                     // 192.168.0.0/16 RFC-1918
+        /^169\.254\./,                     // 169.254.0.0/16 link-local / AWS metadata
+        /^0\./,                            // 0.0.0.0/8
+    ];
+    if (v4.some(r => r.test(ip))) return true;
+    // IPv6 loopback, link-local (fe80::/10), unique-local (fc00::/7)
+    if (ip === "::1") return true;
+    if (/^fe[89ab][0-9a-f]:/i.test(ip)) return true;
+    if (/^f[cd][0-9a-f]{2}:/i.test(ip)) return true;
+    return false;
+}
+
+/**
+ * Validates that a URL is safe to fetch as a server-side proxy:
+ * - scheme must be http or https
+ * - all DNS-resolved addresses must be public (blocks SSRF)
+ */
+async function assertPublicUrl(rawUrl: string): Promise<void> {
+    let parsed: URL;
+    try { parsed = new URL(rawUrl); } catch { throw new Error("Invalid URL"); }
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+        throw new Error("Only http/https URLs are allowed");
+    }
+    const addresses = await dns.lookup(parsed.hostname, { all: true });
+    for (const { address } of addresses) {
+        if (isPrivateIP(address)) throw new Error("URL resolves to a private/internal address");
+    }
+}
+
+const PREVIEW_MAX_BYTES = 2 * 1024 * 1024; // 2 MB
 
 export const previewContent = async (req: req, res: res) => {
     try {
         const url = req.query.url as string;
         if (!url) return res.status(400).json({ message: "Missing url parameter" });
-        const response = await fetch(url);
-        const html = await response.text();
+        try {
+            await assertPublicUrl(url);
+        } catch (e: any) {
+            return res.status(400).json({ message: e.message });
+        }
+        const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
+        const buffer = await response.arrayBuffer();
+        if (buffer.byteLength > PREVIEW_MAX_BYTES) {
+            return res.status(400).json({ message: "Response too large" });
+        }
+        const html = new TextDecoder().decode(buffer);
         const $ = cheerio.load(html);
         const base = new URL(url);
         const og = (prop: string) => $(`meta[property="og:${prop}"]`).attr("content") ?? null;
