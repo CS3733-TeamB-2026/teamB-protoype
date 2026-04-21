@@ -1,15 +1,18 @@
-import {useState,} from "react";
-import type {ContentItem, BookmarkRecord} from "@/lib/types.ts";
-
-export type ContentTab = "all" | "bookmarks";
+import {useState} from "react";
+import type { ContentItem, BookmarkRecord, DocType } from "@/lib/types.ts";
+import {getExtension, getOriginalFilename } from "@/lib/mime.ts";
+import { mapExtensionToDocType } from "@/lib/docTypeMap.ts";
+{/*CHANGE THIS TO ADD MORE TABS!!*/}
+export type ContentTab = "forYou" | "all" | "owned" | "bookmarks";
 
 export function useContentFilters(
     content: ContentItem[],
     bookmarks: BookmarkRecord[],
     currentUserId: number | undefined,
+    currentUserPersona: "underwriter" | "businessAnalyst" | "admin" | undefined,
 ) {
     const [searchTerm, setSearchTerm] = useState("");
-    const [activeTab, setActiveTab] = useState<ContentTab>("all");
+    const [activeTab, setActiveTab] = useState<ContentTab>("forYou");
     // First pass: filter by the search box (case-insensitive display name match).
     const searchedContent = content.filter((item) =>
         item.displayName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -22,9 +25,11 @@ export function useContentFilters(
     const [advancedFilters, setAdvancedFilters] = useState({
         status: [] as Array<"new" | "inProgress" | "complete">,
         contentType: [] as Array<"reference" | "workflow">,
-        persona: [] as Array<"underwriter" | "businessAnalyst" | "admin">,
+        persona: [] as Array<"underwriter" | "businessAnalyst" | "actuarialAnalyst" | "EXLOperator" | "businessOps" | "admin">,
+        tags: [] as string[],
         bookmarkedOnly: false,
         ownedByMe: false,
+        docType: [] as DocType[]
     });
 
     /**
@@ -34,8 +39,10 @@ export function useContentFilters(
         status: [],
         contentType: [],
         persona: [],
+        tags: [],
         bookmarkedOnly: false,
         ownedByMe: false,
+        docType: [],
     });
 
     // Second pass: apply the sidebar checkboxes on top of the search results.
@@ -53,21 +60,50 @@ export function useContentFilters(
             advancedFilters.persona.length === 0 ||
             advancedFilters.persona.includes(item.targetPersona);
 
+        // OR within tags: item passes if it has at least one of the selected filter tags.
+        const matchesTags =
+            advancedFilters.tags.length === 0 ||
+            advancedFilters.tags.some((ft) =>
+                item.tags.some((t) => t.toLowerCase() === ft.toLowerCase())
+            );
+
 // On the bookmarks tab, always require bookmarked.
 // Otherwise, respect the bookmarkedOnly checkbox.
         const requireBookmark = activeTab === "bookmarks" || advancedFilters.bookmarkedOnly;
         const matchesBookmark =
             !requireBookmark || bookmarks.some((b) => b.bookmarkedContentId === item.id);
+        {/*ADD A MATCHES ____ FOR MORE TABS!!!!*/
+        }
+        const ext = item.fileURI
+            ? getExtension(getOriginalFilename(item.fileURI))
+            : null
+        const docType: DocType | null = ext
+            ? mapExtensionToDocType(ext)
+            : item.linkURL
+                ? "links"
+                : null
+        const matchesDocType =
+            advancedFilters.docType.length === 0 ||
+            (docType !== null && advancedFilters.docType.includes(docType))
 
+        const requireOwned = activeTab === "owned" || advancedFilters.ownedByMe;
         const matchesOwner =
-            !advancedFilters.ownedByMe || item.ownerId === currentUserId;
+            !requireOwned || item.ownerId === currentUserId;
+        const matchesForYou =
+            activeTab !== "forYou" || item.targetPersona === currentUserPersona;
 
+
+        {/*ADD A MATCHES ____  RETURN FOR MORE TABS!!!!*/
+        }
         return (
             matchesStatus &&
             matchesContentType &&
             matchesPersona &&
+            matchesTags &&
             matchesBookmark &&
-            matchesOwner
+            matchesDocType &&
+            matchesOwner &&
+            matchesForYou
         );
     });
 
@@ -76,6 +112,8 @@ export function useContentFilters(
         advancedFilters.status.length +
         advancedFilters.contentType.length +
         advancedFilters.persona.length +
+        advancedFilters.docType.length +
+        advancedFilters.tags.length +
         (advancedFilters.bookmarkedOnly ? 1 : 0) +
         (advancedFilters.ownedByMe ? 1 : 0);
 

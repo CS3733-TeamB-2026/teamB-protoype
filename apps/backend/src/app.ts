@@ -39,6 +39,7 @@ app.get("/api/servicereqs", servicereqs.allServiceReqs)
 app.get("/api/assigned", servicereqs.allAssignedReqs)
 // Content
 app.get("/api/content", content.getAllContent)
+app.get("/api/content/tags", content.getAllTags)
 app.post("/api/content/checkin", content.checkinContent)
 app.post("/api/content/checkout", content.checkoutContent)
 app.get("/api/content/info/:id", content.getContentInfo)

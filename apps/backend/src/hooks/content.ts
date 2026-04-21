@@ -53,6 +53,17 @@ export const getAllContent = async (req: req, res: res) => {
     }
 };
 
+export const getAllTags = async (req: req, res: res) => {
+    try {
+        const content = await q.Content.queryAllContent();
+        const tags = [...new Set(content.flatMap((item) => item.tags ?? []))];
+        return res.status(200).json(tags);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
 export const getContentById = async (req: req, res: res) => {
     try {
         const id = parseInt(req.params.id);
@@ -140,6 +151,7 @@ export const uploadFile = async (req: req, res: res) => {
             new Date(payload.lastModified),
             payload.expiration ? new Date(payload.expiration) : null,
             payload.targetPersona,
+            JSON.parse(payload.tags || "[]"),
         );
         return res.status(201).json(result);
     } catch (error) {
@@ -177,6 +189,7 @@ export const updateContent = async (req: req, res: res) => {
             payload.lastModified ? new Date(payload.lastModified) : new Date(),
             payload.expiration ? new Date(payload.expiration) : null,
             payload.targetPersona,
+            JSON.parse(payload.tags || "[]"),
             parseInt(payload.employeeID),
         );
         if (oldURI && (uploaded || linkURL)) {
