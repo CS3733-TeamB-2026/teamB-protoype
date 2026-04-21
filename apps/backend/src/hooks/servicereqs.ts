@@ -37,3 +37,34 @@ export const createServiceReq = async (req: req, res: res) => {
         return res.status(500).end();
     }
 }
+
+export const updateServiceReq = async (req: req, res: res) => {
+    const payload = req.body;
+    try {
+        const result = await q.ServiceReqs.updateServiceReq(
+            payload.id,
+            payload.created,
+            payload.deadline,
+            payload.type,
+            payload.assignee,
+            payload.owner
+        )
+        return res.status(200).json(result);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+}
+
+export const deleteServiceReq = async (req: req, res: res) => {
+    const payload = req.body;
+    try {
+        const result = await q.ServiceReqs.deleteServiceReq(
+            payload.id,
+        )
+        return res.status(204).json(result);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+}

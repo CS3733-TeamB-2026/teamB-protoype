@@ -64,7 +64,7 @@ function ViewServiceReqs() {
 
     const handleDelete = async (servicereq: ServiceReq) => {
         const token = await getAccessTokenSilently();
-        const res = await fetch(`/api/servicereq`, {
+        const res = await fetch(`/api/servicereqs`, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
