@@ -10,10 +10,12 @@ import QuickLinksCard from "@/features/dashboard/components/cards/QuickLinksCard
 import RecentFilesCard from "@/features/dashboard/components/cards/RecentFilesCard.tsx";
 import EmployeeChartCard from "@/features/dashboard/components/cards/EmployeeChartCard.tsx"
 import ContentTypeChartCard from "@/features/dashboard/components/cards/ContentTypeChartCard.tsx";
+import LinksCard from "@/features/dashboard/components/cards/LinksCard.tsx";
 
 const cards = [
     HelloCard,
     ClockCard,
+    LinksCard,
     EmployeeChartCard,
     ContentTypeChartCard,
     QuickLinksCard,
