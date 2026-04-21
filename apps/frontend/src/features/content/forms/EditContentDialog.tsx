@@ -96,7 +96,19 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                 });
                 res = { ok: r.ok, json: () => r.json() };
             }
-            if (!res.ok) { toast.error("Error updating content."); return; }
+            if (!res.ok) {
+                // (either by force-checkin from admin, or by lock expiry)
+                try {
+                    const errData = await res.json() as { lockReleased?: boolean; message?: string };
+                    if (errData.lockReleased) {
+                        toast.error("This item has been forcibly checked in.");
+                        onOpenChange(false);
+                        return;
+                    }
+                } catch {
+                //Generic error for now
+                }
+             { toast.error("Error updating content."); return; }}
             const updated = await res.json() as ContentItem;
             onSave(updated);
             onOpenChange(false);

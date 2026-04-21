@@ -20,7 +20,7 @@ import {
     Lock,
     RefreshCcw,
     KeyRound,
-    Ban, ChevronsLeft, ChevronsRight, ChevronLeft,
+    Ban, ChevronsLeft, ChevronsRight, ChevronLeft, UserRoundKey,
 } from "lucide-react";
 import {Button} from "@/components/ui/button.tsx";
 import {
@@ -81,6 +81,7 @@ import {TagInput} from "@/features/content/tags/TagInput.tsx";
 import {Tabs, TabsTrigger} from "@/components/ui/tabs"
 import { SlidingTabs } from "@/components/shared/SlidingTabs.tsx";
 import { useContentFilters, type ContentTab } from "@/hooks/use-content-filters.ts";
+import {ForceCheckinDialog} from "@/features/content/forms/ForceCheckinDialog.tsx";
 
 
 /**
@@ -231,6 +232,7 @@ function ViewContent() {
 
     const [checkoutTarget, setCheckoutTarget] = useState<ContentItem | null>(null);
     const [checkinTarget, setCheckinTarget] = useState<ContentItem | null>(null);
+    const [forceCheckinTarget, setForceCheckinTarget] = useState<ContentItem | null>(null);
 
 
     // Initial load — shows spinner and fetches link previews
@@ -342,12 +344,15 @@ function ViewContent() {
      */
     const handleDelete = async (id: number) => {
         const token = await getAccessTokenSilently();
-        const res = await fetch(`/api/content/${id}`, {
+        const res = await fetch(`/api/content/${id}?employeeID=${user!.id}`, {
             method: "DELETE",
             headers: {Authorization: `Bearer ${token}`},
         });
         if (res.ok) {
             setContent((prev) => prev.filter((item) => item.id !== id));
+        } else if (res.status === 409) {
+            toast.error("This item has been forcibly checked in.");
+            void refreshContent();
         }
         setDeleteTarget(null);
     };
@@ -412,6 +417,36 @@ function ViewContent() {
             }
         } catch {
             toast.error("Could not check in.");
+        }
+    };
+    /**
+     * Admin-only: forcibly releases the edit lock on `item`, even if another
+     * user currently holds it. Uses `/api/content/checkin` endpoint
+     * but passes the lock holder's ID so the backend lets it through.
+     */
+    const handleForceCheckin = async (item: ContentItem) => {
+        try {
+            const token = await getAccessTokenSilently();
+            const res = await fetch("/api/content/checkin", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ id: item.id, employeeID: item.checkedOutById }),
+            });
+            if (res.ok) {
+                setContent((prev) => prev.map((c) => c.id === item.id
+                    ? { ...c, checkedOutById: null, checkedOutAt: null, checkedOutBy: null }
+                    : c
+                ));
+                toast.success("Force check-in successful.");
+            } else {
+                const data = await res.json().catch(() => ({}));
+                toast.error(data.message || "Could not force check in.");
+            }
+        } catch {
+            toast.error("Could not force check in.");
         }
     };
 
@@ -920,6 +955,20 @@ function ViewContent() {
                                                                     }
 
                                                                     if (isCheckedOut(item)) {
+                                                                        if (user!.persona === "admin") {
+                                                                            return (
+                                                                                <button
+                                                                                    className="w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-destructive"
+                                                                                    title={`${lockLabel(item)} Click to force check in.`}
+                                                                                    onClick={(e) => {
+                                                                                        e.stopPropagation();
+                                                                                        setForceCheckinTarget(item);
+                                                                                    }}
+                                                                                >
+                                                                                    <UserRoundKey className="w-4 h-4"/>
+                                                                                </button>
+                                                                            );
+                                                                        }
                                                                         return (
                                                                             <button
                                                                                 className="w-8 h-8 flex items-center justify-center rounded-md opacity-50 cursor-not-allowed text-muted-foreground"
@@ -1166,6 +1215,26 @@ function ViewContent() {
                                     setLinkPreviews((prev) => ({...prev, [created.id]: null}));
                                 });
                         }
+                    }
+                }}
+            />
+            <ForceCheckinDialog
+                open={!!forceCheckinTarget}
+                onOpenChange={(open: boolean) => {
+                    if (!open) setForceCheckinTarget(null);
+                }}
+                description={forceCheckinTarget
+                    ? <span>
+            Force check in <strong>"{forceCheckinTarget.displayName}"</strong>?
+                        {forceCheckinTarget.checkedOutBy && (
+                            <> This will release the lock currently held by <strong>{forceCheckinTarget.checkedOutBy.firstName} {forceCheckinTarget.checkedOutBy.lastName}</strong>, and they may lose unsaved changes.</>
+                        )}
+        </span>
+                    : undefined}
+                onConfirm={async () => {
+                    if (forceCheckinTarget) {
+                        await handleForceCheckin(forceCheckinTarget);
+                        setForceCheckinTarget(null);
                     }
                 }}
             />
