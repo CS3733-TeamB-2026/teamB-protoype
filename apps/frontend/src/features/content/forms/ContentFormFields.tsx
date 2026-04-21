@@ -23,6 +23,7 @@ interface Props {
     patch: (p: Partial<ContentFormValues>) => void;
     errors: Record<string, string>;
     mode: ContentDialogMode;
+    disabled?: boolean;
 }
 
 /**
@@ -54,7 +55,7 @@ interface Props {
  * overwrite the current date). Date/time always defaults to now (see
  * `fromContentItem` in `content-form.ts`), not the stored last-modified value.
  */
-export function ContentFormFields({ values, patch, errors, mode }: Props) {
+export function ContentFormFields({ values, patch, errors, mode, disabled = false }: Props) {
     const [openModifiedDate, setOpenModifiedDate] = React.useState(false);
     const [openExpirationDate, setOpenExpirationDate] = React.useState(false);
     // Client-side MIME validation error lives here rather than in useContentForm
@@ -217,6 +218,7 @@ export function ContentFormFields({ values, patch, errors, mode }: Props) {
                     <FieldLabel className="text-primary text-lg mb-1">Owner Employee</FieldLabel>
                     <EmployeePicker
                         selectedId={values.ownerID}
+                        disabled={disabled}
                         onSelect={(id, employee) => {
                             const updates: Partial<ContentFormValues> = { ownerID: id ?? null };
                             // Auto-fill persona from the selected employee in add mode only.
@@ -328,7 +330,7 @@ export function ContentFormFields({ values, patch, errors, mode }: Props) {
             {/* Tags */}
             <Field className="bg-background">
                 <FieldLabel className="text-primary text-lg">Tags</FieldLabel>
-                <TagInput value={values.tags} onChange={(tags) => patch({ tags })} />
+                <TagInput value={values.tags} onChange={(tags) => patch({ tags })} disabled={disabled} />
             </Field>
 
             <div className="py-6"><Separator className="bg-primary" /></div>

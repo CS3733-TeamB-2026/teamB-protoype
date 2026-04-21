@@ -124,6 +124,7 @@ export function AddContentDialog({ open, onOpenChange, onSave }: Props) {
                         patch={patch}
                         errors={errors}
                         mode="add"
+                        disabled={uploading || submitting}
                     />
                 </div>
 

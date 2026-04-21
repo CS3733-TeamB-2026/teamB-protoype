@@ -10,6 +10,7 @@ interface Props {
     onChange: (tags: string[]) => void;
     /** When false, the "Create" option is hidden — use for filter contexts. Default true. */
     creatable?: boolean;
+    disabled?: boolean;
 }
 
 /** Normalizes a raw string to Title Case, collapsing internal whitespace. */
@@ -36,7 +37,7 @@ function toTitleCase(str: string): string {
  * to the chip container without inheriting toggle-on-click behaviour. `onFocusOutside` is
  * suppressed to keep the native input focused while the suggestion list is open.
  */
-export function TagInput({ value, onChange, creatable = true }: Props) {
+export function TagInput({ value, onChange, creatable = true, disabled = false }: Props) {
     const [input, setInput] = useState("");
     const [availableTags, setAvailableTags] = useState<string[]>([]);
     const [open, setOpen] = useState(false);
@@ -103,24 +104,26 @@ export function TagInput({ value, onChange, creatable = true }: Props) {
         !availableTags.some((t) => t.toLowerCase() === titleCasedInput.toLowerCase());
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={open && !disabled} onOpenChange={setOpen}>
             <PopoverAnchor asChild>
                 {/* Chips and input share one wrapping box styled to look like an input field */}
                 <div
-                    className="flex flex-wrap items-center gap-1.5 min-h-9 w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm cursor-text focus-within:ring-2 focus-within:ring-ring/30 focus-within:border-ring"
-                    onClick={(e) => (e.currentTarget.querySelector("input") as HTMLInputElement | null)?.focus()}
+                    className={`flex flex-wrap items-center gap-1.5 min-h-9 w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm focus-within:ring-2 focus-within:ring-ring/30 focus-within:border-ring ${disabled ? "opacity-50 pointer-events-none cursor-not-allowed" : "cursor-text"}`}
+                    onClick={(e) => !disabled && (e.currentTarget.querySelector("input") as HTMLInputElement | null)?.focus()}
                 >
                     {value.map((tag) => (
                         <Badge key={tag} variant="outline" className="flex items-center gap-1 pr-1 shrink-0">
                             {tag}
-                            <button
-                                type="button"
-                                onClick={() => removeTag(tag)}
-                                className="ml-0.5 rounded-full hover:bg-muted p-0.5"
-                                aria-label={`Remove ${tag}`}
-                            >
-                                <X className="w-3 h-3" />
-                            </button>
+                            {!disabled && (
+                                <button
+                                    type="button"
+                                    onClick={() => removeTag(tag)}
+                                    className="ml-0.5 rounded-full hover:bg-muted p-0.5"
+                                    aria-label={`Remove ${tag}`}
+                                >
+                                    <X className="w-3 h-3" />
+                                </button>
+                            )}
                         </Badge>
                     ))}
                     <input
@@ -128,8 +131,9 @@ export function TagInput({ value, onChange, creatable = true }: Props) {
                         onChange={handleInputChange}
                         onKeyDown={handleKeyDown}
                         onFocus={() => setOpen(true)}
+                        disabled={disabled}
                         placeholder={value.length === 0 ? "Add a tag..." : ""}
-                        className="flex-1 min-w-24 bg-transparent outline-none placeholder:text-muted-foreground text-sm"
+                        className="flex-1 min-w-24 bg-transparent outline-none placeholder:text-muted-foreground text-sm disabled:cursor-not-allowed"
                     />
                 </div>
             </PopoverAnchor>

@@ -143,6 +143,7 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
                         patch={patch}
                         errors={errors}
                         mode="edit"
+                        disabled={uploading || submitting}
                     />
                 </div>
 

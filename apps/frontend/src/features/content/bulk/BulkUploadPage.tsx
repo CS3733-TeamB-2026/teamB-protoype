@@ -403,6 +403,7 @@ export function BulkUploadPage() {
                                     <FieldLabel className="text-primary text-lg mb-1">Owner Employee</FieldLabel>
                                     <EmployeePicker
                                         selectedId={meta.ownerID}
+                                        disabled={uploading}
                                         onSelect={(id, employee) => {
                                             const updates: Partial<BulkSharedMeta> = { ownerID: id ?? null };
                                             // Auto-fill persona from the selected employee if not already set.
@@ -481,7 +482,7 @@ export function BulkUploadPage() {
                             {/* Tags */}
                             <Field className="bg-background">
                                 <FieldLabel className="text-primary text-lg">Tags</FieldLabel>
-                                <TagInput value={meta.tags} onChange={tags => patchMeta({ tags })} />
+                                <TagInput value={meta.tags} onChange={tags => patchMeta({ tags })} disabled={uploading} />
                             </Field>
 
                             <div className="py-6"><Separator className="bg-primary" /></div>

@@ -8,9 +8,10 @@ import { useAuth0 } from "@auth0/auth0-react"
 interface Props {
     selectedId: number | null;
     onSelect: (id: number | null, employee: EmployeeCardData | null) => void;
+    disabled?: boolean;
 }
 
-export function EmployeePicker({ selectedId, onSelect }: Props) {
+export function EmployeePicker({ selectedId, onSelect, disabled = false }: Props) {
     const [open, setOpen] = useState(false);
     const [employees, setEmployees] = useState<EmployeeCardData[]>([]);
     const [loading, setLoading] = useState(true);
@@ -64,6 +65,7 @@ export function EmployeePicker({ selectedId, onSelect }: Props) {
                 variant="outline"
                 className="w-full justify-between h-auto py-2 px-3 font-normal"
                 onClick={() => setOpen((v) => !v)}
+                disabled={disabled}
             >
                 {loading ? (
                     <span className="flex items-center gap-2 text-muted-foreground">
@@ -78,7 +80,7 @@ export function EmployeePicker({ selectedId, onSelect }: Props) {
                 <ChevronsUpDown className="w-4 h-4 text-muted-foreground shrink-0 ml-2" />
             </Button>
 
-            {open && (
+            {open && !disabled && (
                 <div className="absolute top-full left-0 right-0 z-50 mt-1 rounded-lg border bg-popover shadow-md">
                     <div className="p-2 border-b">
                         <Input
