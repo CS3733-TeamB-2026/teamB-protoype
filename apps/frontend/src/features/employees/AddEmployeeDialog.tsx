@@ -113,7 +113,7 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
         setPassword("")
         setConfirmPassword("")
         setEmail("")
-        setID("")
+        setID(takenIds.size > 0 ? String(lowestAvailableId(takenIds)) : "")
         setErrors({})
     }
 

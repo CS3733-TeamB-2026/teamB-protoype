@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {useEffect, useState} from "react";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import SettingsSection from "../SettingsSection";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -125,7 +126,8 @@ function ProfileSettings() {
                                         disabled={uploading}
                                     />
                                     <Button asChild variant="outline" disabled={uploading}>
-                                        <label htmlFor="profile-photo-upload" className="cursor-pointer">
+                                        <label htmlFor="profile-photo-upload" className="cursor-pointer flex items-center gap-2">
+                                            {uploading && <Loader2 className="w-4 h-4 animate-spin" />}
                                             {uploading ? "Uploading..." : "Change photo"}
                                         </label>
                                     </Button>
@@ -182,12 +184,22 @@ function ProfileSettings() {
                             </div>
                         </CardContent>
 
-                        <CardFooter className="justify-end border-t pt-4">
+                        <CardFooter className="justify-end gap-2 border-t pt-4">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                disabled={!form.formState.isDirty || form.formState.isSubmitting}
+                                onClick={() => form.reset({ firstName: user?.firstName ?? "", lastName: user?.lastName ?? "" })}
+                            >
+                                Reset
+                            </Button>
                             <Button
                                 type="submit"
                                 disabled={!form.formState.isDirty || form.formState.isSubmitting}
                             >
-                                {form.formState.isSubmitting ? "Saving..." : "Save changes"}
+                                {form.formState.isSubmitting
+                                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+                                    : "Save changes"}
                             </Button>
                         </CardFooter>
                     </Card>

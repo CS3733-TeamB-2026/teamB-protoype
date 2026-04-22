@@ -115,46 +115,48 @@ export function EditEmployeeDialog({ content, open, onOpenChange, onSave }: Prop
 
                     <Separator className="bg-primary my-1" />
 
-                    <div className="flex gap-4">
-                        <Field className="flex-1">
-                            <FieldLabel className="text-primary text-lg">
-                                First Name <span className="text-destructive">*</span>
-                            </FieldLabel>
-                            <Input
-                                value={modified.firstName}
-                                className="h-8 text-sm!"
-                                placeholder="Enter first name"
-                                onChange={(e) => {
-                                    const first = e.target.value;
-                                    setModified((prev) => ({ ...prev, firstName: first }));
-                                    setErrors((prev) => ({
-                                        ...prev,
-                                        firstName: "",
-                                        lastName: checkNameTaken(first, modified.lastName),
-                                    }));
-                                }}
-                            />
-                            {errors.firstName && <FieldDescription className="text-destructive">{errors.firstName}</FieldDescription>}
-                        </Field>
-                        <Field className="flex-1">
-                            <FieldLabel className="text-primary text-lg">
-                                Last Name <span className="text-destructive">*</span>
-                            </FieldLabel>
-                            <Input
-                                value={modified.lastName}
-                                className="h-8 text-sm!"
-                                placeholder="Enter last name"
-                                onChange={(e) => {
-                                    const last = e.target.value;
-                                    setModified((prev) => ({ ...prev, lastName: last }));
-                                    setErrors((prev) => ({
-                                        ...prev,
-                                        lastName: checkNameTaken(modified.firstName, last),
-                                    }));
-                                }}
-                            />
-                            {errors.lastName && <FieldDescription className="text-destructive">{errors.lastName}</FieldDescription>}
-                        </Field>
+                    <div className="flex flex-col gap-1">
+                        <div className="flex gap-4">
+                            <Field className="flex-1">
+                                <FieldLabel className="text-primary text-lg">
+                                    First Name <span className="text-destructive">*</span>
+                                </FieldLabel>
+                                <Input
+                                    value={modified.firstName}
+                                    className="h-8 text-sm!"
+                                    placeholder="Enter first name"
+                                    onChange={(e) => {
+                                        const first = e.target.value;
+                                        setModified((prev) => ({ ...prev, firstName: first }));
+                                        setErrors((prev) => ({
+                                            ...prev,
+                                            firstName: "",
+                                            lastName: checkNameTaken(first, modified.lastName),
+                                        }));
+                                    }}
+                                />
+                                {errors.firstName && <FieldDescription className="text-destructive">{errors.firstName}</FieldDescription>}
+                            </Field>
+                            <Field className="flex-1">
+                                <FieldLabel className="text-primary text-lg">
+                                    Last Name <span className="text-destructive">*</span>
+                                </FieldLabel>
+                                <Input
+                                    value={modified.lastName}
+                                    className="h-8 text-sm!"
+                                    placeholder="Enter last name"
+                                    onChange={(e) => {
+                                        const last = e.target.value;
+                                        setModified((prev) => ({ ...prev, lastName: last }));
+                                        setErrors((prev) => ({
+                                            ...prev,
+                                            lastName: checkNameTaken(modified.firstName, last),
+                                        }));
+                                    }}
+                                />
+                            </Field>
+                        </div>
+                        {errors.lastName && <FieldDescription className="text-destructive">{errors.lastName}</FieldDescription>}
                     </div>
 
                     <Separator className="bg-primary my-1" />
@@ -183,13 +185,22 @@ export function EditEmployeeDialog({ content, open, onOpenChange, onSave }: Prop
                 <DialogFooter>
                     <div className="flex flex-col items-center gap-4 w-full">
                         <Separator />
-                        <Button
-                            className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground rounded-lg px-4 py-1"
-                            disabled={submitting}
-                            onClick={handleApply}
-                        >
-                            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
-                        </Button>
+                        <div className="flex flex-row gap-2">
+                            <Button
+                                variant="outline"
+                                disabled={submitting}
+                                onClick={() => { setModified(content); setErrors({}); }}
+                            >
+                                Reset
+                            </Button>
+                            <Button
+                                className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground rounded-lg px-4 py-1"
+                                disabled={submitting}
+                                onClick={handleApply}
+                            >
+                                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                            </Button>
+                        </div>
                     </div>
                 </DialogFooter>
             </DialogContent>
