@@ -22,7 +22,7 @@ function ClockCard() {
     }, []);
 
     return (
-        <Card className="shadow-lg hover:scale-101 transition-transform px-4 py-4 flex flex-row justify-center items-center">
+        <Card className="border-t-accent border-t-4 shadow-lg hover:scale-101 transition-transform px-4 py-4 flex flex-row justify-center items-center">
             <CardContent className="p-0">
                 <div className="flex flex-row items-center gap-5 justify-center">
                     <Clock className="w-15! h-15!"/>

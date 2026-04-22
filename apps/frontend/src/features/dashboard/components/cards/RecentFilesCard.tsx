@@ -6,7 +6,7 @@ import {FolderOpen} from "lucide-react";
 
 function RecentFilesCard() {
     return (
-        <Card className="shadow-lg hover:scale-101 transition-transform xl:col-span-4 px-4 py-8">
+        <Card className="border-t-secondary border-t-4 shadow-lg hover:scale-101 transition-transform md:col-span-2 px-4 py-8">
             <CardHeader className="text-left text-2xl! font-semibold">Recent Files: </CardHeader>
             <CardContent>
                 <RecentFiles />

@@ -29,16 +29,17 @@ export type Category =
 
 /**
  * Which renderer {@link FilePreview} should use for a file.
- * - `"docviewer"` — PDF / DOCX / Markdown via react-doc-viewer
- * - `"image"`     — `<img>` tag
- * - `"audio"`     — `<audio>` element
- * - `"video"`     — `<video>` element
- * - `"text"`      — `<pre>` block (plain text, code, etc.)
- * - `"table"`     — HTML table parsed from Excel/CSV via SheetJS
- * - `"html"`      — sandboxed `<iframe>`
- * - `"none"`      — no preview, download-only
+ * - `"docviewer"`  — PDF / Markdown via react-doc-viewer
+ * - `"microsoft"`  — Word / Excel / PowerPoint via Office 365 iframe viewer
+ * - `"image"`      — `<img>` tag
+ * - `"audio"`      — `<audio>` element
+ * - `"video"`      — `<video>` element
+ * - `"text"`       — `<pre>` block (plain text, code, etc.)
+ * - `"table"`      — HTML table parsed from CSV via SheetJS
+ * - `"html"`       — sandboxed `<iframe>`
+ * - `"none"`       — no preview, download-only
  */
-export type PreviewMode = "docviewer" | "image" | "audio" | "video" | "text" | "table" | "html" | "none";
+export type PreviewMode = "docviewer" | "microsoft" | "image" | "audio" | "video" | "text" | "table" | "html" | "none";
 
 export interface AllowedType {
     /** Canonical MIME type. Lowercase. */
@@ -66,7 +67,7 @@ export const ALLOWED_TYPES: readonly AllowedType[] = [
         mimeType: "application/msword",
         extensions: ["doc"],
         category: "document",
-        previewMode: "none",
+        previewMode: "microsoft",
         label: "Word (legacy)",
     },
     {
@@ -74,14 +75,14 @@ export const ALLOWED_TYPES: readonly AllowedType[] = [
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         extensions: ["docx"],
         category: "document",
-        previewMode: "docviewer",
+        previewMode: "microsoft",
         label: "Word",
     },
     {
         mimeType: "application/vnd.ms-excel",
         extensions: ["xls"],
         category: "spreadsheet",
-        previewMode: "table",
+        previewMode: "microsoft",
         label: "Excel (legacy)",
     },
     {
@@ -89,7 +90,7 @@ export const ALLOWED_TYPES: readonly AllowedType[] = [
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         extensions: ["xlsx"],
         category: "spreadsheet",
-        previewMode: "table",
+        previewMode: "microsoft",
         label: "Excel",
     },
     {
@@ -104,7 +105,7 @@ export const ALLOWED_TYPES: readonly AllowedType[] = [
             "application/vnd.openxmlformats-officedocument.presentationml.presentation",
         extensions: ["pptx"],
         category: "other",
-        previewMode: "none",
+        previewMode: "microsoft",
         label: "PowerPoint",
     },
     {

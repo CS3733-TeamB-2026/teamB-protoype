@@ -1,5 +1,5 @@
-import { useRef } from "react";
-import { X, Upload } from "lucide-react";
+import { useRef, useState } from "react";
+import { X, Upload, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
 import { ContentIcon } from "@/features/content/components/ContentIcon.tsx";
@@ -20,10 +20,19 @@ function formatFileSize(bytes: number): string {
 
 export function FilePickerCard({ file, onChange, error, accept }: Props) {
     const inputRef = useRef<HTMLInputElement>(null);
+    const [opening, setOpening] = useState(false);
 
     const handleClear = () => {
         if (inputRef.current) inputRef.current.value = "";
         onChange(null);
+    };
+
+    const handleClick = () => {
+        setOpening(true);
+        inputRef.current?.click();
+        // The file dialog doesn't fire any reliable close event, so listen for the
+        // window regaining focus — that fires whether a file was picked or cancelled.
+        window.addEventListener("focus", () => setOpening(false), { once: true });
     };
 
     return (
@@ -33,7 +42,10 @@ export function FilePickerCard({ file, onChange, error, accept }: Props) {
                 type="file"
                 accept={accept}
                 className="hidden"
-                onChange={(e) => onChange(e.target.files?.[0] ?? null)}
+                onChange={(e) => {
+                    setOpening(false);
+                    onChange(e.target.files?.[0] ?? null);
+                }}
             />
 
             {file ? (
@@ -71,10 +83,14 @@ export function FilePickerCard({ file, onChange, error, accept }: Props) {
                     type="button"
                     variant="outline"
                     className="w-full justify-center gap-2 border-dashed"
-                    onClick={() => inputRef.current?.click()}
+                    onClick={handleClick}
+                    disabled={opening}
                 >
-                    <Upload className="w-4 h-4" />
-                    Choose file…
+                    {opening
+                        ? <Loader2 className="w-4 h-4 animate-spin" />
+                        : <Upload className="w-4 h-4" />
+                    }
+                    {opening ? "Opening…" : "Choose file…"}
                 </Button>
             )}
 

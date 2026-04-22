@@ -10,8 +10,10 @@ interface Props {
     onChange: (tags: string[]) => void;
     /** When false, the "Create" option is hidden — use for filter contexts. Default true. */
     creatable?: boolean;
+    disabled?: boolean;
 }
 
+/** Normalizes a raw string to Title Case, collapsing internal whitespace. */
 function toTitleCase(str: string): string {
     return str
         .trim()
@@ -21,7 +23,21 @@ function toTitleCase(str: string): string {
         .join(" ");
 }
 
-export function TagInput({ value, onChange, creatable = true }: Props) {
+/**
+ * Chip-style tag input that combines selection from existing tags and free-form creation.
+ *
+ * Fetches the full tag list from `GET /api/content/tags` on mount and uses it to
+ * populate suggestions. When `creatable` is false (filter contexts), the "Create" option
+ * is suppressed so users can only pick from existing tags.
+ *
+ * Input is restricted to letters and spaces; title-casing is applied at the moment a tag
+ * is committed (Enter, comma, or clicking a suggestion) — not while typing.
+ *
+ * Uses `PopoverAnchor` instead of `PopoverTrigger` so the dropdown is positioned relative
+ * to the chip container without inheriting toggle-on-click behaviour. `onFocusOutside` is
+ * suppressed to keep the native input focused while the suggestion list is open.
+ */
+export function TagInput({ value, onChange, creatable = true, disabled = false }: Props) {
     const [input, setInput] = useState("");
     const [availableTags, setAvailableTags] = useState<string[]>([]);
     const [open, setOpen] = useState(false);
@@ -62,10 +78,11 @@ export function TagInput({ value, onChange, creatable = true }: Props) {
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter" || e.key === ",") {
-            e.preventDefault();
+            e.preventDefault(); // prevent form submission and comma insertion
             if (input.trim()) addTag(input);
         }
         if (e.key === "Backspace" && !input && value.length > 0) {
+            // Remove the last chip when the input is already empty, matching standard tag-input UX
             removeTag(value[value.length - 1]);
         }
         if (e.key === "Escape") {
@@ -87,24 +104,26 @@ export function TagInput({ value, onChange, creatable = true }: Props) {
         !availableTags.some((t) => t.toLowerCase() === titleCasedInput.toLowerCase());
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={open && !disabled} onOpenChange={setOpen}>
             <PopoverAnchor asChild>
                 {/* Chips and input share one wrapping box styled to look like an input field */}
                 <div
-                    className="flex flex-wrap items-center gap-1.5 min-h-9 w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm cursor-text focus-within:ring-2 focus-within:ring-ring/30 focus-within:border-ring"
-                    onClick={(e) => (e.currentTarget.querySelector("input") as HTMLInputElement | null)?.focus()}
+                    className={`flex flex-wrap items-center gap-1.5 min-h-9 w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm focus-within:ring-2 focus-within:ring-ring/30 focus-within:border-ring ${disabled ? "opacity-50 pointer-events-none cursor-not-allowed" : "cursor-text"}`}
+                    onClick={(e) => !disabled && (e.currentTarget.querySelector("input") as HTMLInputElement | null)?.focus()}
                 >
                     {value.map((tag) => (
                         <Badge key={tag} variant="outline" className="flex items-center gap-1 pr-1 shrink-0">
                             {tag}
-                            <button
-                                type="button"
-                                onClick={() => removeTag(tag)}
-                                className="ml-0.5 rounded-full hover:bg-muted p-0.5"
-                                aria-label={`Remove ${tag}`}
-                            >
-                                <X className="w-3 h-3" />
-                            </button>
+                            {!disabled && (
+                                <button
+                                    type="button"
+                                    onClick={() => removeTag(tag)}
+                                    className="ml-0.5 rounded-full hover:bg-muted p-0.5"
+                                    aria-label={`Remove ${tag}`}
+                                >
+                                    <X className="w-3 h-3" />
+                                </button>
+                            )}
                         </Badge>
                     ))}
                     <input
@@ -112,8 +131,9 @@ export function TagInput({ value, onChange, creatable = true }: Props) {
                         onChange={handleInputChange}
                         onKeyDown={handleKeyDown}
                         onFocus={() => setOpen(true)}
+                        disabled={disabled}
                         placeholder={value.length === 0 ? "Add a tag..." : ""}
-                        className="flex-1 min-w-24 bg-transparent outline-none placeholder:text-muted-foreground text-sm"
+                        className="flex-1 min-w-24 bg-transparent outline-none placeholder:text-muted-foreground text-sm disabled:cursor-not-allowed"
                     />
                 </div>
             </PopoverAnchor>
@@ -131,7 +151,8 @@ export function TagInput({ value, onChange, creatable = true }: Props) {
                                 type="button"
                                 variant="ghost"
                                 className="w-full justify-start rounded-none border-b border-border font-medium h-9 px-3 text-sm"
-                                onMouseDown={(e) => { e.preventDefault(); addTag(input); }}
+                                // preventDefault keeps focus in the input so typing can continue after selection
+                    onMouseDown={(e) => { e.preventDefault(); addTag(input); }}
                             >
                                 <Plus className="w-3.5 h-3.5 shrink-0" />
                                 Create &ldquo;{titleCasedInput}&rdquo;

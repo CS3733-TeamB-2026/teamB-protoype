@@ -47,6 +47,7 @@ app.post("/api/content/checkin", content.checkinContent)
 app.post("/api/content/checkout", content.checkoutContent)
 app.get("/api/content/info/:id", content.getContentInfo)
 app.get("/api/content/download/:id", content.downloadContent)
+app.get("/api/content/publicUrl/:id", content.getPublicFileUrl)
 app.get("/api/content/:id", content.getContentById)
 app.post("/api/content", upload.single("file"), content.uploadFile)
 app.put("/api/content", upload.single("file"), content.updateContent)
@@ -56,6 +57,7 @@ app.get("/api/bookmark", bookmark.getBookmarks)
 app.post("/api/bookmark/:contentId", bookmark.addBookmark)
 app.delete("/api/bookmark/:contentId", bookmark.removeBookmark)
 // Employee
+app.post("/api/employee/photo", upload.single("photo"), employee.uploadProfilePhoto);
 app.get("/api/employee/all", employee.getAllEmployeesWithLogin)
 app.get("/api/employee", employee.getAllEmployees)
 app.get("/api/employee/me", employee.getMe);

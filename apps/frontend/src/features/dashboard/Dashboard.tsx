@@ -10,6 +10,7 @@ import QuickLinksCard from "@/features/dashboard/components/cards/QuickLinksCard
 import RecentFilesCard from "@/features/dashboard/components/cards/RecentFilesCard.tsx";
 import EmployeeChartCard from "@/features/dashboard/components/cards/EmployeeChartCard.tsx"
 import ContentTypeChartCard from "@/features/dashboard/components/cards/ContentTypeChartCard.tsx";
+import LinksCard from "@/features/dashboard/components/cards/LinksCard.tsx";
 
 const cards = [
     HelloCard,
@@ -20,6 +21,7 @@ const cards = [
     BookmarkedCard,
     MyContentCard,
     RecentFilesCard,
+    LinksCard,
 ]
 
 function Dashboard() {
@@ -37,7 +39,7 @@ function Dashboard() {
             />
 
             {/* Display Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-8 mx-15">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-8 mx-15">
                 {cards.map((Card, index) => (
                     <Card key={index} />
                 ))}

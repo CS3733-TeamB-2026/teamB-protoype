@@ -1,15 +1,15 @@
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import {Link} from "react-router-dom";
 import {Button} from "@/components/ui/button.tsx";
-import {FolderOpen, Plus, UserPlus, Users} from "lucide-react";
+import {CalendarClock, FolderOpen, Plus, UserPlus, Users} from "lucide-react";
 import { useUser } from "@/hooks/use-user.ts"
 
 function QuickLinksCard() {
 
-    const user = useUser();
+    const {user} = useUser();
 
     return (
-        <Card className="shadow-lg hover:scale-101 transition-transform">
+        <Card className="border-t-secondary border-t-4 shadow-lg hover:scale-101 transition-transform">
             <CardHeader>
                 <CardTitle className="capitalize text-2xl font-semibold text-center">
                     User Access: {user?.persona}
@@ -44,7 +44,13 @@ function QuickLinksCard() {
                             View Files
                         </Button>
                     </Link>
-                    <Link to="/manageform" className="w-full">
+                    <Link to="/calendar" className="w-full">
+                        <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-accent hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
+                            <CalendarClock className="w-4 h-4 shrink-0" />
+                            View Calendar
+                        </Button>
+                    </Link>
+                    <Link to="/files/bulk" className="w-full">
                         <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-accent hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
                             <Plus className="w-4 h-4 shrink-0" />
                             Add Content
