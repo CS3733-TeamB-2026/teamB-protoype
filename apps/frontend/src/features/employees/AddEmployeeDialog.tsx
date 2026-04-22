@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu.tsx"
 import { Button } from "@/components/ui/button.tsx"
 import { Separator } from "@/components/ui/separator.tsx"
+import { Loader2 } from "lucide-react"
 import { useAuth0 } from "@auth0/auth0-react"
 import { formatLabel } from "@/lib/utils.ts"
 import type { Employee, Persona } from "@/lib/types.ts"
@@ -62,11 +63,14 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
     const [id, setID] = React.useState("")
     const [takenIds, setTakenIds] = useState<Set<number>>(new Set())
     const [errors, setErrors] = useState<Record<string, string>>({})
+    const [submitting, setSubmitting] = useState(false)
+    const [loadingIds, setLoadingIds] = useState(false)
     const { getAccessTokenSilently } = useAuth0()
     const checkNameTaken = useEmployeeNameTaken(open);
 
     useEffect(() => {
         if (!open) return;
+        setLoadingIds(true);
         (async () => {
             try {
                 const token = await getAccessTokenSilently();
@@ -79,6 +83,8 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
                 setErrors(prev => ({ ...prev, id: "" }));
             } catch {
                 // non-fatal — user can still type manually
+            } finally {
+                setLoadingIds(false);
             }
         })();
     }, [open, getAccessTokenSilently]);
@@ -112,6 +118,7 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
     }
 
     const handleOpenChange = (next: boolean) => {
+        if (submitting) return
         if (!next) resetForm()
         onOpenChange(next)
     }
@@ -136,6 +143,7 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
             return;
         }
 
+        setSubmitting(true)
         try {
             const token = await getAccessTokenSilently();
             const empRes = await fetch('/api/employee/auth', {
@@ -170,6 +178,8 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
             })
         } catch {
             toast.error("Error creating employee.");
+        } finally {
+            setSubmitting(false)
         }
     }
 
@@ -224,14 +234,18 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
                             <FieldLabel className="text-primary text-lg" htmlFor="add-employee-id">
                                 ID <span className="text-destructive">*</span>
                             </FieldLabel>
-                            <Input
-                                value={id}
-                                onChange={(e) => handleIdChange(e.target.value)}
-                                id="add-employee-id"
-                                type="number"
-                                placeholder="000000"
-                                className="h-8 text-sm!"
-                            />
+                            <div className="relative">
+                                <Input
+                                    value={id}
+                                    onChange={(e) => handleIdChange(e.target.value)}
+                                    id="add-employee-id"
+                                    type="number"
+                                    placeholder="000000"
+                                    className="h-8 text-sm!"
+                                    disabled={loadingIds}
+                                />
+                                {loadingIds && <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />}
+                            </div>
                             {errors.id && <FieldDescription className="text-destructive">{errors.id}</FieldDescription>}
                         </Field>
                     </div>
@@ -336,14 +350,15 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
                     <div className="flex flex-col justify-center! items-center gap-4 mt-0 w-full">
                         <Separator />
                         <div className="flex flex-row gap-2">
-                            <Button variant="outline" onClick={resetForm}>
+                            <Button variant="outline" disabled={submitting} onClick={resetForm}>
                                 Reset
                             </Button>
                             <Button
                                 className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground rounded-lg px-4 py-1"
+                                disabled={submitting}
                                 onClick={handleSubmit}
                             >
-                                Submit
+                                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Submit"}
                             </Button>
                         </div>
                     </div>

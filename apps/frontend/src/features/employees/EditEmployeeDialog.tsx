@@ -21,6 +21,7 @@ import {
 import type { Employee } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import { useEmployeeNameTaken } from "./use-employee-name-taken";
 
 interface Props {
@@ -87,6 +88,7 @@ export function EditEmployeeDialog({ content, open, onOpenChange, onSave }: Prop
     }
 
     function handleClose(o: boolean) {
+        if (submitting) return;
         if (!o) {
             setModified(content);
             setErrors({});
@@ -186,7 +188,7 @@ export function EditEmployeeDialog({ content, open, onOpenChange, onSave }: Prop
                             disabled={submitting}
                             onClick={handleApply}
                         >
-                            {submitting ? "Saving..." : "Apply"}
+                            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
                         </Button>
                     </div>
                 </DialogFooter>
