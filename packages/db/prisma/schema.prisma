@@ -37,8 +37,9 @@ model Employee {
   ownedRequests    ServiceRequest[] @relation("OwnedBy")
   assignedRequests ServiceRequest[] @relation("AssignedTo")
 
-  login     Login?
-  bookmarks Bookmark[]
+  login       Login?
+  bookmarks   Bookmark[]
+  collections Collection[]
 
   @@schema("public")
 }
@@ -82,6 +83,21 @@ model ServiceRequest {
   type     RequestType
 
   @@id([ownerId, created])
+  @@schema("public")
+}
+
+model Collection {
+  displayName String
+  id          Int      @id
+
+  owner       Employee @relation(fields: [ownerId], references: [id])
+  ownerId     Int
+
+  public      Boolean
+
+  contentItemIds Int[]
+  contentItems Content[] @relation(fields: [contentItemIds], references: [id])
+
   @@schema("public")
 }
 
