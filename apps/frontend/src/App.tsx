@@ -8,6 +8,7 @@ import Home from "@/pages/Home.tsx";
 import AddEmployee from "@/features/employees/AddEmployee.tsx";
 import UnderwriterPersona from "@/pages/UnderwriterPersona.tsx";
 import BusinessAnalystPersona from "@/pages/BusinessAnalystPersona.tsx";
+import ActuarialAnalystPersona from "@/pages/ActuarialAnalyst.tsx";
 import Dashboard from "@/features/dashboard/Dashboard.tsx";
 import ViewEmployees from "@/features/employees/ViewEmployees.tsx";
 import ViewContent from "@/features/content/listing/ViewContent.tsx";
@@ -60,6 +61,7 @@ function App() {
                             <Route path="/usermanagement" element={<ProtectedRoute><ViewEmployees/></ProtectedRoute>}/>
                             <Route path="/underwriter" element={<UnderwriterPersona/>}/>
                             <Route path="/businessanalyst" element={<BusinessAnalystPersona/>}/>
+                            <Route path="/actuarialanalyst" element={<ActuarialAnalystPersona/>}/>
                             <Route path="/files" element={<ProtectedRoute><ViewContent/></ProtectedRoute>}/>
                             <Route path="/files/bulk" element={<ProtectedRoute><BulkUploadPage/></ProtectedRoute>}/>
                             <Route path="/employeehome" element={<ProtectedRoute><Dashboard/></ProtectedRoute>}/>

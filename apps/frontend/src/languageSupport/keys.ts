@@ -13,6 +13,7 @@ export type TranslationKey =
     | 'sidebar.personas'
     | 'sidebar.underwriter'
     | 'sidebar.businessAnalyst'
+    | 'sidebar.actuarialAnalyst'
     | 'sidebar.home'
     | 'sidebar.dashboard'
     | 'sidebar.manageContent'

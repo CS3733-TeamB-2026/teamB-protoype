@@ -45,6 +45,7 @@ const navItems: NavItem[] = [
     { title: "Personas", icon: User, href: "/", children: [
             {title: "Underwriter", icon: User, href: "/underwriter", children: [], access: [], langKey: 'sidebar.underwriter'},
             {title: "Business Analyst", icon: User, href: "/businessanalyst", children: [], access: [], langKey: "sidebar.businessAnalyst"},
+            {title: "Actuarial Analyst", icon: User, href: "/actuarialanalyst", children: [], access: [], langKey: "sidebar.actuarialAnalyst"},
         ], access: [], langKey: "sidebar.personas" },
 ]
 
