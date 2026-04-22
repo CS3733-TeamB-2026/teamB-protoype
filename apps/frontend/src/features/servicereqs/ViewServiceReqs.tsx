@@ -155,6 +155,7 @@ function ViewServiceReqs() {
                                     const matches = findMatches(servicereq.name, searchTerm)
                                     return (
                                         <TableRow key={servicereq.id}>
+                                            <>{console.log(servicereq.id)}</>
                                             <TableCell className="text-right pr-4">{highlightRange(servicereq.name, 0, matches)}</TableCell>
                                             <TableCell className="font-medium">{servicereq.type}</TableCell>
                                             <TableCell className="font-medium">{new Date(servicereq.created).toLocaleDateString()}</TableCell>

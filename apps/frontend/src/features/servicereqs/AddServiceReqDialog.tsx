@@ -11,14 +11,14 @@ import { Separator } from "@/components/ui/separator.tsx";
 import { toast } from "sonner";
 import { ServiceReqFormFields } from "@/features/servicereqs/ServiceReqFormFields.tsx";
 import { initialValues, buildServiceReqJSON } from "@/features/servicereqs/servicereq-form.ts";
-import type { ServiceReqItem } from "@/lib/types.ts";
+import type { ServiceReq } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useServiceReqForm } from "@/features/servicereqs/use-servicereq-form.tsx";
 
 interface Props {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onSave: (created: ServiceReqItem) => void;
+    onSave: (created: ServiceReq) => void;
 }
 
 /**
@@ -37,9 +37,9 @@ export function AddServiceReqDialog({ open, onOpenChange, onSave }: Props) {
     const { getAccessTokenSilently } = useAuth0();
 
     const { values, patch, setSubmitted, errors, hasErrors, formKey, reset } =
-        useServiceReqForm(initialValues(user?.id ?? 0));
+        useServiceReqForm(initialValues(user.user?.id ?? 0));
 
-    const handleReset = () => reset(initialValues(user!.id));
+    const handleReset = () => reset(initialValues(user.user!.id));
 
     const handleSubmit = async () => {
         if (!user) return;
@@ -55,7 +55,7 @@ export function AddServiceReqDialog({ open, onOpenChange, onSave }: Props) {
                 body: json
             });
             if (!res.ok) { toast.error("Error creating service request."); return; }
-            const created: ServiceReqItem = await res.json();
+            const created: ServiceReq = await res.json();
             onSave(created);
             onOpenChange(false);
             reset(initialValues(created.id));
