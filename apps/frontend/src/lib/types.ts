@@ -55,7 +55,11 @@ export type ServiceReqItem = {
     name: string;
     created: string;
     deadline: string;
+<<<<<<< Updated upstream
     type: "reviewClaim" | "requestAdjuster" | "checkClaim";
+=======
+    type: string;
+>>>>>>> Stashed changes
     assigneeId: number;
     ownerId: number;
 }

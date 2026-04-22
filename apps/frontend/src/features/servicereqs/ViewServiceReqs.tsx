@@ -23,11 +23,19 @@ function ViewServiceReqs() {
     const [serviceReqs, setServiceReqs] = useState<ServiceReqItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [editOpen, setEditOpen] = useState(false);
+<<<<<<< Updated upstream
     const [editingServiceReq, setEditingServiceReq] = useState<ServiceReqItem | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<ServiceReqItem | null>(null);
     const [addOpen, setAddOpen] = useState(false);
     const user = useUser();
     const [sort, toggleSort] = useSortState<"name" | "created" | "deadline" | "type" | "assigneeId" | "ownerId">({column: "type", direction: "asc"});
+=======
+    const [editingServiceReq, setEditingServiceReq] = useState<ServiceReq | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<ServiceReq | null>(null);
+    const [addOpen, setAddOpen] = useState(false);
+    const user = useUser();
+    /*Update*/const [sort, toggleSort] = useSortState<"name" | "created" | "deadline" | "type" | "assigneeId" | "ownerId">({column: "name", direction: "asc"});
+>>>>>>> Stashed changes
     const [searchTerm, setSearchTerm] = useState("");
     const { getAccessTokenSilently } = useAuth0();
 
@@ -56,10 +64,17 @@ function ViewServiceReqs() {
         if (!query) return true;
 
         return (
+<<<<<<< Updated upstream
             e.name.toLowerCase().includes(query) ||
             e.type.toLowerCase().includes(query) ||
             e.ownerId.toString().includes(query) ||
             e.assigneeId.toString().includes(query)
+=======
+            s.id.toString().includes(query) ||
+            s.type.toLowerCase().includes(query) ||
+            s.assigneeId.toString().includes(query) ||
+            s.ownerId.toString().includes(query)
+>>>>>>> Stashed changes
         );
     });
 
@@ -135,15 +150,24 @@ function ViewServiceReqs() {
                             <TableHeader>
                                 <TableRow className="hover:bg-transparent">
                                     <SortableHead column="name" label="Name" sort={sort} onSort={toggleSort} />
+<<<<<<< Updated upstream
                                     <SortableHead column="created" label="Created" sort={sort} onSort={toggleSort} />
                                     <SortableHead column="deadline" label="Deadline" sort={sort} onSort={toggleSort} className="w-full" />
                                     <SortableHead column="type" label="Type" sort={sort} onSort={toggleSort} />
                                     <SortableHead column="assigneeId" label="Assignee ID" sort={sort} onSort={toggleSort} />
                                     <SortableHead column="ownerId" label="Owner ID" sort={sort} onSort={toggleSort} />
+=======
+                                    <SortableHead column="type" label="Type" sort={sort} onSort={toggleSort} />
+                                    <SortableHead column="created" label="Created" sort={sort} onSort={toggleSort} className="w-full" />
+                                    <SortableHead column="deadline" label="Deadline" sort={sort} onSort={toggleSort} />
+                                    <SortableHead column="assigneeId" label="AssigneeID" sort={sort} onSort={toggleSort} />
+                                    <SortableHead column="ownerId" label="OwnerID" sort={sort} onSort={toggleSort} />
+>>>>>>> Stashed changes
                                     <TableHead className="uppercase tracking-wider text-muted-foreground select-none">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
+<<<<<<< Updated upstream
                                 {applySortState(filteredServiceReqs, sort, (e, col) => {
                                     if (col === "name") return e.name;
                                     if (col === "created") return e.created;
@@ -151,14 +175,30 @@ function ViewServiceReqs() {
                                     if (col === "type") return e.type;
                                     if (col === "assigneeId") return e.assigneeId;
                                     if (col === "ownerId") return e.ownerId;
+=======
+                                {applySortState(filteredServiceReqs, sort, (s, col) => {
+                                    if (col === "name") return s.id;
+                                    if (col === "type") return s.type;
+                                    if (col === "created") return s.created;
+                                    if (col === "deadline") return s.deadline;
+                                    if (col === "assigneeId") return s.assigneeId;
+                                    if (col === "ownerId") return s.ownerId;
+>>>>>>> Stashed changes
                                 }).map((servicereq) => {
                                     const matches = findMatches(servicereq.name, searchTerm);
                                     return (
                                         <TableRow key={servicereq.id}>
+<<<<<<< Updated upstream
                                             <TableCell className="font-medium">{highlightRange(servicereq.name, 0, matches)}</TableCell>
                                             <TableCell className="font-medium">{servicereq.created}</TableCell>
                                             <TableCell className="font-medium">{servicereq.deadline}</TableCell>
                                             <TableCell className="font-medium">{servicereq.type}</TableCell>
+=======
+                                            <TableCell className="text-right pr-4">{servicereq.name}</TableCell>
+                                            <TableCell className="font-medium">{servicereq.type}</TableCell>
+                                            <TableCell className="font-medium">{servicereq.created}</TableCell>
+                                            <TableCell className="font-medium">{servicereq.deadline}</TableCell>
+>>>>>>> Stashed changes
                                             <TableCell className="font-medium">{servicereq.assigneeId}</TableCell>
                                             <TableCell className="font-medium">{servicereq.ownerId}</TableCell>
                                             <TableCell>
@@ -166,7 +206,11 @@ function ViewServiceReqs() {
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
+<<<<<<< Updated upstream
                                                         disabled={servicereq.ownerId !== user?.id && servicereq.assigneeId !== user?.id}
+=======
+                                                        disabled={servicereq.ownerId !== user.user?.id && servicereq.assigneeId !== user.user?.id}
+>>>>>>> Stashed changes
                                                         onClick={() => {
                                                             setEditingServiceReq(servicereq);
                                                             setEditOpen(true);
@@ -177,7 +221,11 @@ function ViewServiceReqs() {
                                                     <Button
                                                         variant="destructive"
                                                         size="sm"
+<<<<<<< Updated upstream
                                                         disabled={servicereq.ownerId !== user?.id && servicereq.assigneeId !== user?.id}
+=======
+                                                        disabled={servicereq.ownerId !== user.user?.id && servicereq.assigneeId !== user.user?.id}
+>>>>>>> Stashed changes
                                                         onClick={() => setDeleteTarget(servicereq)}
                                                     >
                                                         <Trash2 className="w-4 h-4" />
