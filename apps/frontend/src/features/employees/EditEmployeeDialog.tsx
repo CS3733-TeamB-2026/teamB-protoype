@@ -16,7 +16,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select.tsx";
-import type { Employee } from "@/lib/types.ts";
+import type { Employee, Persona } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 import { toast } from "sonner";
 
@@ -51,21 +51,6 @@ export function EditEmployeeDialog({ content, open, onOpenChange, onSave }: Prop
                 persona: modified.persona,
             }),
         });
-
-        if (modified.login?.userName) {
-            const token = await getAccessTokenSilently();
-            await fetch("/api/login", {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    userName: modified.login.userName,
-                    employeeID: modified.id,
-                }),
-            });
-        }
 
         if (empRes.ok) {
             onSave(modified);
@@ -109,7 +94,7 @@ export function EditEmployeeDialog({ content, open, onOpenChange, onSave }: Prop
                         <Label className="my-2">Persona</Label>
                         <Select
                             defaultValue={content.persona}
-                            onValueChange={(value) => setModified((prev) => ({ ...prev, persona: value }))}
+                            onValueChange={(value) => setModified((prev) => ({ ...prev, persona: value as Persona }))}
                         >
                             <SelectTrigger className="bg-secondary">
                                 <SelectValue placeholder="Select Persona" />
@@ -123,21 +108,6 @@ export function EditEmployeeDialog({ content, open, onOpenChange, onSave }: Prop
                                 <SelectItem value="admin">Admin</SelectItem>
                             </SelectContent>
                         </Select>
-                    </div>
-                    <div>
-                        <Label className="my-2">Username</Label>
-                        <Input
-                            disabled
-                            defaultValue={content.login?.userName}
-                            className="bg-secondary"
-                            placeholder="Enter Employee Username"
-                            onChange={(e) =>
-                                setModified((prev) => ({
-                                    ...prev,
-                                    login: { ...prev.login, userName: e.target.value },
-                                }))
-                            }
-                        />
                     </div>
                     <Button
                         className="mt-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-20 mx-auto rounded-lg px-2 py-1"
