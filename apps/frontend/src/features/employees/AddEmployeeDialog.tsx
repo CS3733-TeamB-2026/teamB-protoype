@@ -34,7 +34,7 @@ interface AddEmployeeDialogProps {
     onSave: (created: Employee) => void
 }
 
-export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDialogProps) {
+export function AddEmployeeDialog({ open, onOpenChange }: AddEmployeeDialogProps) {
     const [targetPersona, setTargetPersona] = useState("Select job position")
     const [firstName, setFirstName] = React.useState("")
     const [lastName, setLastName] = React.useState("")
