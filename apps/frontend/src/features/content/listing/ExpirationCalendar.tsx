@@ -80,10 +80,10 @@ function ExpirationCalendar() {
     }
 
     function urgencyColor(days: number): string {
-        if (days <= 0) return "bg-destructive text-white";
-        if (days <= 7) return "bg-amber-600 text-white";
-        if (days <= 14) return "bg-yellow-500 text-white";
-        if (days <= 30) return "bg-slate-100 text-black";
+        if (days <= 0) return "bg-destructive/75 text-white";
+        if (days <= 7) return "bg-amber-600/75 text-white";
+        if (days <= 14) return "bg-yellow-500/75 text-white";
+        if (days <= 30) return "bg-slate-100/75 text-black";
         return "bg-slate-100/70 text-black";
     }
 
@@ -118,7 +118,12 @@ function ExpirationCalendar() {
                 description="Track upcoming content expirations for your persona"
             />
 
-            <div className="max-w-6xl mx-auto my-8 px-4">
+            <div className="text-center mt-8">
+                <h1 className="text-4xl font-bold text-primary">Calendar</h1>
+                <p className="text-lg text-muted-foreground mt-2 max-w-xl mx-auto">Keep track of files soon to expire.</p>
+            </div>
+
+            <div className="max-w-6xl mx-auto my-6 px-4">
                 {loading && (
                     <div className="flex items-center justify-center py-24 gap-3 text-muted-foreground">
                         <Loader2 className="w-6 h-6 animate-spin" />
