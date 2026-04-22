@@ -4,8 +4,11 @@ export function mapExtensionToDocType(ext: string | null): DocType | null {
     if (!ext) return null
     const lower = ext.toLowerCase()
 
-    if (["pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx"].includes(lower))
+    if (["pdf", "doc", "docx", "xls", "xlsx"].includes(lower))
         return "office"
+
+    if (["ppt", "pptx"].includes(lower))
+        return "presentation"
 
     if (["txt", "csv"].includes(lower))
         return "plain text"

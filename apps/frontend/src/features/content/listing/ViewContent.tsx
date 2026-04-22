@@ -474,6 +474,7 @@ function ViewContent() {
 
     const docTypeLabels: Record<DocType, string> = {
         office: "Office (PDF, Word..)",
+        presentation: "Presentation",
         audio: "Audio",
         video: "Video",
         images: "Images",

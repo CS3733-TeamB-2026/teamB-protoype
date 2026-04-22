@@ -8,6 +8,7 @@ import {
     FileText,
     FileVideo,
     Link,
+    Presentation,
 } from "lucide-react";
 import { type Category, CATEGORY_COLORS } from "@/lib/mime.ts";
 
@@ -30,6 +31,8 @@ export function ContentIcon({
             return <FileText className={cls} />;
         case "spreadsheet":
             return <FileSpreadsheet className={cls} />;
+        case "presentation":
+            return <Presentation className={cls} />;
         case "image":
             return <FileImage className={cls} />;
         case "audio":
