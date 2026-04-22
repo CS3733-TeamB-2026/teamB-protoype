@@ -15,6 +15,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import type { ServiceReq } from "@/lib/types.ts";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
 import {findMatches, highlightRange} from "@/lib/highlight.tsx";
+import { EmployeeAvatar } from "@/components/shared/EmployeeAvatar.tsx";
 
 function ViewServiceReqs() {
 
@@ -55,11 +56,13 @@ function ViewServiceReqs() {
         const query = searchTerm.toLowerCase().trim().replace(/\s/g, "");
         if (!query) return true;
 
+        const ownerName = `${s.owner.firstName}${s.owner.lastName}`.toLowerCase();
+        const assigneeName = s.assignee ? `${s.assignee.firstName}${s.assignee.lastName}`.toLowerCase() : "";
         return (
             s.name.toString().includes(query) ||
             s.type.toLowerCase().includes(query) ||
-            s.assigneeId.toString().includes(query) ||
-            s.ownerId.toString().includes(query)
+            ownerName.includes(query) ||
+            assigneeName.includes(query)
         );
     });
 
@@ -138,8 +141,8 @@ function ViewServiceReqs() {
                                     <SortableHead column="type" label="Type" sort={sort} onSort={toggleSort} />
                                     <SortableHead column="created" label="Created" sort={sort} onSort={toggleSort} className="w-full" />
                                     <SortableHead column="deadline" label="Deadline" sort={sort} onSort={toggleSort} />
-                                    <SortableHead column="assignee" label="AssigneeID" sort={sort} onSort={toggleSort} />
-                                    <SortableHead column="owner" label="OwnerID" sort={sort} onSort={toggleSort} />
+                                    <SortableHead column="assignee" label="Assignee" sort={sort} onSort={toggleSort} />
+                                    <SortableHead column="owner" label="Owner" sort={sort} onSort={toggleSort} />
                                     <TableHead className="uppercase tracking-wider text-muted-foreground select-none">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -149,8 +152,8 @@ function ViewServiceReqs() {
                                     if (col === "type") return s.type;
                                     if (col === "created") return s.created;
                                     if (col === "deadline") return s.deadline;
-                                    if (col === "assignee") return s.assigneeId;
-                                    if (col === "owner") return s.ownerId;
+                                    if (col === "assignee") return s.assignee ? `${s.assignee.lastName} ${s.assignee.firstName}` : "";
+                                    if (col === "owner") return `${s.owner.lastName} ${s.owner.firstName}`;
                                 }).map((servicereq) => {
                                     const matches = findMatches(servicereq.name, searchTerm)
                                     return (
@@ -159,8 +162,14 @@ function ViewServiceReqs() {
                                             <TableCell className="font-medium">{servicereq.type}</TableCell>
                                             <TableCell className="font-medium">{new Date(servicereq.created).toLocaleDateString()}</TableCell>
                                             <TableCell className="font-medium">{new Date(servicereq.deadline).toLocaleDateString()}</TableCell>
-                                            <TableCell className="font-medium">{servicereq.assigneeId}</TableCell>
-                                            <TableCell className="font-medium">{servicereq.ownerId}</TableCell>
+                                            <TableCell>
+                                                {servicereq.assignee
+                                                    ? <EmployeeAvatar employee={servicereq.assignee} size="sm" />
+                                                    : <span className="text-muted-foreground">—</span>}
+                                            </TableCell>
+                                            <TableCell>
+                                                <EmployeeAvatar employee={servicereq.owner} size="sm" />
+                                            </TableCell>
                                             <TableCell>
                                                 <div className="flex justify-center gap-2">
                                                     <Button

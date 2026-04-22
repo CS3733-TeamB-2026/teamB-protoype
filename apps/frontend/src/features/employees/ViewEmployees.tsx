@@ -36,7 +36,7 @@ function EmployeeRow({ employee, index, searchTerm, currentUserId, onEdit, onDel
             <TableCell>
                 <Avatar className="cursor-pointer w-10 h-10">
                     <AvatarImage src={avatarUrl} />
-                    <AvatarFallback className="bg-accent text-primary-foreground">{" " + employee.firstName[0] + employee.lastName[0]}</AvatarFallback>
+                    <AvatarFallback className="bg-accent text-primary-foreground">{employee.firstName[0]}{employee.lastName[0]}</AvatarFallback>
                 </Avatar>
             </TableCell>
             <TableCell className="text-right pr-4">{employee.id}</TableCell>

@@ -16,7 +16,7 @@ function HelloCard() {
                     <div className="flex flex-row gap-5 items-center">
                         <Avatar className="w-15 h-15 ">
                             <AvatarImage src={avatarUrl} />
-                            <AvatarFallback className="bg-accent text-primary-foreground">{" " + user?.firstName[0] + user?.lastName[0]}</AvatarFallback>
+                            <AvatarFallback className="bg-accent text-primary-foreground">{user?.firstName[0]}{user?.lastName[0]}</AvatarFallback>
                         </Avatar>
                         <div>
                             <CardTitle className="text-3xl text-left">Welcome back, {user?.firstName} {user?.lastName}.</CardTitle>

@@ -85,7 +85,7 @@ function Navbar() {
                                     </span>
                                     <Avatar className="cursor-pointer w-10 h-10 ">
                                         <AvatarImage src={avatarUrl} />
-                                        <AvatarFallback className="bg-accent text-primary-foreground">{isAuthenticated ? " " + user?.firstName[0] + user?.lastName[0] : <UserIcon />}</AvatarFallback>
+                                        <AvatarFallback className="bg-accent text-primary-foreground">{isAuthenticated ? `${user?.firstName[0]}${user?.lastName[0]}` : <UserIcon />}</AvatarFallback>
                                     </Avatar>
                                 </button>
 
@@ -101,7 +101,7 @@ function Navbar() {
                                     <div className="flex items-center gap-3">
                                         <Avatar className="cursor-pointer w-10 h-10 ">
                                             <AvatarImage src={avatarUrl} />
-                                            <AvatarFallback className="bg-accent text-primary-foreground">{isAuthenticated ? " " + user?.firstName[0] + user?.lastName[0] : <UserIcon />}</AvatarFallback>
+                                            <AvatarFallback className="bg-accent text-primary-foreground">{isAuthenticated ? `${user?.firstName[0]}${user?.lastName[0]}` : <UserIcon />}</AvatarFallback>
                                         </Avatar>
                                         <div>
                                             <p className="font-semibold text-lg text-primary">{user?.firstName + " " + user?.lastName}</p>
