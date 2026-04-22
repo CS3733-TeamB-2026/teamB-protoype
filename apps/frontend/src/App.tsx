@@ -27,7 +27,6 @@ import AppearanceSettings from "@/features/settings/sections/AppearanceSettings"
 import ProfileSettings from "@/features/settings/sections/ProfileSettings.tsx"
 import ExperationCalendar from "@/features/content/listing/ExpirationCalendar.tsx"
 import ViewServiceReqs from "@/features/servicereqs/ViewServiceReqs.tsx";
-import ViewServiceReqs from "@/features/servicereqs/ViewServiceReqs.tsx";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const { isAuthenticated } = useAuth0();
@@ -80,7 +79,6 @@ function App() {
                                 <Route path="appearance" element={<ProtectedRoute><AppearanceSettings/></ProtectedRoute>} />
                                 <Route path="profile" element={<ProtectedRoute><ProfileSettings/></ProtectedRoute>} />
                             </Route>
-                            <Route path="/servicereqs" element={<ProtectedRoute><ViewServiceReqs/></ProtectedRoute>}/>
                         </Routes>
                     </main>
                     <Footer />
