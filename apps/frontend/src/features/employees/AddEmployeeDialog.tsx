@@ -191,7 +191,7 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
                                         <DropdownMenuRadioItem value="businessAnalyst">Business Analyst</DropdownMenuRadioItem>
                                         <DropdownMenuRadioItem value="actuarialAnalyst">Actuarial Analyst</DropdownMenuRadioItem>
                                         <DropdownMenuRadioItem value="EXLOperator">EXL Operations</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="businessOperator">Business Operator</DropdownMenuRadioItem>
+                                        <DropdownMenuRadioItem value="businessOps">Business Operator</DropdownMenuRadioItem>
                                         <DropdownMenuRadioItem value="admin">Admin</DropdownMenuRadioItem>
                                     </DropdownMenuRadioGroup>
                                 </DropdownMenuGroup>
