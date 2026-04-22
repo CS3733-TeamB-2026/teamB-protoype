@@ -20,7 +20,7 @@ import { Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import {LocaleProvider} from "@/languageSupport/localeContext.tsx";
 import SettingsLayout from "@/features/settings/SettingsLayout.tsx";
-import AppearanceSettings from "@/features/settings/sections/AppearanceSettings.tsx";
+import AppearanceSettings from "@/features/settings/sections/AppearanceSettings";
 import ProfileSettings from "@/features/settings/sections/ProfileSettings.tsx"
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {

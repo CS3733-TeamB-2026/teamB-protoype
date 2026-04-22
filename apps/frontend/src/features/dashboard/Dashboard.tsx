@@ -15,13 +15,13 @@ import LinksCard from "@/features/dashboard/components/cards/LinksCard.tsx";
 const cards = [
     HelloCard,
     ClockCard,
-    LinksCard,
     EmployeeChartCard,
     ContentTypeChartCard,
     QuickLinksCard,
     BookmarkedCard,
     MyContentCard,
     RecentFilesCard,
+    LinksCard,
 ]
 
 function Dashboard() {

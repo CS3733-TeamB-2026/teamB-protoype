@@ -41,14 +41,14 @@ function HelloCard() {
                 <h1>Additional Links:</h1>
             </CardTitle>
             <CardContent>
-                <div className="flex flex-wrap gap-3">
+                <div className="grid grid-cols-1">
                     {links
                         .filter(item => item.access.length === 0 || (user && item.access.includes(user.persona)))
                         .map(item => (
                             <Link
                                 key={item.href}
                                 to={item.href}
-                                className="w-full justify-start gap-3 px-3 py-1 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-accent hover:text-primary-foreground transition-all active:brightness-90 shadow-none">
+                                className="justify-start gap-3 m-2 px-3 py-1 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-accent hover:text-primary-foreground transition-all active:brightness-90 shadow-none">
                                 {item.title}
                             </Link>
                         ))
