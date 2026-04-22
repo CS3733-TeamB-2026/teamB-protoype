@@ -155,8 +155,8 @@ function ViewServiceReqs() {
                                         <TableRow key={servicereq.id}>
                                             <TableCell className="text-right pr-4">{servicereq.name}</TableCell>
                                             <TableCell className="font-medium">{servicereq.type}</TableCell>
-                                            <TableCell className="font-medium">{servicereq.created}</TableCell>
-                                            <TableCell className="font-medium">{servicereq.deadline}</TableCell>
+                                            <TableCell className="font-medium">{new Date(servicereq.created).toLocaleDateString()}</TableCell>
+                                            <TableCell className="font-medium">{new Date(servicereq.deadline).toLocaleDateString()}</TableCell>
                                             <TableCell className="font-medium">{servicereq.assigneeId}</TableCell>
                                             <TableCell className="font-medium">{servicereq.ownerId}</TableCell>
                                             <TableCell>
@@ -164,6 +164,7 @@ function ViewServiceReqs() {
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
+                                                        disabled={servicereq.ownerId !== user.user?.id && servicereq.assigneeId !== user.user?.id}
                                                         onClick={() => {
                                                             setEditingServiceReq(servicereq);
                                                             setEditOpen(true);
@@ -174,7 +175,7 @@ function ViewServiceReqs() {
                                                     <Button
                                                         variant="destructive"
                                                         size="sm"
-                                                        disabled={servicereq.id === user.user?.id}
+                                                        disabled={servicereq.ownerId !== user.user?.id && servicereq.assigneeId !== user.user?.id}
                                                         onClick={() => setDeleteTarget(servicereq)}
                                                     >
                                                         <Trash2 className="w-4 h-4" />
