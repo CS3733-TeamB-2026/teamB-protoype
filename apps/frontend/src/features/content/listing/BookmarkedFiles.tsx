@@ -30,7 +30,7 @@ function RecentFiles() {
                 const content: ContentItem[] = await contentRes.json();
 
                 const bookmarkedIds = new Set(bookmarks.map((b) => b.bookmarkedContentId));
-                setBookmarkedItems(content.filter((item) => bookmarkedIds.has(item.id)));
+                setBookmarkedItems(content.filter((item) => bookmarkedIds.has(item.id)).slice(0, 5));
                 setLoading(false);
             } catch {
                 setError("Failed to load bookmarks");

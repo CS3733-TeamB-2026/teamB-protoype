@@ -74,6 +74,7 @@ model Content {
 
 //TODO: delete once we know we aren't using this
 model ServiceRequest {
+  id      Int      @id @default(autoincrement())
   owner   Employee @relation("OwnedBy", fields: [ownerId], references: [id])
   ownerId Int
 
@@ -84,7 +85,6 @@ model ServiceRequest {
   deadline DateTime?
   type     RequestType
 
-  @@id([ownerId, created])
   @@schema("public")
 }
 

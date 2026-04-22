@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase'
+import { prisma } from "../lib/prisma";
 
 export class Bucket {
 
@@ -24,6 +25,15 @@ export class Bucket {
         const {data, error} = await supabase.storage.from(bucket).download(path)
         if (error) throw error;
         return data;
+    }
+
+    public static async createPublicUrl(id: number): Promise<string | null> {
+        const contentItem = await prisma.content.findUnique({
+            where: { id },
+        })
+        const path = contentItem?.fileURI ?? null
+        if (!path) { return null }
+        return Bucket.createSignedUrl(path, 120);
     }
 
     public static async getFileMetadata(path: string, bucket = "content") {

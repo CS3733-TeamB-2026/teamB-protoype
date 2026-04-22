@@ -2,6 +2,11 @@ export type TranslationKey =
     | 'cancel'
     | 'confirm'
     | 'save'
+    | '404'
+    | "all"
+    | 'other'
+    | 'bookmarked'
+
     | 'settings.language'
 
     | 'nav.menu'
@@ -10,26 +15,32 @@ export type TranslationKey =
     | 'nav.login'
     | 'nav.logOut'
 
+    | 'search.genericDialogue'
+
     | 'sidebar.personas'
     | 'sidebar.underwriter'
     | 'sidebar.businessAnalyst'
+    | 'sidebar.actuarialAnalyst'
+    | 'sidebar.exlOperations'
+    | 'sidebar.businessOperations'
     | 'sidebar.home'
     | 'sidebar.dashboard'
     | 'sidebar.manageContent'
     | 'sidebar.contentLibrary'
     | 'sidebar.bulkUpload'
     | 'sidebar.addContent'
-    | 'sidebar.viewContent'
     | 'sidebar.addEmployees'
     | 'sidebar.viewEmployees'
     | 'sidebar.manageEmployees'
     | 'sidebar.team'
+    | 'sidebar.servicereqs'
 
     | 'footer.hanoverContentManager'
     | 'footer.rightsReserved'
     | 'footer.notice'
     | 'footer.WPI'
 
+    | 'themes'
 
     | 'role.lead'
     | 'role.assistantLead'
@@ -53,5 +64,59 @@ export type TranslationKey =
     | 'home.bubble2'
     | 'home.bubble3'
 
-    | '404';
+    | 'status'
+    | 'status.new'
+    | 'status.inProgress'
+    | 'status.complete'
+
+    | 'kind'
+    | 'kind.reference'
+    | 'kind.workflow'
+
+    | 'persona'
+    | 'persona.underwriter'
+    | 'persona.businessAnalyst'
+    | 'persona.actuarialAnalyst'
+    | 'persona.EXLOperator'
+    | 'persona.businessOps'
+    | 'persona.admin'
+
+    | 'file.type'
+    | 'file.office'
+    | 'file.audio'
+    | 'file.video'
+    | 'file.images'
+    | 'file.html'
+    | 'file.zip'
+    | 'file.plain text'
+    | 'file.links'
+
+    | 'item'
+    | 'of'
+    | 'page'
+    | 'pages.rowsPerPage'
+
+    | 'disclaimer.start'
+    | 'disclaimer.middle'
+    | 'disclaimer.end'
+
+    | 'content'
+    | 'content.filters'
+    | 'content.hide'
+    | 'content.forYou'
+    | 'content.ownedByMe'
+    | 'content.favorites'
+    | 'content.favorite'
+    | 'content.deleteConfirmation'
+    | 'content.cannotBeUndone'
+    | 'content.deleteDialogue'
+    | 'content.view'
+    | 'content.description'
+    | 'content.name'
+    | 'content.actions'
+    | 'content.owner'
+    | 'content.checkout'
+    | 'content.checkoutTitle'
+    | 'content.checkoutDesc1'
+    | 'content.checkoutDesc2';
 

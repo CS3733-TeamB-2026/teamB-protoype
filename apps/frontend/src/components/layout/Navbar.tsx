@@ -1,6 +1,6 @@
 //import React from "react";
 import { useSidebar } from "@/components/ui/sidebar.tsx";
-import { Menu, Loader2 } from "lucide-react";
+import {Menu, Loader2, ChevronDown} from "lucide-react";
 import logo from "../../assets/hanover_logo.svg"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import {
@@ -17,13 +17,15 @@ import { useUser } from "@/hooks/use-user.ts"
 import {useLocale} from "@/languageSupport/localeContext.tsx";
 import {useTranslation} from "@/languageSupport/useTranslation.ts";
 import DisclaimerAlert from "@/components/layout/DisclaimerAlert"
+import React, { useState } from "react";
 import DarkmodeButton from "@/components/layout/DarkmodeButton"
-import {useState} from "react";
 
 const LOCALES = [
     { code: "en_us", label: "English" },
     { code: "sp_sp", label: "Español" },
 ] as const;
+
+type SettingsCategory = "language" | "theme" | null;
 
 function Navbar() {
     const { toggleSidebar } = useSidebar();
@@ -38,6 +40,10 @@ function Navbar() {
     const {user} = useUser();
     const { locale, setLocale } = useLocale();
     const { ts } = useTranslation(locale);
+
+    const [openCategory, setOpenCategory] = React.useState<SettingsCategory>(null);
+    const toggleCategory = (cat: SettingsCategory) =>
+        setOpenCategory(prev => (prev === cat ? null : cat));
 
     return (
         <>
@@ -166,7 +172,8 @@ function Navbar() {
                 </Popover>
 
                 {/*settings*/}
-                <Popover>
+                {/* only allows one category to be open at a time */}
+                <Popover onOpenChange={(open) => { if (!open) setOpenCategory(null); }}>
                     <PopoverTrigger asChild>
                         <button className="group cursor-pointer p-2 ml-4 mr-1 rounded-full active:scale-[0.96] transition-all duration-200">
                             <Settings
@@ -175,23 +182,60 @@ function Navbar() {
                             />
                         </button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-48">
-                        <p className="font-semibold text-sm text-center">{ts('settings.language')}</p>
-                        <Separator className="" />
+
+                    <PopoverContent className="w-52 p-2">
                         <div className="flex flex-col gap-1">
-                            {LOCALES.map(({ code, label }) => (
-                                <button
-                                    key={code}
-                                    onClick={() => setLocale(code)}
-                                    className={`w-full text-center px-3 py-2 rounded-lg text-sm transition-colors
-                      ${locale === code
-                                        ? "bg-accent text-primary-foreground"
-                                        : "hover:bg-secondary"
-                                    }`}
-                                >
-                                    {label}
-                                </button>
-                            ))}
+
+                            {/* Language Settings */}
+                            <button
+                                onClick={() => toggleCategory("language")}
+                                className="flex items-center justify-between w-full px-3 py-2 rounded-lg text-sm font-semibold transition-colors hover:bg-secondary"
+                            >{ts('settings.language')}
+                                <ChevronDown
+                                    size={14}
+                                    className={`transition-transform duration-200 ${openCategory === "language" ? "rotate-180" : ""}`}
+                                />
+                            </button>
+
+                            {/* Maps each of the designated languages in LOCALES to a button, that button then changes the locale state */}
+                            {openCategory === "language" && (
+                                <div className="flex flex-col gap-0.5 pl-3 pb-1">
+                                    {LOCALES.map(({ code, label }) => (
+                                        <button
+                                            key={code}
+                                            onClick={() => setLocale(code)}
+                                            className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors
+                                                ${locale === code
+                                                ? "bg-accent text-primary-foreground"
+                                                : "hover:bg-secondary"
+                                            }`}
+                                        >
+                                            {label}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
+                            <Separator />
+
+                            {/* Theme Settings */}
+                            <button
+                                onClick={() => toggleCategory("theme")}
+                                className="flex items-center justify-between w-full px-3 py-2 rounded-lg text-sm font-semibold transition-colors hover:bg-secondary"
+                            >{ts('themes')}
+                                <ChevronDown
+                                    size={14}
+                                    className={`transition-transform duration-200 ${openCategory === "theme" ? "rotate-180" : ""}`}
+                                />
+                            </button>
+
+                            {/* list themes here */}
+                            {openCategory === "theme" && (
+                                <div className="flex flex-col gap-0.5 pl-3 pb-1">
+                                    <p>Placeholder</p>
+                                </div>
+                            )}
+
                         </div>
                     </PopoverContent>
                 </Popover>
