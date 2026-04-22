@@ -51,7 +51,6 @@ const navItems: NavItem[] = [
             {title: "EXL Operations", icon: User, href: "/exloperations", children: [], access: [], langKey: "sidebar.exlOperations"},
             {title: "Business Operations", icon: User, href: "/businessoperations", children: [], access: [], langKey: "sidebar.businessOperations"},
         ], access: [], langKey: "sidebar.personas" },
-    { title: "Service Requests", icon: Library, href: "/servicereqs", children: [], access: [], langKey: "sidebar.servicereqs"}
 ]
 
 function AppSidebar() {

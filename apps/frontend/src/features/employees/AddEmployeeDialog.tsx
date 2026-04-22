@@ -26,7 +26,7 @@ import { Button } from "@/components/ui/button.tsx"
 import { Separator } from "@/components/ui/separator.tsx"
 import { useAuth0 } from "@auth0/auth0-react"
 import { formatLabel } from "@/lib/utils.ts"
-import type { Employee } from "@/lib/types.ts"
+import type { Employee, Persona } from "@/lib/types.ts"
 import { toast } from "sonner";
 
 interface AddEmployeeDialogProps {
@@ -35,7 +35,7 @@ interface AddEmployeeDialogProps {
     onSave: (created: Employee) => void
 }
 
-export function AddEmployeeDialog({ open, onOpenChange }: AddEmployeeDialogProps) {
+export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDialogProps) {
     const [targetPersona, setTargetPersona] = useState("Select job position")
     const [firstName, setFirstName] = React.useState("")
     const [lastName, setLastName] = React.useState("")
@@ -103,7 +103,7 @@ export function AddEmployeeDialog({ open, onOpenChange }: AddEmployeeDialogProps
                 firstName: firstName,
                 lastName: lastName,
                 id: parseInt(id),
-                persona: targetPersona,
+                persona: targetPersona as Persona,
                 profilePhotoURI: ""
             })
 

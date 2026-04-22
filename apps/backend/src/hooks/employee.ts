@@ -151,9 +151,7 @@ export const createEmployeeWithAuth0 = async (req: req, res: res) => {
 
     try {
 
-        console.log("Calling create auth")
         const auth0Id = await createAuth0User(username, password, email);
-        console.log("Calling create auth")
 
         if (!auth0Id) {
             return res.status(500).json({ error: "Failed to create Auth0 user" });
