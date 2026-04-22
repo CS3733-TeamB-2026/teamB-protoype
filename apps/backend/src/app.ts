@@ -37,6 +37,7 @@ app.put('/api/login', login.updateLogin)
 // Service Reqs
 app.get("/api/servicereqs", servicereqs.allServiceReqs)
 app.get("/api/assigned", servicereqs.allAssignedReqs)
+app.post("/api/servicereqs",servicereqs.createServiceReq)
 // Content
 app.get("/api/content", content.getAllContent)
 app.get("/api/content/tags", content.getAllTags)

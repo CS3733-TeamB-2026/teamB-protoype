@@ -38,7 +38,7 @@ function RecentFiles() {
     //sort by lastModified (newest first) and take top 5
     const recentFiles = [...content]
         .sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime())
-        .slice(0, 5);
+        .slice(0, 8);
 
     if (loading) {
         return (

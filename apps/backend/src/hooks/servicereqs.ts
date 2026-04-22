@@ -20,3 +20,20 @@ export const allAssignedReqs = async (req: req, res: res) => {
         return res.status(500).end();
     }
 };
+
+export const createServiceReq = async (req: req, res: res) => {
+    const payload = req.body;
+    try {
+        const result = await q.ServiceReqs.createServiceReq(
+            payload.created,
+            payload.deadline,
+            payload.type,
+            payload.assigneeId,
+            payload.ownerId
+        );
+        return res.status(201).json(result);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+}

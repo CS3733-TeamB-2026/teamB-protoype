@@ -1,17 +1,5 @@
-export type ContentType = "reference" | "workflow";
-
-export type ContentStatus = "new" | "inProgress" | "complete";
-
-export type Persona =
-    | "underwriter"
-    | "businessAnalyst"
-    | "actuarialAnalyst"
-    | "EXLOperator"
-    | "businessOps"
-    | "admin";
-
 // Matches the Content model from Prisma (with joined owner)
-export interface ContentItem {
+export type ContentItem = {
     id: number;
     displayName: string;
     linkURL: string | null;
@@ -48,7 +36,7 @@ export type DocType =
     | "images"
     | "links";
 
-export interface BookmarkRecord {
+export type BookmarkRecord = {
     bookmarkerId: number;
     bookmarkedContentId: number;
 }
@@ -70,4 +58,13 @@ export type UrlPreview = {
     image: string | null;
     siteName: string | null;
     favicon: string | null;
+}
+
+export type ServiceReq = {
+    id: number;
+    created: string;
+    deadline: string;
+    type: string;
+    assignee: number;
+    owner: number;
 }

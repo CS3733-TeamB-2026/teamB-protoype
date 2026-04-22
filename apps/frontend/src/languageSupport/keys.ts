@@ -13,6 +13,9 @@ export type TranslationKey =
     | 'sidebar.personas'
     | 'sidebar.underwriter'
     | 'sidebar.businessAnalyst'
+    | 'sidebar.actuarialAnalyst'
+    | 'sidebar.exlOperations'
+    | 'sidebar.businessOperations'
     | 'sidebar.home'
     | 'sidebar.dashboard'
     | 'sidebar.manageContent'
@@ -24,6 +27,7 @@ export type TranslationKey =
     | 'sidebar.viewEmployees'
     | 'sidebar.manageEmployees'
     | 'sidebar.team'
+    | 'sidebar.servicereqs'
 
     | 'footer.hanoverContentManager'
     | 'footer.rightsReserved'
