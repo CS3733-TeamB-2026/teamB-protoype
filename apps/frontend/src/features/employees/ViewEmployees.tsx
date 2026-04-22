@@ -17,6 +17,57 @@ import { useAuth0 } from "@auth0/auth0-react";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
 import type { Employee } from "@/lib/types.ts";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
+import { useAvatarUrl } from "@/hooks/use-avatar-url";
+
+type EmployeeRowProps = {
+    employee: Employee;
+    index: number;
+    searchTerm: string;
+    currentUserId: number | undefined;
+    onEdit: (e: Employee) => void;
+    onDelete: (e: Employee) => void;
+};
+
+function EmployeeRow({ employee, index, searchTerm, currentUserId, onEdit, onDelete }: EmployeeRowProps) {
+    const avatarUrl = useAvatarUrl(employee.id, employee.profilePhotoURI);
+    const matches = findMatches(employee.firstName + employee.lastName, searchTerm);
+    return (
+        <TableRow key={employee.id} className={`${index % 2 === 0 ? "bg-muted/10" : ""}`}>
+            <TableCell>
+                <Avatar className="cursor-pointer w-10 h-10">
+                    <AvatarImage src={avatarUrl} />
+                    <AvatarFallback className="bg-accent text-primary-foreground">{" " + employee.firstName[0] + employee.lastName[0]}</AvatarFallback>
+                </Avatar>
+            </TableCell>
+            <TableCell className="text-right pr-4">{employee.id}</TableCell>
+            <TableCell className="font-medium">{highlightRange(employee.firstName, 0, matches)}</TableCell>
+            <TableCell className="font-medium">{highlightRange(employee.lastName, employee.firstName.length, matches)}</TableCell>
+            <TableCell className="text-center">
+                <PersonaBadge persona={employee.persona} />
+            </TableCell>
+            <TableCell>
+                <div className="flex justify-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={employee.id === currentUserId}
+                        onClick={() => onEdit(employee)}
+                    >
+                        <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button
+                        variant="destructive"
+                        size="sm"
+                        disabled={employee.id === currentUserId}
+                        onClick={() => onDelete(employee)}
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </Button>
+                </div>
+            </TableCell>
+        </TableRow>
+    );
+}
 
 function ViewEmployees() {
 
@@ -152,53 +203,17 @@ function ViewEmployees() {
                                     if (col === "firstName") return e.firstName;
                                     if (col === "lastName") return e.lastName;
                                     if (col === "persona") return e.persona;
-                                }).map((employee, index) => {
-                                    const matches = findMatches(employee.firstName+employee.lastName, searchTerm);
-                                    return (
-                                        <TableRow key={employee.id} className={`${ index % 2 === 0 ? "bg-muted/10" : ""}`}>
-                                            <TableCell>
-                                                <Avatar className="cursor-pointer w-10 h-10 ">
-                                                    {
-                                                        employee.profilePhotoURI?
-                                                            <AvatarImage src={employee.profilePhotoURI} />
-                                                            :
-                                                            <AvatarFallback className="bg-accent text-primary-foreground">{" " + employee?.firstName[0] + employee?.lastName[0]}</AvatarFallback>
-                                                    }
-                                                </Avatar>
-                                            </TableCell>
-                                            <TableCell className="text-right pr-4">{employee.id}</TableCell>
-                                            <TableCell className="font-medium">{highlightRange(employee.firstName, 0, matches)}</TableCell>
-                                            <TableCell className="font-medium">{highlightRange(employee.lastName, employee.firstName.length, matches)}</TableCell>
-                                            <TableCell  className="text-center">
-                                                <PersonaBadge
-                                                    persona={employee.persona}
-                                                />
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="flex justify-center gap-2">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        disabled={employee.id === user?.id}
-                                                        onClick={() => {
-                                                            setEditingEmployee(employee);
-                                                            setEditOpen(true);
-                                                        }}
-                                                    >
-                                                        <Pencil className="w-4 h-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="destructive"
-                                                        size="sm"
-                                                        disabled={employee.id === user?.id}
-                                                        onClick={() => setDeleteTarget(employee)}
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </Button>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    )})}
+                                }).map((employee, index) => (
+                                    <EmployeeRow
+                                        key={employee.id}
+                                        employee={employee}
+                                        index={index}
+                                        searchTerm={searchTerm}
+                                        currentUserId={user?.id}
+                                        onEdit={(e) => { setEditingEmployee(e); setEditOpen(true); }}
+                                        onDelete={setDeleteTarget}
+                                    />
+                                ))}
                             </TableBody>
                         </Table>
                     )}

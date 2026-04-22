@@ -14,6 +14,7 @@ import { UserIcon, Settings, LogOut, LayoutDashboard, Languages} from "lucide-re
 import { Link, useNavigate } from "react-router-dom"
 import { useAuth0 } from "@auth0/auth0-react"
 import { useUser } from "@/hooks/use-user.ts"
+import { useAvatarUrl } from "@/hooks/use-avatar-url"
 import {useLocale} from "@/languageSupport/localeContext.tsx";
 import {useTranslation} from "@/languageSupport/useTranslation.ts";
 import DisclaimerAlert from "@/components/layout/DisclaimerAlert"
@@ -38,6 +39,7 @@ function Navbar() {
     const { isAuthenticated, loginWithRedirect, logout } = useAuth0();
 
     const {user} = useUser();
+    const avatarUrl = useAvatarUrl(user?.id, user?.profilePhotoURI);
     const { locale, setLocale } = useLocale();
     const { ts } = useTranslation(locale);
 
@@ -82,13 +84,8 @@ function Navbar() {
                                         { isAuthenticated ? user?.firstName + " " + user?.lastName : ts('nav.login')}
                                     </span>
                                     <Avatar className="cursor-pointer w-10 h-10 ">
-                                        {
-                                            user?.profilePhotoURI?
-                                                <AvatarImage src={user?.profilePhotoURI} />
-                                                :
-                                                <AvatarFallback className="bg-accent text-primary-foreground">{isAuthenticated ? " " + user?.firstName[0] + user?.lastName[0] : <UserIcon />}</AvatarFallback>
-                                        }
-
+                                        <AvatarImage src={avatarUrl} />
+                                        <AvatarFallback className="bg-accent text-primary-foreground">{isAuthenticated ? " " + user?.firstName[0] + user?.lastName[0] : <UserIcon />}</AvatarFallback>
                                     </Avatar>
                                 </button>
 
@@ -103,12 +100,8 @@ function Navbar() {
                                 <div className="flex flex-col gap-3">
                                     <div className="flex items-center gap-3">
                                         <Avatar className="cursor-pointer w-10 h-10 ">
-                                            {
-                                                user?.profilePhotoURI?
-                                                    <AvatarImage src={user?.profilePhotoURI} />
-                                                    :
-                                                    <AvatarFallback className="bg-accent text-primary-foreground">{isAuthenticated ? " " + user?.firstName[0] + user?.lastName[0] : <UserIcon />}</AvatarFallback>
-                                            }
+                                            <AvatarImage src={avatarUrl} />
+                                            <AvatarFallback className="bg-accent text-primary-foreground">{isAuthenticated ? " " + user?.firstName[0] + user?.lastName[0] : <UserIcon />}</AvatarFallback>
                                         </Avatar>
                                         <div>
                                             <p className="font-semibold text-lg text-primary">{user?.firstName + " " + user?.lastName}</p>

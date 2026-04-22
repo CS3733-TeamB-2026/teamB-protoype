@@ -22,6 +22,7 @@ import {
     AvatarImage,
     AvatarFallback,
 } from "@/components/ui/avatar";
+import { useAvatarUrl } from "@/hooks/use-avatar-url";
 
 const profileSchema = z.object({
     firstName: z
@@ -39,6 +40,7 @@ type ProfileFormValues = z.infer<typeof profileSchema>
 function ProfileSettings() {
 
     const { user, updateUser, uploadProfilePhoto } = useUser();
+    const avatarUrl = useAvatarUrl(user?.id, user?.profilePhotoURI);
     const [uploading, setUploading] = useState(false);
 
     const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,7 +109,7 @@ function ProfileSettings() {
                         <CardContent className="pt-6 space-y-6">
                             <div className="flex items-center gap-6 pb-2">
                                 <Avatar className="h-20 w-20">
-                                    <AvatarImage src={user?.profilePhotoURI ?? undefined} />
+                                    <AvatarImage src={avatarUrl} />
                                     <AvatarFallback className="text-lg">
                                         {user?.firstName?.[0]}{user?.lastName?.[0]}
                                     </AvatarFallback>

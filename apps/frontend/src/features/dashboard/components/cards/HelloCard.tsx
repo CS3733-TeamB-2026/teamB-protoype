@@ -2,10 +2,12 @@ import {Card, CardDescription, CardHeader, CardTitle} from "@/components/ui/card
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
 import {LayoutDashboard} from "lucide-react";
 import { useUser } from "@/hooks/use-user.ts";
+import { useAvatarUrl } from "@/hooks/use-avatar-url";
 
 function HelloCard() {
 
     const {user} = useUser();
+    const avatarUrl = useAvatarUrl(user?.id, user?.profilePhotoURI);
 
     return (
         <Card className="border-t-primary-light border-t-4 md:col-span-2 py-8 px-4 shadow-lg hover:scale-101 transition-transform">
@@ -13,12 +15,8 @@ function HelloCard() {
                 <div className="flex justify-between items-center">
                     <div className="flex flex-row gap-5 items-center">
                         <Avatar className="w-15 h-15 ">
-                            {
-                                user?.profilePhotoURI?
-                                    <AvatarImage src={user?.profilePhotoURI} />
-                                    :
-                                    <AvatarFallback className="bg-accent text-primary-foreground">{" " + user?.firstName[0] + user?.lastName[0]}</AvatarFallback>
-                            }
+                            <AvatarImage src={avatarUrl} />
+                            <AvatarFallback className="bg-accent text-primary-foreground">{" " + user?.firstName[0] + user?.lastName[0]}</AvatarFallback>
                         </Avatar>
                         <div>
                             <CardTitle className="text-3xl text-left">Welcome back, {user?.firstName} {user?.lastName}.</CardTitle>
