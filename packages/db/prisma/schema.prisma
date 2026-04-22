@@ -65,9 +65,8 @@ model Content {
   status        Status
   bookmarks     Bookmark[]
 
-  tags         String[]
-  collection   Collection? @relation(fields: [collectionId], references: [id])
-  collectionId Int?
+  tags            String[]
+  collectionItems CollectionItem[]
 
   @@schema("public")
 }
@@ -90,16 +89,25 @@ model ServiceRequest {
 
 model Collection {
   displayName String
-  id          Int    @id
+  id          Int    @id @default(autoincrement())
 
   owner   Employee @relation(fields: [ownerId], references: [id])
   ownerId Int
 
   public Boolean
 
-  contentItemIds Int[]
-  contentItems   Content[] @relation(fields: [contentItemIds], references: [id])
+  items CollectionItem[]
 
+  @@schema("public")
+}
+
+model CollectionItem {
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  collectionId Int
+  content      Content    @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  contentId    Int
+
+  @@id([collectionId, contentId])
   @@schema("public")
 }
 
