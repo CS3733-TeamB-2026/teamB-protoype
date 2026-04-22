@@ -1,3 +1,20 @@
+export type Persona =
+    | "underwriter"
+    | "businessAnalyst"
+    | "actuarialAnalyst"
+    | "EXLOperator"
+    | "businessOps"
+    | "admin";
+
+export type ContentType =
+    | "reference"
+    | "workflow";
+
+export type ContentStatus =
+    | "new"
+    | "inProgress"
+    | "complete";
+
 // Matches the Content model from Prisma (with joined owner)
 export type ContentItem = {
     id: number;
@@ -25,16 +42,6 @@ export type ContentItem = {
     tags: string[];
 }
 
-// Y'all I couldn't find a way to do it as a part of ContentItem, sorry. -Ricardo
-export type DocType =
-    | "office"
-    | "plain text"
-    | "video"
-    | "audio"
-    | "html"
-    | "zip"
-    | "images"
-    | "links";
 
 export type BookmarkRecord = {
     bookmarkerId: number;
