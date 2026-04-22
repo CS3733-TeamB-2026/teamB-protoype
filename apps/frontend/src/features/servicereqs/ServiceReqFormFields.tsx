@@ -82,7 +82,7 @@ export function ServiceReqFormFields({ values, patch, errors, showLastModified =
                         <Field className="bg-background flex-1">
                             <FieldLabel className="text-primary text-lg" htmlFor="date-modified">
                                 Last Modified Date
-                                ContentFormFields  </FieldLabel>
+                            </FieldLabel>
                             <Popover open={openCreatedDate} onOpenChange={setOpenCreatedDate}>
                                 <PopoverTrigger asChild>
                                     <Button
