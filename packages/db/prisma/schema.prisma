@@ -28,6 +28,7 @@ model Employee {
 
   bookmarks Bookmark[]
 
+  @@unique([firstName, lastName])
   @@schema("public")
 }
 
