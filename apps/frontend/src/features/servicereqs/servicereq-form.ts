@@ -12,6 +12,7 @@ import type { ServiceReqItem } from "@/lib/types.ts";
  * are merged into a single ISO timestamp only in `buildContentFormData`.
  */
 export type ServiceReqFormValues = {
+    id: number | undefined,
     name: string;
     createdDate: Date;
     createdTime: string; // HH:MM:SS string from <input type="time" step="1">
@@ -44,6 +45,7 @@ export function getErrors(values: ServiceReqFormValues): Record<string, string> 
 /** Starting values for the Add form. */
 export function initialValues(userId: number): ServiceReqFormValues {
     return {
+        id: undefined,
         name: "",
         createdDate: new Date(),
         createdTime: nowTimeString(), // HH:MM:SS string from <input type="time" step="1">
@@ -68,6 +70,7 @@ export function buildServiceReqJSON(values: ServiceReqFormValues): string {
     deadlineDate.setHours(0, 0, 0, 0);
 
     return JSON.stringify({
+        id: values.id,
         name: values.name,
         ownerId: values.ownerId,
         assigneeId: values.assigneeId,
@@ -81,6 +84,7 @@ export function buildServiceReqJSON(values: ServiceReqFormValues): string {
 export function fromServiceReqItem(item: ServiceReqItem): ServiceReqFormValues {
     const createdDate = new Date(item.created);
     return {
+        id: item.id,
         name: item.name,
         ownerId: item.ownerId,
         assigneeId: item.assigneeId,
