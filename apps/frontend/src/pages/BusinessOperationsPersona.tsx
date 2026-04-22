@@ -5,14 +5,14 @@ import { usePageTitle } from "@/hooks/use-page-title.ts";
 
 function BusinessOperationsPersona() {
 
-    usePageTitle("Actuarial Analyst Persona");
+    usePageTitle("Business Operations Persona");
 
     return (
         <>
 
             <Hero
                 icon={User}
-                title="Persona - Actuarial Analyst"
+                title="Persona - Business Operations"
             />
 
             {/*persona section*/}
@@ -23,52 +23,49 @@ function BusinessOperationsPersona() {
                 <CardContent className="text-left px-10">
                     <h1 className="text-lg">About Me:</h1> <br/>
                     <p>
-                        I maintain and validate rate information and rating tools. I use iBank to ensure compliance and accuracy in
-                        pricing models. My work supports profitability and regulatory adherence, so I need reliable access to
-                        technical content.
+                        I calculate premiums and follow rating workflows. I depend on iBank for tools and procedures that ensure
+                        accuracy. My role is critical for policy pricing and compliance.
                     </p> <br/>
                     <h1 className="text-lg">I may think and say:</h1> <br/>
                     <ul className="list-disc list-inside text-left mx-auto text-md">
-                        <li>“Are these rates updated for the new filing?”</li>
-                        <li>“I need to confirm the class table before publishing.”</li>
-                        <li>“Does this tool reflect the latest approved changes?”</li>
+                        <li>“What’s the BUR procedure for this class?”</li>
+                        <li>“I need the Prometrix tool for this calculation.”</li>
+                        <li>“Is the BaRR portal updated?”</li>
                     </ul> <br />
                     <h1 className="text-lg">My Goal:</h1> <br/>
                     <p>
-                        Provide accurate rate and pricing information to support underwriting and compliance.
+                        Accurately calculate premiums and follow rating workflows without delays.
                     </p> <br/>
                     <h1 className="text-lg">Skills:</h1> <br/>
                     <ul className="list-disc list-inside text-left mx-auto text-md">
-                        <li>Statistical analysis</li>
-                        <li>Rate validation</li>
-                        <li>Regulatory compliance</li>
-                        <li>Tool maintenance</li>
+                        <li>Rating calculations</li>
+                        <li>Workflow adherence</li>
+                        <li>Detail orientation</li>
                     </ul> <br />
                     <h1 className="text-lg">Critical Capabilities (1-5):</h1> <br/>
                     <ul className="list-disc list-inside text-left mx-auto text-md">
-                        <li>Integrated Thinking: <b>4</b></li>
+                        <li>Integrated Thinking: <b>3</b></li>
                         <li>Change Readiness: <b>3</b></li>
-                        <li>Consultative: <b>3</b></li>
-                        <li>Business / IT Fluency: <b>4</b></li>
-                        <li>Shift Left Mindset: <b>3</b></li>
-                        <li>Peer Networking: <b>3</b></li>
+                        <li>Consultative: <b>2</b></li>
+                        <li>Business / IT Fluency: <b>3</b></li>
+                        <li>Shift Left Mindset: <b>2</b></li>
+                        <li>Peer Networking: <b>2</b></li>
                     </ul> <br />
                     <h1 className="text-lg">Typical Traits:</h1> <br/>
                     <ul className="list-disc list-inside text-left mx-auto text-md">
-                        <li>Analytical</li>
-                        <li>Detail-oriented</li>
-                        <li>Compliance-focused</li>
+                        <li>Precise</li>
+                        <li>Task-focused</li>
+                        <li>Dependable</li>
                     </ul> <br />
                     <h1 className="text-lg">Frequency of Access & Criticality:</h1> <br/>
                     <ul className="list-disc list-inside text-left mx-auto text-md">
-                        <li><b>Access:</b> Weekly</li>
-                        <li><b>Criticality:</b> High — incorrect rates impact revenue and compliance</li>
+                        <li><b>Access:</b> Daily</li>
+                        <li><b>Criticality:</b> High — inability to access tools halts rating</li>
                     </ul> <br />
                     <h1 className="text-lg">Content Accessed:</h1> <br/>
                     <ul className="list-disc list-inside text-left mx-auto text-md">
-                        <li>Rate lookup tools</li>
-                        <li>Class tables</li>
-                        <li>State grids</li>
+                        <li>Rating tools</li>
+                        <li>Workflow documentation</li>
                     </ul> <br />
                 </CardContent>
             </Card>
