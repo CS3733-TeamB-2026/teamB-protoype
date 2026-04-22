@@ -344,6 +344,8 @@ export const CATEGORY_COLORS: Record<Category, { badge: string; icon: string }> 
     link:         { badge: "bg-violet-100 text-violet-700", icon: "text-violet-500" },
 };
 
+export const ALL_CATEGORIES = Object.keys(CATEGORY_COLORS) as Category[];
+
 // ---------- Upload validation ----------
 
 export type UploadValidation =
