@@ -1,10 +1,9 @@
 import { useEffect, useState, useMemo } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useUser } from "@/hooks/use-user.ts";
-import { Hero } from "@/components/shared/Hero.tsx";
 import { ContentIcon } from "@/features/content/components/ContentIcon.tsx";
 import { getCategory, getOriginalFilename } from "@/lib/mime.ts";
-import { CalendarClock, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
 import { Button } from "@/components/ui/button.tsx";
 import type { ContentItem } from "@/lib/types.ts";
@@ -112,16 +111,6 @@ function ExpirationCalendar() {
 
     return (
         <>
-            <Hero
-                icon={CalendarClock}
-                title="Expiration Calendar"
-                description="Track upcoming content expirations for your persona"
-            />
-
-            <div className="text-center mt-8">
-                <h1 className="text-4xl font-bold text-primary">Calendar</h1>
-                <p className="text-lg text-muted-foreground mt-2 max-w-xl mx-auto">Keep track of files soon to expire.</p>
-            </div>
 
             <div className="max-w-6xl mx-auto my-6 px-4">
                 {loading && (

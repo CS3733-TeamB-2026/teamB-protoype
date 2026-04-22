@@ -89,14 +89,14 @@ function ViewServiceReqs() {
         <>
             <Hero
                 icon={Users}
-                title="View ServiceReqs"
-                description="View, update, and delete servicereqs."
+                title="View Service Requests"
+                description="View, update, and delete service requests."
             />
 
             <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center px-4">
                 <CardHeader>
-                    <CardTitle className="text-3xl text-primary mt-4">All ServiceReqs</CardTitle>
-                    <CardDescription>Total ServiceReqs: {servicereqs.length}</CardDescription>
+                    <CardTitle className="text-3xl text-primary mt-4">All Service Requests</CardTitle>
+                    <CardDescription>Total Service Requests: {servicereqs.length}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="flex items-center justify-between mb-4">
