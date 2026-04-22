@@ -65,7 +65,9 @@ model Content {
   status        Status
   bookmarks     Bookmark[]
 
-  tags String[]
+  tags         String[]
+  collection   Collection? @relation(fields: [collectionId], references: [id])
+  collectionId Int?
 
   @@schema("public")
 }
@@ -88,15 +90,15 @@ model ServiceRequest {
 
 model Collection {
   displayName String
-  id          Int      @id
+  id          Int    @id
 
-  owner       Employee @relation(fields: [ownerId], references: [id])
-  ownerId     Int
+  owner   Employee @relation(fields: [ownerId], references: [id])
+  ownerId Int
 
-  public      Boolean
+  public Boolean
 
   contentItemIds Int[]
-  contentItems Content[] @relation(fields: [contentItemIds], references: [id])
+  contentItems   Content[] @relation(fields: [contentItemIds], references: [id])
 
   @@schema("public")
 }
