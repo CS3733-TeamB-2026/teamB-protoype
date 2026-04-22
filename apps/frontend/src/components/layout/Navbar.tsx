@@ -17,7 +17,7 @@ import { useUser } from "@/hooks/use-user.ts"
 import {useLocale} from "@/languageSupport/localeContext.tsx";
 import {useTranslation} from "@/languageSupport/useTranslation.ts";
 import DisclaimerAlert from "@/components/layout/DisclaimerAlert"
-import {useState} from "react";
+import React, {useState} from "react";
 
 const LOCALES = [
     { code: "en_us", label: "English" },
