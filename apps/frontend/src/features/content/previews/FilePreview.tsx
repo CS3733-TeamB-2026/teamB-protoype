@@ -291,7 +291,7 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
                     />
                 </div>
             )}
-            {/* Spreadsheet, routes through officeApps for full support */}
+            {/* XSL/XSLX, routes through officeApps for full support */}
             {status === "ready" && previewMode === "excel" && publicUrl && (
                 <iframe
                     src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(publicUrl)}`}
