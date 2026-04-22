@@ -32,6 +32,8 @@ export const en_us: Record<TranslationKey, string> = {
     'sidebar.underwriter': "Underwriter",
     'sidebar.businessAnalyst': "Business Analyst",
     'sidebar.actuarialAnalyst': "Actuarial Analyst",
+    'sidebar.exlOperations': "EXL Operations",
+    'sidebar.businessOperations': "Business Operations",
     'sidebar.dashboard': "Dashboard",
     'sidebar.manageContent': "Manage Content",
     'sidebar.contentLibrary': "Content Library",

@@ -46,6 +46,8 @@ const navItems: NavItem[] = [
             {title: "Underwriter", icon: User, href: "/underwriter", children: [], access: [], langKey: 'sidebar.underwriter'},
             {title: "Business Analyst", icon: User, href: "/businessanalyst", children: [], access: [], langKey: "sidebar.businessAnalyst"},
             {title: "Actuarial Analyst", icon: User, href: "/actuarialanalyst", children: [], access: [], langKey: "sidebar.actuarialAnalyst"},
+            {title: "EXL Operations", icon: User, href: "/exloperations", children: [], access: [], langKey: "sidebar.exlOperations"},
+            {title: "Business Operations", icon: User, href: "/businessoperations", children: [], access: [], langKey: "sidebar.businessOperations"},
         ], access: [], langKey: "sidebar.personas" },
 ]
 

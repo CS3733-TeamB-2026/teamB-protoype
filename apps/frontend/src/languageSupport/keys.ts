@@ -14,6 +14,8 @@ export type TranslationKey =
     | 'sidebar.underwriter'
     | 'sidebar.businessAnalyst'
     | 'sidebar.actuarialAnalyst'
+    | 'sidebar.exlOperations'
+    | 'sidebar.businessOperations'
     | 'sidebar.home'
     | 'sidebar.dashboard'
     | 'sidebar.manageContent'
