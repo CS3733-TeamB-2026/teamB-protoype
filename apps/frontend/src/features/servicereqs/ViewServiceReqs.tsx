@@ -166,7 +166,7 @@ function ViewServiceReqs() {
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
-                                                        disabled={servicereq.ownerId !== user.user?.id && servicereq.assigneeId !== user.user?.id}
+                                                        disabled={servicereq.ownerId !== user.user?.id && servicereq.assigneeId !== user.user?.id && user.user?.persona !== "admin"}
                                                         onClick={() => {
                                                             setEditingServiceReq(servicereq);
                                                             setEditOpen(true);
@@ -177,7 +177,7 @@ function ViewServiceReqs() {
                                                     <Button
                                                         variant="destructive"
                                                         size="sm"
-                                                        disabled={servicereq.ownerId !== user.user?.id && servicereq.assigneeId !== user.user?.id}
+                                                        disabled={servicereq.ownerId !== user.user?.id && servicereq.assigneeId !== user.user?.id && user.user?.persona !== "admin"}
                                                         onClick={() => setDeleteTarget(servicereq)}
                                                     >
                                                         <Trash2 className="w-4 h-4" />
