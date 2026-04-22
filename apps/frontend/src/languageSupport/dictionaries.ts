@@ -5,7 +5,13 @@ export const en_us: Record<TranslationKey, string> = {
     'confirm': 'Confirm',
     'save': 'Save',
     '404': 'Page not found',
+    "all": "All",
+    'other': 'Other',
+    'bookmarked': 'Bookmarked',
+
     'settings.language': 'Language',
+
+    'themes': 'Themes',
 
     'role.lead': "Lead Software Engineer",
     'role.assistantLead': "Assistant Lead Software Engineer",
@@ -26,8 +32,9 @@ export const en_us: Record<TranslationKey, string> = {
     'footer.notice': 'Not an Official Hanover Website',
     'footer.WPI': 'CS3733 at Worcester Polytechnic Institute',
 
+    'search.genericDialogue': "Search by name...",
+
     'sidebar.home': 'Home',
-    'sidebar.viewContent': 'View Content',
     'sidebar.personas': "Personas",
     'sidebar.underwriter': "Underwriter",
     'sidebar.businessAnalyst': "Business Analyst",
@@ -52,6 +59,62 @@ export const en_us: Record<TranslationKey, string> = {
     'home.bubble1': 'Log in above to begin.',
     'home.bubble2': 'Manage all your files.',
     'home.bubble3': 'Made by WPI students.',
+
+    'status': 'Status',
+    'status.new': 'New',
+    'status.inProgress': 'In Progress',
+    'status.complete': 'Complete',
+
+    'kind': 'Kind',
+    'kind.reference': 'Reference',
+    'kind.workflow': 'Workflow',
+
+    'persona': 'Persona',
+    'persona.underwriter': 'Underwriter',
+    'persona.businessAnalyst': 'Business Analyst',
+    'persona.actuarialAnalyst': 'Actuarial Analyst',
+    'persona.EXLOperator': 'EXL Operator',
+    'persona.businessOps': 'Business Ops',
+    'persona.admin': 'Admin',
+
+    'file.type': 'File Type',
+    'file.office': 'Office (PDF, Word..)',
+    'file.audio': 'Audio',
+    'file.video': 'Video',
+    'file.images': 'Image',
+    'file.html': 'HTML',
+    'file.zip': 'ZIP',
+    'file.plain text': 'Plain Text',
+    'file.links': 'Link',
+
+    'page': 'Page',
+    'item': 'Item',
+    'pages.rowsPerPage': 'Rows Per Page:',
+    'of': 'of',
+
+    'disclaimer.start': 'Disclaimer:',
+    'disclaimer.middle': ' This website has been created for WPI’s CS 3733 Software Engineering as a class project and is ',
+    'disclaimer.end': 'not in use by Hanover Insurance.',
+
+    'content.filters': "Filters",
+    'content.hide': "Hide",
+    'content.forYou': "For You",
+    'content.ownedByMe': "Owned By Me",
+    'content.favorites': "Favorites",
+    'content.favorite': "Favorite",
+    'content.deleteConfirmation': 'Are you sure?',
+    'content.cannotBeUndone': 'This action cannot be undone.',
+    'content.deleteDialogue': 'This will permanently delete ',
+    'content': 'Content',
+    'content.view': 'View Content',
+    'content.description': 'View, update, and delete content you have access to',
+    'content.name': 'Name',
+    'content.actions': 'Actions',
+    'content.owner': 'Owner',
+    'content.checkout': 'Check out',
+    'content.checkoutTitle': 'Are you sure you want to checkout this content?',
+    'content.checkoutDesc1': 'Check out ',
+    'content.checkoutDesc2': "? You'll be able to edit and delete it until you check it back in."
 };
 
 export const sp_sp: Partial<Record<TranslationKey, string>> = {
@@ -59,6 +122,10 @@ export const sp_sp: Partial<Record<TranslationKey, string>> = {
     'confirm': 'Confirmar',
     'save': 'Guardar',
     '404': 'Página no encontrada',
+    "all": "Todo",
+    'other': 'Otro',
+    'bookmarked': 'Marcado',
+
     'settings.language': 'Idioma',
 
     'role.lead': "Ingeniero de Software Líder",
@@ -80,9 +147,10 @@ export const sp_sp: Partial<Record<TranslationKey, string>> = {
     'footer.notice': 'Este no es un Sitio Web Oficial de Hanover',
     'footer.WPI': 'CS3733 en el Worcester Polytechnic Institute',
 
+    'search.genericDialogue': "Busca por nombre...",
+
     'sidebar.team': "Equipo B - D26",
     'sidebar.home': 'Inicio',
-    'sidebar.viewContent': 'Ver Contenido',
     'sidebar.personas': "Personas",
     'sidebar.underwriter': "Underwriter",
     'sidebar.businessAnalyst': "Analista de Negocios",
@@ -106,4 +174,52 @@ export const sp_sp: Partial<Record<TranslationKey, string>> = {
     'home.bubble1': 'Inicia sesión arriba para comenzar.',
     'home.bubble2': 'Administra todos tus archivos.',
     'home.bubble3': 'Hecho por estudiantes de WPI.',
+
+    'status': 'Estado',
+    'status.new': 'Nuevo',
+    'status.inProgress': 'En Curso',
+    'status.complete': 'Completo',
+
+    'kind': 'Tipo',
+    'kind.reference': 'Referencia',
+    'kind.workflow': 'Trabajo',
+
+    'file.type': 'Archivo',
+    'file.office': 'Microsoft Office (PDF, Word..)',
+    'file.audio': 'Audio',
+    'file.video': 'Video',
+    'file.images': 'Imagen',
+    'file.html': 'HTML',
+    'file.zip': 'ZIP',
+    'file.plain text': 'Texto',
+    'file.links': 'Enlace',
+
+    'item': 'Punto',
+    'page': 'Página',
+    'pages.rowsPerPage': 'Filas Por Página:',
+    'of': 'de',
+
+    'disclaimer.start': 'Aviso legal:',
+    'disclaimer.middle': ' Este sitio web ha sido creado para el CS 3733 Ingeniería de Software de WPI como proyecto de clase y ',
+    'disclaimer.end': 'no está en uso por Hanover Insurance.',
+
+    'content.filters': "Filtros",
+    'content.hide': "Ocultar",
+    'content.forYou': "Para Ustedes",
+    'content.ownedByMe': "Propiedad Mía",
+    'content.favorites': "Favoritos",
+    'content.favorite': "Favorito",
+    'content.deleteDialogue': 'Esto eliminará permanentemente ',
+    'content.deleteConfirmation': '¿Estás seguro?',
+    'content.cannotBeUndone': 'Esta acción no se puede deshacer.',
+    'content': 'Contenido',
+    'content.description': 'Ver, actualizar y eliminar el contenido al que tiene acceso',
+    'content.view': 'Ver Contenido',
+    'content.name': 'Nombre',
+    'content.actions': 'Funcionamientos',
+    'content.owner': 'Dueño',
+    'content.checkout': 'Chequear',
+    'content.checkoutTitle': '¿Estás seguro de que quieres revisar este contenido?',
+    'content.checkoutDesc1': '¿Has visto ',
+    'content.checkoutDesc2': "? Puedes editarlo y borrarlo hasta que lo vuelvas a registrar."
 };

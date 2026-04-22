@@ -22,8 +22,20 @@ export type ContentItem = {
     contentType: "reference" | "workflow";
     targetPersona: "underwriter" | "businessAnalyst" | "admin";
     status: "new" | "inProgress" | "complete" | null;
+    docType: DocType;
     tags: string[];
 }
+
+// Y'all I couldn't find a way to do it as a part of ContentItem, sorry. -Ricardo
+export type DocType =
+    | "office"
+    | "plain text"
+    | "video"
+    | "audio"
+    | "html"
+    | "zip"
+    | "images"
+    | "links";
 
 export type BookmarkRecord = {
     bookmarkerId: number;
