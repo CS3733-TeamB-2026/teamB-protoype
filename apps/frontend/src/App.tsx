@@ -11,6 +11,7 @@ import BusinessAnalystPersona from "@/pages/BusinessAnalystPersona.tsx";
 import Dashboard from "@/features/dashboard/Dashboard.tsx";
 import ViewEmployees from "@/features/employees/ViewEmployees.tsx";
 import ViewContent from "@/features/content/listing/ViewContent.tsx";
+import { BulkUploadPage } from "@/features/content/bulk/BulkUploadPage.tsx";
 import { ViewSingleFile } from "@/features/content/previews/ViewSingleFile.tsx";
 import SidebarOverlay from "./components/layout/SidebarOverlay.tsx";
 import { Route, Routes } from "react-router-dom";
@@ -18,6 +19,9 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import {LocaleProvider} from "@/languageSupport/localeContext.tsx";
+import SettingsLayout from "@/features/settings/SettingsLayout.tsx";
+import AppearanceSettings from "@/features/settings/sections/AppearanceSettings.tsx";
+import ProfileSettings from "@/features/settings/sections/ProfileSettings.tsx"
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const { isAuthenticated } = useAuth0();
@@ -57,8 +61,14 @@ function App() {
                             <Route path="/underwriter" element={<UnderwriterPersona/>}/>
                             <Route path="/businessanalyst" element={<BusinessAnalystPersona/>}/>
                             <Route path="/files" element={<ProtectedRoute><ViewContent/></ProtectedRoute>}/>
+                            <Route path="/files/bulk" element={<ProtectedRoute><BulkUploadPage/></ProtectedRoute>}/>
                             <Route path="/employeehome" element={<ProtectedRoute><Dashboard/></ProtectedRoute>}/>
                             <Route path="/file/:id" element={<ProtectedRoute><ViewSingleFile/></ProtectedRoute>}/>
+                            <Route path="/settings" element={<ProtectedRoute><SettingsLayout/></ProtectedRoute>}>
+                                <Route index element={<ProtectedRoute><Navigate to="profile" replace /></ProtectedRoute>} />
+                                <Route path="appearance" element={<ProtectedRoute><AppearanceSettings/></ProtectedRoute>} />
+                                <Route path="profile" element={<ProtectedRoute><ProfileSettings/></ProtectedRoute>} />
+                            </Route>
                         </Routes>
                     </main>
                     <Footer />

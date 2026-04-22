@@ -1,6 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-
-type Persona = "underwriter" | "businessAnalyst" | "actuarialAnalyst" | "EXLOperator" | "businessOps" | "admin";
+import type { Persona } from "@/lib/types.ts";
 
 const PERSONA_STYLES: Record<Persona, { label: string; className: string }> = {
     underwriter:     { label: "Underwriter",           className: "bg-labellight1a text-labeltext"  },
@@ -14,6 +13,7 @@ const PERSONA_STYLES: Record<Persona, { label: string; className: string }> = {
 export function PersonaBadge({ persona }: { persona: string | null }) {
     if (!persona) return null;
     const style = PERSONA_STYLES[persona as Persona];
+
     if (!style) return null;
     return (
         <Badge className={`rounded-sm text-xs ${style.className}`}>

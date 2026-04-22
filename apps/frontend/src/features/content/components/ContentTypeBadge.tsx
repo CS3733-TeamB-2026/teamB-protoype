@@ -1,13 +1,12 @@
 import { Badge } from "@/components/ui/badge.tsx";
-import type {TranslationKey} from "@/languageSupport/keys.ts";
-import {useLocale} from "@/languageSupport/localeContext.tsx";
-import {useTranslation} from "@/languageSupport/useTranslation.ts";
+import type { TranslationKey } from "@/languageSupport/keys.ts";
+import { useLocale } from "@/languageSupport/localeContext.tsx";
+import { useTranslation } from "@/languageSupport/useTranslation.ts";
+import type { ContentType } from "@/lib/types.ts";
 
-type ContentType = "reference" | "workflow";
-
-const TYPE_STYLES: Record<ContentType, { label: string; className: string }> = {
-    reference: { label: "reference", className: "bg-labellight1a text-labeltext" },
-    workflow:  { label: "workflow",  className: "bg-labellight2a text-labeltext" },
+const TYPE_STYLES: Record<ContentType, { className: string }> = {
+    reference: { className: "bg-labellight1a text-labeltext" },
+    workflow:  { className: "bg-labellight2a text-labeltext" },
 };
 
 export function ContentTypeBadge({ contentType }: { contentType: string | null }) {
@@ -19,7 +18,7 @@ export function ContentTypeBadge({ contentType }: { contentType: string | null }
     if (!style) return null;
     return (
         <Badge className={`rounded-sm text-xs ${style.className}`}>
-            {ts(`kind.${style.label}`  as TranslationKey)}
+            {ts(`kind.${contentType}` as TranslationKey)}
         </Badge>
     );
 }

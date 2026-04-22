@@ -1,40 +1,111 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import {createContext, useCallback, useContext, useEffect, useState} from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import type { Persona } from "@/lib/types.ts";
 
-export interface User {
+export type User = {
     id: number;
     firstName: string;
     lastName: string;
     userName: string;
-    persona: "underwriter" | "businessAnalyst" | "admin";
+    persona: Persona;
     profilePhotoURI: string;
 }
 
-const UserContext = createContext<User | null>(null);
+type UserContextValue = {
+    user: User | null;
+    loading: boolean;
+    updateUser: (updates: Partial<User>) => Promise<void>;
+    uploadProfilePhoto: (file: File) => Promise<void>;
+    refetch: () => Promise<void>;
+};
+
+const UserContext = createContext<UserContextValue | undefined>(undefined);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
     const { isAuthenticated, getAccessTokenSilently, user: auth0User } = useAuth0();
-    const [employee, setEmployee] = useState<User | null>(null);
+    const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        if (!isAuthenticated) return;
-        const fetchEmployee = async () => {
+    const fetchUser = useCallback(async () => {
+        if (!isAuthenticated) {
+            setUser(null);
+            setLoading(false);
+            return;
+        }
+        setLoading(true);
+        try {
             const token = await getAccessTokenSilently();
             const res = await fetch("/api/employee/me", {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const data = await res.json();
-            setEmployee({
+            setUser({
                 ...data,
                 userName: auth0User?.preferred_username || auth0User?.nickname || auth0User?.name || "",
             });
-        };
-        fetchEmployee();
-    }, [isAuthenticated, getAccessTokenSilently, auth0User]);
+        } finally {
+            setLoading(false);
+        }
+    }, [isAuthenticated, getAccessTokenSilently, auth0User])
 
-    return <UserContext.Provider value={employee}>{children}</UserContext.Provider>;
+    useEffect(() => {
+        fetchUser();
+    }, [fetchUser]);
+
+    const updateUser = useCallback(
+        async (updates: Partial<User>) => {
+            if (!user) throw new Error("No user to update");
+
+            // Merge updates onto current user to build the full object
+            const fullEmployee = {
+                id: user.id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                persona: user.persona,
+                ...updates,
+            };
+
+            const token = await getAccessTokenSilently();
+            const res = await fetch(`/api/employee`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(fullEmployee),
+            });
+            if (!res.ok) throw new Error("Failed to update user");
+            setUser((prev) => (prev ? { ...prev, ...updates } : prev));
+        },
+        [user, getAccessTokenSilently]
+    );
+
+    const uploadProfilePhoto = useCallback(async (file: File) => {
+        const token = await getAccessTokenSilently();
+        const formData = new FormData();
+        formData.append("photo", file);  // must match upload.single("photo") on backend
+
+        const res = await fetch("/api/employee/photo", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
+            // IMPORTANT: do NOT set Content-Type. Browser sets it with the correct boundary for FormData.
+            body: formData,
+        });
+        if (!res.ok) throw new Error("Upload failed");
+        await fetchUser();
+        
+    }, [fetchUser, getAccessTokenSilently]);
+
+    return (
+        <UserContext.Provider value={{ user, loading, updateUser, uploadProfilePhoto, refetch: fetchUser }}>
+            {children}
+        </UserContext.Provider>
+    );
 }
 
 export function useUser() {
-    return useContext(UserContext);
+    const ctx = useContext(UserContext);
+    if (!ctx) throw new Error("useUser must be used inside UserProvider");
+    return ctx;
 }
+

@@ -1,4 +1,4 @@
-import { Home, User, ChevronDown, Users, UserPlus, X, Library, UserCog, LayoutDashboard } from "lucide-react"
+import { Home, User, ChevronDown, Users, X, Library, LayoutDashboard, Upload } from "lucide-react"
 import React from "react"
 import {Link} from "react-router-dom";
 import {
@@ -38,10 +38,9 @@ For dropdowns, add more items in children array, leave the array empty for singl
 const navItems: NavItem[] = [
     { title: "Home", icon: Home, href: "/", children: [], access: [], langKey: 'sidebar.home' },
     { title: "Dashboard", icon: LayoutDashboard, href: "/employeehome", children: [], access: ["admin", "underwriter", "businessAnalyst"], langKey: 'sidebar.dashboard' },
-    { title: "Manage Content", icon: Library, href: "/files", children: [], access: ["admin", "underwriter", "businessAnalyst"], langKey: 'sidebar.manageContent' },
-    { title: "Manage Employees", icon: UserCog, href: "/", children: [
-            { title: "View Employees", icon: Users, href: "/usermanagement", children: [], access: ["admin"], langKey: 'sidebar.viewEmployees' },
-            { title: "Add Employees", icon: UserPlus, href: "/employeeform", children: [], access: ["admin"], langKey: 'sidebar.addEmployees' },
+    { title: "Content Library", icon: Library, href: "/files", children: [], access: ["admin", "underwriter", "businessAnalyst"], langKey: 'sidebar.manageContent' },
+    { title: "Bulk Upload", icon: Upload, href: "/files/bulk", children: [], access: ["admin", "underwriter", "businessAnalyst"], langKey: 'sidebar.bulkUpload' },
+    { title: "Manage Employees", icon: Users, href: "/usermanagement", children: [
         ], access: ["admin"], langKey: 'sidebar.manageEmployees' },
     { title: "Personas", icon: User, href: "/", children: [
             {title: "Underwriter", icon: User, href: "/underwriter", children: [], access: [], langKey: 'sidebar.underwriter'},
@@ -52,7 +51,7 @@ const navItems: NavItem[] = [
 function AppSidebar() {
     const { locale } = useLocale();
     const { ts } = useTranslation(locale);
-    const user = useUser();
+    const {user} = useUser();
     const {toggleSidebar} = useSidebar();
 
     return (
