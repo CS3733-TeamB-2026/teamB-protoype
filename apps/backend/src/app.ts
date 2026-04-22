@@ -5,13 +5,11 @@ import cors from 'cors'
 import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from "multer";
-import * as login from './hooks/login'
 import * as servicereqs from './hooks/servicereqs'
 import * as content from './hooks/content'
 import * as employee from './hooks/employee'
 import * as bookmark from './hooks/bookmark'
 import { auth } from 'express-oauth2-jwt-bearer'
-import {createEmployeeWithAuth0} from "./hooks/employee";
 
 const app = express();
 app.use(cors());
@@ -29,11 +27,6 @@ app.get("/api/preview", content.previewContent)
 // Protect all routes, ANY ROUTES BEFORE ARE UNPROTECTED
 app.use('/api', checkJwt);
 
-// Login
-app.post("/api/login", login.tryLogin);
-app.post("/api/login/create", login.createLogin)
-app.delete('/api/login', login.deleteLogin)
-app.put('/api/login', login.updateLogin)
 // Service Reqs
 app.get("/api/servicereqs", servicereqs.allServiceReqs)
 app.get("/api/assigned", servicereqs.allAssignedReqs)
@@ -58,7 +51,7 @@ app.post("/api/bookmark/:contentId", bookmark.addBookmark)
 app.delete("/api/bookmark/:contentId", bookmark.removeBookmark)
 // Employee
 app.post("/api/employee/photo", upload.single("photo"), employee.uploadProfilePhoto);
-app.get("/api/employee/all", employee.getAllEmployeesWithLogin)
+app.get("/api/employee/all", employee.getAllEmployees)
 app.get("/api/employee", employee.getAllEmployees)
 app.get("/api/employee/me", employee.getMe);
 app.post("/api/employee/auth", employee.createEmployeeWithAuth0)
@@ -79,4 +72,3 @@ app.listen(3000, '0.0.0.0', () => {
         console.log(`Server is listening on port 3000`);
         console.log(`    http://localhost:3000`);
 })
-

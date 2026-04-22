@@ -71,19 +71,6 @@ export class Employee {
         })
     }
 
-    public static async queryAllEmployeesWithLogin() {
-        return prisma.employee.findMany({
-            orderBy: { id: 'asc' },
-            include: {
-                login: {
-                    select: {
-                        userName: true
-                    }
-                }
-            }
-        })
-    }
-
     public static async updateProfilePhotoURI(id: number, uri: string): Promise<p.Employee> {
         return prisma.employee.update({
             where: { id },
