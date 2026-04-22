@@ -11,31 +11,22 @@ import { Users } from "lucide-react";
 import { SortableHead } from "@/components/shared/SortableHead.tsx";
 import { useSortState, applySortState } from "@/hooks/use-sort-state.ts";
 import { useUser } from "@/hooks/use-user.ts";
-import { findMatches, highlightRange } from "@/lib/highlight.tsx";
 import { useAuth0 } from "@auth0/auth0-react";
-import type { ServiceReqItem } from "@/lib/types.ts";
+import type { ServiceReq } from "@/lib/types.ts";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
 
 function ViewServiceReqs() {
 
     usePageTitle("Manage Service Reqs");
 
-    const [serviceReqs, setServiceReqs] = useState<ServiceReqItem[]>([]);
+    const [servicereqs, setServiceReqs] = useState<ServiceReq[]>([]);
     const [loading, setLoading] = useState(true);
     const [editOpen, setEditOpen] = useState(false);
-<<<<<<< Updated upstream
-    const [editingServiceReq, setEditingServiceReq] = useState<ServiceReqItem | null>(null);
-    const [deleteTarget, setDeleteTarget] = useState<ServiceReqItem | null>(null);
-    const [addOpen, setAddOpen] = useState(false);
-    const user = useUser();
-    const [sort, toggleSort] = useSortState<"name" | "created" | "deadline" | "type" | "assigneeId" | "ownerId">({column: "type", direction: "asc"});
-=======
     const [editingServiceReq, setEditingServiceReq] = useState<ServiceReq | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<ServiceReq | null>(null);
-    const [addOpen, setAddOpen] = useState(false);
+    const [addOpen, setAddOpen] = useState(false);  // <-- new
     const user = useUser();
-    /*Update*/const [sort, toggleSort] = useSortState<"name" | "created" | "deadline" | "type" | "assigneeId" | "ownerId">({column: "name", direction: "asc"});
->>>>>>> Stashed changes
+    /*Update*/const [sort, toggleSort] = useSortState<"name" | "created" | "deadline" | "type" | "assignee" | "owner">({column: "type", direction: "asc"});
     const [searchTerm, setSearchTerm] = useState("");
     const { getAccessTokenSilently } = useAuth0();
 
@@ -59,28 +50,21 @@ function ViewServiceReqs() {
 
     }, [getAccessTokenSilently]);
 
-    const filteredServiceReqs = serviceReqs.filter((e) => {
+    const filteredServiceReqs = servicereqs.filter((s) => {
         const query = searchTerm.toLowerCase().trim().replace(/\s/g, "");
         if (!query) return true;
 
         return (
-<<<<<<< Updated upstream
-            e.name.toLowerCase().includes(query) ||
-            e.type.toLowerCase().includes(query) ||
-            e.ownerId.toString().includes(query) ||
-            e.assigneeId.toString().includes(query)
-=======
             s.id.toString().includes(query) ||
             s.type.toLowerCase().includes(query) ||
             s.assigneeId.toString().includes(query) ||
             s.ownerId.toString().includes(query)
->>>>>>> Stashed changes
         );
     });
 
-    const handleDelete = async (servicereq: ServiceReqItem) => {
+    const handleDelete = async (servicereq: ServiceReq) => {
         const token = await getAccessTokenSilently();
-        const res = await fetch(`/api/servicereqs`, {
+        const res = await fetch(`/api/servicereq`, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
@@ -89,7 +73,7 @@ function ViewServiceReqs() {
             body: JSON.stringify({ id: servicereq.id }),
         });
         if (res.ok) {
-            setServiceReqs((prev) => prev.filter((e) => e.id !== servicereq.id));
+            setServiceReqs((prev) => prev.filter((s) => s.id !== servicereq.id));
         }
         setDeleteTarget(null);
     };
@@ -104,14 +88,14 @@ function ViewServiceReqs() {
         <>
             <Hero
                 icon={Users}
-                title="View Service Requests"
-                description="View, update, and delete service requests."
+                title="View ServiceReqs"
+                description="View, update, and delete servicereqs."
             />
 
             <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center px-4">
                 <CardHeader>
-                    <CardTitle className="text-3xl text-primary mt-4">All Service Requests</CardTitle>
-                    <CardDescription>Total Service Requests: {serviceReqs.length}</CardDescription>
+                    <CardTitle className="text-3xl text-primary mt-4">All ServiceReqs</CardTitle>
+                    <CardDescription>Total ServiceReqs: {servicereqs.length}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="flex items-center justify-between mb-4">
@@ -121,9 +105,9 @@ function ViewServiceReqs() {
                             />
                             <input
                                 type="text"
-                                placeholder="Search service requests..."
+                                placeholder="Search servicereqs..."
                                 value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
+                                onChange={(s) => setSearchTerm(s.target.value)}
                                 className="w-64 h-10 text-lg! pl-2! pr-8 border border-gray-700 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-gray-500"
                             />
                         </div>
@@ -136,7 +120,7 @@ function ViewServiceReqs() {
                                 <span className="flex items-center justify-center min-w-12 h-12">
                                     <Plus className="w-8! h-8! text-primary-foreground" />
                                 </span>
-                                <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Add Employees</span>
+                                <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Add ServiceReqs</span>
                             </Button>
                         </div>
                     </div>
@@ -150,55 +134,29 @@ function ViewServiceReqs() {
                             <TableHeader>
                                 <TableRow className="hover:bg-transparent">
                                     <SortableHead column="name" label="Name" sort={sort} onSort={toggleSort} />
-<<<<<<< Updated upstream
-                                    <SortableHead column="created" label="Created" sort={sort} onSort={toggleSort} />
-                                    <SortableHead column="deadline" label="Deadline" sort={sort} onSort={toggleSort} className="w-full" />
-                                    <SortableHead column="type" label="Type" sort={sort} onSort={toggleSort} />
-                                    <SortableHead column="assigneeId" label="Assignee ID" sort={sort} onSort={toggleSort} />
-                                    <SortableHead column="ownerId" label="Owner ID" sort={sort} onSort={toggleSort} />
-=======
                                     <SortableHead column="type" label="Type" sort={sort} onSort={toggleSort} />
                                     <SortableHead column="created" label="Created" sort={sort} onSort={toggleSort} className="w-full" />
                                     <SortableHead column="deadline" label="Deadline" sort={sort} onSort={toggleSort} />
-                                    <SortableHead column="assigneeId" label="AssigneeID" sort={sort} onSort={toggleSort} />
-                                    <SortableHead column="ownerId" label="OwnerID" sort={sort} onSort={toggleSort} />
->>>>>>> Stashed changes
+                                    <SortableHead column="assignee" label="AssigneeID" sort={sort} onSort={toggleSort} />
+                                    <SortableHead column="owner" label="OwnerID" sort={sort} onSort={toggleSort} />
                                     <TableHead className="uppercase tracking-wider text-muted-foreground select-none">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-<<<<<<< Updated upstream
-                                {applySortState(filteredServiceReqs, sort, (e, col) => {
-                                    if (col === "name") return e.name;
-                                    if (col === "created") return e.created;
-                                    if (col === "deadline") return e.deadline;
-                                    if (col === "type") return e.type;
-                                    if (col === "assigneeId") return e.assigneeId;
-                                    if (col === "ownerId") return e.ownerId;
-=======
                                 {applySortState(filteredServiceReqs, sort, (s, col) => {
-                                    if (col === "name") return s.id;
+                                    if (col === "name") return s.name;
                                     if (col === "type") return s.type;
                                     if (col === "created") return s.created;
                                     if (col === "deadline") return s.deadline;
-                                    if (col === "assigneeId") return s.assigneeId;
-                                    if (col === "ownerId") return s.ownerId;
->>>>>>> Stashed changes
+                                    if (col === "assignee") return s.assigneeId;
+                                    if (col === "owner") return s.ownerId;
                                 }).map((servicereq) => {
-                                    const matches = findMatches(servicereq.name, searchTerm);
                                     return (
                                         <TableRow key={servicereq.id}>
-<<<<<<< Updated upstream
-                                            <TableCell className="font-medium">{highlightRange(servicereq.name, 0, matches)}</TableCell>
-                                            <TableCell className="font-medium">{servicereq.created}</TableCell>
-                                            <TableCell className="font-medium">{servicereq.deadline}</TableCell>
-                                            <TableCell className="font-medium">{servicereq.type}</TableCell>
-=======
                                             <TableCell className="text-right pr-4">{servicereq.name}</TableCell>
                                             <TableCell className="font-medium">{servicereq.type}</TableCell>
                                             <TableCell className="font-medium">{servicereq.created}</TableCell>
                                             <TableCell className="font-medium">{servicereq.deadline}</TableCell>
->>>>>>> Stashed changes
                                             <TableCell className="font-medium">{servicereq.assigneeId}</TableCell>
                                             <TableCell className="font-medium">{servicereq.ownerId}</TableCell>
                                             <TableCell>
@@ -206,11 +164,6 @@ function ViewServiceReqs() {
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
-<<<<<<< Updated upstream
-                                                        disabled={servicereq.ownerId !== user?.id && servicereq.assigneeId !== user?.id}
-=======
-                                                        disabled={servicereq.ownerId !== user.user?.id && servicereq.assigneeId !== user.user?.id}
->>>>>>> Stashed changes
                                                         onClick={() => {
                                                             setEditingServiceReq(servicereq);
                                                             setEditOpen(true);
@@ -221,11 +174,7 @@ function ViewServiceReqs() {
                                                     <Button
                                                         variant="destructive"
                                                         size="sm"
-<<<<<<< Updated upstream
-                                                        disabled={servicereq.ownerId !== user?.id && servicereq.assigneeId !== user?.id}
-=======
-                                                        disabled={servicereq.ownerId !== user.user?.id && servicereq.assigneeId !== user.user?.id}
->>>>>>> Stashed changes
+                                                        disabled={servicereq.id === user?.id}
                                                         onClick={() => setDeleteTarget(servicereq)}
                                                     >
                                                         <Trash2 className="w-4 h-4" />
@@ -243,7 +192,7 @@ function ViewServiceReqs() {
             <ConfirmDeleteDialog
                 open={!!deleteTarget}
                 onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
-                description={deleteTarget ? <span>This will permanently delete {deleteTarget.type} <strong>{deleteTarget.name}</strong>.</span> : undefined}
+                description={deleteTarget ? <span>This will permanently delete <strong>{deleteTarget.id}</strong>.</span> : undefined}
                 onConfirm={() => handleDelete(deleteTarget!)}
             />
 
@@ -253,19 +202,19 @@ function ViewServiceReqs() {
                     content={editingServiceReq}
                     open={editOpen}
                     onOpenChange={setEditOpen}
-                    onSave={(updated) =>
+                    onSave={(updated: ServiceReq) =>
                         setServiceReqs((prev) =>
-                            prev.map((e) => (e.id === updated.id ? updated : e))
+                            prev.map((s) => (s.id === updated.id ? updated : s))
                         )
                     }
                 />
             )}
 
-            {/* Add service req dialog — appends new service req to the table on success */}
+            {/* Add servicereq dialog — appends new servicereq to the table on success */}
             <AddServiceReqDialog
                 open={addOpen}
                 onOpenChange={setAddOpen}
-                onSave={(created) => setServiceReqs((prev) => [...prev, created])}
+                onSave={(created: ServiceReq) => setServiceReqs((prev) => [...prev, created])}
             />
         </>
     );
