@@ -52,6 +52,19 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --label-1: #FFD4A0;
+  --label-2: #FFE8CC;
+  --label-3: #DBBA8E;
+  --label-4: #E8CBA8;
+  --label-5: #FAF0E2;
+  --label-text: var(--secondary-foreground);
+
+  --label-1a: #FFD4A099;
+  --label-2a: #FFE8CC99;
+  --label-3a: #DBBA8E99;
+  --label-4a: #E8CBA899;
+  --label-5a: #E8CBA899;
+  --label-text-a: #87603E99;
 }
 
 .dark {
@@ -97,6 +110,19 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --label-1: #5C3E1F;
+  --label-2: #4A3218;
+  --label-3: #7A5838;
+  --label-4: #6B4A2E;
+  --label-5: #3A2A15;
+  --label-text: var(--secondary-foreground);
+
+  --label-1a: #5C3E1F99;
+  --label-2a: #4A321899;
+  --label-3a: #7A583899;
+  --label-4a: #6B4A2E99;
+  --label-5a: #3A2A1599;
+  --label-text-a: #D4B28F99;
 }
 
 @theme inline {
@@ -153,21 +179,19 @@
   --radius-4xl: calc(var(--radius) * 2.6);
   --font-sans: 'Roboto Variable', sans-serif;
 
-  /*for the content table labels*/
-  --color-labellight1: #FFD4A0;
-  --color-labellight2: #FFE8CC;
-  --color-labellight3: #DBBA8E;
-  --color-labeltext: var(--secondary-foreground);
-  --color-labellight4: #E8CBA8;
-  --color-labellight5: #FAF0E2;
+  --color-labellight1: var(--label-1);
+  --color-labellight2: var(--label-2);
+  --color-labellight3: var(--label-3);
+  --color-labellight4: var(--label-4);
+  --color-labellight5: var(--label-5);
+  --color-labeltext: var(--label-text);
 
-  /*low opacity versions, "a"!*/
-  --color-labellight1a: #FFD4A099;
-  --color-labellight2a: #FFE8CC99;
-  --color-labellight3a: #DBBA8E99;
-  --color-labeltexta:   #87603E99;
-  --color-labellight4a: #E8CBA899;
-  --color-labellight5a: #E8CBA899;
+  --color-labellight1a: var(--label-1a);
+  --color-labellight2a: var(--label-2a);
+  --color-labellight3a: var(--label-3a);
+  --color-labellight4a: var(--label-4a);
+  --color-labellight5a: var(--label-5a);
+  --color-labeltexta: var(--label-text-a);
 }
 
 /*removes the wierd random ticker in the id input fields */

@@ -9,7 +9,7 @@ function QuickLinksCard() {
     const {user} = useUser();
 
     return (
-        <Card className="shadow-lg hover:scale-101 transition-transform">
+        <Card className="border-t-secondary border-t-4 shadow-lg hover:scale-101 transition-transform">
             <CardHeader>
                 <CardTitle className="capitalize text-2xl font-semibold text-center">
                     User Access: {user?.persona}

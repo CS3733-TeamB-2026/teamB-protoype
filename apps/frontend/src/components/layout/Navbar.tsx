@@ -10,14 +10,13 @@ import {
 } from "@/components/ui/popover.tsx"
 import { Separator } from "@/components/ui/separator.tsx"
 //import LoginDialog from "@/dialogs/LoginDialog.tsx"
-import { UserIcon, Settings, LogOut, LayoutDashboard} from "lucide-react"
+import { UserIcon, Settings, LogOut, LayoutDashboard, Languages} from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAuth0 } from "@auth0/auth0-react"
 import { useUser } from "@/hooks/use-user.ts"
 import {useLocale} from "@/languageSupport/localeContext.tsx";
 import {useTranslation} from "@/languageSupport/useTranslation.ts";
 import DisclaimerAlert from "@/components/layout/DisclaimerAlert"
-import DarkmodeButton from "@/components/layout/DarkmodeButton"
 import {useState} from "react";
 
 const LOCALES = [
@@ -56,8 +55,6 @@ function Navbar() {
                     <Link to="/">
                         <img src={logo} alt="logo" className="shrink-0 h-10 w-auto brightness-0 invert ml-3 mr-2" />
                     </Link>
-
-                    <DarkmodeButton/>
 
                     <DisclaimerAlert />
                 </div>
@@ -168,9 +165,9 @@ function Navbar() {
                 {/*settings*/}
                 <Popover>
                     <PopoverTrigger asChild>
-                        <button className="group cursor-pointer p-2 ml-4 mr-1 rounded-full active:scale-[0.96] transition-all duration-200">
-                            <Settings
-                                size={22}
+                        <button className="group cursor-pointer p-2 ml-3 rounded-full active:scale-[0.96] transition-all duration-200">
+                            <Languages
+                                size={28}
                                 className="opacity-70 transition-all duration-200 group-hover:opacity-100"
                             />
                         </button>

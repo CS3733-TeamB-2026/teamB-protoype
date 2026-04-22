@@ -88,7 +88,7 @@ function formatFileSize(bytes: number): string {
 export function BulkUploadPage() {
     usePageTitle("Bulk Upload");
     const navigate = useNavigate();
-    const user = useUser();
+    const {user} = useUser();
     const { getAccessTokenSilently } = useAuth0();
 
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -399,7 +399,7 @@ export function BulkUploadPage() {
 
                             <div className="flex flex-row gap-2">
                                 {/* Owner */}
-                                <Field className="bg-background">
+                                <Field className="">
                                     <FieldLabel className="text-primary text-lg mb-1">Owner Employee</FieldLabel>
                                     <EmployeePicker
                                         selectedId={meta.ownerID}
@@ -418,7 +418,7 @@ export function BulkUploadPage() {
                                 <Separator className="bg-primary mx-2" orientation="vertical" />
 
                                 {/* Target Persona */}
-                                <Field className="bg-background">
+                                <Field className="">
                                     <FieldLabel className="text-primary text-lg mb-1">
                                         Target Persona <span className="text-destructive">*</span>
                                     </FieldLabel>
@@ -427,7 +427,7 @@ export function BulkUploadPage() {
                                         onValueChange={v => patchMeta({ targetPersona: v })}
                                         disabled={uploading}
                                     >
-                                        <SelectTrigger className="bg-background h-10! text-sm">
+                                        <SelectTrigger className=" h-10! text-sm">
                                             <SelectValue placeholder="Select target persona" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -448,8 +448,8 @@ export function BulkUploadPage() {
                             <div className="py-6"><Separator className="bg-primary" /></div>
 
                             {/* Expiration Date */}
-                            <div className="flex flex-wrap items-end gap-4 bg-background py-4">
-                                <Field className="bg-background flex-1">
+                            <div className="flex flex-wrap items-end gap-4  py-4">
+                                <Field className=" flex-1">
                                     <FieldLabel className="text-primary text-lg" htmlFor="date-expiration">
                                         Expiration Date
                                     </FieldLabel>
@@ -480,7 +480,7 @@ export function BulkUploadPage() {
                             <div className="py-6"><Separator className="bg-primary" /></div>
 
                             {/* Tags */}
-                            <Field className="bg-background">
+                            <Field className="">
                                 <FieldLabel className="text-primary text-lg">Tags</FieldLabel>
                                 <TagInput value={meta.tags} onChange={tags => patchMeta({ tags })} disabled={uploading} />
                             </Field>
@@ -489,7 +489,7 @@ export function BulkUploadPage() {
 
                             <div className="flex flex-row gap-2">
                                 {/* Document Type */}
-                                <Field className="bg-background">
+                                <Field className="">
                                     <FieldLabel className="text-primary text-lg">
                                         Type of Document <span className="text-destructive">*</span>
                                     </FieldLabel>
@@ -498,7 +498,7 @@ export function BulkUploadPage() {
                                         onValueChange={v => patchMeta({ contentType: v as ContentFormValues["contentType"] })}
                                         disabled={uploading}
                                     >
-                                        <SelectTrigger className="bg-background h-10! text-sm">
+                                        <SelectTrigger className=" h-10! text-sm">
                                             <SelectValue placeholder="Select document type" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -514,7 +514,7 @@ export function BulkUploadPage() {
                                 <Separator className="bg-primary mx-2" orientation="vertical" />
 
                                 {/* Document Status */}
-                                <Field className="bg-background">
+                                <Field className="">
                                     <FieldLabel className="text-primary text-lg">
                                         Document Status <span className="text-destructive">*</span>
                                     </FieldLabel>
@@ -523,7 +523,7 @@ export function BulkUploadPage() {
                                         onValueChange={v => patchMeta({ status: v as ContentFormValues["status"] })}
                                         disabled={uploading}
                                     >
-                                        <SelectTrigger className="bg-background h-10! text-sm">
+                                        <SelectTrigger className=" h-10! text-sm">
                                             <SelectValue placeholder="Select status" />
                                         </SelectTrigger>
                                         <SelectContent>
