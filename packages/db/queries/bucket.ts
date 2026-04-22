@@ -21,12 +21,12 @@ export class Bucket {
         return data;
     }
 
-    public static async createPublicUrl(id: number): Promise<string> {
+    public static async createPublicUrl(id: number): Promise<string | null> {
         const contentItem = await prisma.content.findUnique({
             where: {id: id},
         })
         const path = contentItem?.fileURI ?? null
-        if(!path) {return ""}
+        if (!path) { return null }
 
         const {data, error} = await supabase.storage.from(bucket).createSignedUrl(path, 120)
         if (error) throw error;

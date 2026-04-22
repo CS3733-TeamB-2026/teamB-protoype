@@ -77,8 +77,8 @@ const DocViewerMemo = memo(function DocViewerMemo({
  *  - `"video"`     → `<video>` element
  *  - `"audio"`     → `<audio>` element
  *  - `"html"`      → sandboxed `<iframe>`
- *  - `"slideshow"` → //TODO
- *  - `"docviewer"` → PDF/DOCX/Markdown via react-doc-viewer ({@link DocViewerMemo})
+ *  - `"microsoft"` → Word/Excel/PowerPoint via Office 365 iframe viewer
+ *  - `"docviewer"` → PDF/Markdown via react-doc-viewer ({@link DocViewerMemo})
  *  - `"none"`      → "No preview available" message
  *
  * Binary formats (everything except `"text"`) are fetched as a `Blob` and
@@ -100,7 +100,7 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
     const [content, setContent] = useState<string | null>(null);   // text mode
     const [objectUrl, setObjectUrl] = useState<string | null>(null); // blob-backed renderers
     const [tableData, setTableData] = useState<string[][] | null>(null); // table mode
-    const [publicUrl, setPublicUrl] = useState<string | null>(null) // slideshow mode
+    const [publicUrl, setPublicUrl] = useState<string | null>(null) // microsoft office mode
     const { getAccessTokenSilently } = useAuth0();
     // Keep a ref so the fetch effect never needs getAccessTokenSilently as a dep.
     // Auth0 returns a new function reference on every render, which would otherwise
@@ -125,13 +125,14 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
         URL.revokeObjectURL(url);
     };
 
-    const GetPublicUrl = async (contentId: string) => {
+    const getPublicUrl = async (contentId: string) => {
         const token = await getAccessTokenSilently();
         const res = await fetch(`/api/content/publicUrl/${contentId}`, {
-            headers: {Authorization: `Bearer ${token}`},
+            headers: { Authorization: `Bearer ${token}` },
         });
+        if (!res.ok) return;
         const data = await res.json();
-        setPublicUrl(data)
+        setPublicUrl(data);
     }
 
     // Main fetch effect. Runs whenever the file source, preview mode, or info
@@ -211,12 +212,10 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
                     localUrl = URL.createObjectURL(blob);
                     setObjectUrl(localUrl);
 
-                    //slideshows need above setup and an additional call
-                    if(previewMode === "slideshow" || previewMode === "microsoftDoc" || previewMode === "excel") {
-                        //get the content id by pulling it off the end of the API call url (kinda cursed, sorry)
-                        const contentId = infoSrc?.slice(18) ?? null
-                        if(!contentId) { return }
-                        await GetPublicUrl(contentId)
+                    if (previewMode === "microsoft") {
+                        const contentId = infoSrc?.split("/").at(-1) ?? null;
+                        if (!contentId) { return }
+                        await getPublicUrl(contentId);
                     }
 
                     setStatus("ready");
@@ -291,8 +290,8 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
                     />
                 </div>
             )}
-            {/* XSL/XSLX, routes through officeApps for full support */}
-            {status === "ready" && previewMode === "excel" && publicUrl && (
+            {/* Word / Excel / PowerPoint: Office 365 iframe viewer */}
+            {status === "ready" && previewMode === "microsoft" && publicUrl && (
                 <iframe
                     src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(publicUrl)}`}
                     className="w-full border-0"
@@ -353,24 +352,6 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
                 preserve page position across parent re-renders) */}
             {status === "ready" && previewMode === "docviewer" && objectUrl && (
                 <DocViewerMemo objectUrl={objectUrl} filename={filename} mode={mode} />
-            )}
-            {status === "ready" && previewMode === "microsoftDoc" && publicUrl && (
-                <iframe
-                    src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(publicUrl)}`}
-                    className="w-full border-0"
-                    style={{ minHeight: "600px" }}
-                    title={filename}
-                />
-            )}
-            {/* PPTX / PPT This uses the office apps to embed, the library we currently use
-             has limited functionality for pptx and xslx, so we reroute through this instead */}
-            {status === "ready" && previewMode === "slideshow" && publicUrl && (
-                <iframe
-                    src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(publicUrl)}`}
-                    className="w-full border-0"
-                    style={{ minHeight: "600px" }}
-                    title={filename}
-                />
             )}
         </div>
     );
