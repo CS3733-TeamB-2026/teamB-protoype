@@ -52,21 +52,6 @@ export function EditEmployeeDialog({ content, open, onOpenChange, onSave }: Prop
             }),
         });
 
-        if (modified.login?.userName) {
-            const token = await getAccessTokenSilently();
-            await fetch("/api/login", {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    userName: modified.login.userName,
-                    employeeID: modified.id,
-                }),
-            });
-        }
-
         if (empRes.ok) {
             onSave(modified);
             onOpenChange(false);
@@ -123,21 +108,6 @@ export function EditEmployeeDialog({ content, open, onOpenChange, onSave }: Prop
                                 <SelectItem value="admin">Admin</SelectItem>
                             </SelectContent>
                         </Select>
-                    </div>
-                    <div>
-                        <Label className="my-2">Username</Label>
-                        <Input
-                            disabled
-                            defaultValue={content.login?.userName}
-                            className="bg-secondary"
-                            placeholder="Enter Employee Username"
-                            onChange={(e) =>
-                                setModified((prev) => ({
-                                    ...prev,
-                                    login: { ...prev.login, userName: e.target.value },
-                                }))
-                            }
-                        />
                     </div>
                     <Button
                         className="mt-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-20 mx-auto rounded-lg px-2 py-1"
