@@ -64,7 +64,7 @@ function EmployeeChartCard() {
     const chartData = Object.entries(counts).map(([persona, count], i) => ({
         persona,
         count,
-        fill: `var(--chart-${i + 1})`,
+        fill: `var(--chart-${ i === 5 ? 3 : (i % 5) + 1 })`,
     }));
 
     return (
