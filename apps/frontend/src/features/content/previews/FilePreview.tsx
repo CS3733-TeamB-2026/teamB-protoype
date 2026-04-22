@@ -4,7 +4,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import * as XLSX from "xlsx";
 import DocViewer, { PDFRenderer, DocxRenderer, MarkdownRenderer } from "@iamjariwala/react-doc-viewer";
 import "@iamjariwala/react-doc-viewer/dist/index.css";
-import AltDocViewer, { DocViewerRenderers } from "react-doc-viewer"; //used for slideshows
 import { getPreviewMode } from "@/lib/mime.ts";
 import { getCachedText, setCachedText, getCachedBlob, setCachedBlob } from "@/features/content/previews/file-cache.ts";
 import { useAuth0 } from "@auth0/auth0-react"
@@ -189,6 +188,7 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
                     // Parse just the first sheet and convert to a 2-D string array.
                     // header:1 means "use row indices as headers" (i.e. return raw rows),
                     // defval:"" fills empty cells with an empty string instead of undefined.
+
                     const wb = XLSX.read(buf, { type: "array" });
                     const ws = wb.Sheets[wb.SheetNames[0]];
                     const rows = XLSX.utils.sheet_to_json<string[]>(ws, { header: 1, defval: "" });
@@ -212,7 +212,7 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
                     setObjectUrl(localUrl);
 
                     //slideshows need above setup and an additional call
-                    if(previewMode === "slideshow") {
+                    if(previewMode === "slideshow" || previewMode === "microsoftDoc" || previewMode === "excel") {
                         //get the content id by pulling it off the end of the API call url (kinda cursed, sorry)
                         const contentId = infoSrc?.slice(18) ?? null
                         if(!contentId) { return }
@@ -291,29 +291,38 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
                     />
                 </div>
             )}
-            {/* Spreadsheet: first row treated as column headers, remaining rows as data */}
+            {/* Spreadsheet, routes through officeApps for full support */}
+            {status === "ready" && previewMode === "excel" && publicUrl && (
+                <iframe
+                    src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(publicUrl)}`}
+                    className="w-full border-0"
+                    style={{ minHeight: "600px" }}
+                    title={filename}
+                />
+            )}
+            {/* CSV: first row treated as column headers, remaining rows as data */}
             {status === "ready" && previewMode === "table" && tableData != null && (
                 <div className="overflow-auto max-h-130 px-6 pb-4">
                     <table className="text-sm border-collapse">
                         <thead>
-                            <tr>
-                                {(tableData[0] ?? []).map((cell, i) => (
-                                    <th key={i} className="border border-border px-3 py-1.5 bg-muted text-left font-medium whitespace-nowrap">
-                                        {cell}
-                                    </th>
-                                ))}
-                            </tr>
+                        <tr>
+                            {(tableData[0] ?? []).map((cell, i) => (
+                                <th key={i} className="border border-border px-3 py-1.5 bg-muted text-left font-medium whitespace-nowrap">
+                                    {cell}
+                                </th>
+                            ))}
+                        </tr>
                         </thead>
                         <tbody>
-                            {tableData.slice(1).map((row, ri) => (
-                                <tr key={ri} className="even:bg-muted/30">
-                                    {row.map((cell, ci) => (
-                                        <td key={ci} className="border border-border px-3 py-1.5 whitespace-nowrap">
-                                            {cell}
-                                        </td>
-                                    ))}
-                                </tr>
-                            ))}
+                        {tableData.slice(1).map((row, ri) => (
+                            <tr key={ri} className="even:bg-muted/30">
+                                {row.map((cell, ci) => (
+                                    <td key={ci} className="border border-border px-3 py-1.5 whitespace-nowrap">
+                                        {cell}
+                                    </td>
+                                ))}
+                            </tr>
+                        ))}
                         </tbody>
                     </table>
                 </div>
@@ -345,13 +354,24 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
             {status === "ready" && previewMode === "docviewer" && objectUrl && (
                 <DocViewerMemo objectUrl={objectUrl} filename={filename} mode={mode} />
             )}
-            {/* PPTX / PPT: TODO */}
-            {status === "ready" && previewMode === "slideshow" && objectUrl &&
-                <AltDocViewer
-                    documents={[{ uri: publicUrl, fileName: filename }]}
-                    pluginRenderers={DocViewerRenderers}
+            {status === "ready" && previewMode === "microsoftDoc" && publicUrl && (
+                <iframe
+                    src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(publicUrl)}`}
+                    className="w-full border-0"
+                    style={{ minHeight: "600px" }}
+                    title={filename}
                 />
-            }
+            )}
+            {/* PPTX / PPT This uses the office apps to embed, the library we currently use
+             has limited functionality for pptx and xslx, so we reroute through this instead */}
+            {status === "ready" && previewMode === "slideshow" && publicUrl && (
+                <iframe
+                    src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(publicUrl)}`}
+                    className="w-full border-0"
+                    style={{ minHeight: "600px" }}
+                    title={filename}
+                />
+            )}
         </div>
     );
 }

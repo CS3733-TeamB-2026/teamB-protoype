@@ -38,7 +38,7 @@ export type Category =
  * - `"html"`      — sandboxed `<iframe>`
  * - `"none"`      — no preview, download-only
  */
-export type PreviewMode = "docviewer" | "slideshow" | "image" | "audio" | "video" | "text" | "table" | "html" | "none";
+export type PreviewMode = "docviewer" | "microsoftDoc" | "slideshow" | "image" | "audio" | "video" | "text" | "table" | "excel" | "html" | "none";
 
 export interface AllowedType {
     /** Canonical MIME type. Lowercase. */
@@ -66,7 +66,7 @@ export const ALLOWED_TYPES: readonly AllowedType[] = [
         mimeType: "application/msword",
         extensions: ["doc"],
         category: "document",
-        previewMode: "none",
+        previewMode: "microsoftDoc",
         label: "Word (legacy)",
     },
     {
@@ -74,14 +74,14 @@ export const ALLOWED_TYPES: readonly AllowedType[] = [
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         extensions: ["docx"],
         category: "document",
-        previewMode: "docviewer",
+        previewMode: "microsoftDoc",
         label: "Word",
     },
     {
         mimeType: "application/vnd.ms-excel",
         extensions: ["xls"],
         category: "spreadsheet",
-        previewMode: "table",
+        previewMode: "excel",
         label: "Excel (legacy)",
     },
     {
@@ -89,7 +89,7 @@ export const ALLOWED_TYPES: readonly AllowedType[] = [
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         extensions: ["xlsx"],
         category: "spreadsheet",
-        previewMode: "table",
+        previewMode: "excel",
         label: "Excel",
     },
     {
