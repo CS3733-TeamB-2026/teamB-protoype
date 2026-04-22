@@ -1,134 +1,113 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button.tsx";
+import { useUser } from "@/hooks/use-user.ts";
 import {
     Dialog,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Label } from "@/components/ui/label.tsx";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select.tsx";
-import type { ServiceReq } from "@/lib/types.ts";
-import { useAuth0 } from "@auth0/auth0-react";
+import { Separator } from "@/components/ui/separator.tsx";
 import { toast } from "sonner";
+import { ServiceReqFormFields } from "@/features/servicereqs/ServiceReqFormFields.tsx";
+import { fromServiceReqItem, buildServiceReqJSON } from "@/features/servicereqs/servicereq-form.ts";
+import type { ServiceReqItem } from "@/lib/types.ts";
+import { useAuth0 } from "@auth0/auth0-react";
+import { useServiceReqForm } from "@/features/servicereqs/use-servicereq-form.tsx";
 
 interface Props {
-    content: ServiceReq;
+    content: ServiceReqItem;
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onSave: (updated: ServiceReq) => void;
+    onSave: (updated: ServiceReqItem) => void;
 }
 
+/**
+ * Dialog for editing an existing service req item via `PUT /api/servicereq`.
+ */
 export function EditServiceReqDialog({ content, open, onOpenChange, onSave }: Props) {
-    const [modified, setModified] = useState<ServiceReq>(content);
+    const { values, patch, setSubmitted, errors, hasErrors, formKey, reset } =
+        useServiceReqForm(fromServiceReqItem(content));
+
+    const handleReset = () => reset(fromServiceReqItem(content));
+
+    const user = useUser();
     const { getAccessTokenSilently } = useAuth0();
 
-    async function handleApply() {
-        if (!modified.created.trim() || !modified.deadline.trim() || !modified.type.trim() || !modified.assigneeId || !modified.ownerId) {
-            toast.error("Fields may not be empty.");
-            return;
-        }
+    const handleApply = async () => {
+        if (!user) return;
+        setSubmitted(true);
+        if (hasErrors) return;
 
-        const token = await getAccessTokenSilently();
-        const empRes = await fetch("/api/servicereqs", {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                id: modified.id,
-                created: modified.created.trim(),
-                deadline: modified.deadline.trim(),
-                type: modified.type.trim(),
-                assigneeId: modified.assigneeId,
-                ownerId: modified.ownerId,
-            }),
-        });
-
-        if (empRes.ok) {
-            onSave(modified);
+        try {
+            const json = buildServiceReqJSON(values);
+            const token = await getAccessTokenSilently();
+            const res = await fetch("/api/servicereqs", {
+                method: "PUT",
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                body: json,
+            });
+            if (!res.ok) { toast.error("Error updating service request."); return; }
+            const updated = await res.json();
+            onSave(updated);
             onOpenChange(false);
+            toast.success("Service Request updated successfully!");
+        } catch {
+            toast.error("Error updating service request.");
         }
-    }
+    };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
+            <DialogContent className="sm:max-w-2xl max-h-[80vh] flex flex-col">
                 <DialogHeader>
-                    <DialogTitle>Modify ServiceReq</DialogTitle>
+                    <DialogTitle>Modify Service Request</DialogTitle>
                     <DialogDescription className="text-muted-foreground">
-                        Modify service req values here.
+                        Modify a work service request.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="flex flex-col gap-2">
+
+                <Separator />
+
+                <div className="overflow-y-auto flex-1 flex flex-col gap-2 min-w-0 pr-2">
+                    {/* Service Request ID — read-only, edit-only field */}
                     <div>
-                        <Label className="my-2">Created</Label>
-                        <Input
-                            defaultValue={content.created}
-                            className="bg-secondary"
-                            placeholder="Enter Service Req created date"
-                            onChange={(s) => setModified((prev) => ({ ...prev, created: s.target.value }))}
-                        />
+                        <Label className="my-2">Service Request ID</Label>
+                        <Input value={content.id} className="bg-secondary" disabled />
                     </div>
-                    <div>
-                        <Label className="my-2">Deadline</Label>
-                        <Input
-                            defaultValue={content.deadline}
-                            className="bg-secondary"
-                            placeholder="Enter Service Req Deadline"
-                            onChange={(s) => setModified((prev) => ({ ...prev, deadline: s.target.value }))}
-                        />
-                    </div>
-                    <div>
-                        <Label className="my-2">Type</Label>
-                        <Select
-                            defaultValue={content.type}
-                            onValueChange={(value) => setModified((prev) => ({ ...prev, type: value }))}
-                        >
-                            <SelectTrigger className="bg-secondary">
-                                <SelectValue placeholder="Select Type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="reviewClaim">Review Claim</SelectItem>
-                                <SelectItem value="requestAdjuster">Request Adjuster</SelectItem>
-                                <SelectItem value="checkClaim">Check Claim</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div>
-                        <Label className="my-2">Assignee ID</Label>
-                        <Input
-                            defaultValue={content.assigneeId}
-                            className="bg-secondary"
-                            placeholder="Enter Service Req Assignee ID"
-                            onChange={(s) => setModified((prev) => ({ ...prev, assigneeId: Number(s.target.value) }))}
-                        />
-                    </div>
-                    <div>
-                        <Label className="my-2">Owner ID</Label>
-                        <Input
-                            defaultValue={content.ownerId}
-                            className="bg-secondary"
-                            placeholder="Enter Service Req Owner ID"
-                            onChange={(s) => setModified((prev) => ({ ...prev, ownerId: Number(s.target.value) }))}
-                        />
-                    </div>
-                    <Button
-                        className="mt-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-20 mx-auto rounded-lg px-2 py-1"
-                        onClick={handleApply}
-                    >
-                        Apply
-                    </Button>
+
+                    <Separator />
+
+                    <ServiceReqFormFields
+                        key={formKey}
+                        values={values}
+                        patch={patch}
+                        errors={errors}
+                        showLastModified
+                    />
+
                 </div>
+
+                <DialogFooter>
+                    <div className="flex flex-col justify-center! items-center gap-4 mt-5 w-full">
+                        <Separator />
+                        <div className="flex flex-row gap-2">
+                            <Button variant="outline" onClick={handleReset}>
+                                Reset
+                            </Button>
+                            <Button
+                                className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground rounded-lg px-4 py-1"
+                                onClick={handleApply}
+                                disabled={hasErrors}
+                            >
+                                Apply
+                            </Button>
+                        </div>
+                    </div>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     );

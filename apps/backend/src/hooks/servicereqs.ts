@@ -25,6 +25,7 @@ export const createServiceReq = async (req: req, res: res) => {
     const payload = req.body;
     try {
         const result = await q.ServiceReqs.createServiceReq(
+            payload.name,
             payload.created,
             payload.deadline,
             payload.type,
@@ -43,6 +44,7 @@ export const updateServiceReq = async (req: req, res: res) => {
     try {
         const result = await q.ServiceReqs.updateServiceReq(
             payload.id,
+            payload.name,
             payload.created,
             payload.deadline,
             payload.type,

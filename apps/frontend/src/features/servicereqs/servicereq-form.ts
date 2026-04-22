@@ -28,9 +28,6 @@ export function nowTimeString(): string {
 /**
  * Returns a map of field name → error message for any invalid fields.
  * An empty object means the form is valid.
- *
- * `isEdit` relaxes the file requirement: existing content can be saved
- * without re-uploading a file (the server keeps the current file).
  */
 export function getErrors(values: ServiceReqFormValues): Record<string, string> {
     const e: Record<string, string> = {};
@@ -58,30 +55,30 @@ export function initialValues(userId: number): ServiceReqFormValues {
 }
 
 /** Build a FormData with all fields shared between create and update. */
-export function buildServiceReqFormData(values: ServiceReqFormValues): FormData {
-    const formData = new FormData();
-    formData.append("name", values.name);
-    formData.append("ownerId", values.ownerId.toString());
+export function buildServiceReqJSON(values: ServiceReqFormValues): string {
     if (values.assigneeId === undefined) throw new Error("Assignee is required.");
-    formData.append("assigneeId", values.assigneeId.toString());
     if (values.type === undefined) throw new Error("Type is required.");
-    formData.append("type", values.type);
 
     // Merge the date picker value and the separate time input into one timestamp.
     const created = new Date(values.createdDate);
     const [lmh, lmm, lms] = values.createdTime.split(":").map(Number);
     created.setHours(lmh, lmm, lms ?? 0, 0);
-    formData.append("created", created.toISOString());
     if (values.deadline === undefined) throw new Error("Deadline is required.");
     const deadlineDate = new Date(values.deadline);
     deadlineDate.setHours(0, 0, 0, 0);
-    formData.append("deadline", deadlineDate.toISOString());
 
-    return formData;
+    return JSON.stringify({
+        name: values.name,
+        ownerId: values.ownerId,
+        assigneeId: values.assigneeId,
+        type: values.type,
+        created: created.toISOString(),
+        deadline: deadlineDate.toISOString(),
+    })
 }
 
 /** Populate form values from an existing ServiceReqItem for the Edit form. */
-export function fromContentItem(item: ServiceReqItem): ServiceReqFormValues {
+export function fromServiceReqItem(item: ServiceReqItem): ServiceReqFormValues {
     const createdDate = new Date(item.created);
     return {
         name: item.name,

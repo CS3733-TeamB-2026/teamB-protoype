@@ -20,13 +20,11 @@ export class ServiceReqs {
     }
 
     public static async createServiceReq(
-        _created: Date, _deadline: Date, _type_string: string, _assigneeId: number, _ownerId: number): Promise<void> {
-        let _type: p.RequestType | null = Helper.requestHelper(_type_string)
-        if (_type == null) {
-            throw new Error("Service Request type not specified")
-        }
-        await prisma.serviceRequest.create({
+        _name: string, _created: Date, _deadline: Date, _type_string: string, _assigneeId: number, _ownerId: number): Promise<p.ServiceRequest> {
+        let _type: p.RequestType = Helper.requestHelper(_type_string)
+        return prisma.serviceRequest.create({
             data: {
+                name: _name,
                 created: _created,
                 deadline: _deadline,
                 type: _type,
@@ -37,14 +35,15 @@ export class ServiceReqs {
     }
 
     public static async updateServiceReq(
-        _id: number, _created: Date, _deadline: Date, _type_string: string, _assigneeId: number, _ownerId: number): Promise<void> {
+        _id: number, _name: string, _created: Date, _deadline: Date, _type_string: string, _assigneeId: number, _ownerId: number): Promise<p.ServiceRequest> {
         let _type: p.RequestType | null = Helper.requestHelper(_type_string)
         if (_type == null) {
             throw new Error("Service Request type not specified")
         }
-        await prisma.serviceRequest.update({
+        return prisma.serviceRequest.update({
             where: {id: _id},
             data: {
+                name: _name,
                 created: _created,
                 deadline: _deadline,
                 type: _type,

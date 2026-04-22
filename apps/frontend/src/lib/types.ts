@@ -49,11 +49,13 @@ export type UrlPreview = {
     favicon: string | null;
 }
 
-export type ServiceReq = {
+// Same types and names as in the DB
+export type ServiceReqItem = {
     id: number;
+    name: string;
     created: string;
     deadline: string;
-    type: string;
+    type: "reviewClaim" | "requestAdjuster" | "checkClaim";
     assigneeId: number;
     ownerId: number;
 }
