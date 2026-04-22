@@ -73,7 +73,8 @@ import {useAuth0} from "@auth0/auth0-react"
 import {highlight} from "@/lib/highlight.tsx";
 import {formatLabel, formatName} from "@/lib/utils.ts";
 import {toast} from "sonner";
-import type { ContentItem, BookmarkRecord, DocType, ContentStatus, ContentType, Persona, UrlPreview } from "@/lib/types.ts";
+import type { ContentItem, BookmarkRecord, ContentStatus, ContentType, Persona, UrlPreview } from "@/lib/types.ts";
+import { type Category } from "@/lib/mime.ts";
 import {usePageTitle} from "@/hooks/use-page-title.ts";
 import {ConfirmCheckoutDialog} from "@/features/content/forms/ConfirmCheckoutDialog.tsx";
 import {ConfirmCheckinDialog} from "@/features/content/forms/ConfirmCheckinDialog.tsx";
@@ -472,16 +473,18 @@ function ViewContent() {
         setEditOpen(true);
     };
 
-    const docTypeLabels: Record<DocType, string> = {
-        office: "Office (PDF, Word..)",
+    const docTypeLabels: Record<Category, string> = {
+        pdf:          "PDF",
+        document:     "Document",
+        spreadsheet:  "Spreadsheet",
         presentation: "Presentation",
-        audio: "Audio",
-        video: "Video",
-        images: "Images",
-        html: "HTML",
-        zip: "ZIP",
-        "plain text": "Plain Text",
-        links: "Links"
+        image:        "Image",
+        audio:        "Audio",
+        video:        "Video",
+        archive:      "Archive",
+        code:         "Code",
+        other:        "Other",
+        link:         "Link",
     }
 
     // Total column count used for colSpan on the expanded detail rows.
@@ -745,7 +748,7 @@ function ViewContent() {
                                             <p className="font-medium mb-2">{ts('file.type')}</p>
                                             <div className="flex flex-col gap-1.5">
                                                 {Object.entries(docTypeLabels).map(([key]) => {
-                                                    const dt = key as DocType
+                                                    const dt = key as Category
 
                                                     return (
                                                         <label key={dt} className="flex items-center gap-2">

@@ -26,7 +26,8 @@ export type Category =
     | "video"
     | "archive"
     | "code"
-    | "other";
+    | "other"
+    | "link";
 
 /**
  * Which renderer {@link FilePreview} should use for a file.
@@ -329,10 +330,7 @@ export function stripExtension(filename: string): string {
 
 // ---------- Colors ----------
 
-export const CATEGORY_COLORS: Record<
-    Category | "link",
-    { badge: string; icon: string }
-> = {
+export const CATEGORY_COLORS: Record<Category, { badge: string; icon: string }> = {
     pdf:          { badge: "bg-red-100 text-red-700",         icon: "text-red-500" },
     document:     { badge: "bg-blue-100 text-blue-700",      icon: "text-blue-500" },
     spreadsheet:  { badge: "bg-emerald-100 text-emerald-700", icon: "text-emerald-500" },

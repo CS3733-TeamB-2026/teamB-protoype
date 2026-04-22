@@ -42,17 +42,6 @@ export type ContentItem = {
     tags: string[];
 }
 
-// Y'all I couldn't find a way to do it as a part of ContentItem, sorry. -Ricardo
-export type DocType =
-    | "office"
-    | "presentation"
-    | "plain text"
-    | "video"
-    | "audio"
-    | "html"
-    | "zip"
-    | "images"
-    | "links";
 
 export type BookmarkRecord = {
     bookmarkerId: number;
