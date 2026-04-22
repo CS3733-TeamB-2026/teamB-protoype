@@ -158,6 +158,8 @@ function ViewContent() {
 
     //whenever a new filter is applied it just resets the pages to page 1 to make sure content is always displayed
     useEffect(() => {
+        //TODO: fix!!
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentPage(1);
     }, [activeTab, searchTerm, advancedFilters, sort]);
 

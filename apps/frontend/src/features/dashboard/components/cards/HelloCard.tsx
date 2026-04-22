@@ -8,7 +8,7 @@ function HelloCard() {
     const {user} = useUser();
 
     return (
-        <Card className="md:col-span-2 py-8 px-4 shadow-lg hover:scale-101 transition-transform">
+        <Card className="border-t-primary-light border-t-4 md:col-span-2 py-8 px-4 shadow-lg hover:scale-101 transition-transform">
             <CardHeader>
                 <div className="flex justify-between items-center">
                     <div className="flex flex-row gap-5 items-center">

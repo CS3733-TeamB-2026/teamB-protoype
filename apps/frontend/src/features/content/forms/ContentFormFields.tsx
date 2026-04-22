@@ -124,7 +124,7 @@ export function ContentFormFields({ values, patch, errors, mode, disabled = fals
     return (
         <div className="mx-4">
             {/* Name */}
-            <Field className="bg-background">
+            <Field className="">
                 <FieldLabel className="text-primary text-lg" htmlFor="input-field-name">
                     Name <span className="text-destructive">*</span>
                 </FieldLabel>
@@ -142,7 +142,7 @@ export function ContentFormFields({ values, patch, errors, mode, disabled = fals
             <div className="py-4"><Separator className="bg-primary" /></div>
 
             {/* Content Source */}
-            <Field className="bg-background">
+            <Field className="">
                 <FieldLabel className="text-primary text-lg mb-4">
                     Content Source <span className="text-destructive">*</span>
                 </FieldLabel>
@@ -214,7 +214,7 @@ export function ContentFormFields({ values, patch, errors, mode, disabled = fals
 
             <div className="flex flex-row gap-2">
                 {/* Owner */}
-                <Field className="bg-background">
+                <Field className="">
                     <FieldLabel className="text-primary text-lg mb-1">Owner Employee</FieldLabel>
                     <EmployeePicker
                         selectedId={values.ownerID}
@@ -235,12 +235,12 @@ export function ContentFormFields({ values, patch, errors, mode, disabled = fals
                 <Separator className="bg-primary mx-2" orientation="vertical" />
 
                 {/* Target Persona */}
-                <Field className="bg-background">
+                <Field className="">
                     <FieldLabel className="text-primary text-lg mb-1">
                         Target Persona <span className="text-destructive">*</span>
                     </FieldLabel>
                     <Select value={values.targetPersona} onValueChange={(v) => patch({ targetPersona: v })}>
-                        <SelectTrigger className="bg-background h-10! text-sm">
+                        <SelectTrigger className=" h-10! text-sm">
                             <SelectValue placeholder="Select target persona" />
                         </SelectTrigger>
                         <SelectContent>
@@ -259,8 +259,8 @@ export function ContentFormFields({ values, patch, errors, mode, disabled = fals
             <div className="py-6"><Separator className="bg-primary" /></div>
 
             {/* Dates */}
-            <div className="flex flex-wrap items-end gap-4 bg-background py-4">
-                <Field className="bg-background flex-1">
+            <div className="flex flex-wrap items-end gap-4  py-4">
+                <Field className=" flex-1">
                     <FieldLabel className="text-primary text-lg" htmlFor="date-modified">
                         Last Modified Date
                     </FieldLabel>
@@ -298,11 +298,11 @@ export function ContentFormFields({ values, patch, errors, mode, disabled = fals
                         value={values.lastModifiedTime}
                         onChange={(e) => patch({ lastModifiedTime: e.target.value })}
                         disabled={values.uploadMode === "file" && values.file !== null}
-                        className="font-normal md:text-sm h-10! appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+                        className="font-normal md:text-sm h-10! appearance-none  [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
                     />
                 </Field>
 
-                <Field className="bg-background flex-1">
+                <Field className=" flex-1">
                     <FieldLabel className="text-primary text-lg" htmlFor="date-expiration">
                         Expiration Date
                     </FieldLabel>
@@ -328,7 +328,7 @@ export function ContentFormFields({ values, patch, errors, mode, disabled = fals
             <div className="py-6"><Separator className="bg-primary" /></div>
 
             {/* Tags */}
-            <Field className="bg-background">
+            <Field className="">
                 <FieldLabel className="text-primary text-lg">Tags</FieldLabel>
                 <TagInput value={values.tags} onChange={(tags) => patch({ tags })} disabled={disabled} />
             </Field>
@@ -337,7 +337,7 @@ export function ContentFormFields({ values, patch, errors, mode, disabled = fals
 
             <div className="flex flex-row gap-2">
                 {/* Document Type */}
-                <Field className="bg-background">
+                <Field className="">
                     <FieldLabel className="text-primary text-lg">
                         Type of Document <span className="text-destructive">*</span>
                     </FieldLabel>
@@ -345,7 +345,7 @@ export function ContentFormFields({ values, patch, errors, mode, disabled = fals
                         value={values.contentType === "none" ? "" : values.contentType}
                         onValueChange={(v) => patch({ contentType: v as ContentFormValues["contentType"] })}
                     >
-                        <SelectTrigger className="bg-background h-10! text-sm">
+                        <SelectTrigger className=" h-10! text-sm">
                             <SelectValue placeholder="Select document type" />
                         </SelectTrigger>
                         <SelectContent>
@@ -359,7 +359,7 @@ export function ContentFormFields({ values, patch, errors, mode, disabled = fals
                 <Separator className="bg-primary mx-2" orientation="vertical" />
 
                 {/* Document Status */}
-                <Field className="bg-background">
+                <Field className="">
                     <FieldLabel className="text-primary text-lg">
                         Document Status <span className="text-destructive">*</span>
                     </FieldLabel>
@@ -367,7 +367,7 @@ export function ContentFormFields({ values, patch, errors, mode, disabled = fals
                         value={values.status === "none" ? "" : values.status}
                         onValueChange={(v) => patch({ status: v as ContentFormValues["status"] })}
                     >
-                        <SelectTrigger className="bg-background h-10! text-sm">
+                        <SelectTrigger className=" h-10! text-sm">
                             <SelectValue placeholder="Select status" />
                         </SelectTrigger>
                         <SelectContent>
