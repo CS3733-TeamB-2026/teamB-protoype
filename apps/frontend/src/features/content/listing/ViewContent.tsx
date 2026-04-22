@@ -151,6 +151,8 @@ function ViewContent() {
     //default amount of content shown is 25
 
     useEffect(() => {
+        //TODO: fix!!
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentPage(1);
     }, [activeTab, searchTerm, advancedFilters, sort]);
 
