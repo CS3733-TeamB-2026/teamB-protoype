@@ -14,6 +14,7 @@ import { useUser } from "@/hooks/use-user.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 import type { ServiceReq } from "@/lib/types.ts";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
+import {findMatches, highlightRange} from "@/lib/highlight.tsx";
 
 function ViewServiceReqs() {
 
@@ -55,7 +56,7 @@ function ViewServiceReqs() {
         if (!query) return true;
 
         return (
-            s.id.toString().includes(query) ||
+            s.name.toString().includes(query) ||
             s.type.toLowerCase().includes(query) ||
             s.assigneeId.toString().includes(query) ||
             s.ownerId.toString().includes(query)
@@ -151,9 +152,10 @@ function ViewServiceReqs() {
                                     if (col === "assignee") return s.assigneeId;
                                     if (col === "owner") return s.ownerId;
                                 }).map((servicereq) => {
+                                    const matches = findMatches(servicereq.name, searchTerm)
                                     return (
                                         <TableRow key={servicereq.id}>
-                                            <TableCell className="text-right pr-4">{servicereq.name}</TableCell>
+                                            <TableCell className="text-right pr-4">{highlightRange(servicereq.name, 0, matches)}</TableCell>
                                             <TableCell className="font-medium">{servicereq.type}</TableCell>
                                             <TableCell className="font-medium">{new Date(servicereq.created).toLocaleDateString()}</TableCell>
                                             <TableCell className="font-medium">{new Date(servicereq.deadline).toLocaleDateString()}</TableCell>
