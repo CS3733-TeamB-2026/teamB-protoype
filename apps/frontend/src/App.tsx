@@ -25,6 +25,7 @@ import {LocaleProvider} from "@/languageSupport/localeContext.tsx";
 import SettingsLayout from "@/features/settings/SettingsLayout.tsx";
 import AppearanceSettings from "@/features/settings/sections/AppearanceSettings.tsx";
 import ProfileSettings from "@/features/settings/sections/ProfileSettings.tsx"
+import ViewServiceReqs from "@/features/servicereqs/ViewServiceReqs.tsx";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const { isAuthenticated } = useAuth0();
@@ -70,6 +71,7 @@ function App() {
                             <Route path="/files/bulk" element={<ProtectedRoute><BulkUploadPage/></ProtectedRoute>}/>
                             <Route path="/employeehome" element={<ProtectedRoute><Dashboard/></ProtectedRoute>}/>
                             <Route path="/file/:id" element={<ProtectedRoute><ViewSingleFile/></ProtectedRoute>}/>
+                            <Route path="/servicereqs" element={<ProtectedRoute><ViewServiceReqs/></ProtectedRoute>}/>
                             <Route path="/settings" element={<ProtectedRoute><SettingsLayout/></ProtectedRoute>}>
                                 <Route index element={<ProtectedRoute><Navigate to="profile" replace /></ProtectedRoute>} />
                                 <Route path="appearance" element={<ProtectedRoute><AppearanceSettings/></ProtectedRoute>} />

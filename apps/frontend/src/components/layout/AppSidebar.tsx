@@ -1,4 +1,4 @@
-import { Home, User, ChevronDown, Users, X, Library, LayoutDashboard, Upload } from "lucide-react"
+import { Home, User, ChevronDown, Users, X, Library, LayoutDashboard, Upload, NetworkIcon } from "lucide-react"
 import React from "react"
 import {Link} from "react-router-dom";
 import {
@@ -42,6 +42,7 @@ const navItems: NavItem[] = [
     { title: "Bulk Upload", icon: Upload, href: "/files/bulk", children: [], access: ["admin", "underwriter", "businessAnalyst"], langKey: 'sidebar.bulkUpload' },
     { title: "Manage Employees", icon: Users, href: "/usermanagement", children: [
         ], access: ["admin"], langKey: 'sidebar.manageEmployees' },
+    { title: "Service Requests", icon: NetworkIcon, href: "/servicereqs", children: [], access: ["admin", "underwriter", "businessAnalyst"], langKey: 'sidebar.servicereqs' },
     { title: "Personas", icon: User, href: "/", children: [
             {title: "Underwriter", icon: User, href: "/underwriter", children: [], access: [], langKey: 'sidebar.underwriter'},
             {title: "Business Analyst", icon: User, href: "/businessanalyst", children: [], access: [], langKey: "sidebar.businessAnalyst"},
