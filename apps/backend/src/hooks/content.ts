@@ -162,6 +162,18 @@ export const downloadContent = async (req: req, res: res) => {
     }
 };
 
+export const getPublicFileUrl = async (req: req, res: res) => {
+    try {
+        const id = parseInt(req.params.id)
+        const publicUrl = await q.Bucket.createPublicUrl(id)
+        if (!publicUrl) return res.status(404).end();
+        return res.status(200).json(publicUrl);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+}
+
 function buildFileURI(ownerID: string, filename: string): string {
     return `${ownerID}/${crypto.randomUUID()}/${filename}`;
 }

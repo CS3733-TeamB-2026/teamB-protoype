@@ -10,6 +10,8 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog.tsx";
+import {useLocale} from "@/languageSupport/localeContext.tsx";
+import {useTranslation} from "@/languageSupport/useTranslation.ts";
 
 interface Props {
     open: boolean;
@@ -20,6 +22,8 @@ interface Props {
 
 export function ConfirmDeleteDialog({ open, onOpenChange, description, onConfirm }: Props) {
     const [loading, setLoading] = useState(false);
+    const { locale } = useLocale();
+    const { ts } = useTranslation(locale);
 
     async function handleConfirm(e: React.MouseEvent) {
         e.preventDefault(); // prevent AlertDialogAction from closing the dialog
@@ -35,7 +39,7 @@ export function ConfirmDeleteDialog({ open, onOpenChange, description, onConfirm
         <AlertDialog open={open} onOpenChange={loading ? undefined : onOpenChange}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogTitle>{ts('content.deleteConfirmation')}</AlertDialogTitle>
                     <AlertDialogDescription>
                         {description ?? "This action cannot be undone."}
                     </AlertDialogDescription>

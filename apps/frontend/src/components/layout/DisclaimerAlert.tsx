@@ -2,6 +2,8 @@ import { Info } from "lucide-react";
 import React, {useEffect} from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
+import {useLocale} from "@/languageSupport/localeContext.tsx";
+import {useTranslation} from "@/languageSupport/useTranslation.ts";
 
 function DisclaimerAlert() {
 
@@ -10,6 +12,8 @@ function DisclaimerAlert() {
     const hasShownAlert = React.useRef(false);
     const location = useLocation();
     const {isAuthenticated} = useAuth0();
+    const { locale } = useLocale();
+    const { ts } = useTranslation(locale);
 
     useEffect( () => {
         const timer = setTimeout(() => {
@@ -31,7 +35,7 @@ function DisclaimerAlert() {
             >
                 <Info className={`transition-colors duration-200 w-8! h-8! shrink-0 ${ open || hovered ? "text-accent" : "text-primary-foreground/15"}`}/>
                 <span className="ml-2 w-100 shrink-0 text-xs">
-                    <span className={`font-bold transition-colors duration-800 ${open || hovered ? "text-accent" : "text-primary-foreground/15"}`}>Disclaimer:</span> This website has been created for WPI’s CS 3733 Software Engineering as a class project and is <span className={`font-bold transition-colors duration-800 ${open || hovered ? "text-accent" : "text-primary-foreground/15"}`}>not in use by Hanover Insurance.</span></span>
+                    <span className={`font-bold transition-colors duration-800 ${open || hovered ? "text-accent" : "text-primary-foreground/15"}`}>{ts('disclaimer.start')}</span>{ts('disclaimer.middle')}<span className={`font-bold transition-colors duration-800 ${open || hovered ? "text-accent" : "text-primary-foreground/15"}`}>{ts('disclaimer.end')}</span></span>
             </div>
         </div>
     )

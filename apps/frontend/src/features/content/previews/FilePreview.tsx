@@ -77,7 +77,8 @@ const DocViewerMemo = memo(function DocViewerMemo({
  *  - `"video"`     → `<video>` element
  *  - `"audio"`     → `<audio>` element
  *  - `"html"`      → sandboxed `<iframe>`
- *  - `"docviewer"` → PDF/DOCX/Markdown via react-doc-viewer ({@link DocViewerMemo})
+ *  - `"microsoft"` → Word/Excel/PowerPoint via Office 365 iframe viewer
+ *  - `"docviewer"` → PDF/Markdown via react-doc-viewer ({@link DocViewerMemo})
  *  - `"none"`      → "No preview available" message
  *
  * Binary formats (everything except `"text"`) are fetched as a `Blob` and
@@ -99,6 +100,7 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
     const [content, setContent] = useState<string | null>(null);   // text mode
     const [objectUrl, setObjectUrl] = useState<string | null>(null); // blob-backed renderers
     const [tableData, setTableData] = useState<string[][] | null>(null); // table mode
+    const [publicUrl, setPublicUrl] = useState<string | null>(null) // microsoft office mode
     const { getAccessTokenSilently } = useAuth0();
     // Keep a ref so the fetch effect never needs getAccessTokenSilently as a dep.
     // Auth0 returns a new function reference on every render, which would otherwise
@@ -122,6 +124,16 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
         a.click();
         URL.revokeObjectURL(url);
     };
+
+    const getPublicUrl = async (contentId: string) => {
+        const token = await getAccessTokenSilently();
+        const res = await fetch(`/api/content/publicUrl/${contentId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        setPublicUrl(data);
+    }
 
     // Main fetch effect. Runs whenever the file source, preview mode, or info
     // URL changes (i.e. when a different file is expanded).
@@ -177,6 +189,7 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
                     // Parse just the first sheet and convert to a 2-D string array.
                     // header:1 means "use row indices as headers" (i.e. return raw rows),
                     // defval:"" fills empty cells with an empty string instead of undefined.
+
                     const wb = XLSX.read(buf, { type: "array" });
                     const ws = wb.Sheets[wb.SheetNames[0]];
                     const rows = XLSX.utils.sheet_to_json<string[]>(ws, { header: 1, defval: "" });
@@ -198,6 +211,13 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
                     }
                     localUrl = URL.createObjectURL(blob);
                     setObjectUrl(localUrl);
+
+                    if (previewMode === "microsoft") {
+                        const contentId = infoSrc?.split("/").at(-1) ?? null;
+                        if (!contentId) { return }
+                        await getPublicUrl(contentId);
+                    }
+
                     setStatus("ready");
                 }
             } catch {
@@ -270,29 +290,38 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
                     />
                 </div>
             )}
-            {/* Spreadsheet: first row treated as column headers, remaining rows as data */}
+            {/* Word / Excel / PowerPoint: Office 365 iframe viewer */}
+            {status === "ready" && previewMode === "microsoft" && publicUrl && (
+                <iframe
+                    src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(publicUrl)}`}
+                    className="w-full border-0"
+                    style={{ minHeight: "600px" }}
+                    title={filename}
+                />
+            )}
+            {/* CSV: first row treated as column headers, remaining rows as data */}
             {status === "ready" && previewMode === "table" && tableData != null && (
                 <div className="overflow-auto max-h-130 px-6 pb-4">
                     <table className="text-sm border-collapse">
                         <thead>
-                            <tr>
-                                {(tableData[0] ?? []).map((cell, i) => (
-                                    <th key={i} className="border border-border px-3 py-1.5 bg-muted text-left font-medium whitespace-nowrap">
-                                        {cell}
-                                    </th>
-                                ))}
-                            </tr>
+                        <tr>
+                            {(tableData[0] ?? []).map((cell, i) => (
+                                <th key={i} className="border border-border px-3 py-1.5 bg-muted text-left font-medium whitespace-nowrap">
+                                    {cell}
+                                </th>
+                            ))}
+                        </tr>
                         </thead>
                         <tbody>
-                            {tableData.slice(1).map((row, ri) => (
-                                <tr key={ri} className="even:bg-muted/30">
-                                    {row.map((cell, ci) => (
-                                        <td key={ci} className="border border-border px-3 py-1.5 whitespace-nowrap">
-                                            {cell}
-                                        </td>
-                                    ))}
-                                </tr>
-                            ))}
+                        {tableData.slice(1).map((row, ri) => (
+                            <tr key={ri} className="even:bg-muted/30">
+                                {row.map((cell, ci) => (
+                                    <td key={ci} className="border border-border px-3 py-1.5 whitespace-nowrap">
+                                        {cell}
+                                    </td>
+                                ))}
+                            </tr>
+                        ))}
                         </tbody>
                     </table>
                 </div>
