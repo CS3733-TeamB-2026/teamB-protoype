@@ -19,11 +19,22 @@ export type ContentItem = {
     } | null;
     lastModified: string;
     expiration: string | null;
-    contentType: "reference" | "workflow";
-    targetPersona: "underwriter" | "businessAnalyst" | "admin";
-    status: "new" | "inProgress" | "complete" | null;
+    contentType: ContentType;
+    targetPersona: Persona;
+    status: ContentStatus;
     tags: string[];
 }
+
+// Y'all I couldn't find a way to do it as a part of ContentItem, sorry. -Ricardo
+export type DocType =
+    | "office"
+    | "plain text"
+    | "video"
+    | "audio"
+    | "html"
+    | "zip"
+    | "images"
+    | "links";
 
 export type BookmarkRecord = {
     bookmarkerId: number;
@@ -34,7 +45,7 @@ export type Employee = {
     firstName: string;
     lastName: string;
     id: number;
-    persona: string;
+    persona: Persona;
     profilePhotoURI: string;
     login?: {
         userName: string;

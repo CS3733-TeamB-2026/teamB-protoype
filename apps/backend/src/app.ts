@@ -54,6 +54,7 @@ app.get("/api/bookmark", bookmark.getBookmarks)
 app.post("/api/bookmark/:contentId", bookmark.addBookmark)
 app.delete("/api/bookmark/:contentId", bookmark.removeBookmark)
 // Employee
+app.post("/api/employee/photo", upload.single("photo"), employee.uploadProfilePhoto);
 app.get("/api/employee/all", employee.getAllEmployeesWithLogin)
 app.get("/api/employee", employee.getAllEmployees)
 app.get("/api/employee/me", employee.getMe);

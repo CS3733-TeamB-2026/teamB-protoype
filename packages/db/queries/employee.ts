@@ -84,4 +84,11 @@ export class Employee {
         })
     }
 
+    public static async updateProfilePhotoURI(id: number, uri: string): Promise<p.Employee> {
+        return prisma.employee.update({
+            where: { id },
+            data: { profilePhotoURI: uri }
+        });
+    }
+
 }

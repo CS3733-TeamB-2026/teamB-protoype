@@ -1,6 +1,5 @@
 import { Badge } from "@/components/ui/badge.tsx";
-
-type ContentType = "reference" | "workflow";
+import type { ContentType } from "@/lib/types.ts";
 
 const TYPE_STYLES: Record<ContentType, { label: string; className: string }> = {
     reference: { label: "Reference", className: "bg-labellight1a text-labeltext" },

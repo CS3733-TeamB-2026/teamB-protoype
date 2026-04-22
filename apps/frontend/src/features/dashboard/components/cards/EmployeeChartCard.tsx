@@ -68,7 +68,7 @@ function EmployeeChartCard() {
     }));
 
     return (
-        <Card className="shadow-lg hover:scale-101 transition-transform md:col-span-2 flex flex-col">
+        <Card className="shadow-lg hover:scale-101 transition-transform sm:col-span-1 flex flex-col">
             <CardHeader className="items-center pb-0">
                 <CardTitle className="capitalize text-2xl font-semibold">Department Breakdown</CardTitle>
                 <CardDescription>Current headcount by department.</CardDescription>
@@ -76,7 +76,7 @@ function EmployeeChartCard() {
             <CardContent className="flex flex-row items-center justify-center gap-4 pb-0 mr-10">
                 <ChartContainer
                     config={chartConfig}
-                    className="w-80 h-80 shrink-0"
+                    className="w-60 h-60 shrink-0"
                 >
                     <PieChart>
                         <ChartTooltip
