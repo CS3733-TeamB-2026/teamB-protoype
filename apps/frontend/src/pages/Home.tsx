@@ -55,20 +55,20 @@ function Home() {
 
 
             {/* Stats strip */}
-            <div className="bg-primary text-primary-foreground shadow-md">
+            <div className="bg-primary-surface text-primary-foreground shadow-md">
                 <div className="max-w-6xl mx-auto px-6 py-5 grid grid-cols-2 divide-x divide-primary-foreground/20">
 
                     <div className="flex flex-col items-center gap-0.5 px-4">
-                        <span className="text-3xl font-bold">{members.length}</span>
+                        <span className="text-3xl font-bold">Team B</span>
                         <span className="text-xs text-primary-foreground/70 uppercase tracking-widest">
-                Team Members
+                D-Term, 2025-26 Academic Year
             </span>
                     </div>
 
                     <div className="flex flex-col items-center gap-0.5 px-4">
-                        <span className="text-3xl font-bold">6</span>
+                        <span className="text-3xl font-bold">CS3733</span>
                         <span className="text-xs text-primary-foreground/70 uppercase tracking-widest">
-                Personas
+                Worcester Polytechnic Institute
             </span>
                     </div>
 
@@ -79,7 +79,7 @@ function Home() {
             <div id="content" className="scroll-mt-20 max-w-6xl mx-auto px-6 mt-12">
                 <div className="text-center mb-10">
                     <h1 className="text-4xl font-bold text-primary">{ts('home.mainHeader')}</h1>
-                    <p className="text-lg text-muted-foreground mt-2 max-w-xl mx-auto">{ts('home.subheader')}</p>
+                    <p className="text-lg text-muted-foreground mt-2 max-w-xl mx-auto">The quiet infrastructure behind a better team.</p>
                 </div>
 
                 {/* Feature cards */}
@@ -152,7 +152,7 @@ function Home() {
                     <div className="w-full border-t border-border" />
                 </div>
                 <div className="relative flex justify-center">
-                    <div className="flex items-center gap-2 bg-secondary px-4 py-1.5 rounded-full border border-border shadow-sm">
+                    <div className="flex items-center gap-2 bg-card px-4 py-1.5 rounded-full border border-border shadow-sm">
                         <Users className="w-4 h-4 text-primary" />
                         <span className="text-sm font-semibold text-primary">{ts('home.meetTheTeam')}</span>
                     </div>

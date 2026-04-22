@@ -94,7 +94,7 @@ function ContentTypeChartCard() {
     }, [content]);
 
     return (
-        <Card className="shadow-lg hover:scale-101 transition-transform md:col-span-2 flex flex-col">
+        <Card className="border-t-secondary border-t-4 shadow-lg hover:scale-101 transition-transform md:col-span-2 flex flex-col">
             <CardHeader className="items-center pb-0">
                 <CardTitle className="capitalize text-2xl font-semibold">Content Type Breakdown</CardTitle>
                 <CardDescription>Current distribution of file types in database.</CardDescription>

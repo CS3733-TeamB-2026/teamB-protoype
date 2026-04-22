@@ -158,6 +158,8 @@ function ViewContent() {
 
     //whenever a new filter is applied it just resets the pages to page 1 to make sure content is always displayed
     useEffect(() => {
+        //TODO: fix!!
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentPage(1);
     }, [activeTab, searchTerm, advancedFilters, sort]);
 
@@ -1055,23 +1057,49 @@ function ViewContent() {
                                                                 </TableRow>
                                                             )}
                                                     {/* link preview */}
-                                                    {isExpanded && isLink && (
-                                                        <TableRow className="hover:bg-transparent">
-                                                            <TableCell colSpan={NUM_COLS} className="p-0">
-                                                                <UrlPreviewLink
-                                                                    href={item.linkURL!}
-                                                                    status={
-                                                                        !(item.id in linkPreviews)
-                                                                            ? "loading"
-                                                                            : linkPreviews[item.id] === null
-                                                                                ? "unreachable"
-                                                                                : "ok"
-                                                                    }
-                                                                    preview={linkPreviews[item.id] ?? null}
-                                                                />
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    )}
+                                                    {isExpanded && isLink && (() => {
+                                                        const url = item.linkURL!;
+                                                        //checks for the v= tag on all youtube videos followed by an identifier
+                                                        const youtubeMatch = url.match(/[?&]v=([a-zA-Z0-9_-]+)/);
+
+                                                        //youtube link embedding
+                                                        if (youtubeMatch) {
+                                                            return (
+                                                                <TableRow className="hover:bg-transparent">
+                                                                    <TableCell colSpan={NUM_COLS} className="p-0">
+                                                                        <iframe
+                                                                            //youtube embed data
+                                                                            src={`https://www.youtube.com/embed/${youtubeMatch[1]}`}
+                                                                            className="w-full border-0"
+                                                                            style={{ minHeight: "400px" }}
+                                                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                                            allowFullScreen
+                                                                            title={url}
+                                                                        />
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            );
+                                                        }
+
+                                                        //normal link preview
+                                                        return (
+                                                            <TableRow className="hover:bg-transparent">
+                                                                <TableCell colSpan={NUM_COLS} className="p-0">
+                                                                    <UrlPreviewLink
+                                                                        href={url}
+                                                                        status={
+                                                                            !(item.id in linkPreviews)
+                                                                                ? "loading"
+                                                                                : linkPreviews[item.id] === null
+                                                                                    ? "unreachable"
+                                                                                    : "ok"
+                                                                        }
+                                                                        preview={linkPreviews[item.id] ?? null}
+                                                                    />
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        );
+                                                    })()}
                                                     {/* file preview */}
                                                     {isExpanded && isFile && (
                                                         <TableRow className="hover:bg-transparent">
