@@ -1,7 +1,7 @@
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import {Link} from "react-router-dom";
 import {Button} from "@/components/ui/button.tsx";
-import {FolderOpen, Plus, UserPlus, Users} from "lucide-react";
+import {CalendarClock, FolderOpen, Plus, UserPlus, Users} from "lucide-react";
 import { useUser } from "@/hooks/use-user.ts"
 
 function QuickLinksCard() {
@@ -42,6 +42,12 @@ function QuickLinksCard() {
                         <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-accent hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
                             <FolderOpen className="w-4 h-4 shrink-0" />
                             View Files
+                        </Button>
+                    </Link>
+                    <Link to="/calendar" className="w-full">
+                        <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-accent hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
+                            <CalendarClock className="w-4 h-4 shrink-0" />
+                            View Calendar
                         </Button>
                     </Link>
                     <Link to="/files/bulk" className="w-full">

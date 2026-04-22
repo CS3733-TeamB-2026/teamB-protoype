@@ -25,6 +25,7 @@ import {LocaleProvider} from "@/languageSupport/localeContext.tsx";
 import SettingsLayout from "@/features/settings/SettingsLayout.tsx";
 import AppearanceSettings from "@/features/settings/sections/AppearanceSettings";
 import ProfileSettings from "@/features/settings/sections/ProfileSettings.tsx"
+import ExperationCalendar from "@/features/content/listing/ExpirationCalendar.tsx"
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const { isAuthenticated } = useAuth0();
@@ -69,6 +70,7 @@ function App() {
                             <Route path="/files" element={<ProtectedRoute><ViewContent/></ProtectedRoute>}/>
                             <Route path="/files/bulk" element={<ProtectedRoute><BulkUploadPage/></ProtectedRoute>}/>
                             <Route path="/employeehome" element={<ProtectedRoute><Dashboard/></ProtectedRoute>}/>
+                            <Route path="/calendar" element={<ExperationCalendar/>}/>
                             <Route path="/file/:id" element={<ProtectedRoute><ViewSingleFile/></ProtectedRoute>}/>
                             <Route path="/settings" element={<ProtectedRoute><SettingsLayout/></ProtectedRoute>}>
                                 <Route index element={<ProtectedRoute><Navigate to="profile" replace /></ProtectedRoute>} />
