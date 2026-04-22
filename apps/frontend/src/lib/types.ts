@@ -54,9 +54,6 @@ export type Employee = {
     id: number;
     persona: Persona;
     profilePhotoURI: string;
-    login?: {
-        userName: string;
-    };
 }
 
 export type UrlPreview = {
