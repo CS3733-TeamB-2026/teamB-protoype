@@ -1,4 +1,4 @@
-import type { ServiceReqItem } from "@/lib/types.ts";
+import type { ServiceReq } from "@/lib/types.ts";
 
 /**
  * Shared form state for both Add and Edit service req dialogs.
@@ -81,14 +81,14 @@ export function buildServiceReqJSON(values: ServiceReqFormValues): string {
 }
 
 /** Populate form values from an existing ServiceReqItem for the Edit form. */
-export function fromServiceReqItem(item: ServiceReqItem): ServiceReqFormValues {
+export function fromServiceReqItem(item: ServiceReq): ServiceReqFormValues {
     const createdDate = new Date(item.created);
     return {
         id: item.id,
         name: item.name,
         ownerId: item.ownerId,
         assigneeId: item.assigneeId,
-        type: item.type,
+        type: item.type as "reviewClaim" | "requestAdjuster" | "checkClaim" | "none",
         createdDate: createdDate,
         createdTime: createdDate.toTimeString().substring(0, 8),
         deadline: new Date(item.deadline),

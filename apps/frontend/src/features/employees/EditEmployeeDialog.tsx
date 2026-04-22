@@ -16,7 +16,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select.tsx";
-import type { Employee } from "@/lib/types.ts";
+import type { Employee, Persona } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 import { toast } from "sonner";
 
@@ -109,7 +109,7 @@ export function EditEmployeeDialog({ content, open, onOpenChange, onSave }: Prop
                         <Label className="my-2">Persona</Label>
                         <Select
                             defaultValue={content.persona}
-                            onValueChange={(value) => setModified((prev) => ({ ...prev, persona: value }))}
+                            onValueChange={(value) => setModified((prev) => ({ ...prev, persona: value as Persona }))}
                         >
                             <SelectTrigger className="bg-secondary">
                                 <SelectValue placeholder="Select Persona" />
