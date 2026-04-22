@@ -29,7 +29,7 @@ function ViewEmployees() {
     const [deleteTarget, setDeleteTarget] = useState<Employee | null>(null);
     const [addOpen, setAddOpen] = useState(false);  // <-- new
     const {user} = useUser();
-    const [sort, toggleSort] = useSortState<"id" | "firstName" | "lastName" | "persona" | "userName">({column: "id", direction: "asc"});
+    const [sort, toggleSort] = useSortState<"id" | "firstName" | "lastName" | "persona">({column: "id", direction: "asc"});
     const [searchTerm, setSearchTerm] = useState("");
     const { getAccessTokenSilently } = useAuth0();
 
@@ -63,7 +63,6 @@ function ViewEmployees() {
             e.lastName.toLowerCase().includes(query) ||
             concatName.toLowerCase().includes(query) ||
             e.persona.toLowerCase().includes(query) ||
-            (e.login?.userName ?? "").toLowerCase().includes(query) ||
             e.id.toString().includes(query)
         );
     });
