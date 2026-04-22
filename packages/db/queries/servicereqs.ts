@@ -3,20 +3,41 @@ import {prisma} from "../lib/prisma";
 import {Helper} from "./helper";
 
 export class ServiceReqs {
-    public static async queryAllServiceReqs(): Promise<p.ServiceRequest[]> {
-        return prisma.serviceRequest.findMany({})
+    private static readonly employeeSelect = {
+        id: true,
+        firstName: true,
+        lastName: true,
+        persona: true,
+        profilePhotoURI: true,
+    } as const;
+
+    public static async queryAllServiceReqs() {
+        return prisma.serviceRequest.findMany({
+            include: {
+                owner: { select: ServiceReqs.employeeSelect },
+                assignee: { select: ServiceReqs.employeeSelect },
+            },
+        });
     }
 
-    public static async queryAssignedServiceReqs(): Promise<p.ServiceRequest[]> {
+    public static async queryAssignedServiceReqs() {
         return prisma.serviceRequest.findMany({
-            where: {assigneeId: {not: null}}
-        })
+            where: { assigneeId: { not: null } },
+            include: {
+                owner: { select: ServiceReqs.employeeSelect },
+                assignee: { select: ServiceReqs.employeeSelect },
+            },
+        });
     }
 
-    public static async queryServiceReqsByAssigned(id: number): Promise<p.ServiceRequest[]> {
+    public static async queryServiceReqsByAssigned(id: number) {
         return prisma.serviceRequest.findMany({
-            where: {assigneeId: id}
-        })
+            where: { assigneeId: id },
+            include: {
+                owner: { select: ServiceReqs.employeeSelect },
+                assignee: { select: ServiceReqs.employeeSelect },
+            },
+        });
     }
 
     public static async createServiceReq(

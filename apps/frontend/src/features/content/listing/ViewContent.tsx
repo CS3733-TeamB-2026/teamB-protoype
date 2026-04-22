@@ -72,6 +72,7 @@ import {invalidateFileCacheById} from "@/features/content/previews/file-cache.ts
 import {useAuth0} from "@auth0/auth0-react"
 import {highlight} from "@/lib/highlight.tsx";
 import {formatLabel, formatName} from "@/lib/utils.ts";
+import { EmployeeAvatar } from "@/components/shared/EmployeeAvatar.tsx";
 import {toast} from "sonner";
 import type { ContentItem, BookmarkRecord, ContentStatus, ContentType, Persona, UrlPreview } from "@/lib/types.ts";
 import { ALL_CATEGORIES } from "@/lib/mime.ts";
@@ -859,8 +860,10 @@ function ViewContent() {
                                                         {/* This section just defines all the little label
                                                         cells in the top of the previewer */}
                                                         {/* owner */}
-                                                        <TableCell className="hidden sm:table-cell text-foreground">
-                                                            {formatName(item.owner)}
+                                                        <TableCell className="hidden sm:table-cell">
+                                                            {item.owner
+                                                                ? <EmployeeAvatar employee={item.owner} size="sm" />
+                                                                : <span className="text-muted-foreground">—</span>}
                                                         </TableCell>
                                                         {/* status */}
                                                         <TableCell className="hidden sm:table-cell text-center">
