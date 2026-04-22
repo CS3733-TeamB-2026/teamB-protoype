@@ -141,7 +141,7 @@ function ProfileSettings() {
                                     name="firstName"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>First name</FormLabel>
+                                            <FormLabel>First name <span className="text-destructive">*</span></FormLabel>
                                             <FormControl>
                                                 <Input placeholder="First Name" {...field} />
                                             </FormControl>
@@ -154,7 +154,7 @@ function ProfileSettings() {
                                     name="lastName"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Last name</FormLabel>
+                                            <FormLabel>Last name <span className="text-destructive">*</span></FormLabel>
                                             <FormControl>
                                                 <Input placeholder="Last Name" {...field} />
                                             </FormControl>

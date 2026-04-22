@@ -29,6 +29,7 @@ import { useAuth0 } from "@auth0/auth0-react"
 import { formatLabel } from "@/lib/utils.ts"
 import type { Employee, Persona } from "@/lib/types.ts"
 import { toast } from "sonner";
+import { useEmployeeNameTaken } from "./use-employee-name-taken";
 
 interface AddEmployeeDialogProps {
     open: boolean
@@ -60,9 +61,9 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
     const [email, setEmail] = React.useState("")
     const [id, setID] = React.useState("")
     const [takenIds, setTakenIds] = useState<Set<number>>(new Set())
-    const [takenNames, setTakenNames] = useState<Set<string>>(new Set())
     const [errors, setErrors] = useState<Record<string, string>>({})
     const { getAccessTokenSilently } = useAuth0()
+    const checkNameTaken = useEmployeeNameTaken(open);
 
     useEffect(() => {
         if (!open) return;
@@ -73,9 +74,7 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
                 if (!res.ok) return;
                 const employees: Employee[] = await res.json();
                 const taken = new Set(employees.map(e => e.id));
-                const names = new Set(employees.map(e => `${e.firstName.trim().toLowerCase()}|${e.lastName.trim().toLowerCase()}`));
                 setTakenIds(taken);
-                setTakenNames(names);
                 setID(String(lowestAvailableId(taken)));
                 setErrors(prev => ({ ...prev, id: "" }));
             } catch {
@@ -84,20 +83,14 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
         })();
     }, [open, getAccessTokenSilently]);
 
-    const validateName = (first: string, last: string): string => {
-        if (!first.trim() || !last.trim()) return "";
-        const key = `${first.trim().toLowerCase()}|${last.trim().toLowerCase()}`;
-        return takenNames.has(key) ? "An employee with this name already exists." : "";
-    };
-
     const handleFirstNameChange = (value: string) => {
         setFirstName(value);
-        setErrors(p => ({ ...p, firstName: "", lastName: validateName(value, lastName) }));
+        setErrors(p => ({ ...p, firstName: "", lastName: checkNameTaken(value, lastName) }));
     };
 
     const handleLastNameChange = (value: string) => {
         setLastName(value);
-        setErrors(p => ({ ...p, lastName: validateName(firstName, value) }));
+        setErrors(p => ({ ...p, lastName: checkNameTaken(firstName, value) }));
     };
 
     const handleIdChange = (value: string) => {
@@ -126,7 +119,7 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
     const handleSubmit = async () => {
         const newErrors: Record<string, string> = {};
         if (!firstName.trim()) newErrors.firstName = "First name is required.";
-        const nameErr = validateName(firstName, lastName);
+        const nameErr = checkNameTaken(firstName, lastName);
         if (!lastName.trim()) newErrors.lastName = "Last name is required.";
         else if (nameErr) newErrors.lastName = nameErr;
         const idErr = validateId(id, takenIds);
