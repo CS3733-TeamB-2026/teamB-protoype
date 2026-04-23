@@ -87,7 +87,7 @@ export function fromServiceReqItem(item: ServiceReq): ServiceReqFormValues {
         id: item.id,
         name: item.name,
         ownerId: item.ownerId,
-        assigneeId: item.assigneeId,
+        assigneeId: item.assigneeId ?? undefined,
         type: item.type as "reviewClaim" | "requestAdjuster" | "checkClaim" | "none",
         createdDate: createdDate,
         createdTime: createdDate.toTimeString().substring(0, 8),
