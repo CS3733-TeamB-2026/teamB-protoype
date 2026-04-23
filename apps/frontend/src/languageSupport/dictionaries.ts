@@ -50,6 +50,7 @@ export const en_us: Record<TranslationKey, string> = {
     'sidebar.viewEmployees': "View Employees",
     'sidebar.manageEmployees': "Manage Employees",
     'sidebar.team': "Team B - D26",
+    'sidebar.servicereqs': "Service Requests",
 
     'home.header': "Hanover Insurance - Content Management Application",
     'home.subheader': "CS3733 Team B D26",
