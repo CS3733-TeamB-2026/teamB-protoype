@@ -18,7 +18,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select.tsx";
-import type { Employee, Persona } from "@/lib/types.ts";
+import type { Employee } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
