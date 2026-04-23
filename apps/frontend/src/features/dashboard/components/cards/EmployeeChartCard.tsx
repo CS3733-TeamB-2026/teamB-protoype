@@ -21,6 +21,9 @@ const chartConfig = {
     count: { label: "Employees" },
     underwriter: { label: "Underwriters"},
     businessAnalyst: { label: "Business Analysts"},
+    actuarialAnalyst: { label: "Actuarial Analysts"},
+    EXLOperator: { label: "EXL Operator"},
+    businessOps: { label: "Business Ops"},
     admin: { label: "Administrators"},
 } satisfies ChartConfig;
 
@@ -64,11 +67,11 @@ function EmployeeChartCard() {
     const chartData = Object.entries(counts).map(([persona, count], i) => ({
         persona,
         count,
-        fill: `var(--chart-${i + 1})`,
+        fill: `var(--chart-${ i === 5 ? 3 : (i % 5) + 1 })`,
     }));
 
     return (
-        <Card className="shadow-lg hover:scale-101 transition-transform sm:col-span-1 flex flex-col">
+        <Card className="border-t-secondary border-t-4 shadow-lg hover:scale-101 transition-transform sm:col-span-1 flex flex-col">
             <CardHeader className="items-center pb-0">
                 <CardTitle className="capitalize text-2xl font-semibold">Department Breakdown</CardTitle>
                 <CardDescription>Current headcount by department.</CardDescription>

@@ -10,15 +10,16 @@ import {
 } from "@/components/ui/popover.tsx"
 import { Separator } from "@/components/ui/separator.tsx"
 //import LoginDialog from "@/dialogs/LoginDialog.tsx"
-import { UserIcon, Settings, LogOut, LayoutDashboard} from "lucide-react"
+import { UserIcon, Settings, LogOut, LayoutDashboard, Languages} from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAuth0 } from "@auth0/auth0-react"
 import { useUser } from "@/hooks/use-user.ts"
+import { useAvatarUrl } from "@/hooks/use-avatar-url"
 import {useLocale} from "@/languageSupport/localeContext.tsx";
 import {useTranslation} from "@/languageSupport/useTranslation.ts";
 import DisclaimerAlert from "@/components/layout/DisclaimerAlert"
-import React, { useState } from "react";
-import DarkmodeButton from "@/components/layout/DarkmodeButton"
+import {useState} from "react";
+import React from "react";
 
 const LOCALES = [
     { code: "en_us", label: "English" },
@@ -38,6 +39,7 @@ function Navbar() {
     const { isAuthenticated, loginWithRedirect, logout } = useAuth0();
 
     const {user} = useUser();
+    const avatarUrl = useAvatarUrl(user?.id, user?.profilePhotoURI);
     const { locale, setLocale } = useLocale();
     const { ts } = useTranslation(locale);
 
@@ -63,8 +65,6 @@ function Navbar() {
                         <img src={logo} alt="logo" className="shrink-0 h-10 w-auto brightness-0 invert ml-3 mr-2" />
                     </Link>
 
-                    <DarkmodeButton/>
-
                     <DisclaimerAlert />
                 </div>
 
@@ -84,13 +84,8 @@ function Navbar() {
                                         { isAuthenticated ? user?.firstName + " " + user?.lastName : ts('nav.login')}
                                     </span>
                                     <Avatar className="cursor-pointer w-10 h-10 ">
-                                        {
-                                            user?.profilePhotoURI?
-                                                <AvatarImage src={user?.profilePhotoURI} />
-                                                :
-                                                <AvatarFallback className="bg-accent text-primary-foreground">{isAuthenticated ? " " + user?.firstName[0] + user?.lastName[0] : <UserIcon />}</AvatarFallback>
-                                        }
-
+                                        <AvatarImage src={avatarUrl} />
+                                        <AvatarFallback className="bg-accent text-primary-foreground">{isAuthenticated ? `${user?.firstName[0]}${user?.lastName[0]}` : <UserIcon />}</AvatarFallback>
                                     </Avatar>
                                 </button>
 
@@ -105,12 +100,8 @@ function Navbar() {
                                 <div className="flex flex-col gap-3">
                                     <div className="flex items-center gap-3">
                                         <Avatar className="cursor-pointer w-10 h-10 ">
-                                            {
-                                                user?.profilePhotoURI?
-                                                    <AvatarImage src={user?.profilePhotoURI} />
-                                                    :
-                                                    <AvatarFallback className="bg-accent text-primary-foreground">{isAuthenticated ? " " + user?.firstName[0] + user?.lastName[0] : <UserIcon />}</AvatarFallback>
-                                            }
+                                            <AvatarImage src={avatarUrl} />
+                                            <AvatarFallback className="bg-accent text-primary-foreground">{isAuthenticated ? `${user?.firstName[0]}${user?.lastName[0]}` : <UserIcon />}</AvatarFallback>
                                         </Avatar>
                                         <div>
                                             <p className="font-semibold text-lg text-primary">{user?.firstName + " " + user?.lastName}</p>
@@ -175,9 +166,9 @@ function Navbar() {
                 {/* only allows one category to be open at a time */}
                 <Popover onOpenChange={(open) => { if (!open) setOpenCategory(null); }}>
                     <PopoverTrigger asChild>
-                        <button className="group cursor-pointer p-2 ml-4 mr-1 rounded-full active:scale-[0.96] transition-all duration-200">
-                            <Settings
-                                size={22}
+                        <button className="group cursor-pointer p-2 ml-3 rounded-full active:scale-[0.96] transition-all duration-200">
+                            <Languages
+                                size={28}
                                 className="opacity-70 transition-all duration-200 group-hover:opacity-100"
                             />
                         </button>
@@ -213,26 +204,6 @@ function Navbar() {
                                             {label}
                                         </button>
                                     ))}
-                                </div>
-                            )}
-
-                            <Separator />
-
-                            {/* Theme Settings */}
-                            <button
-                                onClick={() => toggleCategory("theme")}
-                                className="flex items-center justify-between w-full px-3 py-2 rounded-lg text-sm font-semibold transition-colors hover:bg-secondary"
-                            >{ts('themes')}
-                                <ChevronDown
-                                    size={14}
-                                    className={`transition-transform duration-200 ${openCategory === "theme" ? "rotate-180" : ""}`}
-                                />
-                            </button>
-
-                            {/* list themes here */}
-                            {openCategory === "theme" && (
-                                <div className="flex flex-col gap-0.5 pl-3 pb-1">
-                                    <p>Placeholder</p>
                                 </div>
                             )}
 

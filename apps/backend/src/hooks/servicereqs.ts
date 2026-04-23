@@ -25,6 +25,7 @@ export const createServiceReq = async (req: req, res: res) => {
     const payload = req.body;
     try {
         const result = await q.ServiceReqs.createServiceReq(
+            payload.name,
             payload.created,
             payload.deadline,
             payload.type,
@@ -32,6 +33,36 @@ export const createServiceReq = async (req: req, res: res) => {
             payload.ownerId
         );
         return res.status(201).json(result);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+}
+
+export const updateServiceReq = async (req: req, res: res) => {
+    const payload = req.body;
+    try {
+        const result = await q.ServiceReqs.updateServiceReq(
+            payload.id,
+            payload.name,
+            payload.created,
+            payload.deadline,
+            payload.type,
+            payload.assigneeId,
+            payload.ownerId
+        )
+        return res.status(200).json(result);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+}
+
+export const deleteServiceReq = async (req: req, res: res) => {
+    const payload = req.body;
+    try {
+        const result = await q.ServiceReqs.deleteServiceReq(payload.id)
+        return res.status(204).json(result);
     } catch (error) {
         console.error(error);
         return res.status(500).end();

@@ -20,12 +20,14 @@ export type Category =
     | "pdf"
     | "document"
     | "spreadsheet"
+    | "presentation"
     | "image"
     | "audio"
     | "video"
     | "archive"
     | "code"
-    | "other";
+    | "other"
+    | "link";
 
 /**
  * Which renderer {@link FilePreview} should use for a file.
@@ -96,15 +98,15 @@ export const ALLOWED_TYPES: readonly AllowedType[] = [
     {
         mimeType: "application/vnd.ms-powerpoint",
         extensions: ["ppt"],
-        category: "other",
-        previewMode: "none",
+        category: "presentation",
+        previewMode: "microsoft",
         label: "PowerPoint (legacy)",
     },
     {
         mimeType:
             "application/vnd.openxmlformats-officedocument.presentationml.presentation",
         extensions: ["pptx"],
-        category: "other",
+        category: "presentation",
         previewMode: "microsoft",
         label: "PowerPoint",
     },
@@ -328,13 +330,11 @@ export function stripExtension(filename: string): string {
 
 // ---------- Colors ----------
 
-export const CATEGORY_COLORS: Record<
-    Category | "link",
-    { badge: string; icon: string }
-> = {
+export const CATEGORY_COLORS: Record<Category, { badge: string; icon: string }> = {
     pdf:          { badge: "bg-red-100 text-red-700",         icon: "text-red-500" },
     document:     { badge: "bg-blue-100 text-blue-700",      icon: "text-blue-500" },
     spreadsheet:  { badge: "bg-emerald-100 text-emerald-700", icon: "text-emerald-500" },
+    presentation: { badge: "bg-orange-100 text-orange-700",  icon: "text-orange-500" },
     image:        { badge: "bg-pink-100 text-pink-700",   icon: "text-pink-500" },
     audio:        { badge: "bg-teal-100 text-teal-700",    icon: "text-teal-500" },
     video:        { badge: "bg-indigo-100 text-indigo-700", icon: "text-indigo-500" },
@@ -343,6 +343,8 @@ export const CATEGORY_COLORS: Record<
     other:        { badge: "bg-secondary text-secondary-foreground", icon: "text-muted-foreground" },
     link:         { badge: "bg-violet-100 text-violet-700", icon: "text-violet-500" },
 };
+
+export const ALL_CATEGORIES = Object.keys(CATEGORY_COLORS) as Category[];
 
 // ---------- Upload validation ----------
 

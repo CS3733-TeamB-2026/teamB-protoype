@@ -3,6 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {useEffect, useState} from "react";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import SettingsSection from "../SettingsSection";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import {
     AvatarImage,
     AvatarFallback,
 } from "@/components/ui/avatar";
+import { useAvatarUrl } from "@/hooks/use-avatar-url";
 
 const profileSchema = z.object({
     firstName: z
@@ -39,6 +41,7 @@ type ProfileFormValues = z.infer<typeof profileSchema>
 function ProfileSettings() {
 
     const { user, updateUser, uploadProfilePhoto } = useUser();
+    const avatarUrl = useAvatarUrl(user?.id, user?.profilePhotoURI);
     const [uploading, setUploading] = useState(false);
 
     const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,7 +110,7 @@ function ProfileSettings() {
                         <CardContent className="pt-6 space-y-6">
                             <div className="flex items-center gap-6 pb-2">
                                 <Avatar className="h-20 w-20">
-                                    <AvatarImage src={user?.profilePhotoURI ?? undefined} />
+                                    <AvatarImage src={avatarUrl} />
                                     <AvatarFallback className="text-lg">
                                         {user?.firstName?.[0]}{user?.lastName?.[0]}
                                     </AvatarFallback>
@@ -123,7 +126,8 @@ function ProfileSettings() {
                                         disabled={uploading}
                                     />
                                     <Button asChild variant="outline" disabled={uploading}>
-                                        <label htmlFor="profile-photo-upload" className="cursor-pointer">
+                                        <label htmlFor="profile-photo-upload" className="cursor-pointer flex items-center gap-2">
+                                            {uploading && <Loader2 className="w-4 h-4 animate-spin" />}
                                             {uploading ? "Uploading..." : "Change photo"}
                                         </label>
                                     </Button>
@@ -139,7 +143,7 @@ function ProfileSettings() {
                                     name="firstName"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>First name</FormLabel>
+                                            <FormLabel>First name <span className="text-destructive">*</span></FormLabel>
                                             <FormControl>
                                                 <Input placeholder="First Name" {...field} />
                                             </FormControl>
@@ -152,7 +156,7 @@ function ProfileSettings() {
                                     name="lastName"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Last name</FormLabel>
+                                            <FormLabel>Last name <span className="text-destructive">*</span></FormLabel>
                                             <FormControl>
                                                 <Input placeholder="Last Name" {...field} />
                                             </FormControl>
@@ -180,12 +184,22 @@ function ProfileSettings() {
                             </div>
                         </CardContent>
 
-                        <CardFooter className="justify-end border-t pt-4">
+                        <CardFooter className="justify-end gap-2 border-t pt-4">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                disabled={!form.formState.isDirty || form.formState.isSubmitting}
+                                onClick={() => form.reset({ firstName: user?.firstName ?? "", lastName: user?.lastName ?? "" })}
+                            >
+                                Reset
+                            </Button>
                             <Button
                                 type="submit"
                                 disabled={!form.formState.isDirty || form.formState.isSubmitting}
                             >
-                                {form.formState.isSubmitting ? "Saving..." : "Save changes"}
+                                {form.formState.isSubmitting
+                                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+                                    : "Save changes"}
                             </Button>
                         </CardFooter>
                     </Card>

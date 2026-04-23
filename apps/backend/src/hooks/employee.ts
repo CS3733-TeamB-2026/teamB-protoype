@@ -60,17 +60,6 @@ export const uploadProfilePhoto = async (req: req, res: res)=> {
     }
 }
 
-export const getAllEmployeesWithLogin = async (req: req, res: res) => {
-    try {
-        const employees = await q.Employee.queryAllEmployeesWithLogin();
-        const signed = await Promise.all(employees.map(signPhotoUrl));
-        return res.status(200).json(signed);
-    } catch (error) {
-        console.error(error);
-        return res.status(500).end();
-    }
-}
-
 export const getMe = async (req: req, res: res) => {
 
     const auth0Id = req.auth?.payload.sub;
@@ -151,9 +140,7 @@ export const createEmployeeWithAuth0 = async (req: req, res: res) => {
 
     try {
 
-        console.log("Calling create auth")
         const auth0Id = await createAuth0User(username, password, email);
-        console.log("Calling create auth")
 
         if (!auth0Id) {
             return res.status(500).json({ error: "Failed to create Auth0 user" });

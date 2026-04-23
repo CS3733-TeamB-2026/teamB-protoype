@@ -4,11 +4,13 @@ import {
     Dialog,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Label } from "@/components/ui/label.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
+import { Field, FieldLabel, FieldDescription } from "@/components/ui/field.tsx";
 import {
     Select,
     SelectContent,
@@ -19,6 +21,8 @@ import {
 import type { Employee } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import { useEmployeeNameTaken } from "./use-employee-name-taken";
 
 interface Props {
     content: Employee;
@@ -27,91 +31,143 @@ interface Props {
     onSave: (updated: Employee) => void;
 }
 
+type FormErrors = { firstName?: string; lastName?: string };
+
 export function EditEmployeeDialog({ content, open, onOpenChange, onSave }: Props) {
     const [modified, setModified] = useState<Employee>(content);
+    const [errors, setErrors] = useState<FormErrors>({});
+    const [submitting, setSubmitting] = useState(false);
     const { getAccessTokenSilently } = useAuth0();
+    const checkNameTaken = useEmployeeNameTaken(open, content.id);
+
+    function validate(): FormErrors {
+        const errs: FormErrors = {};
+        if (!modified.firstName.trim()) errs.firstName = "First name is required.";
+        if (!modified.lastName.trim()) errs.lastName = "Last name is required.";
+        else {
+            const nameErr = checkNameTaken(modified.firstName, modified.lastName);
+            if (nameErr) errs.lastName = nameErr;
+        }
+        return errs;
+    }
 
     async function handleApply() {
-        if (!modified.firstName.trim() || !modified.lastName.trim() || !modified.persona.trim()) {
-            toast.error("Fields may not be empty.");
+        const errs = validate();
+        if (Object.keys(errs).length > 0) {
+            setErrors(errs);
             return;
         }
 
-        const token = await getAccessTokenSilently();
-        const empRes = await fetch("/api/employee", {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify({
-                id: modified.id,
-                firstName: modified.firstName,
-                lastName: modified.lastName,
-                persona: modified.persona,
-            }),
-        });
-
-        if (modified.login?.userName) {
+        setSubmitting(true);
+        try {
             const token = await getAccessTokenSilently();
-            await fetch("/api/login", {
+            const res = await fetch("/api/employee", {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
+                    Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
-                    userName: modified.login.userName,
-                    employeeID: modified.id,
+                    id: modified.id,
+                    firstName: modified.firstName,
+                    lastName: modified.lastName,
+                    persona: modified.persona,
                 }),
             });
-        }
 
-        if (empRes.ok) {
+            if (!res.ok) {
+                toast.error("Failed to save changes.");
+                return;
+            }
+
             onSave(modified);
             onOpenChange(false);
+        } finally {
+            setSubmitting(false);
         }
     }
 
+    function handleClose(o: boolean) {
+        if (submitting) return;
+        if (!o) {
+            setModified(content);
+            setErrors({});
+        }
+        onOpenChange(o);
+    }
+
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
+        <Dialog open={open} onOpenChange={handleClose}>
+            <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>Modify User</DialogTitle>
-                    <DialogDescription className="text-muted-foreground">
+                    <DialogTitle className="text-2xl text-primary text-center">Modify User</DialogTitle>
+                    <DialogDescription className="text-muted-foreground mb-2 text-center">
                         Modify user values here.
                     </DialogDescription>
+                    <Separator />
                 </DialogHeader>
-                <div className="flex flex-col gap-2">
-                    <div>
-                        <Label className="my-2">Employee ID</Label>
-                        <Input defaultValue={content.id} className="bg-secondary" disabled />
+
+                <div className="flex flex-col gap-3 mx-2">
+                    <Field>
+                        <FieldLabel className="text-primary text-lg">Employee ID</FieldLabel>
+                        <Input value={content.id} className="h-8 text-sm!" disabled />
+                    </Field>
+
+                    <Separator className="bg-primary my-1" />
+
+                    <div className="flex flex-col gap-1">
+                        <div className="flex gap-4">
+                            <Field className="flex-1">
+                                <FieldLabel className="text-primary text-lg">
+                                    First Name <span className="text-destructive">*</span>
+                                </FieldLabel>
+                                <Input
+                                    value={modified.firstName}
+                                    className="h-8 text-sm!"
+                                    placeholder="Enter first name"
+                                    onChange={(e) => {
+                                        const first = e.target.value;
+                                        setModified((prev) => ({ ...prev, firstName: first }));
+                                        setErrors((prev) => ({
+                                            ...prev,
+                                            firstName: "",
+                                            lastName: checkNameTaken(first, modified.lastName),
+                                        }));
+                                    }}
+                                />
+                                {errors.firstName && <FieldDescription className="text-destructive">{errors.firstName}</FieldDescription>}
+                            </Field>
+                            <Field className="flex-1">
+                                <FieldLabel className="text-primary text-lg">
+                                    Last Name <span className="text-destructive">*</span>
+                                </FieldLabel>
+                                <Input
+                                    value={modified.lastName}
+                                    className="h-8 text-sm!"
+                                    placeholder="Enter last name"
+                                    onChange={(e) => {
+                                        const last = e.target.value;
+                                        setModified((prev) => ({ ...prev, lastName: last }));
+                                        setErrors((prev) => ({
+                                            ...prev,
+                                            lastName: checkNameTaken(modified.firstName, last),
+                                        }));
+                                    }}
+                                />
+                            </Field>
+                        </div>
+                        {errors.lastName && <FieldDescription className="text-destructive">{errors.lastName}</FieldDescription>}
                     </div>
-                    <div>
-                        <Label className="my-2">First Name</Label>
-                        <Input
-                            defaultValue={content.firstName}
-                            className="bg-secondary"
-                            placeholder="Enter Employee First Name"
-                            onChange={(e) => setModified((prev) => ({ ...prev, firstName: e.target.value }))}
-                        />
-                    </div>
-                    <div>
-                        <Label className="my-2">Last Name</Label>
-                        <Input
-                            defaultValue={content.lastName}
-                            className="bg-secondary"
-                            placeholder="Enter Employee Last Name"
-                            onChange={(e) => setModified((prev) => ({ ...prev, lastName: e.target.value }))}
-                        />
-                    </div>
-                    <div>
-                        <Label className="my-2">Persona</Label>
+
+                    <Separator className="bg-primary my-1" />
+
+                    <Field>
+                        <FieldLabel className="text-primary text-lg">Job Position</FieldLabel>
                         <Select
-                            defaultValue={content.persona}
-                            onValueChange={(value) => setModified((prev) => ({ ...prev, persona: value }))}
+                            value={modified.persona}
+                            onValueChange={(value) => setModified((prev) => ({ ...prev, persona: value as Employee["persona"] }))}
                         >
-                            <SelectTrigger className="bg-secondary">
+                            <SelectTrigger className="h-8 text-sm!">
                                 <SelectValue placeholder="Select Persona" />
                             </SelectTrigger>
                             <SelectContent>
@@ -123,29 +179,30 @@ export function EditEmployeeDialog({ content, open, onOpenChange, onSave }: Prop
                                 <SelectItem value="admin">Admin</SelectItem>
                             </SelectContent>
                         </Select>
-                    </div>
-                    <div>
-                        <Label className="my-2">Username</Label>
-                        <Input
-                            disabled
-                            defaultValue={content.login?.userName}
-                            className="bg-secondary"
-                            placeholder="Enter Employee Username"
-                            onChange={(e) =>
-                                setModified((prev) => ({
-                                    ...prev,
-                                    login: { ...prev.login, userName: e.target.value },
-                                }))
-                            }
-                        />
-                    </div>
-                    <Button
-                        className="mt-5 hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground w-20 mx-auto rounded-lg px-2 py-1"
-                        onClick={handleApply}
-                    >
-                        Apply
-                    </Button>
+                    </Field>
                 </div>
+
+                <DialogFooter>
+                    <div className="flex flex-col items-center gap-4 w-full">
+                        <Separator />
+                        <div className="flex flex-row gap-2">
+                            <Button
+                                variant="outline"
+                                disabled={submitting}
+                                onClick={() => { setModified(content); setErrors({}); }}
+                            >
+                                Reset
+                            </Button>
+                            <Button
+                                className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground rounded-lg px-4 py-1"
+                                disabled={submitting}
+                                onClick={handleApply}
+                            >
+                                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                            </Button>
+                        </div>
+                    </div>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
     );

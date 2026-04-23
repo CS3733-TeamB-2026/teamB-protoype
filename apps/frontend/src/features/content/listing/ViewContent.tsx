@@ -72,8 +72,10 @@ import {invalidateFileCacheById} from "@/features/content/previews/file-cache.ts
 import {useAuth0} from "@auth0/auth0-react"
 import {highlight} from "@/lib/highlight.tsx";
 import {formatLabel, formatName} from "@/lib/utils.ts";
+import { EmployeeAvatar } from "@/components/shared/EmployeeAvatar.tsx";
 import {toast} from "sonner";
-import type { ContentItem, BookmarkRecord, DocType, ContentStatus, ContentType, Persona, UrlPreview } from "@/lib/types.ts";
+import type { ContentItem, BookmarkRecord, ContentStatus, ContentType, Persona, UrlPreview } from "@/lib/types.ts";
+import { ALL_CATEGORIES } from "@/lib/mime.ts";
 import {usePageTitle} from "@/hooks/use-page-title.ts";
 import {ConfirmCheckoutDialog} from "@/features/content/forms/ConfirmCheckoutDialog.tsx";
 import {ConfirmCheckinDialog} from "@/features/content/forms/ConfirmCheckinDialog.tsx";
@@ -158,6 +160,8 @@ function ViewContent() {
 
     //whenever a new filter is applied it just resets the pages to page 1 to make sure content is always displayed
     useEffect(() => {
+        //TODO: fix!!
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentPage(1);
     }, [activeTab, searchTerm, advancedFilters, sort]);
 
@@ -470,16 +474,6 @@ function ViewContent() {
         setEditOpen(true);
     };
 
-    const docTypeLabels: Record<DocType, string> = {
-        office: "Office (PDF, Word..)",
-        audio: "Audio",
-        video: "Video",
-        images: "Images",
-        html: "HTML",
-        zip: "ZIP",
-        "plain text": "Plain Text",
-        links: "Links"
-    }
 
     // Total column count used for colSpan on the expanded detail rows.
     const NUM_COLS = 8;
@@ -741,8 +735,7 @@ function ViewContent() {
                                         <div>
                                             <p className="font-medium mb-2">{ts('file.type')}</p>
                                             <div className="flex flex-col gap-1.5">
-                                                {Object.entries(docTypeLabels).map(([key]) => {
-                                                    const dt = key as DocType
+                                                {ALL_CATEGORIES.map((dt) => {
 
                                                     return (
                                                         <label key={dt} className="flex items-center gap-2">
@@ -810,7 +803,7 @@ function ViewContent() {
                                     </TableHeader>
                                     <TableBody>
                                         {/* pre sorts the content */}
-                                        {paginatedContent.map((item) => {
+                                        {paginatedContent.map((item, index) => {
                                             const isFile = !!item.fileURI;
                                             const isLink = !!item.linkURL;
                                             const originalFilename = isFile
@@ -826,7 +819,7 @@ function ViewContent() {
                                             return (
                                                 <React.Fragment key={item.id}>
                                                     <TableRow
-                                                        className={`cursor-pointer ${item.checkedOutById === user!.id ? "bg-accent/10 border-l-4 border-l-accent" : ""} ${isExpanded ? "bg-muted/80 hover:bg-muted/90" : ""} ${isCheckedOut(item) ? "opacity-50" : ""}`}
+                                                        className={`cursor-pointer ${item.checkedOutById === user!.id ? "bg-accent/10 border-l-4 border-l-accent" : ""} ${index % 2 === 0 ? "bg-muted/15" : ""} ${isExpanded ? "bg-muted/80 hover:bg-muted/90" : ""} ${isCheckedOut(item) ? "opacity-50" : ""}`}
                                                         onClick={() => toggleExpand(item.id)}
                                                         tabIndex={0}
                                                         onKeyDown={(e) => {
@@ -867,8 +860,10 @@ function ViewContent() {
                                                         {/* This section just defines all the little label
                                                         cells in the top of the previewer */}
                                                         {/* owner */}
-                                                        <TableCell className="hidden sm:table-cell text-foreground">
-                                                            {formatName(item.owner)}
+                                                        <TableCell className="hidden sm:table-cell">
+                                                            {item.owner
+                                                                ? <EmployeeAvatar employee={item.owner} size="sm" />
+                                                                : <span className="text-muted-foreground">—</span>}
                                                         </TableCell>
                                                         {/* status */}
                                                         <TableCell className="hidden sm:table-cell text-center">
@@ -1055,23 +1050,49 @@ function ViewContent() {
                                                                 </TableRow>
                                                             )}
                                                     {/* link preview */}
-                                                    {isExpanded && isLink && (
-                                                        <TableRow className="hover:bg-transparent">
-                                                            <TableCell colSpan={NUM_COLS} className="p-0">
-                                                                <UrlPreviewLink
-                                                                    href={item.linkURL!}
-                                                                    status={
-                                                                        !(item.id in linkPreviews)
-                                                                            ? "loading"
-                                                                            : linkPreviews[item.id] === null
-                                                                                ? "unreachable"
-                                                                                : "ok"
-                                                                    }
-                                                                    preview={linkPreviews[item.id] ?? null}
-                                                                />
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    )}
+                                                    {isExpanded && isLink && (() => {
+                                                        const url = item.linkURL!;
+                                                        //checks for the v= tag on all youtube videos followed by an identifier
+                                                        const youtubeMatch = url.match(/[?&]v=([a-zA-Z0-9_-]+)/);
+
+                                                        //youtube link embedding
+                                                        if (youtubeMatch) {
+                                                            return (
+                                                                <TableRow className="hover:bg-transparent">
+                                                                    <TableCell colSpan={NUM_COLS} className="p-0">
+                                                                        <iframe
+                                                                            //youtube embed data
+                                                                            src={`https://www.youtube.com/embed/${youtubeMatch[1]}`}
+                                                                            className="w-full border-0"
+                                                                            style={{ minHeight: "400px" }}
+                                                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                                            allowFullScreen
+                                                                            title={url}
+                                                                        />
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            );
+                                                        }
+
+                                                        //normal link preview
+                                                        return (
+                                                            <TableRow className="hover:bg-transparent">
+                                                                <TableCell colSpan={NUM_COLS} className="p-0">
+                                                                    <UrlPreviewLink
+                                                                        href={url}
+                                                                        status={
+                                                                            !(item.id in linkPreviews)
+                                                                                ? "loading"
+                                                                                : linkPreviews[item.id] === null
+                                                                                    ? "unreachable"
+                                                                                    : "ok"
+                                                                        }
+                                                                        preview={linkPreviews[item.id] ?? null}
+                                                                    />
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        );
+                                                    })()}
                                                     {/* file preview */}
                                                     {isExpanded && isFile && (
                                                         <TableRow className="hover:bg-transparent">

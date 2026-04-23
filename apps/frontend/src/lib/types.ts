@@ -1,22 +1,39 @@
-// Matches the Content model from Prisma (with joined owner)
+export type Persona =
+    | "underwriter"
+    | "businessAnalyst"
+    | "actuarialAnalyst"
+    | "EXLOperator"
+    | "businessOps"
+    | "admin";
+
+export type ContentType =
+    | "reference"
+    | "workflow";
+
+export type ContentStatus =
+    | "new"
+    | "inProgress"
+    | "complete";
+
+export type Employee = {
+    id: number;
+    firstName: string;
+    lastName: string;
+    persona: Persona;
+    profilePhotoURI: string;
+}
+
+// Matches the Content model from Prisma (with joined owner/checkedOutBy)
 export type ContentItem = {
     id: number;
     displayName: string;
     linkURL: string | null;
     fileURI: string | null;
     ownerId: number | null;
-    owner: {
-        id: number;
-        firstName: string;
-        lastName: string;
-    } | null;
+    owner: Employee | null;
     checkedOutById: number | null;
     checkedOutAt: string | null;
-    checkedOutBy: {
-        id: number;
-        firstName: string;
-        lastName: string;
-    } | null;
+    checkedOutBy: Employee | null;
     lastModified: string;
     expiration: string | null;
     contentType: ContentType;
@@ -25,31 +42,9 @@ export type ContentItem = {
     tags: string[];
 }
 
-// Y'all I couldn't find a way to do it as a part of ContentItem, sorry. -Ricardo
-export type DocType =
-    | "office"
-    | "plain text"
-    | "video"
-    | "audio"
-    | "html"
-    | "zip"
-    | "images"
-    | "links";
-
 export type BookmarkRecord = {
     bookmarkerId: number;
     bookmarkedContentId: number;
-}
-
-export type Employee = {
-    firstName: string;
-    lastName: string;
-    id: number;
-    persona: Persona;
-    profilePhotoURI: string;
-    login?: {
-        userName: string;
-    };
 }
 
 export type UrlPreview = {
@@ -62,9 +57,15 @@ export type UrlPreview = {
 
 export type ServiceReq = {
     id: number;
+    name: string;
     created: string;
     deadline: string;
     type: string;
-    assignee: number;
-    owner: number;
+    ownerId: number;
+    owner: Employee;
+    assigneeId: number | null;
+    assignee: Employee | null;
 }
+
+/** Alias kept for backwards compatibility with edit/form helpers. */
+export type ServiceReqItem = ServiceReq;

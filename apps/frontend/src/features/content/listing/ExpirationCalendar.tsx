@@ -1,10 +1,9 @@
 import { useEffect, useState, useMemo } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useUser } from "@/hooks/use-user.ts";
-import { Hero } from "@/components/shared/Hero.tsx";
 import { ContentIcon } from "@/features/content/components/ContentIcon.tsx";
 import { getCategory, getOriginalFilename } from "@/lib/mime.ts";
-import { CalendarClock, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
 import { Button } from "@/components/ui/button.tsx";
 import type { ContentItem } from "@/lib/types.ts";
@@ -80,10 +79,10 @@ function ExpirationCalendar() {
     }
 
     function urgencyColor(days: number): string {
-        if (days <= 0) return "bg-destructive text-white";
-        if (days <= 7) return "bg-amber-600 text-white";
-        if (days <= 14) return "bg-yellow-500 text-white";
-        if (days <= 30) return "bg-slate-100 text-black";
+        if (days <= 0) return "bg-destructive/75 text-white";
+        if (days <= 7) return "bg-amber-600/75 text-white";
+        if (days <= 14) return "bg-yellow-500/75 text-white";
+        if (days <= 30) return "bg-slate-100/75 text-black";
         return "bg-slate-100/70 text-black";
     }
 
@@ -112,13 +111,8 @@ function ExpirationCalendar() {
 
     return (
         <>
-            <Hero
-                icon={CalendarClock}
-                title="Expiration Calendar"
-                description="Track upcoming content expirations for your persona"
-            />
 
-            <div className="max-w-6xl mx-auto my-8 px-4">
+            <div className="max-w-6xl mx-auto my-6 px-4">
                 {loading && (
                     <div className="flex items-center justify-center py-24 gap-3 text-muted-foreground">
                         <Loader2 className="w-6 h-6 animate-spin" />

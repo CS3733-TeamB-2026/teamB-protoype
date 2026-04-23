@@ -34,7 +34,7 @@ export class Helper {
         }
     }
 
-    public static requestHelper(_type: string | null): p.RequestType | null {
+    public static requestHelper(_type: string | null): p.RequestType {
         if (_type == "reviewClaim") {
             return p.RequestType.reviewClaim
         } else if (_type == "requestAdjuster") {
@@ -42,8 +42,7 @@ export class Helper {
         } else if (_type == "checkClaim") {
             return p.RequestType.checkClaim
         } else {
-            console.log(_type)
-            return null
+            throw new Error(`Unknown request type: ${_type}`);
         }
     }
 }

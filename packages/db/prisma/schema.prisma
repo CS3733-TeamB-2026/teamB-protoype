@@ -12,17 +12,6 @@ datasource db {
   schemas  = ["public"]
 }
 
-//TODO: will not be used once Auth0 is online
-model Login {
-  userName     String
-  passwordHash String
-
-  employee   Employee @relation(fields: [employeeID], references: [id], onDelete: Cascade)
-  employeeID Int      @id
-
-  @@schema("public")
-}
-
 model Employee {
   id              Int     @id
   auth0Id         String? @unique
@@ -37,10 +26,10 @@ model Employee {
   ownedRequests    ServiceRequest[] @relation("OwnedBy")
   assignedRequests ServiceRequest[] @relation("AssignedTo")
 
-  login       Login?
   bookmarks   Bookmark[]
   collections Collection[]
 
+  @@unique([firstName, lastName])
   @@schema("public")
 }
 
@@ -71,7 +60,6 @@ model Content {
   @@schema("public")
 }
 
-//TODO: delete once we know we aren't using this
 model ServiceRequest {
   id      Int      @id @default(autoincrement())
   owner   Employee @relation("OwnedBy", fields: [ownerId], references: [id])
@@ -83,6 +71,7 @@ model ServiceRequest {
   created  DateTime    @default(now())
   deadline DateTime?
   type     RequestType
+  name     String?
 
   @@schema("public")
 }

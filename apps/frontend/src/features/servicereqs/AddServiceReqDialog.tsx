@@ -1,200 +1,111 @@
-"use client"
-import { ChevronDown } from "lucide-react"
-import * as React from "react"
-import { useState } from "react"
+import { Button } from "@/components/ui/button.tsx";
+import { useUser } from "@/hooks/use-user.ts";
 import {
     Dialog,
     DialogContent,
+    DialogDescription, DialogFooter,
     DialogHeader,
     DialogTitle,
-} from "@/components/ui/dialog.tsx"
-import {
-    Field,
-    FieldLabel,
-} from "@/components/ui/field.tsx"
-import { Input } from "@/components/ui/input.tsx"
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuGroup,
-    DropdownMenuLabel,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx"
-import { Button } from "@/components/ui/button.tsx"
-import { Separator } from "@/components/ui/separator.tsx"
-import { useAuth0 } from "@auth0/auth0-react"
-import { formatLabel } from "@/lib/utils.ts"
-import type { ServiceReq } from "@/lib/types.ts"
+} from "@/components/ui/dialog.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
+import { toast } from "sonner";
+import { ServiceReqFormFields } from "@/features/servicereqs/ServiceReqFormFields.tsx";
+import { initialValues, buildServiceReqJSON } from "@/features/servicereqs/servicereq-form.ts";
+import type { ServiceReq } from "@/lib/types.ts";
+import { useAuth0 } from "@auth0/auth0-react";
+import { useServiceReqForm } from "@/features/servicereqs/use-servicereq-form.tsx";
 
-interface AddServiceReqDialog {
-    open: boolean
-    onOpenChange: (open: boolean) => void
-    onSave: (created: ServiceReq) => void
+interface Props {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    onSave: (created: ServiceReq) => void;
 }
 
-export function AddServiceReqDialog({ open, onOpenChange, onSave }: AddServiceReqDialog) {
-    const [type, setType] = useState("Select service req type")
-    const [created, setCreated] = React.useState("")
-    const [deadline, setDeadline] = React.useState("")
-    const [assignee, setAssignee] = React.useState("")
-    const [owner, setOwner] = React.useState("")
-    const [submitResult, setSubmitResult] = useState<"success" | "error" | null>(null)
-    const { getAccessTokenSilently } = useAuth0()
+/**
+ * Dialog for creating a new content item via `POST /api/content`.
+ *
+ * After a successful save, calls `onSave` with the server-returned item so the
+ * parent (`ViewContent`) can append it to the list and immediately fetch its
+ * link preview without waiting for the next poll.
+ *
+ * The form is reset after each successful submission so the dialog is clean if
+ * the user opens it again. `formKey` forces `ContentFormFields` to remount on
+ * reset, clearing any local state inside that component (e.g., file picker errors).
+ */
+export function AddServiceReqDialog({ open, onOpenChange, onSave }: Props) {
+    const user = useUser();
+    const { getAccessTokenSilently } = useAuth0();
 
-    const resetForm = () => {
-        setType("Select service req type")
-        setCreated("")
-        setDeadline("")
-        setAssignee("")
-        setOwner("")
-        setSubmitResult(null)
-    }
+    const { values, patch, setSubmitted, errors, hasErrors, formKey, reset } =
+        useServiceReqForm(initialValues(user.user?.id ?? 0));
 
-    const handleOpenChange = (next: boolean) => {
-        if (!next) resetForm()
-        onOpenChange(next)
-    }
+    const handleReset = () => reset(initialValues(user.user!.id));
 
     const handleSubmit = async () => {
-        {/*TODO: This forces the user to enter all the fields, should probably do this on backend later */}
-        if (!created || !deadline || !owner || !assignee || type === "Select service req type") {
-            setSubmitResult("error")
-            return
-        }
+        if (!user) return;
+        setSubmitted(true);
+        if (hasErrors) return;
+
         try {
+            const json = buildServiceReqJSON(values);
             const token = await getAccessTokenSilently();
-            const empRes =  await fetch('/api/servicereqs', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    created: created,
-                    deadline: deadline,
-                    type: type,
-                    assignee: assignee,
-                    owner: owner,
-                })
-            })
-            if (!empRes.ok) {
-                setSubmitResult("error");
-                return
-            }
-
-            setSubmitResult("success")
-
-            resetForm()
+            const res = await fetch("/api/servicereqs", {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                body: json
+            });
+            if (!res.ok) { toast.error("Error creating service request."); return; }
+            const created: ServiceReq = await res.json();
+            onSave(created);
+            onOpenChange(false);
+            reset(initialValues(created.id));
+            toast.success("Service Request created successfully!");
         } catch {
-            setSubmitResult("error")
+            toast.error("Error creating service request.");
         }
-    }
+    };
 
     return (
-        <Dialog open={open} onOpenChange={handleOpenChange}>
-            <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-2xl max-h-[80vh] flex flex-col">
                 <DialogHeader>
-                    <DialogTitle className="text-primary text-2xl font-semibold">Add Service Req</DialogTitle>
+                    <DialogTitle className="text-2xl">Add Service Request</DialogTitle>
+                    <DialogDescription className="text-muted-foreground mb-2">
+                        Add a new work service request.
+                    </DialogDescription>
+                    <Separator />
                 </DialogHeader>
 
-                <Separator className="bg-primary" />
+                <div className="overflow-y-auto flex-1 flex flex-col gap-2 min-w-0 pr-2">
 
-                <div className="flex flex-wrap items-end gap-4">
-                    <Field className="flex-2">
-                        <FieldLabel className="text-primary" htmlFor="add-created">Created</FieldLabel>
-                        <Input
-                            value={created}
-                            onChange={(e) => setCreated(e.target.value)}
-                            id="add-created"
-                            type="text"
-                            placeholder="Enter created date"
-                        />
-                    </Field>
-                    <Field className="flex-2">
-                        <FieldLabel className="text-primary" htmlFor="add-deadline">Deadline</FieldLabel>
-                        <Input
-                            value={deadline}
-                            onChange={(e) => setDeadline(e.target.value)}
-                            id="add-deadline"
-                            type="text"
-                            placeholder="Enter deadline date"
-                        />
-                    </Field>
+                    <ServiceReqFormFields
+                        key={formKey}
+                        values={values}
+                        patch={patch}
+                        errors={errors}
+                        showLastModified
+                    />
+
                 </div>
 
-                <Separator className="bg-primary" />
-
-                <Field>
-                    <FieldLabel className="text-primary">Service Request Type</FieldLabel>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="bg-background justify-between">
-                                {type === "Select service req type" ? "Select service req type" : formatLabel(type)}
-                                <ChevronDown className="h-4 w-4" />
+                <DialogFooter>
+                    <div className="flex flex-col justify-center! items-center gap-4 mt-0 w-full">
+                        <Separator />
+                        <div className="flex flex-row gap-2">
+                            <Button variant="outline" onClick={handleReset}>
+                                Reset
                             </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            <DropdownMenuGroup>
-                                <DropdownMenuLabel>Job Position</DropdownMenuLabel>
-                                <DropdownMenuRadioGroup value={type} onValueChange={setType}>
-                                    <DropdownMenuRadioItem value="reviewClaim">Review Claim</DropdownMenuRadioItem>
-                                    <DropdownMenuRadioItem value="requestAdjuster">Request Adjuster</DropdownMenuRadioItem>
-                                    <DropdownMenuRadioItem value="checkClaim">Check Claim</DropdownMenuRadioItem>
-                                </DropdownMenuRadioGroup>
-                            </DropdownMenuGroup>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </Field>
-
-                <Separator className="bg-primary" />
-
-                <div className="flex flex-wrap items-end gap-4">
-                    <Field className="flex-1">
-                        <FieldLabel className="text-primary" htmlFor="add-assignee">Assignee ID</FieldLabel>
-                        <Input
-                            value={assignee}
-                            onChange={(e) => setAssignee(e.target.value)}
-                            id="add-assignee"
-                            type="text"
-                            placeholder="Enter assignee id"
-                        />
-                    </Field>
-                    <Field className="flex-2">
-                        <FieldLabel className="text-primary" htmlFor="add-owner">Owner ID</FieldLabel>
-                        <Input
-                            value={owner}
-                            onChange={(e) => setOwner(e.target.value)}
-                            id="add-owner"
-                            type="text"
-                            placeholder="Enter owner id"
-                        />
-                    </Field>
-                </div>
-
-                {submitResult === "success" && (
-                    <div className="rounded-md bg-chart-1 border-chart-2 px-3 py-2">
-                        Service Request created successfully!
+                            <Button
+                                className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground rounded-lg px-4 py-1"
+                                onClick={handleSubmit}
+                                disabled={hasErrors}
+                            >
+                                Submit
+                            </Button>
+                        </div>
                     </div>
-                )}
-                {submitResult === "error" && (
-                    <div className="rounded-md bg-destructive border-destructive text-background px-3 py-2">
-                        Error creating service req. Please fill in all fields and try again.
-                    </div>
-                )}
-
-                <div className="flex justify-center pt-2">
-                    <Button
-                        onClick={handleSubmit}
-                        className="bg-accent text-lg text-white hover:bg-accent-dark hover:text-white px-10 py-6"
-                        variant="outline"
-                        size="lg"
-                    >
-                        Submit
-                    </Button>
-                </div>
+                </DialogFooter>
             </DialogContent>
         </Dialog>
-    )
+    );
 }

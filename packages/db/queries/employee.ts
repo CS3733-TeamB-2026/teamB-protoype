@@ -13,12 +13,12 @@ export class Employee {
         })
     }
 
-    public static async updateEmployee(id: number, _firstName: string, _lastName: string, _persona: string | null): Promise<void> {
+    public static async updateEmployee(id: number, _firstName: string, _lastName: string, _persona: string | null): Promise<p.Employee> {
         const _personaTyped: p.Persona | null = Helper.personaHelper(_persona)
         if (_personaTyped === null) {
             throw new Error("No persona type provided")
         }
-        await prisma.employee.update({
+        return prisma.employee.update({
             where: {id: id},
             data: {
                 firstName: _firstName,
@@ -40,12 +40,12 @@ export class Employee {
         })
     }
 
-    public static async createEmployee(_id: number, _firstName: string, _lastName: string, _persona: string | null): Promise<void> {
+    public static async createEmployee(_id: number, _firstName: string, _lastName: string, _persona: string | null): Promise<p.Employee> {
         const _personaTyped: p.Persona | null = Helper.personaHelper(_persona)
         if (_personaTyped === null) {
             throw new Error("No persona type provided")
         }
-        await prisma.employee.create({
+        return prisma.employee.create({
             data: {
                 id: _id,
                 firstName: _firstName,
@@ -55,31 +55,18 @@ export class Employee {
         })
     }
 
-    public static async createEmployeeWithAuth0(_id: number, _firstName: string, _lastName: string, _persona: string | null, _auth0Id: string): Promise<void> {
+    public static async createEmployeeWithAuth0(_id: number, _firstName: string, _lastName: string, _persona: string | null, _auth0Id: string): Promise<p.Employee> {
         const _personaTyped: p.Persona | null = Helper.personaHelper(_persona)
         if (_personaTyped === null) {
             throw new Error("No persona type provided")
         }
-        await prisma.employee.create({
+        return prisma.employee.create({
             data: {
                 id: _id,
                 firstName: _firstName,
                 lastName: _lastName,
                 persona: _personaTyped,
                 auth0Id: _auth0Id,
-            }
-        })
-    }
-
-    public static async queryAllEmployeesWithLogin() {
-        return prisma.employee.findMany({
-            orderBy: { id: 'asc' },
-            include: {
-                login: {
-                    select: {
-                        userName: true
-                    }
-                }
             }
         })
     }

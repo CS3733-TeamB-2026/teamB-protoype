@@ -2,18 +2,19 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Loader2, ChevronsUpDown } from "lucide-react";
-import { EmployeeCard, type EmployeeCardData } from "@/components/shared/EmployeeCard.tsx";
+import { EmployeeCard } from "@/components/shared/EmployeeCard.tsx";
+import type { Employee } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react"
 
 interface Props {
     selectedId: number | null;
-    onSelect: (id: number | null, employee: EmployeeCardData | null) => void;
+    onSelect: (id: number | null, employee: Employee | null) => void;
     disabled?: boolean;
 }
 
 export function EmployeePicker({ selectedId, onSelect, disabled = false }: Props) {
     const [open, setOpen] = useState(false);
-    const [employees, setEmployees] = useState<EmployeeCardData[]>([]);
+    const [employees, setEmployees] = useState<Employee[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const containerRef = useRef<HTMLDivElement>(null);
@@ -25,7 +26,7 @@ export function EmployeePicker({ selectedId, onSelect, disabled = false }: Props
             try {
                 const token = await getAccessTokenSilently();
                 const res = await fetch("/api/employee/all", { headers: { Authorization: `Bearer ${token}` } });
-                const data: EmployeeCardData[] = await res.json();
+                const data: Employee[] = await res.json();
                 setEmployees(data);
             } finally {
                 setLoading(false);
