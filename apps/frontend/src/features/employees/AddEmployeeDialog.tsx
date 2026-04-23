@@ -1,19 +1,13 @@
-"use client"
-import { ChevronDown } from "lucide-react"
-import * as React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect } from "react";
+import { ChevronDown, Loader2 } from "lucide-react";
 import {
     Dialog,
     DialogContent, DialogDescription, DialogFooter,
     DialogHeader,
     DialogTitle,
-} from "@/components/ui/dialog.tsx"
-import {
-    Field,
-    FieldLabel,
-    FieldDescription,
-} from "@/components/ui/field.tsx"
-import { Input } from "@/components/ui/input.tsx"
+} from "@/components/ui/dialog.tsx";
+import { Field, FieldLabel, FieldDescription } from "@/components/ui/field.tsx";
+import { Input } from "@/components/ui/input.tsx";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -22,50 +16,36 @@ import {
     DropdownMenuRadioGroup,
     DropdownMenuRadioItem,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu.tsx"
-import { Button } from "@/components/ui/button.tsx"
-import { Separator } from "@/components/ui/separator.tsx"
-import { Loader2 } from "lucide-react"
-import { useAuth0 } from "@auth0/auth0-react"
-import { formatLabel } from "@/lib/utils.ts"
-import type { Employee, Persona } from "@/lib/types.ts"
+} from "@/components/ui/dropdown-menu.tsx";
+import { Button } from "@/components/ui/button.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
+import { useAuth0 } from "@auth0/auth0-react";
+import { formatLabel } from "@/lib/utils.ts";
+import type { Employee } from "@/lib/types.ts";
 import { toast } from "sonner";
 import { useEmployeeNameTaken } from "./use-employee-name-taken";
+import {
+    type EmployeeFormValues,
+    initialValues,
+    getErrors,
+    buildPayload,
+    toEmployee,
+    lowestAvailableId,
+} from "./employee-form";
 
-interface AddEmployeeDialogProps {
-    open: boolean
-    onOpenChange: (open: boolean) => void
-    onSave: (created: Employee) => void
+interface Props {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    onSave: (created: Employee) => void;
 }
 
-function lowestAvailableId(taken: Set<number>): number {
-    let n = 1;
-    while (taken.has(n)) n++;
-    return n;
-}
-
-function validateId(value: string, taken: Set<number>): string {
-    if (!value) return "ID is required.";
-    const n = Number(value);
-    if (!Number.isInteger(n) || n < 1) return "Must be a positive whole number.";
-    if (taken.has(n)) return "This ID is already in use.";
-    return "";
-}
-
-export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDialogProps) {
-    const [targetPersona, setTargetPersona] = useState("Select job position")
-    const [firstName, setFirstName] = React.useState("")
-    const [lastName, setLastName] = React.useState("")
-    const [userName, setUserName] = React.useState("")
-    const [password, setPassword] = React.useState("")
-    const [confirmPassword, setConfirmPassword] = React.useState("")
-    const [email, setEmail] = React.useState("")
-    const [id, setID] = React.useState("")
-    const [takenIds, setTakenIds] = useState<Set<number>>(new Set())
-    const [errors, setErrors] = useState<Record<string, string>>({})
-    const [submitting, setSubmitting] = useState(false)
-    const [loadingIds, setLoadingIds] = useState(false)
-    const { getAccessTokenSilently } = useAuth0()
+export function AddEmployeeDialog({ open, onOpenChange, onSave }: Props) {
+    const [values, setValues] = useState<EmployeeFormValues>(initialValues);
+    const [takenIds, setTakenIds] = useState<Set<number>>(new Set());
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [submitting, setSubmitting] = useState(false);
+    const [loadingIds, setLoadingIds] = useState(false);
+    const { getAccessTokenSilently } = useAuth0();
     const checkNameTaken = useEmployeeNameTaken(open);
 
     useEffect(() => {
@@ -79,7 +59,7 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
                 const employees: Employee[] = await res.json();
                 const taken = new Set(employees.map(e => e.id));
                 setTakenIds(taken);
-                setID(String(lowestAvailableId(taken)));
+                setValues(prev => ({ ...prev, id: String(lowestAvailableId(taken)) }));
                 setErrors(prev => ({ ...prev, id: "" }));
             } catch {
                 // non-fatal — user can still type manually
@@ -89,104 +69,57 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
         })();
     }, [open, getAccessTokenSilently]);
 
-    const handleFirstNameChange = (value: string) => {
-        setFirstName(value);
-        setErrors(p => ({ ...p, firstName: "", lastName: checkNameTaken(value, lastName) }));
-    };
+    function set<K extends keyof EmployeeFormValues>(field: K, value: EmployeeFormValues[K]) {
+        setValues(prev => ({ ...prev, [field]: value }));
+    }
 
-    const handleLastNameChange = (value: string) => {
-        setLastName(value);
-        setErrors(p => ({ ...p, lastName: checkNameTaken(firstName, value) }));
-    };
-
-    const handleIdChange = (value: string) => {
-        setID(value);
-        const err = validateId(value, takenIds);
-        setErrors(prev => ({ ...prev, id: err }));
-    };
+    function clearError(field: string) {
+        setErrors(prev => ({ ...prev, [field]: "" }));
+    }
 
     const resetForm = () => {
-        setTargetPersona("Select job position")
-        setFirstName("")
-        setLastName("")
-        setUserName("")
-        setPassword("")
-        setConfirmPassword("")
-        setEmail("")
-        setID(takenIds.size > 0 ? String(lowestAvailableId(takenIds)) : "")
-        setErrors({})
-    }
+        setValues(initialValues(takenIds.size > 0 ? takenIds : undefined));
+        setErrors({});
+    };
 
     const handleOpenChange = (next: boolean) => {
-        if (submitting) return
-        if (!next) resetForm()
-        onOpenChange(next)
-    }
+        if (submitting) return;
+        if (!next) resetForm();
+        onOpenChange(next);
+    };
 
     const handleSubmit = async () => {
-        const newErrors: Record<string, string> = {};
-        if (!firstName.trim()) newErrors.firstName = "First name is required.";
-        const nameErr = checkNameTaken(firstName, lastName);
-        if (!lastName.trim()) newErrors.lastName = "Last name is required.";
-        else if (nameErr) newErrors.lastName = nameErr;
-        const idErr = validateId(id, takenIds);
-        if (idErr) newErrors.id = idErr;
-        if (targetPersona === "Select job position") newErrors.persona = "Job position is required.";
-        if (!userName.trim()) newErrors.userName = "Username is required.";
-        if (!email.trim()) newErrors.email = "Email is required.";
-        if (!password) newErrors.password = "Password is required.";
-        if (!confirmPassword) newErrors.confirmPassword = "Please confirm your password.";
-        else if (password !== confirmPassword) newErrors.confirmPassword = "Passwords do not match.";
-
-        if (Object.keys(newErrors).length > 0) {
-            setErrors(newErrors);
+        const errs = getErrors(values, takenIds, checkNameTaken);
+        if (Object.keys(errs).length > 0) {
+            setErrors(errs);
             return;
         }
 
-        setSubmitting(true)
+        setSubmitting(true);
         try {
             const token = await getAccessTokenSilently();
-            const empRes = await fetch('/api/employee/auth', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    firstName,
-                    lastName,
-                    id: parseInt(id),
-                    persona: targetPersona,
-                    username: userName,
-                    email,
-                    password,
-                })
-            })
-            if (!empRes.ok) {
+            const res = await fetch("/api/employee/auth", {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify(buildPayload(values)),
+            });
+            if (!res.ok) {
                 toast.error("Failed to create employee.");
-                return
+                return;
             }
-
             toast.success("Employee created successfully!");
+            onSave(toEmployee(values));
             onOpenChange(false);
-            onSave({
-                firstName,
-                lastName,
-                id: parseInt(id),
-                persona: targetPersona as Persona,
-                profilePhotoURI: ""
-            })
         } catch {
             toast.error("Error creating employee.");
         } finally {
-            setSubmitting(false)
+            setSubmitting(false);
         }
-    }
+    };
 
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
-
                 <DialogHeader>
                     <DialogTitle className="text-2xl text-primary text-center">Add Employee</DialogTitle>
                     <DialogDescription className="text-muted-foreground mb-2 text-center">
@@ -196,7 +129,6 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
                 </DialogHeader>
 
                 <div className="overflow-y-auto flex-1 flex flex-col gap-2 min-w-0 pr-2 mx-2">
-
                     <div className="flex flex-wrap items-start gap-4">
                         <div className="flex flex-wrap flex-2 gap-4 flex-col min-w-0">
                             <div className="flex flex-wrap gap-4">
@@ -205,12 +137,15 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
                                         First Name <span className="text-destructive">*</span>
                                     </FieldLabel>
                                     <Input
-                                        value={firstName}
-                                        onChange={(e) => handleFirstNameChange(e.target.value)}
                                         id="add-first-name"
-                                        type="text"
+                                        value={values.firstName}
                                         placeholder="Enter first name"
                                         className="h-8 text-sm!"
+                                        onChange={(e) => {
+                                            const first = e.target.value;
+                                            set("firstName", first);
+                                            setErrors(prev => ({ ...prev, firstName: "", lastName: checkNameTaken(first, values.lastName) }));
+                                        }}
                                     />
                                     {errors.firstName && <FieldDescription className="text-destructive">{errors.firstName}</FieldDescription>}
                                 </Field>
@@ -219,12 +154,15 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
                                         Last Name <span className="text-destructive">*</span>
                                     </FieldLabel>
                                     <Input
-                                        value={lastName}
-                                        onChange={(e) => handleLastNameChange(e.target.value)}
                                         id="add-last-name"
-                                        type="text"
+                                        value={values.lastName}
                                         placeholder="Enter last name"
                                         className="h-8 text-sm!"
+                                        onChange={(e) => {
+                                            const last = e.target.value;
+                                            set("lastName", last);
+                                            setErrors(prev => ({ ...prev, lastName: checkNameTaken(values.firstName, last) }));
+                                        }}
                                     />
                                 </Field>
                             </div>
@@ -236,13 +174,21 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
                             </FieldLabel>
                             <div className="relative">
                                 <Input
-                                    value={id}
-                                    onChange={(e) => handleIdChange(e.target.value)}
                                     id="add-employee-id"
                                     type="number"
+                                    value={values.id}
                                     placeholder="000000"
                                     className="h-8 text-sm!"
                                     disabled={loadingIds}
+                                    onChange={(e) => {
+                                        const v = e.target.value;
+                                        set("id", v);
+                                        const n = Number(v);
+                                        if (!v) clearError("id");
+                                        else if (!Number.isInteger(n) || n < 1) setErrors(prev => ({ ...prev, id: "Must be a positive whole number." }));
+                                        else if (takenIds.has(n)) setErrors(prev => ({ ...prev, id: "This ID is already in use." }));
+                                        else clearError("id");
+                                    }}
                                 />
                                 {loadingIds && <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />}
                             </div>
@@ -259,14 +205,17 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" className="bg-background justify-between h-8 text-sm">
-                                    {targetPersona === "Select job position" ? "Select job position" : formatLabel(targetPersona)}
+                                    {values.persona ? formatLabel(values.persona) : "Select job position"}
                                     <ChevronDown className="h-4 w-4" />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent>
                                 <DropdownMenuGroup>
                                     <DropdownMenuLabel>Job Position</DropdownMenuLabel>
-                                    <DropdownMenuRadioGroup value={targetPersona} onValueChange={(v) => { setTargetPersona(v); setErrors(p => ({ ...p, persona: "" })); }}>
+                                    <DropdownMenuRadioGroup
+                                        value={values.persona}
+                                        onValueChange={(v) => { set("persona", v); clearError("persona"); }}
+                                    >
                                         <DropdownMenuRadioItem value="underwriter">Underwriter</DropdownMenuRadioItem>
                                         <DropdownMenuRadioItem value="businessAnalyst">Business Analyst</DropdownMenuRadioItem>
                                         <DropdownMenuRadioItem value="actuarialAnalyst">Actuarial Analyst</DropdownMenuRadioItem>
@@ -288,43 +237,42 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
                                 Username <span className="text-destructive">*</span>
                             </FieldLabel>
                             <Input
-                                value={userName}
-                                onChange={(e) => { setUserName(e.target.value); setErrors(p => ({ ...p, userName: "" })); }}
                                 id="add-username"
-                                type="text"
+                                value={values.username}
                                 placeholder="Enter username"
                                 className="h-8 text-sm!"
+                                onChange={(e) => { set("username", e.target.value); clearError("username"); }}
                             />
-                            {errors.userName && <FieldDescription className="text-destructive">{errors.userName}</FieldDescription>}
+                            {errors.username && <FieldDescription className="text-destructive">{errors.username}</FieldDescription>}
                         </Field>
                         <Field className="flex-1">
                             <FieldLabel className="text-primary text-lg" htmlFor="add-email">
                                 Email <span className="text-destructive">*</span>
                             </FieldLabel>
                             <Input
-                                value={email}
-                                onChange={(e) => { setEmail(e.target.value); setErrors(p => ({ ...p, email: "" })); }}
                                 id="add-email"
                                 type="email"
+                                value={values.email}
                                 placeholder="Enter email"
                                 className="h-8 text-sm!"
+                                onChange={(e) => { set("email", e.target.value); clearError("email"); }}
                             />
                             {errors.email && <FieldDescription className="text-destructive">{errors.email}</FieldDescription>}
                         </Field>
                     </div>
-                    <div />
+
                     <div className="flex flex-wrap items-start gap-4">
                         <Field className="flex-1">
                             <FieldLabel className="text-primary text-lg" htmlFor="add-password">
                                 Password <span className="text-destructive">*</span>
                             </FieldLabel>
                             <Input
-                                value={password}
-                                onChange={(e) => { setPassword(e.target.value); setErrors(p => ({ ...p, password: "" })); }}
                                 id="add-password"
                                 type="password"
+                                value={values.password}
                                 placeholder="Enter password"
                                 className="h-8 text-sm!"
+                                onChange={(e) => { set("password", e.target.value); clearError("password"); }}
                             />
                             {errors.password && <FieldDescription className="text-destructive">{errors.password}</FieldDescription>}
                         </Field>
@@ -333,17 +281,16 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
                                 Confirm Password <span className="text-destructive">*</span>
                             </FieldLabel>
                             <Input
-                                value={confirmPassword}
-                                onChange={(e) => { setConfirmPassword(e.target.value); setErrors(p => ({ ...p, confirmPassword: "" })); }}
                                 id="add-confirm-password"
                                 type="password"
+                                value={values.confirmPassword}
                                 placeholder="Enter password again"
                                 className="h-8 text-sm!"
+                                onChange={(e) => { set("confirmPassword", e.target.value); clearError("confirmPassword"); }}
                             />
                             {errors.confirmPassword && <FieldDescription className="text-destructive">{errors.confirmPassword}</FieldDescription>}
                         </Field>
                     </div>
-
                 </div>
 
                 <DialogFooter>
@@ -363,8 +310,7 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: AddEmployeeDia
                         </div>
                     </div>
                 </DialogFooter>
-
             </DialogContent>
         </Dialog>
-    )
+    );
 }

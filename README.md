@@ -1,6 +1,6 @@
 # teamB-prototype
 
-A content management system for an insurance company. Employees with assigned personas (`underwriter`, `businessAnalyst`, `admin`) can view, add, edit, and delete content items (uploaded files or external URLs), manage other employees, and track service requests. A checkout/check-in locking mechanism prevents simultaneous edits on the same content item.
+A content management system for an insurance company. Employees with role-based personas can view, add, edit, and delete content items (uploaded files or external URLs), manage other employees, and track service requests. A checkout/check-in locking mechanism prevents simultaneous edits on the same content item.
 
 ---
 
@@ -36,10 +36,11 @@ apps/
   frontend/src/
     pages/                 Top-level routed pages
     features/              Feature modules (content, dashboard, settings, employees, servicereqs)
-    components/            Shared presentational components
-    context/               UserContext, ThemeProvider
+    components/            Shared presentational components and layout chrome
+    context/               UserContext, ThemeProvider, Auth0ProviderWithNavigate
     hooks/                 Shared hooks (use-user, use-sort-state, use-avatar-url, etc.)
-    lib/                   types, mime helpers, cn(), formatters
+    lib/                   types, mime helpers, cn(), formatters, caches
+    languageSupport/       i18n (LocaleProvider, useTranslation, dictionaries)
 
 packages/db/
   prisma/schema.prisma     DB schema
@@ -48,8 +49,6 @@ packages/db/
   queries/                 Data-access classes: Content, Employee, Login,
                            Bookmark, ServiceReqs, Bucket, Helper
 ```
-
-Route handlers in `apps/backend/src/hooks/` are intentionally thin — they parse the request, call a static method on the matching `packages/db/queries/*` class, and return JSON. Business logic (locking, validation, persona mapping) lives in the query classes.
 
 ---
 
@@ -82,7 +81,7 @@ The Auth0 tenant (`dev-s638hh1d5ry67sv6.us.auth0.com`) and API audience (`https:
 
 ### Authentication
 
-Every route under `/api` except `POST /api/preview` requires a valid Auth0 JWT:
+Every route under `/api` except `GET /api/preview` requires a valid Auth0 JWT:
 
 ```ts
 // apps/backend/src/app.ts
@@ -170,296 +169,187 @@ Enums (`Persona`, `Status`, `ContentType`, `RequestType`) are mapped from string
 
 Five feature modules live under `apps/frontend/src/features/`: **content**, **dashboard**, **settings**, **employees**, and **servicereqs**. Shared plumbing (context, hooks, UI primitives, types) lives in sibling top-level folders.
 
-### Shared utilities
+### Shared utilities and library
 
-- **`useUser()`** (`hooks/use-user.ts` / `context/UserContext`) — current employee: `firstName`, `lastName`, `persona`, `profilePhotoURI`, `userName`. Context also exposes `updateUser` and `uploadProfilePhoto`.
-- **`useTheme()`** (`context/ThemeProvider`) — `light | dark | system`
-- **`usePageTitle(title)`** — sets the browser tab title
-- **`useSortState` / `applySortState`** — column sorting used by every table
-- **`useAvatarUrl`** — resolves a signed avatar URL per employee row
-- **`cn()`** (`lib/utils`) — Tailwind class merger
-- **`toast`** from `sonner` — async success/error notifications
-- **Types** (`lib/types.ts`) — `Employee`, `ContentItem`, etc. `type` aliases only, no `interface`.
+**`lib/`**
+
+- **`lib/utils.ts`** — `cn()` (Tailwind class merger), `formatLabel()` (camelCase → human label, e.g. `"inProgress"` → `"In Progress"`), `formatName()` (employee → `"Last, First"`).
+- **`lib/types.ts`** — canonical TypeScript types: `Employee`, `ContentItem`, `ContentType`, `ContentStatus`, `Persona`, `BookmarkRecord`, `UrlPreview`, `ServiceReq`. All are plain `type` aliases (never `interface`), hand-written to mirror the Prisma schema shapes — nothing imported from generated types.
+- **`lib/mime.ts`** — MIME-type utilities: `categorize`, `CATEGORY_COLORS` (icon and badge color map), `validateFileForUpload`, `stripExtension`, `ALLOWED_ACCEPT_STRING`, `lookupByFilename`, `resolveAllowedType`.
+- **`lib/highlight.tsx`** — search-term highlighting. `highlight(text, query)` returns JSX spans. `findMatches(full, query)` returns `{start, end}[]` ranges. `highlightRange(text, offset, matches)` applies pre-computed ranges to a substring — used when a match spans a concatenated full name and you need to highlight each part separately.
+- **`lib/avatar-cache.ts`** — session-scoped `Map<employeeId, Blob>` for profile photo bytes. Call `invalidateAvatarCache(id)` after uploading a new photo so the next render re-fetches.
+
+**`hooks/`**
+
+- **`useUser()`** (`hooks/use-user.ts` / `context/UserContext`) — current employee: `id`, `firstName`, `lastName`, `persona`, `profilePhotoURI`, `userName`. Context also exposes `updateUser` and `uploadProfilePhoto`.
+- **`useTheme()`** (`context/ThemeProvider`) — `light | dark | system`.
+- **`usePageTitle(title)`** — sets the browser `<title>`.
+- **`useSortState<T>` / `applySortState`** — generic column sort state used by every sortable table.
+- **`useAvatarUrl(id, uri)`** — fetches `GET /api/employee/photo/:id` and caches the blob in `lib/avatar-cache.ts`. Used by `EmployeeAvatar` and any component that needs a per-row signed URL.
+- **`useContentFilters(content, bookmarks, userId, persona)`** — owns all content filtering: search term, active tab (`forYou | all | owned | bookmarks`), and sidebar checkbox filters (status, contentType, persona, tags, docType). Returns `filteredContent`, `activeFilterCount`, and setters. Add new filters here, not in `ViewContent`.
+- **`useIsMobile()`** — `true` below 768 px via `matchMedia`. Used by the sidebar shell.
+
+**`toast`** from `sonner` — async success/error notifications, used throughout.
+
+### Internationalisation (`languageSupport/`)
+
+A minimal runtime i18n system supporting English (`en_us`) and Spanish (`sp_sp`):
+
+- **`localeContext.tsx`** — `LocaleProvider` (mounted in `main.tsx`) and `useLocale()` returning `{ locale, setLocale }`.
+- **`keys.ts`** — `TranslationKey` — string literal union of every translation key.
+- **`dictionaries.ts`** / **`translation.ts`** — per-locale tables and the `ts(key, locale)` lookup.
+- **`useTranslation.ts`** — `useTranslation(locale)` returns `{ ts(key: TranslationKey) }`. Usage: `const { ts } = useTranslation(useLocale().locale)`.
+
+Extend by adding a key to `keys.ts` and entries to `dictionaries.ts`.
+
+### Shared components (`components/shared/`)
+
+- **`EmployeeAvatar`** — avatar with initials fallback and HoverCard tooltip. `size`: `sm | default | lg`.
+- **`EmployeeCard`** — compact name + persona display; used as list rows inside `EmployeePicker`.
+- **`EmployeePicker`** — searchable employee dropdown. Controlled via `selectedId` / `onSelect(id, employee)`. Fetches `/api/employee/all` on mount. Supports `disabled` and a "None" option.
+- **`PersonaBadge`** — badge for a persona value.
+- **`SortableHead<T>`** — generic `<TableHead>` with sort-direction arrow. Pairs with `useSortState`.
+- **`SlidingTabs`** — animated underline tab strip.
+- **`UrlPreviewCard`** — OG metadata card (title, description, image, favicon). Used by `UrlSourceField`; also available standalone.
+- **`UrlPreviewLink`** — link that shows a `UrlPreviewCard` on hover.
+- **`FilePickerCard`** — drag-and-drop / click-to-browse file selection area.
+- **`Hero`** — page-top banner with icon, title, and description.
+
+Layout chrome: `components/layout/` (`AppSidebar`, `Navbar`, `Footer`, `DarkmodeButton`, `DisclaimerAlert`, `SidebarOverlay`).
 
 ### Content feature
 
-The largest feature — everything under `features/content/` plus the two pages that render it: `ViewContent` (listing) and `ViewSingleFile` (full-page viewer).
+The largest feature — everything under `features/content/`.
 
 ```
 features/content/
   forms/
-    content-form.ts          Shared types, validation, FormData builder, XHR helper
+    content-form.ts          Types, validation, FormData builder, xhrFetch
     use-content-form.ts      Hook wrapping form state + deferred validation
-    ContentFormFields.tsx    Form UI shared by Add and Edit dialogs
+    ContentFormFields.tsx    Shared form UI for Add and Edit dialogs
     AddContentDialog.tsx     POST /api/content
     EditContentDialog.tsx    PUT  /api/content
     UrlSourceField.tsx       URL input with live OG-preview card
-    TagInput.tsx             Chip-style tag input with suggestions + create-new
-    ExpirationCalendar.tsx   Full-month calendar of items with expirations
+    ConfirmCheckoutDialog.tsx
+    ConfirmCheckinDialog.tsx
+    ForceCheckinDialog.tsx   Admin-only — release another user's lock
   listing/
+    ViewContent.tsx          Main content list page
     BookmarkedFiles.tsx      Current user's bookmarks (top 5)
     MyFiles.tsx              Items owned by current user (top 5)
     RecentFiles.tsx          Most recently modified items (top 8)
+    ExpirationCalendar.tsx   Full-month calendar of items with expirations
   previews/
     FilePreview.tsx          Inline/full file viewer (PDF, DOCX, images, text…)
+    ViewSingleFile.tsx       Full-page viewer at /file/:id
     file-cache.ts            Session-scoped cache for downloaded file bytes
     preview-cache.ts         Session-scoped cache for URL OG metadata
-  dialogs/
-    ConfirmCheckoutDialog.tsx   Confirm checkout
-    ConfirmCheckinDialog.tsx    Confirm checkin
-    ForceCheckinDialog.tsx      Admin-only — release another user's lock
+  tags/
+    TagInput.tsx             Chip-style tag input with suggestions + create-new
+  bulk/
+    BulkUploadPage.tsx       Multi-file upload at /bulk-upload
   components/
-    ContentIcon.tsx             Lucide icon keyed by file category
-    ContentExtBadge.tsx         Badge showing file extension (or "Link")
-    ContentStatusBadge.tsx      Badge for status
-    ContentTypeBadge.tsx        Badge for contentType
+    ContentIcon.tsx          Lucide icon keyed by file category (uses CATEGORY_COLORS from lib/mime.ts)
+    ContentExtBadge.tsx      Badge showing file extension (or "Link")
+    ContentStatusBadge.tsx   Null-safe status badge; labels via useTranslation
+    ContentTypeBadge.tsx     Same pattern for contentType
 ```
 
-**Content item shape** (`lib/types.ts`):
+`ContentItem` is defined in `lib/types.ts` — hand-written to mirror the Prisma `Content` shape with joined `owner` and `checkedOutBy` relations as `Employee` objects. Key fields: `ownerId`, `checkedOutById` (the raw ID), `checkedOutBy` (the joined employee object).
 
-```ts
-type ContentItem = {
-    id: number;
-    displayName: string;
-    linkURL: string | null;
-    fileURI: string | null;
-    ownerID: number | null;
-    owner: { id: number; firstName: string; lastName: string } | null;
-    checkedOutBy: number | null;
-    checkedOutAt: string | null;
-    checkedOutByEmployee: { id: number; firstName: string; lastName: string } | null;
-    lastModified: string;
-    expiration: string | null;
-    contentType: "reference" | "workflow";
-    targetPersona: "underwriter" | "businessAnalyst" | "admin";
-    status: "new" | "inProgress" | "complete" | null;
-    tags: string[];
-}
-```
+Every item is either a **file** (`fileURI`) or a **link** (`linkURL`), never both. Most UI branches on `item.linkURL ? … : …`.
 
-Every item is either a **file** (stored in Supabase, referenced by `fileURI`) or a **link** (external URL in `linkURL`). Never both — the backend enforces this, and most UI code branches on `item.linkURL ? … : …`.
+#### Checkout / check-in flow
 
-#### Checkout / check-in flow (frontend)
+1. Pencil icon → `ConfirmCheckoutDialog` opens.
+2. Confirm → `POST /api/content/checkout`. If taken, backend returns the holder's name; dialog stays closed.
+3. On success, `EditContentDialog` opens. A 5-second poll compares `data.checkedOutById` to `user.id` as strings. Mismatch = lock lost → dialog closes with toast.
+4. Submit → `PUT /api/content`. `409 { lockReleased: true }` → close + toast.
+5. Cancel/close → `POST /api/content/checkin` (skipped if already expired server-side).
 
-The lock-and-edit dance is the most load-bearing piece of logic in the feature:
+The three confirm dialogs are near-identical `AlertDialog` wrappers with an async `onConfirm` and a local `loading` flag that gates the close handler. `ForceCheckinDialog` is admin-only — it checkins using the current holder's `employeeID`.
 
-1. User clicks the pencil icon on a row → `ConfirmCheckoutDialog` opens.
-2. Confirm → `POST /api/content/checkout` with `{ id, employeeID }`. If another user holds the lock, the backend returns their name and a toast shows; the dialog stays closed.
-3. On success, `EditContentDialog` opens. While open, a 5-second poll re-fetches the item and compares `data.checkedOutBy` to `user.id` **as strings**. If they stop matching, the lock expired or was force-released — the dialog closes and shows a toast.
-4. Apply → `PUT /api/content` with `employeeID` in the body. If the backend returns `409 { lockReleased: true }`, the dialog closes with a toast.
-5. Cancel or close → `POST /api/content/checkin`. Skipped if the lock has already expired server-side.
+#### Add/Edit dialogs and form plumbing
 
-The three confirm dialogs (`ConfirmCheckoutDialog`, `ConfirmCheckinDialog`, `ForceCheckinDialog`) are near-identical AlertDialog wrappers that each take an async `onConfirm` and manage a local `loading` state. `ForceCheckinDialog` is admin-only and releases another user's lock by calling `POST /api/content/checkin` with the current holder's `employeeID`. All three disable their close handler while loading so the user can't dismiss mid-request.
+Both dialogs share `ContentFormFields` (UI), `useContentForm` (state), and `buildContentFormData` + `xhrFetch` (submission):
 
-#### Add/Edit dialogs
+|                        | AddContentDialog              | EditContentDialog                        |
+| ---------------------- | ----------------------------- | ---------------------------------------- |
+| Method                 | `POST /api/content`           | `PUT /api/content`                       |
+| Initial values         | `initialValues(userId, persona)` | `fromContentItem(content)`            |
+| Extra fields on submit | —                             | `id`, `employeeID`                       |
+| Source field required  | yes                           | no (keeps existing file/link)            |
+| 409 handling           | —                             | `{ lockReleased: true }` → close + toast |
 
-Both dialogs share nearly everything: `ContentFormFields` for the UI, `useContentForm` for state, and `buildContentFormData` + `xhrFetch` for submission.
+**`content-form.ts`** — single source of truth:
+- `ContentFormValues` — `contentType` and `status` use `"none"` as a sentinel so `<Select>` can show its placeholder; `dateModified` + `lastModifiedTime` are kept separate and merged into one ISO timestamp by `buildContentFormData`.
+- `initialValues(userId, persona)` / `fromContentItem(item)` — starting values for Add / Edit.
+- `getErrors(values, isEdit)` — returns `{ field: message }`; `isEdit` relaxes the source requirement.
+- `buildContentFormData(values)` — serializes to `FormData`; `tags` is JSON-stringified (FormData can't send arrays; backend does `JSON.parse(payload.tags || "[]")`).
+- `xhrFetch(...)` — XHR wrapper used instead of `fetch` when a file is attached, so upload progress can be tracked and the request can be cancelled mid-flight via an `AbortSignal`.
 
-|                             | AddContentDialog       | EditContentDialog                             |
-| --------------------------- | ---------------------- | --------------------------------------------- |
-| Method                      | `POST /api/content`    | `PUT /api/content`                            |
-| Initial values              | `initialValues(userId, persona)` | `fromContentItem(content)`          |
-| Extra fields on submit      | none                   | `id`, `employeeID`                            |
-| Shows Content ID            | no                     | yes (read-only)                               |
-| Required source field       | yes                    | no (keeps existing file/link)                 |
-| 409 handling                | n/a                    | `{ lockReleased: true }` → close + toast      |
-
-File uploads go through **`xhrFetch`** (in `content-form.ts`) instead of `fetch` — XHR is used specifically to get upload-progress events, which power a `<Progress>` bar and honor an `AbortSignal` for the Cancel button. When an upload is in flight, the dialog's close handler is gated on `!uploading && !submitting` so the user can't orphan the request.
-
-#### Form plumbing — `content-form.ts`
-
-Single source of truth for form behavior:
-
-- **`ContentFormValues`** — form shape. `contentType` and `status` use `"none"` as a sentinel for "not selected" so shadcn's `<Select>` can show its placeholder. `dateModified` and `lastModifiedTime` are stored separately and merged into one ISO timestamp in `buildContentFormData`.
-- **`initialValues(userId, persona)`** / **`fromContentItem(item)`** — starting values for Add / Edit.
-- **`getErrors(values, isEdit)`** — returns `{ field: message }`. Empty map = valid. `isEdit` relaxes the source requirement.
-- **`buildContentFormData(values)`** — serializes to `FormData`. `tags` is JSON-serialized (FormData can't send arrays; backend does `JSON.parse(payload.tags || "[]")`). File field is only appended in file mode; URL mode sends an empty `linkURL` string.
-- **`xhrFetch(url, method, headers, body, onProgress, signal)`** — returns a `{ ok, status, json }` shape matching the subset of `Response` the caller uses.
-
-#### `useContentForm`
-
-Thin `useState` wrapper with **deferred validation**: errors aren't shown until the first submit attempt (`submitted = true`), but `hasErrors` reflects current validity regardless so the Submit button can disable itself once the form becomes invalid after first submission. `reset()` increments `formKey`, which callers pass as the `key` prop on `ContentFormFields` to force a full remount.
+**`useContentForm`** — thin `useState` wrapper with deferred validation: errors only show after the first submit attempt, but `hasErrors` is always current so the Submit button can disable in real time. `reset()` increments `formKey`, which callers pass as `key` on `ContentFormFields` to force a remount.
 
 #### `UrlSourceField` — live OG previews
 
-When URL mode is active, renders the URL input and a preview card below it. Fetches `GET /api/preview?url=...` on mount (if a value is already present) and on blur. Results cached in **`preview-cache.ts`**, a module-level `Map` with three states: `undefined` (never fetched), `null` (unreachable), or `UrlPreview` (success). Storing `null` explicitly prevents re-hitting dead URLs on every render.
+Fetches `GET /api/preview?url=...` on mount and on blur. Results cached in `preview-cache.ts` — a module-level `Map` with three states: `undefined` (never fetched), `null` (unreachable), `UrlPreview` (success). Storing `null` prevents re-hitting dead URLs on every render.
 
-#### `TagInput` — chip input with suggestions
+#### `TagInput`
 
-Fetches `GET /api/content/tags` on mount for the suggestion list; silently degrades to create-only if the request fails. Tags are Title Cased at commit time (Enter, comma, or clicking a suggestion), not while typing. Input is restricted to letters and spaces via regex on every keystroke. Backspace on empty input removes the last chip. When `creatable={false}` (filter contexts), the "Create" option is suppressed. Uses `PopoverAnchor` (not `PopoverTrigger`) to avoid toggle-on-click, and `onMouseDown` + `preventDefault` on suggestions so the input doesn't blur before the selection registers.
+Fetches `GET /api/content/tags` on mount for suggestions; degrades to create-only if that fails. Tags are Title Cased at commit time (Enter, comma, or suggestion click), not while typing. Restricted to letters and spaces. Backspace on empty input removes the last chip. `creatable={false}` suppresses the create option (filter contexts). Uses `PopoverAnchor` (not `PopoverTrigger`) and `onMouseDown` + `preventDefault` on suggestions to prevent blur-before-select.
 
-#### File previews & caching
+#### File previews and caching
 
-`FilePreview` fetches from `/api/content/download/:id` and renders the appropriate viewer by filetype (PDF, DOCX, images, text, etc.). Two caches in **`file-cache.ts`**:
+`FilePreview` renders the appropriate viewer by filetype (PDF, DOCX, images, text, etc.). Bytes are cached in `file-cache.ts` — `textCache: Map<url, string>` for text, `blobCache: Map<url, Blob>` for binary. Session-scoped, never auto-evicted — call `invalidateFileCacheById(id)` after saving an edit.
 
-- `textCache: Map<src, string>` for text-format files
-- `blobCache: Map<src, Blob>` for binary formats
-
-Both are keyed by the download URL. The cache lives for the entire session and is never auto-evicted — **call `invalidateFileCacheById(id)` after saving an edit** so stale bytes don't show up in the next preview.
-
-`ViewSingleFile` (at `/file/:id`) fetches only item metadata, then delegates to `<FilePreview mode="full" />`. Bytes come from the same cache the inline preview uses, so navigating between list and full-page view doesn't re-download.
-
-#### Listing components
-
-`BookmarkedFiles`, `MyFiles`, and `RecentFiles` (under `features/content/listing/`) are near-structurally-identical compact summary lists used by dashboard cards:
-
-- **`BookmarkedFiles`** — fetches `/api/bookmark` and `/api/content?persona=...` in parallel, filters to bookmarked IDs, top 5.
-- **`MyFiles`** — `/api/content?persona=...`, filters by `ownerId === user.id`, top 5.
-- **`RecentFiles`** — `/api/content?persona=...`, sorts by `lastModified` desc, top 8.
-
-All three render: icon (via `ContentIcon` + `getCategory` from `lib/mime.ts`), display name, last-modified date, and either a "View →" link (`linkURL` items) or the file extension. Same loading/error/empty states.
-
-#### Shared presentational components
-
-Four components under `features/content/components/` keep icon/color/label choices in one place:
-
-- **`ContentIcon`** — Lucide icon keyed by a `Category` (`pdf` / `document` / `spreadsheet` / `presentation` / `image` / `audio` / `video` / `archive` / `code` / other). `isLink={true}` overrides to a `Link` icon. Colors from `CATEGORY_COLORS[category].icon` in `lib/mime.ts`.
-- **`ContentExtBadge`** — uppercased extension or `"Link"`. Colors paired with `ContentIcon` from the same map.
-- **`ContentStatusBadge`** — returns `null` for missing/unrecognized status so callers can render it unconditionally. Labels localized via `useTranslation`.
-- **`ContentTypeBadge`** — same pattern for `contentType`.
-
-Adding a new status or content type means extending one `Record<Enum, { className }>` map (plus enum + translations).
+`ViewSingleFile` (at `/file/:id`) fetches only metadata and delegates to `<FilePreview mode="full" />`. Both inline and full-page share the same cache, so navigating between them doesn't re-download.
 
 #### `ExpirationCalendar`
 
-Full-month calendar view at `/calendar`. Fetches content filtered by persona, keeps items with `expiration`, and buckets them into a `Map<"YYYY-MM-DD", ContentItem[]>`. The grid is built manually (no calendar library) — `firstDay` of the month plus a padded week to round out the last row. Each day cell shows up to 3 chips color-coded by urgency (red if expired, amber ≤7d, yellow ≤14d, neutral otherwise). Overflow collapses into "+N more". Clicking a day toggles a detail panel at the bottom.
+At `/calendar`. Buckets content with an `expiration` into a `Map<"YYYY-MM-DD", ContentItem[]>`. Manual grid (no calendar library) — `firstDay` of the month padded to full weeks. Each day cell shows up to 3 chips color-coded by urgency (red = expired, amber ≤7d, yellow ≤14d). Overflow shows "+N more". Clicking a day toggles a detail panel.
+
+#### `BulkUploadPage`
+
+At `/bulk-upload`. Select multiple files (each gets an editable display name pre-filled from the filename), fill shared metadata (persona, owner, tags, type, status), upload sequentially via `POST /api/content`. Per-row status icons: `pending → uploading → success | error`. Errors don't stop remaining uploads. "Upload More" resets the file list, keeping metadata for a second batch.
 
 ### Dashboard
 
-`pages/Dashboard.tsx` is a grid of self-contained cards. The page does nothing but render them:
+`features/dashboard/Dashboard.tsx` is a flat array of self-contained card components rendered in a responsive grid. Add a card by creating it under `features/dashboard/components/cards/` and appending it to the `cards` array — one-line change. Cards share a colored top border, soft shadow, and `hover:scale-101 transition-transform`. Some span multiple columns via `md:col-span-2`.
 
-```tsx
-// apps/frontend/src/pages/Dashboard.tsx
-const cards = [
-    HelloCard, ClockCard, EmployeeChartCard, ContentTypeChartCard,
-    QuickLinksCard, BookmarkedCard, MyContentCard, RecentFilesCard, LinksCard,
-]
-// ...
-<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-8 mx-15">
-    {cards.map((Card, index) => <Card key={index} />)}
-</div>
-```
-
-Adding a card is a one-line change: write it under `features/dashboard/components/cards/`, import, drop into the `cards` array. Some cards span multiple columns via `md:col-span-2`. All cards share a colored top border (`border-t-secondary border-t-4` or `border-t-accent`), soft shadow, and subtle `hover:scale-101 transition-transform`.
-
-**Cards:**
-
-- **`HelloCard`** — greeting with avatar + name from `useUser()`; falls back to initials.
-- **`ClockCard`** — live clock via `setInterval`.
-- **`EmployeeChartCard`** — Recharts pie chart of headcount by persona; colors from `--chart-1`…`--chart-5`.
-- **`ContentTypeChartCard`** — horizontal bar chart of file types. Filters out `linkURL` items, buckets by extension via `categorize()` (Images / PDFs / Documents / Spreadsheets / Presentations / Videos / Archives / Other). Chart data memoized on `content`.
-- **`QuickLinksCard`** — shortcuts; View Users and Add Employee are admin-only.
-- **`LinksCard`** — static links filtered by `user.persona` (each link declares `access: string[]`).
-- **`BookmarkedCard` / `MyContentCard` / `RecentFilesCard`** — presentational wrappers around the listing components. `RecentFilesCard` also has a "View Files" button linking to `/files`.
-
-**Conventions for new cards:** put them in `features/dashboard/components/cards/`, fetch with `useAuth0().getAccessTokenSilently()` + `Authorization: Bearer ${token}`, use relative API paths, match the existing styling, and `useMemo` derived chart/list data.
+Cards: `HelloCard` (greeting + avatar), `ClockCard` (live clock), `EmployeeChartCard` (Recharts pie by persona), `ContentTypeChartCard` (bar chart by file type; memoized), `QuickLinksCard`, `LinksCard` (filtered by persona), `BookmarkedCard`, `MyContentCard`, `RecentFilesCard` (wrappers around the listing components).
 
 ### Settings
 
-Nested-route layout at `/settings/*`. `SettingsLayout.tsx` renders a sidebar and an `<Outlet />` for the active section — each section is a fresh component mount.
+Nested-route layout at `/settings/*`. `SettingsLayout.tsx` renders a sidebar nav and `<Outlet />` — each section is a fresh mount.
 
-```
-/settings/profile       → ProfileSettings
-/settings/appearance    → AppearanceSettings
-/settings/account       → (disabled, redirects to profile)
-/settings/notifications → (disabled, redirects to profile)
-```
+- **`ProfileSettings.tsx`** — uses react-hook-form + zod. Populated via `form.reset(...)` in a `useEffect` watching `user`. Photo upload is separate: hidden file input, client-side MIME + 5 MB validation, then `uploadProfilePhoto(file)` from `UserContext`. `userName` and `persona` are read-only. Submit disabled unless `isDirty`.
+- **`AppearanceSettings.tsx`** — shadcn `RadioGroup` backed by `useTheme()`; no local state.
 
-- **`SettingsLayout.tsx`** — two-column shell with a shared page header.
-- **`SettingsNav.tsx`** — sidebar with `NavLink` active-state styling. Items are `{ to, label, icon, disabled? }`. Disabled items render dimmed and redirect to `profile` on click.
-- **`SettingsSection.tsx`** — presentational wrapper (`title`, optional `description`, children) used by every section for consistent headers.
-- **`ProfileSettings.tsx`** — uses **react-hook-form** with a **zod** resolver. Defaults are empty, then populated via `form.reset(...)` inside a `useEffect` watching `user` (avoids flash of empty fields). Profile photo upload is separate from the form: hidden `<input type="file">` triggered by a styled `<label>`, validates image MIME + 5 MB cap client-side, then calls `uploadProfilePhoto(file)` from `UserContext`. `userName` and `persona` are disabled (managed in Auth0 / by admins). Submit disabled unless `isDirty`; after save, `form.reset(values)` flips it back.
-- **`AppearanceSettings.tsx`** — theme selector backed by `useTheme()`. Pure shadcn `RadioGroup`, no local state — context is the source of truth.
-
-**Adding a section:** create the component under `features/settings/sections/` wrapping content in `<SettingsSection>`, register a nested route, add an entry to `SettingsNav.tsx`.
+Adding a section: create the component under `features/settings/sections/` wrapped in `<SettingsSection>`, register the nested route, add to `SettingsNav.tsx`.
 
 ### Employees feature
 
-Full CRUD for employee accounts under `features/employees/`.
+Full CRUD under `features/employees/`. Both dialogs import helpers from `employee-form.ts` (`EmployeeFormValues`, `initialValues`, `getErrors`, `buildPayload`, `toEmployee`, `lowestAvailableId`), but there is no shared form-fields component or custom hook — each dialog manages its own `useState`.
 
-```
-ViewEmployees
-├── AddEmployeeDialog
-│   └── useEmployeeNameTaken      ← uniqueness check
-└── EditEmployeeDialog
-    └── useEmployeeNameTaken      ← uniqueness check (excludes self)
+- **Creating** — `AddEmployeeDialog` fetches taken IDs/names on open; pre-fills ID with `lowestAvailableId(taken)`. Posts to `POST /api/employee/auth`.
+- **Editing** — `firstName`, `lastName`, `persona` only (`id` read-only). `PUT /api/employee`.
+- **Deleting** — `ConfirmDeleteDialog` warns about owned file removal. `DELETE /api/employee`.
 
-AddEmployee                        ← legacy standalone page (superseded)
-```
+**`useEmployeeNameTaken(open, excludeId?)`** — fetches all employees when the dialog opens, builds a `Set` of `"firstName|lastName"` keys, returns a `checkNameTaken(first, last)` function. `excludeId` prevents the edited employee's own name from triggering a false conflict. Silently no-ops if the fetch fails.
 
-Unlike the Service Requests feature, this module does **not** use a shared form-fields component or a custom form hook — each dialog manages its own `useState`.
+**Validation** — Add requires firstName, lastName (unique), id (positive int, not taken), persona, userName, email, password, confirmPassword (matching). Edit requires firstName and lastName (unique, self excluded).
 
-**Data flow:**
-
-- **Fetching** — `ViewEmployees` pulls from `GET /api/employee/all` on mount.
-- **Creating** — `AddEmployeeDialog` fetches `/api/employee` on open to build a set of taken IDs and names; the ID field is pre-filled with the lowest available positive integer via `lowestAvailableId(taken)`. Submit validates then `POST`s `/api/employee/auth`.
-- **Editing** — `EditEmployeeDialog` pre-populates from props; only `firstName`, `lastName`, `persona` are editable (`id` is read-only). Submit `PUT`s `/api/employee`.
-- **Deleting** — `ConfirmDeleteDialog` warns that files owned by the employee will also be removed. On confirm, `DELETE /api/employee` with the ID.
-
-**Name uniqueness — `useEmployeeNameTaken`:**
-
-```ts
-const checkNameTaken = useEmployeeNameTaken(open, excludeId?)
-```
-
-Fetches all employees when the dialog opens and builds a `Set` of normalized `"firstName|lastName"` keys. Returns a `checkNameTaken(first, last)` function that returns an error string if taken, or `""` if available. The optional `excludeId` (used in `EditEmployeeDialog`) filters out the employee being edited so their own name doesn't trigger a false conflict. Non-fatal — if the fetch fails, the check is silently skipped.
-
-**Validation:**
-
-- *Add* — required: `firstName`, `lastName` (not a duplicate), `id` (positive integer, not taken), `persona` (not the placeholder), `userName`, `email`, `password`, `confirmPassword` (must match).
-- *Edit* — required: `firstName`, `lastName` (not a duplicate, own name excluded). `persona` is always valid (dropdown).
-
-**Access control** — Edit and Delete are disabled for the logged-in user's own row (`employee.id === currentUserId`).
-
-**Search & sorting** — search matches across `firstName`, `lastName`, concatenated full name, `persona`, and `id`. Whitespace stripped before matching. Name matches highlighted via `highlightRange`, with the last name's highlight offset derived from the first name's length. Sortable columns: `id`, `firstName`, `lastName`, `persona`. Default: `id` asc.
-
-Rows are extracted into a separate `EmployeeRow` component so `useAvatarUrl` can be called per row without violating hook rules inside `.map()`.
+Search matches firstName, lastName, full name, persona, id. Name matches highlighted via `highlightRange`. Rows extracted to `EmployeeRow` so `useAvatarUrl` can be called per row (hooks can't be called inside `.map()`).
 
 ### Service Requests feature
 
-Full CRUD for service requests under `features/servicereqs/`.
+Full CRUD under `features/servicereqs/`. `AddServiceReqDialog` and `EditServiceReqDialog` share `ServiceReqFormFields` (fully controlled, no internal state) and each instantiate their own `useServiceReqForm`.
 
-```
-ViewServiceReqs
-├── AddServiceReqDialog
-│   └── ServiceReqFormFields   ← shared
-└── EditServiceReqDialog
-    └── ServiceReqFormFields   ← shared
-```
+**`useServiceReqForm`** — same deferred-validation pattern as `useContentForm`: errors hidden until first submit, `hasErrors` always current, `reset()` increments `formKey` for remount. `createdDate` and `createdTime` are kept separate (date picker returns `Date`, time input returns `"HH:MM:SS"`) and merged into an ISO timestamp in `buildServiceReqJSON`. `type: "none"` is the sentinel for the `<Select>` placeholder and is rejected by validation.
 
-Form state is managed by `useServiceReqForm`, instantiated independently in each dialog. `ServiceReqFormFields` is fully controlled — owns no state, receives values and callbacks via props.
+Access control: Edit and Delete disabled unless the user is `ownerId`, `assigneeId`, or `admin`.
 
-**`useServiceReqForm`:**
-
-```ts
-const { values, patch, setSubmitted, errors, hasErrors, formKey, reset } =
-    useServiceReqForm(initialValues);
-```
-
-Validation is **deferred** (same pattern as `useContentForm`): error messages appear only after first submit, but `hasErrors` is always current so the Submit button can disable in real time. `reset()` increments `formKey` for remount.
-
-**`ServiceReqFormValues`:**
-
-```ts
-type ServiceReqFormValues = {
-    id: number | undefined;
-    name: string;
-    createdDate: Date;
-    createdTime: string;         // "HH:MM:SS" — kept separate for the time <input>
-    deadline: Date | undefined;
-    ownerId: number;
-    assigneeId: number | undefined;
-    type: "reviewClaim" | "requestAdjuster" | "checkClaim" | "none";
-}
-```
-
-`"none"` is a sentinel for the placeholder state of the `<Select>`. Treated as an error and never sent to the API. `createdDate` and `createdTime` are merged into one ISO timestamp in `buildServiceReqJSON`.
-
-**Validation** — required: `name`, `ownerId`, `assigneeId`, `type` (not `"none"`), `createdDate`, `createdTime`, `deadline`.
-
-**Access control** — Edit and Delete are disabled unless the logged-in user is the `ownerId`, the `assigneeId`, or an `admin`.
-
-**Search & sorting** — search matches across `name`, `type`, owner full name, assignee full name. Matches in the `name` column highlighted via `highlightRange`. All columns sortable. Default: `type` asc.
+Search matches name, type, owner full name, assignee full name. `highlightRange` on the name column. All columns sortable; default: type asc.
 
 **API endpoints** — `GET/POST/PUT /api/servicereqs`, `DELETE /api/servicereq`.
 
@@ -467,14 +357,14 @@ type ServiceReqFormValues = {
 
 ## Conventions
 
+- **shadcn/ui primitives** — reach for a component from `components/ui/` (`Button`, `Dialog`, `Card`, `Input`, `Select`, `Popover`, `Table`, `Badge`, `Avatar`, etc.) before writing raw `<div>` elements. Add new primitives with `pnpm --filter frontend exec shadcn add <component>`. The `components/ui/` files are auto-generated and must not be hand-edited.
 - **pnpm only** — never `npm` or `npx`. Use `pnpm prisma migrate dev`, not `pnpx prisma migrate dev`.
 - **Relative API paths everywhere** — never hardcode `localhost:3000`. The backend serves the frontend's built `dist/` in production, so `/api/...` works in both environments.
 - **`type` aliases only, no `interface`** — project-wide TypeScript convention for the frontend. A few legacy files still use `interface`; migrate as they're touched. No OOP/class-based patterns in frontend TS.
 - **`cache: "no-store"` on poll requests** — avoids stale cache hits on the 5-second edit-dialog poll and the 10-second list poll in `ViewContent`.
-- **Compare lock owners as strings** — `String(data.checkedOutBy) !== String(user!.id)`. The backend sometimes returns numbers and sometimes the nested employee object depending on the endpoint, so string-comparing IDs is the safe cross-cutting form.
+- **Compare lock owners as strings** — use `String(data.checkedOutById) !== String(user!.id)`. The field is a number in the DB but JSON serialization can produce inconsistencies across endpoints, so string-comparing avoids `42 !== "42"` false mismatches.
 - **Always `parseInt` IDs on the backend** — `FormData` values are always strings, so `id`, `ownerID`, `employeeID` need parsing before use.
 - **Auth headers** — always `Authorization: Bearer ${token}` using `getAccessTokenSilently()` from `@auth0/auth0-react`.
-- **Targeted changes preferred** — minimal diffs over full file rewrites.
 - **Polling (not WebSockets)** — consistent pattern: `ViewContent` lists poll every 10s, `EditContentDialog` polls every 5s.
 - **Express 5 wildcards** — use `app.get('/{*splat}', ...)`, not `app.get('*', ...)`. Required for the SPA fallback.
 
