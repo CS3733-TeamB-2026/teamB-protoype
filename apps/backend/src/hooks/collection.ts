@@ -1,14 +1,7 @@
 import * as q from "@softeng-app/db";
 import { req, res } from "./types";
 import { getEmployee } from "../helpers/getEmployee";
-
-function isAdmin(persona: string) {
-    return persona === "admin";
-}
-
-function canMutate(collection: { ownerId: number }, employeeId: number, persona: string) {
-    return collection.ownerId === employeeId || isAdmin(persona);
-}
+import { isAdmin, isOwnerOrAdmin } from "../helpers/permissions";
 
 export const getAllCollections = async (req: req, res: res) => {
     try {
@@ -31,7 +24,7 @@ export const getCollectionById = async (req: req, res: res) => {
         const collectionId = parseInt(req.params.id);
         const collection = await q.Collection.queryById(collectionId);
 
-        if (!collection.public && !canMutate(collection, employee.id, employee.persona)) {
+        if (!collection.public && !isOwnerOrAdmin(collection.ownerId, employee.id, employee.persona)) {
             return res.status(403).json({ error: "Access denied" });
         }
 
@@ -64,10 +57,9 @@ export const updateCollection = async (req: req, res: res) => {
         const collectionId = parseInt(req.params.id);
         const existing = await q.Collection.queryById(collectionId);
 
-        if (!canMutate(existing, employee.id, employee.persona)) {
+        if (!isOwnerOrAdmin(existing.ownerId, employee.id, employee.persona)) {
             return res.status(403).json({ error: "Access denied" });
         }
-
         const { displayName, isPublic, ownerId, contentIds } = req.body;
         const updated = await q.Collection.update(
             collectionId,
@@ -91,7 +83,7 @@ export const deleteCollection = async (req: req, res: res) => {
         const collectionId = parseInt(req.params.id);
         const existing = await q.Collection.queryById(collectionId);
 
-        if (!canMutate(existing, employee.id, employee.persona)) {
+        if (!isOwnerOrAdmin(existing.ownerId, employee.id, employee.persona)) {
             return res.status(403).json({ error: "Access denied" });
         }
 
@@ -125,7 +117,7 @@ export const addFavorite = async (req: req, res: res) => {
 
         // Prevent favoriting a private collection the employee can't see
         const collection = await q.Collection.queryById(collectionId);
-        if (!collection.public && !canMutate(collection, employee.id, employee.persona)) {
+        if (!collection.public && !isOwnerOrAdmin(collection.ownerId, employee.id, employee.persona)) {
             return res.status(403).json({ error: "Access denied" });
         }
 

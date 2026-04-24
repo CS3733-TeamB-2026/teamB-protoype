@@ -4,6 +4,16 @@ import {Helper, employeeSelect} from "./helper";
 
 export class ServiceReqs {
 
+    public static async queryServiceReqById(id: number) {
+        return prisma.serviceRequest.findUnique({
+            where: { id },
+            include: {
+                owner: { select: employeeSelect },
+                assignee: { select: employeeSelect },
+            },
+        });
+    }
+
     public static async queryAllServiceReqs() {
         return prisma.serviceRequest.findMany({
             include: {

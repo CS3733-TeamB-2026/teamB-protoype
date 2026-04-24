@@ -9,12 +9,12 @@ export {Collection} from "./queries/collection";
 // Prisma model types — use these in backend code (hooks, helpers).
 // Do not import Prisma types directly on the frontend; use lib/types.ts instead.
 export type {
-    Employee as EmployeeModel,
-    Content as ContentModel,
-    ServiceRequest as ServiceRequestModel,
-    Collection as CollectionModel,
-    CollectionItem as CollectionItemModel,
-    CollectionFavorite as CollectionFavoriteModel,
-    Bookmark as BookmarkModel,
+    EmployeeModel,
+    ContentModel,
+    ServiceRequestModel,
+    CollectionModel,
+    CollectionItemModel,
+    CollectionFavoriteModel,
+    BookmarkModel,
 } from "./generated/prisma/models";
 export type { Persona, Status, ContentType, RequestType } from "./generated/prisma/enums";

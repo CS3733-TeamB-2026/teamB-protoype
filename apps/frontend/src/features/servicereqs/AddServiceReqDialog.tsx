@@ -37,9 +37,9 @@ export function AddServiceReqDialog({ open, onOpenChange, onSave }: Props) {
     const { getAccessTokenSilently } = useAuth0();
 
     const { values, patch, setSubmitted, errors, hasErrors, formKey, reset } =
-        useServiceReqForm(initialValues(user.user?.id ?? 0));
+        useServiceReqForm(initialValues());
 
-    const handleReset = () => reset(initialValues(user.user!.id));
+    const handleReset = () => reset(initialValues());
 
     const handleSubmit = async () => {
         if (!user) return;
@@ -58,7 +58,7 @@ export function AddServiceReqDialog({ open, onOpenChange, onSave }: Props) {
             const created: ServiceReq = await res.json();
             onSave(created);
             onOpenChange(false);
-            reset(initialValues(created.id));
+            reset(initialValues());
             toast.success("Service Request created successfully!");
         } catch {
             toast.error("Error creating service request.");

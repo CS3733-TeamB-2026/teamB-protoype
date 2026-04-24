@@ -1,6 +1,7 @@
 import * as p from "../generated/prisma/client";
 
-// auth0Id is intentionally excluded — the frontend has no business seeing it
+// Shared across all query classes that join employees — auth0Id intentionally excluded
+// so it is never serialised into an API response.
 export const employeeSelect = {
     id: true,
     firstName: true,

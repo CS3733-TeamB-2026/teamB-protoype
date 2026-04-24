@@ -68,7 +68,6 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
 
         const formData = buildContentFormData(values);
         formData.append("id", content.id.toString());
-        formData.append("employeeID", String(user.id));
 
         const token = await getAccessTokenSilently();
         const hasFile = values.uploadMode === "file" && values.file !== null;
