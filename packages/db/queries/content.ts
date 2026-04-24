@@ -1,6 +1,6 @@
 import * as p from "../generated/prisma/client";
 import {prisma} from "../lib/prisma";
-import {Helper} from "./helper";
+import {Helper, employeeSelect} from "./helper";
 
 
 export class Content {
@@ -99,7 +99,7 @@ export class Content {
 
     public static async queryAllContent() {
         return prisma.content.findMany({
-            include: {owner: true, checkedOutBy: true,},
+            include: {owner: { select: employeeSelect }, checkedOutBy: { select: employeeSelect },},
         })
     }
 
@@ -114,8 +114,8 @@ export class Content {
         return prisma.content.findMany({
             where: {targetPersona: _personaTyped},
             include: {
-                owner: true,
-                checkedOutBy: true,
+                owner: { select: employeeSelect },
+                checkedOutBy: { select: employeeSelect },
             },
         })
     }
@@ -123,7 +123,7 @@ export class Content {
     public static async queryContentById(_id: number): Promise<p.Content | null> {
         return prisma.content.findUnique({
             where: {id: _id},
-            include: { owner: true, checkedOutBy: true }
+            include: { owner: { select: employeeSelect }, checkedOutBy: { select: employeeSelect } }
         })
     }
 
@@ -131,7 +131,7 @@ export class Content {
     public static async checkoutContent(id: number, employeeID: number){
         const content = await prisma.content.findUnique({
             where: {id: id},
-            include: {owner: true, checkedOutBy: true,}
+            include: {owner: { select: employeeSelect }, checkedOutBy: { select: employeeSelect },}
         })
         if (!content) {
             throw new Error("Content not found");
@@ -149,8 +149,8 @@ export class Content {
                 checkedOutAt: new Date(),
             },
             include: {
-                owner: true,
-                checkedOutBy: true,
+                owner: { select: employeeSelect },
+                checkedOutBy: { select: employeeSelect },
             },
         });
     }

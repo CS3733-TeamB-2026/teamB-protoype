@@ -1,13 +1,7 @@
 import { prisma } from "../lib/prisma";
+import { employeeSelect } from "./helper";
 
-const employeeSelect = {
-    id: true,
-    firstName: true,
-    lastName: true,
-    persona: true,
-    profilePhotoURI: true,
-} as const;
-
+// Items have no guaranteed DB order, so position must always be applied here
 const itemsInclude = {
     items: {
         orderBy: { position: "asc" as const },
@@ -15,6 +9,17 @@ const itemsInclude = {
     },
 } as const;
 
+/**
+ * Query class for the Collection model.
+ *
+ * Permission checks (ownership, admin access, private visibility) are the
+ * responsibility of the backend hook, not this class. These methods trust
+ * that the caller has already verified the requesting employee is allowed
+ * to perform the operation.
+ *
+ * Favorites are kept separate from collection queries — use queryFavorites,
+ * addFavorite, and removeFavorite rather than inlining them into queryAll/queryById.
+ */
 export class Collection {
     /** Returns all public collections plus all collections owned by the given employee.
      *  Pass isAdmin=true to return every collection regardless of visibility. */
@@ -45,6 +50,7 @@ export class Collection {
         });
     }
 
+    /** Creates a new collection with the given name and owner. */
     public static async create(displayName: string, ownerId: number, isPublic: boolean) {
         return prisma.collection.create({
             data: { displayName, ownerId, public: isPublic },
@@ -93,12 +99,14 @@ export class Collection {
         await prisma.collection.delete({ where: { id: collectionId } });
     }
 
+    /** Adds a favorite for given collection and employee. */
     public static async addFavorite(collectionId: number, employeeId: number) {
         return prisma.collectionFavorite.create({
             data: { collectionId, employeeId },
         });
     }
 
+    /** Removes a favorite. */
     public static async removeFavorite(collectionId: number, employeeId: number) {
         await prisma.collectionFavorite.delete({
             where: { employeeId_collectionId: { employeeId, collectionId } },

@@ -1,5 +1,14 @@
 import * as p from "../generated/prisma/client";
 
+// auth0Id is intentionally excluded — the frontend has no business seeing it
+export const employeeSelect = {
+    id: true,
+    firstName: true,
+    lastName: true,
+    persona: true,
+    profilePhotoURI: true,
+} as const;
+
 export class Helper {
     public static personaHelper(_persona: string | null): p.Persona | null {
         if (_persona == "underwriter") {
@@ -19,7 +28,6 @@ export class Helper {
             return null
             //TODO: figure out a default return
         }
-
     }
 
     public static statusHelper(_status: string | null): p.Status {

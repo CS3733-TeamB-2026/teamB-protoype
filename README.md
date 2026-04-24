@@ -46,8 +46,8 @@ packages/db/
   prisma/schema.prisma     DB schema
   lib/prisma.ts            Prisma client
   lib/supabase.ts          Supabase client
-  queries/                 Data-access classes: Content, Employee, Login,
-                           Bookmark, ServiceReqs, Bucket, Helper
+  queries/                 Data-access classes: Content, Employee, Bookmark,
+                           Collection, ServiceReqs, Bucket, Helper
 ```
 
 ---
@@ -156,12 +156,16 @@ All storage operations go through `packages/db/queries/bucket.ts` (`Bucket.uploa
 Schema at `packages/db/prisma/schema.prisma`.
 
 - **Employee** — `id`, `firstName`, `lastName`, `persona`, `auth0Id`, `profilePhotoURI`
-- **Login** — local username/passwordHash keyed to `employeeID` (legacy)
 - **Content** — `displayName`, `linkURL` *xor* `fileURI`, `ownerId`, `contentType` (`reference` | `workflow`), `status` (`new` | `inProgress` | `complete`), `targetPersona`, `tags: string[]`, `lastModified`, `expiration`, `checkedOutById`, `checkedOutAt`
 - **Bookmark** — join table (`bookmarkerId`, `bookmarkedContentId`) with a composite unique key
+- **Collection** — `displayName`, `ownerId`, `public`; items stored in **CollectionItem** (`collectionId`, `contentId`, `position`) — explicit join table so item order is preserved. Favorites stored in **CollectionFavorite** (`employeeId`, `collectionId`).
 - **ServiceRequest** — `name`, `created`, `deadline`, `type`, `assigneeId`, `ownerId`
 
 Enums (`Persona`, `Status`, `ContentType`, `RequestType`) are mapped from strings via the `Helper` class (`packages/db/queries/helper.ts`), so the API accepts plain strings from the frontend.
+
+### Separation of concerns: `packages/db` vs `apps/backend`
+
+The query classes in `packages/db/queries/` are a pure data layer — they talk to the database and nothing else. **They do not enforce permissions.** Deciding whether a requesting employee is allowed to read or mutate a resource (ownership checks, admin access, private-visibility rules) is the responsibility of the route handler in `apps/backend/src/hooks/`. This keeps the query classes reusable and testable in isolation.
 
 ---
 
