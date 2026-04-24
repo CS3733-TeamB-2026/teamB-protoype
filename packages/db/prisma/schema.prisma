@@ -26,8 +26,9 @@ model Employee {
   ownedRequests    ServiceRequest[] @relation("OwnedBy")
   assignedRequests ServiceRequest[] @relation("AssignedTo")
 
-  bookmarks   Bookmark[]
-  collections Collection[]
+  bookmarks           Bookmark[]
+  collections         Collection[]
+  collectionFavorites CollectionFavorite[]
 
   @@unique([firstName, lastName])
   @@schema("public")
@@ -77,15 +78,14 @@ model ServiceRequest {
 }
 
 model Collection {
+  id          Int     @id @default(autoincrement())
   displayName String
-  id          Int    @id @default(autoincrement())
+  owner       Employee @relation(fields: [ownerId], references: [id])
+  ownerId     Int
+  public      Boolean
 
-  owner   Employee @relation(fields: [ownerId], references: [id])
-  ownerId Int
-
-  public Boolean
-
-  items CollectionItem[]
+  items     CollectionItem[]
+  favorites CollectionFavorite[]
 
   @@schema("public")
 }
@@ -95,8 +95,19 @@ model CollectionItem {
   collectionId Int
   content      Content    @relation(fields: [contentId], references: [id], onDelete: Cascade)
   contentId    Int
+  position     Int
 
   @@id([collectionId, contentId])
+  @@schema("public")
+}
+
+model CollectionFavorite {
+  employee     Employee   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId   Int
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  collectionId Int
+
+  @@id([employeeId, collectionId])
   @@schema("public")
 }
 
