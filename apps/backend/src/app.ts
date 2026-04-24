@@ -9,6 +9,7 @@ import * as servicereqs from './hooks/servicereqs'
 import * as content from './hooks/content'
 import * as employee from './hooks/employee'
 import * as bookmark from './hooks/bookmark'
+import * as collection from './hooks/collection'
 import { auth } from 'express-oauth2-jwt-bearer'
 
 const app = express();
@@ -49,6 +50,15 @@ app.delete("/api/content/:id", content.deleteContent)
 app.get("/api/bookmark", bookmark.getBookmarks)
 app.post("/api/bookmark/:contentId", bookmark.addBookmark)
 app.delete("/api/bookmark/:contentId", bookmark.removeBookmark)
+// Collections
+app.get("/api/collections", collection.getAllCollections)
+app.post("/api/collections", collection.createCollection)
+app.get("/api/collections/favorites", collection.getFavorites)
+app.get("/api/collections/:id", collection.getCollectionById)
+app.put("/api/collections/:id", collection.updateCollection)
+app.delete("/api/collections/:id", collection.deleteCollection)
+app.post("/api/collections/:id/favorite", collection.addFavorite)
+app.delete("/api/collections/:id/favorite", collection.removeFavorite)
 // Employee
 app.post("/api/employee/photo", upload.single("photo"), employee.uploadProfilePhoto);
 app.get("/api/employee/all", employee.getAllEmployees)
