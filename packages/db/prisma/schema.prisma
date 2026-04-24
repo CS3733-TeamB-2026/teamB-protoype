@@ -78,7 +78,7 @@ model ServiceRequest {
 }
 
 model Collection {
-  id          Int     @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   displayName String
   owner       Employee @relation(fields: [ownerId], references: [id])
   ownerId     Int
