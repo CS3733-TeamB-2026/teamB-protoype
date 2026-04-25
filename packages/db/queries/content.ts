@@ -155,7 +155,6 @@ export class Content {
         });
     }
 
-
     public static async checkinContent(id: number, employeeID: number): Promise<void> {
         await prisma.content.update({
             where: { id },
@@ -163,5 +162,37 @@ export class Content {
         })
     }
 
+    //helper function - only used by other hit count queries
+    private static async getHitsArray(id: number): Promise<Array<number>> {
+        const emptyArray: number[] = [] //used to ensure that return value gets defined as a number array and not null
+        return (await prisma.content.findUnique({
+            where: { id: id },
+            select: { hits: true }
+        }))?.hits ?? emptyArray
+    }
 
+    //Note: if we want to add more queries like these, we should abstract them to reuse more code with a .filter()
+    public static async getTotalHitCount(id: number): Promise<number> {
+        const hits = await Content.getHitsArray(id)
+        return hits.length
+    }
+
+    public static async getEmployeeHitCount(id: number, employeeId: number): Promise<number> {
+        const hits = await Content.getHitsArray(id)
+        return hits.filter((empId) => empId == employeeId).length
+    }
+
+    public static async getEmployeeGroupHitCount(id: number, employeeIds: number[]): Promise<number> {
+        const hits = await Content.getHitsArray(id)
+        return hits.filter((empId) => employeeIds.includes(empId)).length
+    }
+
+    public static async addHit(id: number, employeeId: number): Promise<void> {
+        const hits = await Content.getHitsArray(id)
+        hits.push(employeeId)
+        await prisma.content.update({
+            where: {id: id},
+            data: { hits: hits }
+        })
+    }
 }
