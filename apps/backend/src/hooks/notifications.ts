@@ -43,7 +43,7 @@ export const getNotifications = async (req: req, res: res) => {
                 contentId: c.id,
                 contentName: c.displayName,
                 triggeredBy: null,
-                createdAt: c.expiration.toISOString(),
+                createdAt: new Date(now).toISOString(),  // ← was c.expiration.toISOString()
                 metadata: { daysLeft, expired: daysLeft <= 0 },
             });
         }
