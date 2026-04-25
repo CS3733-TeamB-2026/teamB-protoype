@@ -1,6 +1,7 @@
 import * as p from "../generated/prisma/client";
 import {prisma} from "../lib/prisma";
 import {Helper} from "./helper";
+import { Notification } from "./notification";
 
 
 export class Content {
@@ -35,8 +36,8 @@ export class Content {
             throw new Error("You do not have this content checked out.")
         }
 
-        return prisma.content.update({
-            where: {id: id},
+        const updated = await prisma.content.update({
+            where: { id: id },
             data: {
                 displayName: _name,
                 linkURL: _linkURL,
@@ -50,6 +51,33 @@ export class Content {
                 tags: _tags,
             }
         });
+
+        try {
+            const changedFields: Array<"displayName" | "linkURL" | "fileURI" | "contentType" | "status" | "expiration" | "targetPersona" | "tags"> = [];
+
+            if (content.displayName !== _name) changedFields.push("displayName");
+            if (content.linkURL !== _linkURL) changedFields.push("linkURL");
+            if (content.fileURI !== _fileURI) changedFields.push("fileURI");
+            if (content.contentType !== _contentType) changedFields.push("contentType");
+            if (content.status !== _statusTyped) changedFields.push("status");
+            if ((content.expiration?.getTime() ?? null) !== (_expiration?.getTime() ?? null)) {
+                changedFields.push("expiration");
+            }
+            if (content.targetPersona !== _personaTyped) changedFields.push("targetPersona");
+            if (JSON.stringify(content.tags) !== JSON.stringify(_tags)) changedFields.push("tags");
+
+            if (changedFields.length > 0) {
+                await Notification.emitChange(id, _checkedOutById, _personaTyped, changedFields);
+            }
+
+            if (content.ownerId !== _ownerId) {
+                await Notification.emitOwnership(id, _checkedOutById, _personaTyped, content.ownerId, _ownerId);
+            }
+        } catch (err) {
+            console.error("Failed to emit notification:", err);
+        }
+
+        return updated;
     }
 
     public static async createContent(
