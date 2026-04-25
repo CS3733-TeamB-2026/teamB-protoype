@@ -26,7 +26,8 @@ model Employee {
   ownedRequests    ServiceRequest[] @relation("OwnedBy")
   assignedRequests ServiceRequest[] @relation("AssignedTo")
 
-  bookmarks Bookmark[]
+  bookmarks              Bookmark[]
+  triggeredNotifications Notification[] @relation("Triggered")
 
   @@unique([firstName, lastName])
   @@schema("public")
@@ -43,7 +44,8 @@ model Content {
 
   checkedOutById Int?
   checkedOutAt   DateTime?
-  checkedOutBy   Employee? @relation("CheckedOut", fields: [checkedOutById], references: [id], onDelete: SetNull)
+  checkedOutBy   Employee?      @relation("CheckedOut", fields: [checkedOutById], references: [id], onDelete: SetNull)
+  notifications  Notification[] @relation("Notified")
 
   lastModified DateTime
   expiration   DateTime?
@@ -81,6 +83,32 @@ model Bookmark {
   bookmarkedContentId Int
 
   @@id([bookmarkerId, bookmarkedContentId])
+  @@schema("public")
+}
+
+model Notification {
+  id Int @id @default(autoincrement())
+
+  type NotificationType
+
+  content   Content @relation("Notified", fields: [contentId], references: [id], onDelete: Cascade)
+  contentId Int
+
+  triggeredBy   Employee? @relation("Triggered", fields: [triggeredById], references: [id], onDelete: SetNull)
+  triggeredById Int?
+
+  targetPersona Persona
+  metadata      Json?
+  createdAt     DateTime @default(now())
+
+  @@index([targetPersona, createdAt])
+  @@schema("public")
+}
+
+enum NotificationType {
+  change
+  ownership
+
   @@schema("public")
 }
 
