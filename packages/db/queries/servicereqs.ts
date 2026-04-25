@@ -4,6 +4,7 @@ import {Helper, employeeSelect} from "./helper";
 
 export class ServiceReqs {
 
+    /** Fetches a single service request by ID, used by the backend hook for ownership checks before update/delete. */
     public static async queryServiceReqById(id: number) {
         return prisma.serviceRequest.findUnique({
             where: { id },
