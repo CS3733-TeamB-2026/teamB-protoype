@@ -26,6 +26,7 @@ export class Notification {
         targetPersona: p.Persona,
         oldOwnerId: number | null,
         newOwnerId: number | null,
+        newOwnerName: string | null,
     ) {
         return prisma.notification.create({
             data: {
@@ -33,7 +34,7 @@ export class Notification {
                 contentId: contentId,
                 triggeredById: triggeredById,
                 targetPersona: targetPersona,
-                metadata: { oldOwnerId, newOwnerId },
+                metadata: { oldOwnerId, newOwnerId, newOwnerName },
             },
         });
     }

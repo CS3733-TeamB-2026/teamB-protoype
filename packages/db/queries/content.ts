@@ -71,7 +71,14 @@ export class Content {
             }
 
             if (content.ownerId !== _ownerId) {
-                await Notification.emitOwnership(id, _checkedOutById, _personaTyped, content.ownerId, _ownerId);
+                const newOwner = _ownerId
+                    ? await prisma.employee.findUnique({
+                        where: { id: _ownerId },
+                        select: { firstName: true, lastName: true },
+                    })
+                    : null;
+                const newOwnerName = newOwner ? `${newOwner.firstName} ${newOwner.lastName}` : null;
+                await Notification.emitOwnership(id, _checkedOutById, _personaTyped, content.ownerId, _ownerId, newOwnerName);
             }
         } catch (err) {
             console.error("Failed to emit notification:", err);

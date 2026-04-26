@@ -77,6 +77,7 @@ export type NotificationItem = {
         changedFields?: string[];
         oldOwnerId?: number | null;
         newOwnerId?: number | null;
+        newOwnerName?: string | null;
         daysLeft?: number;
         expired?: boolean;
     };

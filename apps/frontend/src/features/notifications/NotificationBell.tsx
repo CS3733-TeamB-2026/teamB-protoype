@@ -7,12 +7,12 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover.tsx";
-import { Separator } from "@/components/ui/separator.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import { useUser } from "@/hooks/use-user.ts";
 import type { NotificationItem } from "@/lib/types.ts";
 import { NotificationCard } from "@/features/notifications/NotificationCard.tsx";
 
-const PREVIEW_COUNT = 500;
+const PAGE_SIZE = 5;
 
 export function NotificationBell() {
     const { user } = useUser();
@@ -33,11 +33,12 @@ export function NotificationBell() {
             const data: NotificationItem[] = await res.json();
             setItems(data);
         } catch {
-            // silent — bell is best-effort
+            //silent
         }
     }, [getAccessTokenSilently, user]);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         void load();
         const id = setInterval(load, 30_000);
         return () => clearInterval(id);
@@ -46,7 +47,7 @@ export function NotificationBell() {
     if (!user) return null;
 
     const count = items.length;
-    const preview = items.slice(0, PREVIEW_COUNT);
+    const pageItems = items.slice(0, PAGE_SIZE);
     const badge = count === 0 ? null : count > 9 ? "9+" : String(count);
 
     return (
@@ -58,43 +59,43 @@ export function NotificationBell() {
                         className="opacity-70 transition-all duration-200 group-hover:opacity-100"
                     />
                     {badge && (
-                        <span className="absolute top-0 right-0 min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-primary-foreground text-[10px] font-semibold flex items-center justify-center">
+                        <span className="absolute top-0 right-0 min-w-4.5 h-4.5 px-1 rounded-full bg-accent text-primary-foreground text-[10px] font-semibold flex items-center justify-center">
                             {badge}
                         </span>
                     )}
                 </button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 p-0 mr-4">
-                <div className="px-3 py-2 font-semibold text-primary">
+            <PopoverContent className="w-80 p-0 mr-4 flex flex-col">
+                <div className="px-3 pt-2 text-center text-lg font-semibold text-primary">
                     Notifications
                 </div>
-                <Separator className="bg-primary" />
-                <div className="max-h-96 overflow-y-auto">
-                    {preview.length === 0 ? (
-                        <p className="p-6 text-center text-sm text-muted-foreground">
+                <div className="px-2">
+                    {pageItems.length === 0 ? (
+                        <p className="p-4 text-center text-sm text-muted-foreground">
                             You have no notifications.
                         </p>
                     ) : (
-                        <div className="flex flex-col p-1">
-                            {preview.map((n) => (
+                        <div className="flex flex-col gap-1">
+                            {pageItems.map((n, i) => (
                                 <NotificationCard
                                     key={n.id}
                                     notification={n}
                                     compact
+                                    index={i}
                                     onSelect={() => setOpen(false)}
                                 />
                             ))}
                         </div>
                     )}
                 </div>
-                <Separator className="bg-primary" />
-                <Link
-                    to="/notifications"
-                    onClick={() => setOpen(false)}
-                    className="block w-full text-center px-3 py-2 text-sm font-semibold rounded-b-md transition-colors hover:bg-secondary"
-                >
-                    View all
-                </Link>
+
+                <div className="px-2 pb-2">
+                    <Button asChild size="sm" className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                        <Link to="/notifications" onClick={() => setOpen(false)}>
+                            View all
+                        </Link>
+                    </Button>
+                </div>
             </PopoverContent>
         </Popover>
     );
