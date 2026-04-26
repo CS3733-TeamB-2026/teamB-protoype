@@ -337,10 +337,13 @@ export const getEmployeeHitCount = async (req: req, res: res) => {
 
 export const addHit = async (req: req, res: res) => {
     try {
-        console.log("addHit started")
+        //get the employeeId of the logged-in user
+        const auth0Id = req.auth?.payload.sub;
+        const data = await q.Employee.queryEmployeeByAuth(auth0Id);
+        if (!data) { return res.status(400).end() }
+        const employeeId = data.id
+
         const id = parseInt(req.params.id)
-        const employeeId = parseInt(req.body.employeeId)
-        console.log("id: ", id, " employeeId: ", employeeId)
         await q.Content.addHit(id, employeeId)
         return res.status(201).end();
     }

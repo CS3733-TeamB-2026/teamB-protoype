@@ -55,7 +55,6 @@ export function ViewSingleFile() {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${token}`,
                     },
-                    body: JSON.stringify({employeeId: 1}) //TODO change to current user
                 })
             } catch (error) {
                 setError("File not found or failed to load.");
