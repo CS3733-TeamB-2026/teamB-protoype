@@ -305,3 +305,46 @@ export const checkinContent = async (req: req, res: res) => {
     }
 }
 
+export const getTotalHitCount = async (req: req, res: res) => {
+    try {
+        const id = parseInt(req.params.id)
+        const count = await q.Content.getTotalHitCount(id)
+        return res.status(200).json(count);
+    }
+    catch (error: any) {
+        console.error(error);
+        return res.status(500).end();
+    }
+}
+
+export const getEmployeeHitCount = async (req: req, res: res) => {
+    try {
+        const id = parseInt(req.params.id)
+        const employeeId = parseInt(req.body.employeeId)
+        const count = await q.Content.getEmployeeHitCount(id, employeeId)
+        return res.status(200).json(count);
+    }
+    catch (error: any) {
+        console.error(error);
+        return res.status(500).end();
+    }
+}
+
+/*
+    I'm not making the hook for EmployeeGroupHitCount to avoid clutter if it won't be used,
+    but I (Luke) can make it if it will be used for something like showing hit count by persona
+*/
+
+export const addHit = async (req: req, res: res) => {
+    try {
+        const id = parseInt(req.params.id)
+        const employeeId = parseInt(req.body.employeeId)
+        await q.Content.addHit(id, employeeId)
+        return res.status(201);
+    }
+    catch (error: any) {
+        console.error(error);
+        return res.status(500).end();
+    }
+}
+
