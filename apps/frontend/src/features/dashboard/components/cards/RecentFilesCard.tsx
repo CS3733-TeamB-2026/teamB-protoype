@@ -1,12 +1,16 @@
-import {Card, CardContent, CardHeader} from "@/components/ui/card.tsx";
+import {CardContent, CardHeader} from "@/components/ui/card.tsx";
 import RecentFiles from "@/features/content/listing/RecentFiles.tsx";
 import {Link} from "react-router-dom";
 import {Button} from "@/components/ui/button.tsx";
 import {FolderOpen} from "lucide-react";
+import DashboardCard from "@/features/dashboard/components/cards/DashboardCard.tsx";
 
 function RecentFilesCard() {
     return (
-        <Card className="border-t-secondary border-t-4 shadow-lg hover:scale-101 transition-transform md:col-span-2 px-4 py-8">
+        <DashboardCard
+            size="medium"
+            borderColor="secondary"
+        >
             <CardHeader className="text-left text-2xl! font-semibold">Recent Files: </CardHeader>
             <CardContent>
                 <RecentFiles />
@@ -17,7 +21,7 @@ function RecentFilesCard() {
                     </Button>
                 </Link>
             </CardContent>
-        </Card>
+        </DashboardCard>
     );
 }
 

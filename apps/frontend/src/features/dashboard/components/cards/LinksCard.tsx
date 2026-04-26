@@ -1,6 +1,7 @@
-import {Card, CardContent, CardTitle} from "@/components/ui/card.tsx";
+import {CardContent, CardTitle} from "@/components/ui/card.tsx";
 import { Link } from "react-router-dom";
 import { useUser } from "@/hooks/use-user.ts";
+import DashboardCard from "@/features/dashboard/components/cards/DashboardCard.tsx";
 
 type LinkItem = {
     title: string;
@@ -36,7 +37,10 @@ function HelloCard() {
     const {user} = useUser();
 
     return (
-        <Card className="lg:col-span-1 py-8 px-4 shadow-lg hover:scale-101 transition-transform">
+        <DashboardCard
+            size="small"
+            borderColor="secondary"
+        >
             <CardTitle className="capitalize text-2xl font-semibold text-center">
                 <h1>Additional Links:</h1>
             </CardTitle>
@@ -55,7 +59,7 @@ function HelloCard() {
                     }
                 </div>
             </CardContent>
-        </Card>
+        </DashboardCard>
     );
 }
 
