@@ -17,6 +17,7 @@ export class Content {
         _targetPersona: string,
         _tags: string[],
         _checkedOutById: number,
+        _textContent: string | null = null,
     ): Promise<p.Content> {
         const _personaTyped: p.Persona | null = Helper.personaHelper(_targetPersona)
         if (_personaTyped === null) {
@@ -48,6 +49,7 @@ export class Content {
                 expiration: _expiration,
                 targetPersona: _personaTyped,
                 tags: _tags,
+                textContent: _textContent,
             }
         });
     }
@@ -63,6 +65,7 @@ export class Content {
         _expiration: Date | null,
         _targetPersona: string,
         _tags: string[] = [],
+        _textContent: string | null = null,
     ): Promise<p.Content> {
         if (!_linkURL && !_fileURI) {
             throw new Error("Content must have either a linkURL or a fileURI")
@@ -87,6 +90,7 @@ export class Content {
                 expiration: _expiration,
                 targetPersona: _personaTyped,
                 tags: _tags,
+                textContent: _textContent,
             }
         })
     }
@@ -194,5 +198,33 @@ export class Content {
             where: {id: id},
             data: { hits: hits }
         })
+    }
+
+    public static async searchContent(query: string): Promise<p.Content[]> {
+        const results = await prisma.$queryRaw<p.Content[]>`
+        SELECT
+            id,
+            "displayName",
+            "linkURL",
+            "fileURI",
+            "contentType",
+            "status",
+            "targetPersona",
+            "tags",
+            "lastModified",
+            "expiration",
+            ts_rank("searchVector", plainto_tsquery('english', ${query})) AS rank,
+            ts_headline(
+                'english',
+                "textContent",
+                plainto_tsquery('english', ${query}),
+                'MaxWords=50, MinWords=20'
+            ) AS snippet
+        FROM "Content"
+        WHERE "searchVector" @@ plainto_tsquery('english', ${query})
+        ORDER BY rank DESC
+        LIMIT 20;
+    `;
+        return results;
     }
 }
