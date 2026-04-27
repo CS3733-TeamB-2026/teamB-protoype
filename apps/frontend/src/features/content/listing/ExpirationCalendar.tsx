@@ -3,10 +3,11 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { useUser } from "@/hooks/use-user.ts";
 import { ContentIcon } from "@/features/content/components/ContentIcon.tsx";
 import { getCategory, getOriginalFilename } from "@/lib/mime.ts";
-import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
 import { Button } from "@/components/ui/button.tsx";
 import type { ContentItem } from "@/lib/types.ts";
+import { InlineContentPreview } from "@/features/content/previews/InlineContentPreview.tsx";
 
 const NOW = Date.now();
 
@@ -20,6 +21,7 @@ function ExpirationCalendar() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [selectedDate, setSelectedDate] = useState<string | null>(null); // "YYYY-MM-DD"
+    const [expandedItemId, setExpandedItemId] = useState<number | null>(null);
     const [viewYear, setViewYear] = useState(new Date().getFullYear());
     const [viewMonth, setViewMonth] = useState(new Date().getMonth());
 
@@ -171,7 +173,10 @@ function ExpirationCalendar() {
                                 return (
                                     <div
                                         key={key}
-                                        onClick={() => setSelectedDate(prev => prev === key ? null : key)}
+                                        onClick={() => {
+                                            setSelectedDate(prev => prev === key ? null : key);
+                                            setExpandedItemId(null);
+                                        }}
                                         className={`border-r border-b min-h-[120px] p-1.5 cursor-pointer transition-colors flex flex-col gap-1
                                             ${isSelected ? "bg-accent/10 ring-1 ring-inset ring-accent" : "hover:bg-muted/30"}
                                         `}
@@ -192,20 +197,34 @@ function ExpirationCalendar() {
                                                 const originalFilename = item.fileURI ? getOriginalFilename(item.fileURI) : null;
                                                 const category = getCategory(null, originalFilename);
                                                 return (
-                                                    <div
+                                                    <button
                                                         key={item.id}
-                                                        className={`flex items-center gap-1 rounded px-1 py-0.5 text-xs truncate ${urgencyColor(days)}`}
-                                                        title={item.displayName}
+                                                        type="button"
+                                                        onClick={(event) => {
+                                                            event.stopPropagation();
+                                                            setSelectedDate(key);
+                                                            setExpandedItemId((prev) => (prev === item.id ? null : item.id));
+                                                        }}
+                                                        className={`flex items-center gap-1 rounded px-1 py-0.5 text-xs truncate text-left ${urgencyColor(days)}`}
+                                                        title={`Preview ${item.displayName}`}
                                                     >
                                                         <ContentIcon category={category} isLink={!!item.linkURL} className="w-3 h-3 shrink-0" />
                                                         <span className="truncate">{item.displayName}</span>
-                                                    </div>
+                                                    </button>
                                                 );
                                             })}
                                             {items.length > 3 && (
-                                                <div className="text-xs text-muted-foreground px-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={(event) => {
+                                                        event.stopPropagation();
+                                                        setSelectedDate(key);
+                                                        setExpandedItemId(null);
+                                                    }}
+                                                    className="text-xs text-muted-foreground px-1 text-left hover:text-foreground"
+                                                >
                                                     +{items.length - 3} more
-                                                </div>
+                                                </button>
                                             )}
                                         </div>
                                     </div>
@@ -223,7 +242,7 @@ function ExpirationCalendar() {
                                         })}
                                     </h3>
                                     <button
-                                        onClick={() => setSelectedDate(null)}
+                                        onClick={() => { setSelectedDate(null); setExpandedItemId(null); }}
                                         className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                                     >
                                         Dismiss
@@ -238,19 +257,33 @@ function ExpirationCalendar() {
                                             const originalFilename = item.fileURI ? getOriginalFilename(item.fileURI) : null;
                                             const category = getCategory(null, originalFilename);
                                             return (
-                                                <div key={item.id} className="flex items-center justify-between p-3 rounded-lg border bg-background hover:bg-muted/40 transition-colors">
-                                                    <div className="flex items-center gap-3 min-w-0">
-                                                        <ContentIcon category={category} isLink={!!item.linkURL} className="w-4 h-4 shrink-0" />
-                                                        <div className="min-w-0">
-                                                            <p className="text-sm font-medium truncate">{item.displayName}</p>
-                                                            <p className="text-xs text-muted-foreground">
-                                                                {new Date(item.expiration!).toLocaleString()}
-                                                            </p>
+                                                <div key={item.id} className="rounded-lg border bg-background overflow-hidden">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setExpandedItemId((prev) => (prev === item.id ? null : item.id))}
+                                                        className="w-full flex items-center justify-between p-3 hover:bg-muted/40 transition-colors text-left"
+                                                    >
+                                                        <div className="flex items-center gap-3 min-w-0">
+                                                            <ContentIcon category={category} isLink={!!item.linkURL} className="w-4 h-4 shrink-0" />
+                                                            <div className="min-w-0">
+                                                                <p className="text-sm font-medium truncate">{item.displayName}</p>
+                                                                <p className="text-xs text-muted-foreground">
+                                                                    {new Date(item.expiration!).toLocaleString()}
+                                                                </p>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <span className={`text-xs font-semibold px-2 py-1 rounded-full shrink-0 ml-4 ${urgencyColor(days)}`}>
-                                                        {days < 0 ? `Expired ${Math.abs(days)}d ago` : days === 0 ? "Today" : `${days}d left`}
-                                                    </span>
+                                                        <div className="flex items-center gap-2 shrink-0 ml-4">
+                                                            <Eye className="w-4 h-4 text-muted-foreground" />
+                                                            <span className={`text-xs font-semibold px-2 py-1 rounded-full ${urgencyColor(days)}`}>
+                                                                {days < 0 ? `Expired ${Math.abs(days)}d ago` : days === 0 ? "Today" : `${days}d left`}
+                                                            </span>
+                                                        </div>
+                                                    </button>
+                                                    {expandedItemId === item.id && (
+                                                        <div className="border-t bg-muted/10 p-3">
+                                                            <InlineContentPreview item={item} />
+                                                        </div>
+                                                    )}
                                                 </div>
                                             );
                                         })}

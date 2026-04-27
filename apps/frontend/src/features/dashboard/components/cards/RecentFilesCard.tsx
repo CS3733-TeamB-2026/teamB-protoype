@@ -4,6 +4,10 @@ import {Link} from "react-router-dom";
 import {Button} from "@/components/ui/button.tsx";
 import {FolderOpen} from "lucide-react";
 
+
+
+
+
 function RecentFilesCard() {
     return (
         <Card className="border-t-secondary border-t-4 shadow-lg hover:scale-101 transition-transform md:col-span-2 px-4 py-8">
