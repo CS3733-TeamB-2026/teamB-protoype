@@ -106,7 +106,7 @@ function ContentTypeChartCard() {
                 <Popover open={open} onOpenChange={setOpen}>
                     <PopoverTrigger asChild>
                         <Info
-                            className="absolute right-1 top-1 w-8 h-8 text-blue-950 cursor-pointer"
+                            className="absolute right-1 top-1 w-8 h-8 cursor-pointer"
                         />
                     </PopoverTrigger>
 
