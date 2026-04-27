@@ -371,7 +371,7 @@ Search matches name, type, owner full name, assignee full name. `highlightRange`
 ### Known issues / TODOs
 
 - `queryContentByOwnerId` (in `packages/db/queries/content.ts`) uses `localStorage` on the server — unfixed.
-- `queryContentByName` needs case-insensitive search.
+- `queryContentByName` needs case-insensitive search. → 'queryContentByName' no longer exists - Ricardo
 
 ---
 
