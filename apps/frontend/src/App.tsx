@@ -29,6 +29,7 @@ import ExperationCalendar from "@/features/content/listing/ExpirationCalendar.ts
 import ViewServiceReqs from "@/features/servicereqs/ViewServiceReqs.tsx";
 import SearchContent from "@/features/SearchContent.tsx";
 
+import ViewNotifications from "@/features/notifications/ViewNotifications.tsx";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const { isAuthenticated } = useAuth0();
@@ -76,8 +77,10 @@ function App() {
                             <Route path="/calendar" element={<ExperationCalendar/>}/>
                             <Route path="/file/:id" element={<ProtectedRoute><ViewSingleFile/></ProtectedRoute>}/>
                             <Route path="/servicereqs" element={<ProtectedRoute><ViewServiceReqs/></ProtectedRoute>}/>
+                            <Route path="/notifications" element={<ProtectedRoute><ViewNotifications/></ProtectedRoute>}/>
                             <Route path="/search" element={<ProtectedRoute><SearchContent/></ProtectedRoute>}/>
                             <Route path="/settings" element={<ProtectedRoute><SettingsLayout/></ProtectedRoute>}>
+
                                 <Route index element={<ProtectedRoute><Navigate to="profile" replace /></ProtectedRoute>} />
                                 <Route path="appearance" element={<ProtectedRoute><AppearanceSettings/></ProtectedRoute>} />
                                 <Route path="profile" element={<ProtectedRoute><ProfileSettings/></ProtectedRoute>} />
