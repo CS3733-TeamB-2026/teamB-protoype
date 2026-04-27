@@ -178,17 +178,33 @@ function buildFileURI(ownerID: string, filename: string): string {
     return `${ownerID}/${crypto.randomUUID()}/${filename}`;
 }
 
+import { extractText, SupportedMimeType } from '../../lib/extractors';
+
 export const uploadFile = async (req: req, res: res) => {
     const payload = req.body;
     let fileURI: string | null = null;
     let uploaded = false;
+    let textContent: string | null = null;
+
     try {
         if (req.file) {
             fileURI = buildFileURI(payload.ownerID, req.file.originalname);
             const uploadResult = await q.Bucket.uploadFile(req.file.buffer, fileURI);
             uploaded = true;
             fileURI = uploadResult.path;
+
+            // Extract text from the uploaded file
+            textContent = await extractText(
+                req.file.buffer,
+                req.file.mimetype as SupportedMimeType
+            );
         }
+
+        // If no file but a URL was provided, extract text from the URL
+        if (!textContent && payload.linkURL) {
+            textContent = await extractText(null, 'url', payload.linkURL);
+        }
+
         const result = await q.Content.createContent(
             payload.name,
             payload.linkURL || null,
@@ -200,6 +216,7 @@ export const uploadFile = async (req: req, res: res) => {
             payload.expiration ? new Date(payload.expiration) : null,
             payload.targetPersona,
             JSON.parse(payload.tags || "[]"),
+            textContent,
         );
         return res.status(201).json(result);
     } catch (error) {
@@ -348,3 +365,16 @@ export const addHit = async (req: req, res: res) => {
     }
 }
 
+export const searchContent = async (req: req, res: res) => {
+    const { q: searchQuery } = req.query;
+    if (!searchQuery || typeof searchQuery !== 'string') {
+        return res.status(400).json({ error: 'Search query is required' });
+    }
+    try {
+        const results = await q.Content.searchContent(searchQuery);
+        return res.status(200).json(results);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
