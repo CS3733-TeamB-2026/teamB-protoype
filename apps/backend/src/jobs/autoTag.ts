@@ -1,6 +1,6 @@
 import * as q from "@softeng-app/db";
 
-export async function applyExpirationTags(url: string) {
+export async function applyExpirationTags() {
     const all = await q.Content.queryAllContent();
 
     const now = new Date();

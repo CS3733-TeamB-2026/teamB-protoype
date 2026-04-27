@@ -16,7 +16,7 @@ export class Content {
         _expiration: Date | null,
         _targetPersona: string,
         _tags: string[],
-        _checkedOutById: number,
+        _checkedOutById: number | null
     ): Promise<p.Content> {
         const _personaTyped: p.Persona | null = Helper.personaHelper(_targetPersona)
         if (_personaTyped === null) {
