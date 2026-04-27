@@ -3,6 +3,7 @@ import { req, res } from "./types";
 import { getEmployee } from "../helpers/getEmployee";
 import { isAdmin, isOwnerOrAdmin } from "../helpers/permissions";
 
+/** Returns collections visible to the caller — all for admins, public+own for regular employees. */
 export const getAllCollections = async (req: req, res: res) => {
     try {
         const employee = await getEmployee(req);
@@ -16,6 +17,7 @@ export const getAllCollections = async (req: req, res: res) => {
     }
 };
 
+/** Fetches a collection by ID; 403s if it's private and the caller isn't the owner or an admin. */
 export const getCollectionById = async (req: req, res: res) => {
     try {
         const employee = await getEmployee(req);
@@ -35,6 +37,7 @@ export const getCollectionById = async (req: req, res: res) => {
     }
 };
 
+/** Creates a collection owned by the caller — ownerId is derived from the JWT, not the request body. */
 export const createCollection = async (req: req, res: res) => {
     try {
         const employee = await getEmployee(req);
@@ -108,6 +111,7 @@ export const getFavorites = async (req: req, res: res) => {
     }
 };
 
+/** Adds a favorite after verifying the caller can see the collection — prevents bookmarking inaccessible private collections. */
 export const addFavorite = async (req: req, res: res) => {
     try {
         const employee = await getEmployee(req);

@@ -130,6 +130,18 @@ All routes are JSON unless noted. File-upload routes use `multipart/form-data` w
 **Login** (`/api/login`) — legacy local auth, retained for compatibility
 - `POST /api/login`, `POST /api/login/create`, `PUT /api/login`, `DELETE /api/login`
 
+**Collections** (`/api/collections`) — visibility rules applied at the DB layer for `GET /api/collections`; post-query for single fetches
+- `GET    /api/collections` — public collections + caller's own (all for admins)
+- `POST   /api/collections` — create; owner is derived from JWT, not the request body
+- `GET    /api/collections/favorites` — caller's favorited collections
+- `GET    /api/collections/:id` — single collection; 403 if private and caller is not owner/admin
+- `PUT    /api/collections/:id` — update name, visibility, owner, and full ordered item list (owner or admin only)
+- `DELETE /api/collections/:id` — cascades to CollectionItem and CollectionFavorite (owner or admin only)
+- `POST   /api/collections/:id/favorite` — add favorite; guards against favoriting inaccessible private collections
+- `DELETE /api/collections/:id/favorite` — remove favorite
+
+> **Route order matters**: `GET /api/collections/favorites` must be registered **before** `GET /api/collections/:id` to avoid Express matching `"favorites"` as an ID.
+
 **Service Requests** — `GET/POST/PUT /api/servicereqs`, `DELETE /api/servicereq`, plus `/api/assigned`.
 
 > **Route order matters in `apps/backend/src/app.ts`**: `checkout`, `checkin`, `info`, `download`, `publicUrl`, and `tags` must be registered **before** `/:id`, otherwise Express 5 will match them to the parameterized route first.
