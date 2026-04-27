@@ -43,6 +43,30 @@ export function NotificationBell() {
         const id = setInterval(load, 30_000);
         return () => clearInterval(id);
     }, [load]);
+    const handleDismiss = async (id: string) => {
+        setItems((prev) => prev.filter((n) => n.id !== id));
+
+        try {
+            const token = await getAccessTokenSilently();
+            const body = id.startsWith("exp-")
+                ? (() => {
+                    const match = id.match(/^exp-(\d+)-(.+)$/);
+                    if (!match) return null;
+                    return { kind: "expiration", contentId: Number(match[1]), threshold: match[2] };
+                })()
+                : { kind: "notification", notificationId: Number(id) };
+
+            if (!body) return;
+
+            await fetch(`/api/notifications/dismiss`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                body: JSON.stringify(body),
+            });
+        } catch {
+            // silent — refresh will restore if it failed
+        }
+    };
 
     if (!user) return null;
 
@@ -83,6 +107,7 @@ export function NotificationBell() {
                                     compact
                                     index={i}
                                     onSelect={() => setOpen(false)}
+                                    onDismiss={handleDismiss}
                                 />
                             ))}
                         </div>

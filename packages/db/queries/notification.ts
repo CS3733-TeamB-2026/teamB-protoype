@@ -64,4 +64,35 @@ export class Notification {
             orderBy: { expiration: "asc" },
         });
     }
+    public static async getDismissedNotificationIds(employeeId: number): Promise<Set<number>> {
+        const rows = await prisma.notificationDismissal.findMany({
+            where: { employeeId },
+            select: { notificationId: true },
+        });
+        return new Set(rows.map((r) => r.notificationId));
+    }
+
+    public static async getDismissedExpirations(employeeId: number): Promise<Set<string>> {
+        const rows = await prisma.expirationDismissal.findMany({
+            where: { employeeId },
+            select: { contentId: true, threshold: true },
+        });
+        return new Set(rows.map((r) => `${r.contentId}:${r.threshold}`));
+    }
+
+    public static async dismissNotification(notificationId: number, employeeId: number) {
+        return prisma.notificationDismissal.upsert({
+            where: { notificationId_employeeId: { notificationId, employeeId } },
+            update: {},
+            create: { notificationId, employeeId },
+        });
+    }
+
+    public static async dismissExpiration(contentId: number, employeeId: number, threshold: string) {
+        return prisma.expirationDismissal.upsert({
+            where: { contentId_employeeId_threshold: { contentId, employeeId, threshold } },
+            update: {},
+            create: { contentId, employeeId, threshold },
+        });
+    }
 }

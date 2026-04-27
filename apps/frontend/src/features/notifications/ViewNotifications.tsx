@@ -45,6 +45,30 @@ export default function ViewNotifications() {
             toast.error("Failed to refresh notifications.");
         }
     }, [getAccessTokenSilently]);
+    const handleDismiss = async (id: string) => {
+        setItems((prev) => prev.filter((n) => n.id !== id));
+
+        try {
+            const token = await getAccessTokenSilently();
+            const body = id.startsWith("exp-")
+                ? (() => {
+                    const match = id.match(/^exp-(\d+)-(.+)$/);
+                    if (!match) return null;
+                    return { kind: "expiration", contentId: Number(match[1]), threshold: match[2] };
+                })()
+                : { kind: "notification", notificationId: Number(id) };
+
+            if (!body) return;
+
+            await fetch(`/api/notifications/dismiss`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                body: JSON.stringify(body),
+            });
+        } catch {
+            toast.error("Failed to dismiss notification.");
+        }
+    };
 
 
 
@@ -187,7 +211,11 @@ export default function ViewNotifications() {
                         <div className="flex-1 min-w-0">
                             <div className="flex flex-col gap-3">
                                 {paginated.map((n) => (
-                                    <NotificationCard key={n.id} notification={n} />
+                                    <NotificationCard
+                                        key={n.id}
+                                        notification={n}
+                                        onDismiss={handleDismiss}
+                                    />
                                 ))}
                             </div>
                         </div>

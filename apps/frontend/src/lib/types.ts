@@ -75,11 +75,16 @@ export type NotificationItem = {
     createdAt: string;
     metadata: {
         changedFields?: string[];
+        before?: Record<string, unknown>;
+        after?: Record<string, unknown>;
         oldOwnerId?: number | null;
         newOwnerId?: number | null;
+        oldOwnerName?: string | null;
         newOwnerName?: string | null;
         daysLeft?: number;
+        hoursLeft?: number;
         expired?: boolean;
+        threshold?: "3d" | "1h" | "expired";
     };
 }
 
