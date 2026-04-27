@@ -1,21 +1,25 @@
 import * as p from "../generated/prisma/client";
 import {prisma} from "../lib/prisma";
-import {Helper} from "./helper";
+import {Helper, employeeSelect} from "./helper";
 
 export class ServiceReqs {
-    private static readonly employeeSelect = {
-        id: true,
-        firstName: true,
-        lastName: true,
-        persona: true,
-        profilePhotoURI: true,
-    } as const;
+
+    /** Fetches a single service request by ID, used by the backend hook for ownership checks before update/delete. */
+    public static async queryServiceReqById(id: number) {
+        return prisma.serviceRequest.findUnique({
+            where: { id },
+            include: {
+                owner: { select: employeeSelect },
+                assignee: { select: employeeSelect },
+            },
+        });
+    }
 
     public static async queryAllServiceReqs() {
         return prisma.serviceRequest.findMany({
             include: {
-                owner: { select: ServiceReqs.employeeSelect },
-                assignee: { select: ServiceReqs.employeeSelect },
+                owner: { select: employeeSelect },
+                assignee: { select: employeeSelect },
             },
         });
     }
@@ -24,8 +28,8 @@ export class ServiceReqs {
         return prisma.serviceRequest.findMany({
             where: { assigneeId: { not: null } },
             include: {
-                owner: { select: ServiceReqs.employeeSelect },
-                assignee: { select: ServiceReqs.employeeSelect },
+                owner: { select: employeeSelect },
+                assignee: { select: employeeSelect },
             },
         });
     }
@@ -34,8 +38,8 @@ export class ServiceReqs {
         return prisma.serviceRequest.findMany({
             where: { assigneeId: id },
             include: {
-                owner: { select: ServiceReqs.employeeSelect },
-                assignee: { select: ServiceReqs.employeeSelect },
+                owner: { select: employeeSelect },
+                assignee: { select: employeeSelect },
             },
         });
     }

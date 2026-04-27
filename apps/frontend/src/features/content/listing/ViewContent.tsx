@@ -355,7 +355,7 @@ function ViewContent() {
      */
     const handleDelete = async (id: number) => {
         const token = await getAccessTokenSilently();
-        const res = await fetch(`/api/content/${id}?employeeID=${user!.id}`, {
+        const res = await fetch(`/api/content/${id}`, {
             method: "DELETE",
             headers: {Authorization: `Bearer ${token}`},
         });
@@ -387,7 +387,7 @@ function ViewContent() {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({id: item.id, employeeID: user!.id}),
+                body: JSON.stringify({id: item.id}),
             });
             const data = await res.json();
             if (!res.ok) {
@@ -417,7 +417,7 @@ function ViewContent() {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({id: item.id, employeeID: user!.id}),
+                body: JSON.stringify({id: item.id}),
             });
             if (res.ok) {
                 setContent((prev) => prev.map((c) => c.id === item.id
@@ -432,8 +432,8 @@ function ViewContent() {
     };
     /**
      * Admin-only: forcibly releases the edit lock on `item`, even if another
-     * user currently holds it. Uses `/api/content/checkin` endpoint
-     * but passes the lock holder's ID so the backend lets it through.
+     * user currently holds it. The backend allows this because the caller's
+     * JWT identifies them as an admin.
      */
     const handleForceCheckin = async (item: ContentItem) => {
         try {
@@ -444,7 +444,7 @@ function ViewContent() {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ id: item.id, employeeID: item.checkedOutById }),
+                body: JSON.stringify({ id: item.id }),
             });
             if (res.ok) {
                 setContent((prev) => prev.map((c) => c.id === item.id

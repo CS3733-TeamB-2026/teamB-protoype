@@ -1,15 +1,16 @@
 import * as p from "../generated/prisma/client";
 import {prisma} from "../lib/prisma";
-import {Helper} from "./helper";
+import {Helper, employeeSelect} from "./helper";
 
 export class Employee {
-    public static async queryAllEmployees(): Promise<p.Employee[]> {
-        return prisma.employee.findMany({})
+    public static async queryAllEmployees() {
+        return prisma.employee.findMany({ select: employeeSelect })
     }
 
-    public static async queryEmployeeById(id: number): Promise<p.Employee | null> {
+    public static async queryEmployeeById(id: number) {
         return prisma.employee.findUnique({
-            where: {id: id}
+            where: { id },
+            select: employeeSelect,
         })
     }
 

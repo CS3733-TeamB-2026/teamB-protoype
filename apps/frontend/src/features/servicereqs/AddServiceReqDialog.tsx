@@ -22,24 +22,23 @@ interface Props {
 }
 
 /**
- * Dialog for creating a new content item via `POST /api/content`.
+ * Dialog for creating a new service request via `POST /api/servicereqs`.
  *
- * After a successful save, calls `onSave` with the server-returned item so the
- * parent (`ViewContent`) can append it to the list and immediately fetch its
- * link preview without waiting for the next poll.
+ * The owner is derived from the caller's JWT on the backend — the form does
+ * not send an `ownerId` field.
  *
  * The form is reset after each successful submission so the dialog is clean if
- * the user opens it again. `formKey` forces `ContentFormFields` to remount on
- * reset, clearing any local state inside that component (e.g., file picker errors).
+ * the user opens it again. `formKey` forces `ServiceReqFormFields` to remount
+ * on reset, clearing any local state inside that component.
  */
 export function AddServiceReqDialog({ open, onOpenChange, onSave }: Props) {
     const user = useUser();
     const { getAccessTokenSilently } = useAuth0();
 
     const { values, patch, setSubmitted, errors, hasErrors, formKey, reset } =
-        useServiceReqForm(initialValues(user.user?.id ?? 0));
+        useServiceReqForm(initialValues());
 
-    const handleReset = () => reset(initialValues(user.user!.id));
+    const handleReset = () => reset(initialValues());
 
     const handleSubmit = async () => {
         if (!user) return;
@@ -58,7 +57,7 @@ export function AddServiceReqDialog({ open, onOpenChange, onSave }: Props) {
             const created: ServiceReq = await res.json();
             onSave(created);
             onOpenChange(false);
-            reset(initialValues(created.id));
+            reset(initialValues());
             toast.success("Service Request created successfully!");
         } catch {
             toast.error("Error creating service request.");

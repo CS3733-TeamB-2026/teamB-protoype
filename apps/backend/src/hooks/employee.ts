@@ -1,6 +1,8 @@
 import * as q from "@softeng-app/db";
 import {req, res} from "./types"
 import { createAuth0User } from "../helpers/auth0Management";
+import { getEmployee } from "../helpers/getEmployee";
+import { isAdmin, isOwnerOrAdmin } from "../helpers/permissions";
 
 function buildPhotoURI(employeeId: number, filename:string): string {
     return `${employeeId}/${crypto.randomUUID()}/${filename}`;
@@ -8,6 +10,7 @@ function buildPhotoURI(employeeId: number, filename:string): string {
 
 const PROFILE_BUCKET = "profiles"
 
+/** Replaces a stored storage path with a 1-hour signed URL; returns the record unchanged if no photo is set. */
 async function signPhotoUrl<T extends { profilePhotoURI: string | null }>(employee: T): Promise<T> {
     if (!employee.profilePhotoURI) return employee;
     const signedUrl = await q.Bucket.createSignedUrl(
@@ -18,6 +21,11 @@ async function signPhotoUrl<T extends { profilePhotoURI: string | null }>(employ
     return { ...employee, profilePhotoURI: signedUrl };
 }
 
+/**
+ * Uploads or replaces the caller's profile photo (max 5 MB, images only).
+ * Uses raw auth0Id instead of getEmployee because the upload is always self-service —
+ * there is no ownership transfer here, unlike content uploads.
+ */
 export const uploadProfilePhoto = async (req: req, res: res)=> {
     const auth0Id = req.auth?.payload.sub;
     let fileURI: string | null = null;
@@ -60,8 +68,13 @@ export const uploadProfilePhoto = async (req: req, res: res)=> {
     }
 }
 
+/**
+ * Returns the authenticated employee's profile with a signed photo URL.
+ * Uses raw auth0Id (not getEmployee helper) because this is the bootstrap
+ * endpoint — the frontend calls it on login before the employee record is
+ * guaranteed to exist, and a 404 here is a valid signal, not an error.
+ */
 export const getMe = async (req: req, res: res) => {
-
     const auth0Id = req.auth?.payload.sub;
 
     try {
@@ -122,6 +135,10 @@ export const getEmployeeById = async (req: req, res: res) => {
 export const createEmployee = async (req: req, res: res) => {
     const payload = req.body;
     try {
+        const caller = await getEmployee(req);
+        if (!caller) return res.status(404).json({ error: "Employee not found" });
+        if (!isAdmin(caller.persona)) return res.status(403).json({ error: "Admin only" });
+
         const result = await q.Employee.createEmployee(
             payload.id,
             payload.firstName,
@@ -139,6 +156,9 @@ export const createEmployeeWithAuth0 = async (req: req, res: res) => {
     const { id, firstName, lastName, persona, username, password, email } = req.body;
 
     try {
+        const caller = await getEmployee(req);
+        if (!caller) return res.status(404).json({ error: "Employee not found" });
+        if (!isAdmin(caller.persona)) return res.status(403).json({ error: "Admin only" });
 
         const auth0Id = await createAuth0User(username, password, email);
 
@@ -165,11 +185,19 @@ export const createEmployeeWithAuth0 = async (req: req, res: res) => {
 export const updateEmployee = async (req: req, res: res) => {
     const payload = req.body;
     try {
+        const caller = await getEmployee(req);
+        if (!caller) return res.status(404).json({ error: "Employee not found" });
+        if (!isOwnerOrAdmin(parseInt(payload.id), caller.id, caller.persona))
+            return res.status(403).json({ error: "Access denied" });
+
+        // Non-admins cannot change persona — use the existing value to prevent self-escalation
+        const persona = isAdmin(caller.persona) ? payload.persona : caller.persona;
+
         const result = await q.Employee.updateEmployee(
             payload.id,
             payload.firstName,
             payload.lastName,
-            payload.persona,
+            persona,
         );
         return res.status(200).json(result);
     } catch (error) {
@@ -181,8 +209,12 @@ export const updateEmployee = async (req: req, res: res) => {
 export const deleteEmployee = async (req: req, res: res) => {
     const payload = req.body;
     try {
-        const result = await q.Employee.deleteEmployee(payload.id);
-        return res.status(204).json(result);
+        const caller = await getEmployee(req);
+        if (!caller) return res.status(404).json({ error: "Employee not found" });
+        if (!isAdmin(caller.persona)) return res.status(403).json({ error: "Admin only" });
+
+        await q.Employee.deleteEmployee(payload.id);
+        return res.status(204).end();
     } catch (error) {
         console.error(error);
         return res.status(500).end();

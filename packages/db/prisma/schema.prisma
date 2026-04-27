@@ -23,6 +23,8 @@ model Employee {
   ownedRequests          ServiceRequest[]        @relation("OwnedBy")
   notificationDismissals NotificationDismissal[]
   expirationDismissals   ExpirationDismissal[]
+  collections            Collection[]
+  collectionFavorites    CollectionFavorite[]
 
   @@unique([firstName, lastName])
   @@schema("public")
@@ -50,6 +52,7 @@ model Content {
   owner                Employee?                @relation("Owned", fields: [ownerId], references: [id])
   notifications        Notification[]           @relation("Notified")
   expirationDismissals ExpirationDismissal[]
+  collectionItems      CollectionItem[]
 
   @@schema("public")
 }
@@ -65,6 +68,40 @@ model ServiceRequest {
   assignee   Employee?   @relation("AssignedTo", fields: [assigneeId], references: [id])
   owner      Employee    @relation("OwnedBy", fields: [ownerId], references: [id])
 
+  @@schema("public")
+}
+
+model Collection {
+  id          Int      @id @default(autoincrement())
+  displayName String
+  owner       Employee @relation(fields: [ownerId], references: [id])
+  ownerId     Int
+  public      Boolean
+
+  items     CollectionItem[]
+  favorites CollectionFavorite[]
+
+  @@schema("public")
+}
+
+model CollectionItem {
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  collectionId Int
+  content      Content    @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  contentId    Int
+  position     Int
+
+  @@id([collectionId, contentId])
+  @@schema("public")
+}
+
+model CollectionFavorite {
+  employee     Employee   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId   Int
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  collectionId Int
+
+  @@id([employeeId, collectionId])
   @@schema("public")
 }
 
