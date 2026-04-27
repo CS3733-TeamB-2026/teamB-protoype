@@ -84,7 +84,7 @@ model Notification {
   metadata      Json?
   createdAt     DateTime         @default(now())
   content       Content          @relation("Notified", fields: [contentId], references: [id], onDelete: Cascade)
-  triggeredBy   Employee?        @relation("Triggered", fields: [triggeredById], references: [id])
+  triggeredBy   Employee?        @relation("Triggered", fields: [triggeredById], references: [id], onDelete: SetNull)
 
   @@index([targetPersona, createdAt])
   @@schema("public")
