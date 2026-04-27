@@ -47,11 +47,22 @@ export function ViewSingleFile() {
                 if (!res.ok) throw new Error(`${res.status}`);
                 const data: ContentItem = await res.json();
                 setItem(data);
-            } catch {
+
+                //Add to the hit count
+                await fetch(`/api/content/hitCount/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                })
+            } catch (error) {
                 setError("File not found or failed to load.");
+                console.error(error);
             } finally {
                 setLoading(false);
             }
+
         };
         void fetchItem();
     }, [id, getAccessTokenSilently]);
