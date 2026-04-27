@@ -4,3 +4,4 @@ export {Helper} from "./queries/helper";
 export {Employee} from "./queries/employee";
 export {Content} from "./queries/content";
 export {Bookmark} from "./queries/bookmark";
+export { Notification } from "./queries/notification";
