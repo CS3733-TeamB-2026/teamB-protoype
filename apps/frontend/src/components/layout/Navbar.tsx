@@ -20,6 +20,8 @@ import {useTranslation} from "@/languageSupport/useTranslation.ts";
 import DisclaimerAlert from "@/components/layout/DisclaimerAlert"
 import {useState} from "react";
 import React from "react";
+import { NotificationBell } from "@/features/notifications/NotificationBell.tsx";
+
 
 const LOCALES = [
     { code: "en_us", label: "English" },
@@ -71,6 +73,7 @@ function Navbar() {
                 <div className="flex-1" />
 
                 {/* user avatar popover */}
+                {isAuthenticated && <NotificationBell />}
                 <Popover open={userOpen} onOpenChange={setUserOpen}>
                     <PopoverTrigger asChild>
                         {

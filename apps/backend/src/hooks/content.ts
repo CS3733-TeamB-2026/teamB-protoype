@@ -4,6 +4,7 @@ import * as cheerio from "cheerio";
 import { req, res } from "./types";
 import { getEmployee } from "../helpers/getEmployee";
 import { assertPublicUrl } from "../helpers/validateUrl";
+import { extractText, SupportedMimeType } from "../../lib/extractors";
 
 const PREVIEW_MAX_BYTES = 2 * 1024 * 1024; // 2 MB
 
@@ -159,6 +160,8 @@ export const uploadFile = async (req: req, res: res) => {
     const payload = req.body;
     let fileURI: string | null = null;
     let uploaded = false;
+    let textContent: string | null = null;
+
     try {
         const employee = await getEmployee(req);
         if (!employee)
@@ -174,7 +177,19 @@ export const uploadFile = async (req: req, res: res) => {
             );
             uploaded = true;
             fileURI = uploadResult.path;
+
+            // Extract text from the uploaded file
+            textContent = await extractText(
+                req.file.buffer,
+                req.file.mimetype as SupportedMimeType
+            );
         }
+
+        // If no file but a URL was provided, extract text from the URL
+        if (!textContent && payload.linkURL) {
+            textContent = await extractText(null, 'url', payload.linkURL);
+        }
+
         const result = await q.Content.createContent(
             payload.name,
             payload.linkURL || null,
@@ -186,6 +201,7 @@ export const uploadFile = async (req: req, res: res) => {
             payload.expiration ? new Date(payload.expiration) : null,
             payload.targetPersona,
             JSON.parse(payload.tags || "[]"),
+            textContent,
         );
         return res.status(201).json(result);
     } catch (error) {
@@ -340,6 +356,57 @@ export const checkinContent = async (req: req, res: res) => {
         await q.Content.checkinContent(contentId, employee.id);
         return res.status(200).json({ message: "Checked in" });
     } catch (error: any) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+export const getTotalHitCount = async (req: req, res: res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const count = await q.Content.getTotalHitCount(id);
+        return res.status(200).json(count);
+    } catch (error: any) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+export const getEmployeeHitCount = async (req: req, res: res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const employeeId = parseInt(req.body.employeeId);
+        const count = await q.Content.getEmployeeHitCount(id, employeeId);
+        return res.status(200).json(count);
+    } catch (error: any) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+export const addHit = async (req: req, res: res) => {
+    try {
+        const employee = await getEmployee(req);
+        if (!employee) return res.status(404).json({ error: "Employee not found" });
+
+        const id = parseInt(req.params.id);
+        await q.Content.addHit(id, employee.id);
+        return res.status(201).end();
+    } catch (error: any) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+export const searchContent = async (req: req, res: res) => {
+    const { q: searchQuery } = req.query;
+    if (!searchQuery || typeof searchQuery !== "string") {
+        return res.status(400).json({ error: "Search query is required" });
+    }
+    try {
+        const results = await q.Content.searchContent(searchQuery);
+        return res.status(200).json(results);
+    } catch (error) {
         console.error(error);
         return res.status(500).end();
     }

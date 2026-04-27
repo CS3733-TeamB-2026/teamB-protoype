@@ -10,6 +10,7 @@ import * as content from './hooks/content'
 import * as employee from './hooks/employee'
 import * as bookmark from './hooks/bookmark'
 import * as collection from './hooks/collection'
+import * as notifications from './hooks/notifications'
 import { auth } from 'express-oauth2-jwt-bearer'
 
 const app = express();
@@ -39,9 +40,13 @@ app.get("/api/content", content.getAllContent)
 app.get("/api/content/tags", content.getAllTags)
 app.post("/api/content/checkin", content.checkinContent)
 app.post("/api/content/checkout", content.checkoutContent)
+app.get("/api/content/hitCount/:id", content.getTotalHitCount)
+app.get("/api/content/empHitCount/:id", content.getEmployeeHitCount)
+app.post("/api/content/hitCount/:id", content.addHit)
 app.get("/api/content/info/:id", content.getContentInfo)
 app.get("/api/content/download/:id", content.downloadContent)
 app.get("/api/content/publicUrl/:id", content.getPublicFileUrl)
+app.get("/api/content/search", content.searchContent)
 app.get("/api/content/:id", content.getContentById)
 app.post("/api/content", upload.single("file"), content.uploadFile)
 app.put("/api/content", upload.single("file"), content.updateContent)
@@ -69,6 +74,8 @@ app.post("/api/employee", employee.createEmployee)
 app.get("/api/employee/:id", employee.getEmployeeById)
 app.put("/api/employee", employee.updateEmployee)
 app.delete("/api/employee", employee.deleteEmployee)
+//notifications
+app.get("/api/notifications", notifications.getNotifications)
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

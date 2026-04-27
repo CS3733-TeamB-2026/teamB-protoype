@@ -66,6 +66,22 @@ export type ServiceReq = {
     assigneeId: number | null;
     assignee: Employee | null;
 }
+export type NotificationItem = {
+    id: string;
+    type: "change" | "ownership" | "expiration";
+    contentId: number;
+    contentName: string;
+    triggeredBy: { id: number; firstName: string; lastName: string } | null;
+    createdAt: string;
+    metadata: {
+        changedFields?: string[];
+        oldOwnerId?: number | null;
+        newOwnerId?: number | null;
+        newOwnerName?: string | null;
+        daysLeft?: number;
+        expired?: boolean;
+    };
+}
 
 /** Alias kept for backwards compatibility with edit/form helpers. */
 export type ServiceReqItem = ServiceReq;

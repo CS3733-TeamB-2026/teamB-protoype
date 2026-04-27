@@ -5,6 +5,7 @@ export {Employee} from "./queries/employee";
 export {Content} from "./queries/content";
 export {Bookmark} from "./queries/bookmark";
 export {Collection} from "./queries/collection";
+export { Notification } from "./queries/notification";
 
 // Prisma model types — use these in backend code (hooks, helpers).
 // Do not import Prisma types directly on the frontend; use lib/types.ts instead.
