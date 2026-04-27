@@ -1,21 +1,24 @@
 import { useEffect, useState } from "react";
 import { useUser } from "@/hooks/use-user.ts";
-import { Bookmark, Loader2 } from "lucide-react";
+import { Bookmark, ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import { ContentIcon } from "@/features/content/components/ContentIcon.tsx";
 import { getCategory, getExtension, getOriginalFilename, lookupByFilename } from "@/lib/mime.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 import type { ContentItem, BookmarkRecord } from "@/lib/types.ts";
+import { FilePreview } from "@/features/content/previews/FilePreview.tsx";
 
 function RecentFiles() {
     const [bookmarkedItems, setBookmarkedItems] = useState<ContentItem[]>([]);
+    const [expandedId, setExpandedId] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const {user} = useUser();
+    const { user } = useUser();
     const { getAccessTokenSilently } = useAuth0();
 
     useEffect(() => {
         if (!user) return;
+
         const fetchBookmarkedContent = async () => {
             try {
                 const token = await getAccessTokenSilently();
@@ -37,6 +40,7 @@ function RecentFiles() {
                 setLoading(false);
             }
         };
+
         void fetchBookmarkedContent();
     }, [user, getAccessTokenSilently]);
 
@@ -73,33 +77,66 @@ function RecentFiles() {
                 const originalFilename = isFile ? getOriginalFilename(item.fileURI!) : null;
                 const mimeType = originalFilename ? lookupByFilename(originalFilename)?.mimeType : null;
                 const category = getCategory(mimeType, originalFilename);
+                const isExpanded = expandedId === item.id;
 
                 return (
-                    <div
-                        key={item.id}
-                        className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
-                    >
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <ContentIcon
-                                category={category}
-                                isLink={!!item.linkURL}
-                                className="w-5 h-5 shrink-0"
-                            />
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium truncate">{item.displayName}</p>
-                                <p className="text-xs text-muted-foreground">
-                                    Updated {new Date(item.lastModified).toLocaleDateString()}
-                                </p>
+                    <div key={item.id} className="rounded-lg border overflow-hidden">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (item.linkURL) return;
+                                setExpandedId((prev) => (prev === item.id ? null : item.id));
+                            }}
+                            className="w-full flex items-center justify-between p-3 hover:bg-muted/50 transition-colors text-left"
+                        >
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                                {!item.linkURL &&
+                                    (isExpanded ? (
+                                        <ChevronDown className="w-4 h-4 shrink-0 text-muted-foreground" />
+                                    ) : (
+                                        <ChevronRight className="w-4 h-4 shrink-0 text-muted-foreground" />
+                                    ))}
+
+                                <ContentIcon
+                                    category={category}
+                                    isLink={!!item.linkURL}
+                                    className="w-5 h-5 shrink-0"
+                                />
+
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium truncate">{item.displayName}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        Updated {new Date(item.lastModified).toLocaleDateString()}
+                                    </p>
+                                </div>
                             </div>
-                        </div>
-                        {item.linkURL ? (
-                            <a href={item.linkURL} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline shrink-0" onClick={(e) => e.stopPropagation()}>
-                                View →
-                            </a>
-                        ) : (
-                            <span className="text-xs text-muted-foreground shrink-0">
-                        {getExtension(originalFilename || '') || 'File'}
-                    </span>
+
+                            {item.linkURL ? (
+                                <a
+                                    href={item.linkURL}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-primary hover:underline shrink-0"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    View →
+                                </a>
+                            ) : (
+                                <span className="text-xs text-muted-foreground shrink-0">
+                                    {getExtension(originalFilename || "") || "File"}
+                                </span>
+                            )}
+                        </button>
+
+                        {isExpanded && !item.linkURL && (
+                            <div className="border-t bg-muted/10 p-3">
+                                <FilePreview
+                                    filename={originalFilename || item.displayName}
+                                    src={`/api/content/download/${item.id}`}
+                                    infoSrc={`/api/content/info/${item.id}`}
+                                    mode="inline"
+                                />
+                            </div>
                         )}
                     </div>
                 );
