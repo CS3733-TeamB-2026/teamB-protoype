@@ -32,6 +32,9 @@ apps/
       types.ts             Shared req/res type aliases
     helpers/
       auth0Management.ts   Auth0 Management API client
+      getEmployee.ts       Resolves JWT → EmployeeModel; used by every protected handler
+      permissions.ts       isAdmin / isOwnerOrAdmin — extracted so permission logic is testable without Express
+      validateUrl.ts       assertPublicUrl — SSRF-safe URL validator (DNS-resolves before fetching)
 
   frontend/src/
     pages/                 Top-level routed pages
@@ -89,7 +92,9 @@ app.get("/api/preview", content.previewContent)   // public
 app.use('/api', checkJwt)                         // everything below is protected
 ```
 
-The authenticated user's Auth0 `sub` is read from `req.auth.payload.sub` and resolved to an internal `Employee` via `queryEmployeeByAuth(auth0Id)`. New employees are created through `POST /api/employee/auth`, which provisions an Auth0 user first and then writes the `Employee` row with the returned `auth0Id`.
+The authenticated user's Auth0 `sub` is read from `req.auth.payload.sub` and resolved to an internal `Employee` via `getEmployee(req)` (`helpers/getEmployee.ts`). This helper is used by every protected handler so the employee record is verified on every call and the `auth0Id` is never forwarded to the frontend. The two exceptions are `getMe` and `uploadProfilePhoto`, which read `req.auth.payload.sub` directly — `getMe` is the bootstrap call made before the employee record is guaranteed to exist, so a 404 is intentional.
+
+New employees are created through `POST /api/employee/auth`, which provisions an Auth0 user first and then writes the `Employee` row with the returned `auth0Id`.
 
 ### API routes
 
@@ -106,10 +111,10 @@ All routes are JSON unless noted. File-upload routes use `multipart/form-data` w
 - `GET    /api/content/download/:id` — streams the file inline with the correct MIME type
 - `GET    /api/content/publicUrl/:id` — short-lived (120 s) signed URL
 - `POST   /api/content` — create (multipart; `linkURL` *xor* `fileURI`, never both)
-- `PUT    /api/content` — update; requires `employeeID` matching `checkedOutById`, else `409 { lockReleased: true }`
-- `DELETE /api/content/:id?employeeID=...` — same lock check; also deletes the Supabase file if present
-- `POST   /api/content/checkout` — `{ id, employeeID }`; fails with the current holder's name if taken
-- `POST   /api/content/checkin`  — `{ id, employeeID }`
+- `PUT    /api/content` — update; employee identity from JWT, else `409 { lockReleased: true }` if lock mismatch
+- `DELETE /api/content/:id` — same lock check; also deletes the Supabase file if present
+- `POST   /api/content/checkout` — `{ id }`; employee from JWT; fails if already checked out
+- `POST   /api/content/checkin`  — `{ id }`; admin can force-checkin any item; non-admins can only checkin their own lock
 
 **Bookmarks** (`/api/bookmark`) — user derived from the JWT, not the URL
 - `GET    /api/bookmark`
@@ -178,6 +183,8 @@ Enums (`Persona`, `Status`, `ContentType`, `RequestType`) are mapped from string
 ### Separation of concerns: `packages/db` vs `apps/backend`
 
 The query classes in `packages/db/queries/` are a pure data layer — they talk to the database and nothing else. **They do not enforce permissions.** Deciding whether a requesting employee is allowed to read or mutate a resource (ownership checks, admin access, private-visibility rules) is the responsibility of the route handler in `apps/backend/src/hooks/`. This keeps the query classes reusable and testable in isolation.
+
+All joined `Employee` records use the shared `employeeSelect` constant (`packages/db/queries/helper.ts`), which explicitly excludes `auth0Id` so it is never serialised into an API response.
 
 ---
 

@@ -1,13 +1,10 @@
 import * as q from "@softeng-app/db";
 import { req, res } from "./types";
+import { getEmployee } from "../helpers/getEmployee";
 
 export const getNotifications = async (req: req, res: res) => {
-    const auth0Id = req.auth?.payload.sub;
-
     try {
-        if (!auth0Id) return res.status(401).end();
-
-        const employee = await q.Employee.queryEmployeeByAuth(auth0Id);
+        const employee = await getEmployee(req);
         if (!employee) return res.status(404).json({ error: "No employee found" });
 
         const [persisted, expiring] = await Promise.all([

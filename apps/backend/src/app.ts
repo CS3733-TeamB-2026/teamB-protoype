@@ -34,7 +34,7 @@ app.get("/api/servicereqs", servicereqs.allServiceReqs)
 app.get("/api/assigned", servicereqs.allAssignedReqs)
 app.post("/api/servicereqs",servicereqs.createServiceReq)
 app.put("/api/servicereqs", servicereqs.updateServiceReq)
-app.delete("api/servicereqs/:id", servicereqs.deleteServiceReq)
+app.delete("/api/servicereqs/:id", servicereqs.deleteServiceReq)
 // Content
 app.get("/api/content", content.getAllContent)
 app.get("/api/content/tags", content.getAllTags)

@@ -10,6 +10,7 @@ function buildPhotoURI(employeeId: number, filename:string): string {
 
 const PROFILE_BUCKET = "profiles"
 
+/** Replaces a stored storage path with a 1-hour signed URL; returns the record unchanged if no photo is set. */
 async function signPhotoUrl<T extends { profilePhotoURI: string | null }>(employee: T): Promise<T> {
     if (!employee.profilePhotoURI) return employee;
     const signedUrl = await q.Bucket.createSignedUrl(
@@ -20,6 +21,11 @@ async function signPhotoUrl<T extends { profilePhotoURI: string | null }>(employ
     return { ...employee, profilePhotoURI: signedUrl };
 }
 
+/**
+ * Uploads or replaces the caller's profile photo (max 5 MB, images only).
+ * Uses raw auth0Id instead of getEmployee because the upload is always self-service —
+ * there is no ownership transfer here, unlike content uploads.
+ */
 export const uploadProfilePhoto = async (req: req, res: res)=> {
     const auth0Id = req.auth?.payload.sub;
     let fileURI: string | null = null;
@@ -62,8 +68,13 @@ export const uploadProfilePhoto = async (req: req, res: res)=> {
     }
 }
 
+/**
+ * Returns the authenticated employee's profile with a signed photo URL.
+ * Uses raw auth0Id (not getEmployee helper) because this is the bootstrap
+ * endpoint — the frontend calls it on login before the employee record is
+ * guaranteed to exist, and a 404 here is a valid signal, not an error.
+ */
 export const getMe = async (req: req, res: res) => {
-
     const auth0Id = req.auth?.payload.sub;
 
     try {

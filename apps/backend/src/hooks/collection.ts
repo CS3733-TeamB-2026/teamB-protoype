@@ -52,6 +52,7 @@ export const createCollection = async (req: req, res: res) => {
     }
 };
 
+/** Updates a collection; replaces the full ordered item list — send all contentIds, not a diff. Owner/admin only. */
 export const updateCollection = async (req: req, res: res) => {
     try {
         const employee = await getEmployee(req);
@@ -78,6 +79,7 @@ export const updateCollection = async (req: req, res: res) => {
     }
 };
 
+/** Deletes a collection; cascades to CollectionItem and CollectionFavorite rows. Owner/admin only. */
 export const deleteCollection = async (req: req, res: res) => {
     try {
         const employee = await getEmployee(req);
@@ -98,6 +100,7 @@ export const deleteCollection = async (req: req, res: res) => {
     }
 };
 
+/** Returns the caller's favorited collections with full item data. */
 export const getFavorites = async (req: req, res: res) => {
     try {
         const employee = await getEmployee(req);
@@ -133,6 +136,7 @@ export const addFavorite = async (req: req, res: res) => {
     }
 };
 
+/** Removes a favorite; no visibility check — employees can always un-favorite even if a collection was made private. */
 export const removeFavorite = async (req: req, res: res) => {
     try {
         const employee = await getEmployee(req);
