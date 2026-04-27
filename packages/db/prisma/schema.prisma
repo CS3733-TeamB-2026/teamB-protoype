@@ -9,44 +9,47 @@ datasource db {
 }
 
 model Employee {
-  id                     Int              @id
+  id                     Int                     @id
   firstName              String
   lastName               String
   persona                Persona
-  auth0Id                String?          @unique
+  auth0Id                String?                 @unique
   profilePhotoURI        String?
   bookmarks              Bookmark[]
-  checkedOutContent      Content[]        @relation("CheckedOut")
-  ownedContent           Content[]        @relation("Owned")
-  triggeredNotifications Notification[]   @relation("Triggered")
-  assignedRequests       ServiceRequest[] @relation("AssignedTo")
-  ownedRequests          ServiceRequest[] @relation("OwnedBy")
+  checkedOutContent      Content[]               @relation("CheckedOut")
+  ownedContent           Content[]               @relation("Owned")
+  triggeredNotifications Notification[]          @relation("Triggered")
+  assignedRequests       ServiceRequest[]        @relation("AssignedTo")
+  ownedRequests          ServiceRequest[]        @relation("OwnedBy")
+  notificationDismissals NotificationDismissal[]
+  expirationDismissals   ExpirationDismissal[]
 
   @@unique([firstName, lastName])
   @@schema("public")
 }
 
 model Content {
-  id             Int                      @id @default(autoincrement())
-  linkURL        String?                  @unique
-  lastModified   DateTime
-  expiration     DateTime?
-  status         Status
-  contentType    ContentType
-  targetPersona  Persona
-  displayName    String
-  fileURI        String?                  @unique
-  checkedOutAt   DateTime?
-  checkedOutById Int?
-  ownerId        Int?
-  tags           String[]
-  hits           Int[]                    @default([])
-  textContent    String?
-  searchVector   Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, COALESCE(\"textContent\", ''::text))"))
-  bookmarks      Bookmark[]
-  checkedOutBy   Employee?                @relation("CheckedOut", fields: [checkedOutById], references: [id])
-  owner          Employee?                @relation("Owned", fields: [ownerId], references: [id])
-  notifications  Notification[]           @relation("Notified")
+  id                   Int                      @id @default(autoincrement())
+  linkURL              String?                  @unique
+  lastModified         DateTime
+  expiration           DateTime?
+  status               Status
+  contentType          ContentType
+  targetPersona        Persona
+  displayName          String
+  fileURI              String?                  @unique
+  checkedOutAt         DateTime?
+  checkedOutById       Int?
+  ownerId              Int?
+  tags                 String[]
+  hits                 Int[]                    @default([])
+  textContent          String?
+  searchVector         Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, COALESCE(\"textContent\", ''::text))"))
+  bookmarks            Bookmark[]
+  checkedOutBy         Employee?                @relation("CheckedOut", fields: [checkedOutById], references: [id])
+  owner                Employee?                @relation("Owned", fields: [ownerId], references: [id])
+  notifications        Notification[]           @relation("Notified")
+  expirationDismissals ExpirationDismissal[]
 
   @@schema("public")
 }
@@ -76,17 +79,41 @@ model Bookmark {
 }
 
 model Notification {
-  id            Int              @id @default(autoincrement())
-  type          NotificationType
-  contentId     Int
-  triggeredById Int?
-  targetPersona Persona
-  metadata      Json?
-  createdAt     DateTime         @default(now())
-  content       Content          @relation("Notified", fields: [contentId], references: [id], onDelete: Cascade)
-  triggeredBy   Employee?        @relation("Triggered", fields: [triggeredById], references: [id], onDelete: SetNull)
+  id                     Int                     @id @default(autoincrement())
+  type                   NotificationType
+  contentId              Int
+  triggeredById          Int?
+  targetPersona          Persona
+  metadata               Json?
+  createdAt              DateTime                @default(now())
+  content                Content                 @relation("Notified", fields: [contentId], references: [id], onDelete: Cascade)
+  triggeredBy            Employee?               @relation("Triggered", fields: [triggeredById], references: [id], onDelete: SetNull)
+  notificationDismissals NotificationDismissal[]
 
   @@index([targetPersona, createdAt])
+  @@schema("public")
+}
+
+model NotificationDismissal {
+  notificationId Int
+  employeeId     Int
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  employee       Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  dismissedAt    DateTime     @default(now())
+
+  @@id([notificationId, employeeId])
+  @@schema("public")
+}
+
+model ExpirationDismissal {
+  contentId   Int
+  employeeId  Int
+  threshold   String
+  content     Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  dismissedAt DateTime @default(now())
+
+  @@id([contentId, employeeId, threshold])
   @@schema("public")
 }
 
