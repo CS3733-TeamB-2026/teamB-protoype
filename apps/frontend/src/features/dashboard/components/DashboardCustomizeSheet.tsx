@@ -8,11 +8,23 @@ import {
     SheetTrigger,
 } from "@/components/ui/sheet";
 import { Settings2 } from "lucide-react"
-import { WIDGET_REGISTRY, type WidgetId, type WidgetLayoutEntry, type WidgetSize, DEFAULT_LAYOUT } from "@/features/dashboard/widget-registry.ts";
-import {Separator} from "@/components/ui/separator.tsx";
-import { Switch } from "@/components/ui/switch.tsx";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import { type WidgetLayoutEntry, type WidgetId } from "@/features/dashboard/widget-registry.ts";
+import WidgetRow from "@/features/dashboard/components/WidgetRow.tsx";
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 
 type DashboardCustomizeSheetProps = {
     layout: WidgetLayoutEntry[];
@@ -21,7 +33,30 @@ type DashboardCustomizeSheetProps = {
 
 function DashboardCustomizeSheet({ layout, setLayout }: DashboardCustomizeSheetProps) {
 
-    const layoutMap = new Map(layout.map(w => [w.id, w]));
+    const updateEntry = (id: WidgetId, updates: Partial<WidgetLayoutEntry>) => {
+        setLayout(prev => prev.map(w => w.id === id ? { ...w, ...updates } : w));
+    };
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: { distance: 5 },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!over || active.id === over.id) return;
+
+        setLayout(prev => {
+            const oldIndex = prev.findIndex(w => w.id === active.id);
+            const newIndex = prev.findIndex(w => w.id === over.id);
+            return arrayMove(prev, oldIndex, newIndex);
+        });
+    };
+
 
     return (
         <Sheet>
@@ -40,51 +75,24 @@ function DashboardCustomizeSheet({ layout, setLayout }: DashboardCustomizeSheetP
                 </SheetHeader>
 
                 <div className="py-6">
-                    {
-                        Object.entries(WIDGET_REGISTRY)
-                            .map(([widget, entry]) => (
-                                <div key={widget} className="my-3 mx-6">
-                                    <div className="flex flex-row items-center justify-between gap-4">
-                                        <div className="flex flex-row items-center justify-between gap-4">
-                                            <Switch
-                                                id={`vis-${widget}`}
-                                                checked={ layoutMap.has(widget as WidgetId) ? layoutMap.get(widget as WidgetId)?.visible : false }
-                                                onCheckedChange={ (checked) => {
-                                                    setLayout(prev =>
-                                                        prev.map( w => w.id === widget ? {...w, visible: checked} : w )
-                                                    )
-                                                }}
-                                            />
-                                            <div className="flex flex-col">
-                                                <Label htmlFor={`vis-${widget}`} className="capitalize text-lg">{entry.label}</Label>
-                                                <Label htmlFor={`vis-${widget}`} className="text-md text-muted-foreground">{entry.description}</Label>
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-row justify-center items-center">
-                                            <RadioGroup
-                                                className="gap-1 mr-3"
-                                                value={ layoutMap.get(widget as WidgetId)?.size }
-                                                onValueChange={(value) =>
-                                                    setLayout(prev =>
-                                                        prev.map( w => w.id === widget ? {...w, size: value as WidgetSize} : w )
-                                                    )
-                                                }
-                                            >
-                                                {
-                                                    (["small","medium","full"] as WidgetSize[]).map((size) => (
-                                                        <div key={size} className="flex items-center space-x-2">
-                                                            <RadioGroupItem value={size} id={`${widget}-${size}`} />
-                                                            <Label htmlFor={`${widget}-${size}`} className="capitalize text-md">{size}</Label>
-                                                        </div>
-                                                    ))
-                                                }
-                                            </RadioGroup>
-                                        </div>
-
-                                    </div>
-                                </div>
-                            ))
-                    }
+                    <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={handleDragEnd}
+                    >
+                        <SortableContext
+                            items={layout.map(w => w.id)}
+                            strategy={verticalListSortingStrategy}
+                        >
+                            {layout.map((layoutEntry) => (
+                                <WidgetRow
+                                    key={layoutEntry.id}
+                                    layoutEntry={layoutEntry}
+                                    onUpdate={(updates) => updateEntry(layoutEntry.id, updates)}
+                                />
+                            ))}
+                        </SortableContext>
+                    </DndContext>
                 </div>
             </SheetContent>
         </Sheet>
