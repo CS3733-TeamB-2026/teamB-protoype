@@ -65,6 +65,11 @@ export type ServiceReq = {
     owner: Employee;
     assigneeId: number | null;
     assignee: Employee | null;
+    notes: string | null;
+    linkedContentId: number | null;
+    linkedContent: ContentItem | null;
+    linkedCollectionId: number | null;
+    linkedCollection: Collection | null;
 }
 export type NotificationItem = {
     id: string;
