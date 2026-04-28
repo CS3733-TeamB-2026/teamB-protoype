@@ -29,12 +29,22 @@ interface Slide {
 
 const USER_SECTIONS: Section[] = [
     {
+        label: "Viewing Documents",
+        title: "Viewing Documents",
+        steps: [
+            { title: "Document Search", desc: "Use the search bar or filter by category to find documents. Results update and highlight as you type.", image: 'SearchTutorial' },
+            { title: "Document Filtering", desc: "Alternatively, next to the search bar you can find the advanced filters, or you can just click the category dividers such as Status, Owner, Etc. to search in order.", image: 'FilterTutorial' },
+            { title: "Viewing a Document", desc: "Click any document title to open its detail page, which shows metadata, version history, and a preview where available.", image: 'ViewingTutorial' },
+            { title: "Downloading Files", desc: "Click Download on the document detail page to save a copy locally. No check-out needed for downloading.", image: 'DownloadingTutorial' },
+        ],
+    },
+    {
         label: "Uploading Documents",
         title: "Uploading Documents",
         steps: [
-            { title: "Finding The Upload Page", desc: "From the sidebar, select Upload Document. This opens the document submission form.", image: 'slide1' },
-            { title: "Select Your File", desc: "Click to choose a file on your computer, or drag and drop files to upload them!", image: 'slide2' },
-            { title: "Fill in Document Information", desc: "While uploading documents, make sure to add all the relevant information for others to use.", image: 'slide3' },
+            { title: "Finding The Upload Page", desc: "From the sidebar, select Manage Content. From here, click on the big + symbol.", image: 'AddingContentTutorial' },
+            { title: "Select Your File", desc: "Click to choose a file on your computer, or drag and drop files to upload them! Alternatively, you can add a link instead!", image: 'FileUploadTutorial' },
+            { title: "Fill in Document Information", desc: "While uploading documents, make sure to add all the relevant information for others to use.", image: 'FillingOutInfoTutorial' },
             { title: "Submitting", desc: "Finally, once you're done entering the information, just hit the submit button and you're done!", tag: { label: "Confirmation dialog appears", variant: "ui" }, image: 'slide4'},
             { title: "Bulk Uploading", desc: "Another choice is to upload files in bulk, the process is the same but from here you can upload as many files as you want at once", image: 'slide5' },
         ],
@@ -57,16 +67,6 @@ const USER_SECTIONS: Section[] = [
             { title: "Making Edits", desc: "While checked out, download the file, make your changes locally, and re-upload the updated version using the Edit flow. Or alternatively, change document metadata without downloading.", image: 'slide11' },
             { title: "Checking In", desc: "Once finished, click Check In on the document page. This saves your changes and releases the lock for others.", image: 'slide12' },
             { title: "Who Has What?", desc: "A locked document shows a Checked Out badge with the name of the user who currently has it.", tag: { label: "Badge visible on document card", variant: "ui" }, image: 'slide13' },
-        ],
-    },
-    {
-        label: "Viewing Documents",
-        title: "Viewing Documents",
-        steps: [
-            { title: "Document Search", desc: "Use the search bar or filter by category to find documents. Results update and highlight as you type.", image: 'SearchTutorial' },
-            { title: "Document Filtering", desc: "Alternatively, you can also filter by category. There are simple filters and more advanced content filters", image: 'slide15' },
-            { title: "Viewing a Document", desc: "Click any document title to open its detail page, which shows metadata, version history, and a preview where available.", image: 'slide16' },
-            { title: "Downloading Files", desc: "Click Download on the document detail page to save a copy locally. No check-out needed for downloading.", image: 'slide17' },
         ],
     },
 ];

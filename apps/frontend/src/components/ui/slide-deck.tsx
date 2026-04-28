@@ -1,6 +1,6 @@
-import slide1 from "../../assets/Team Photos/Cameron Pietraski.png";
-import slide2 from "../../assets/Team Photos/Dylan Zickus.jpg";
-import slide3 from "../../assets/Team Photos/Hayden Schultz.jpg";
+import AddingContentTutorial from "../../assets/Tutorial Slide Decks/Adding Content Tutorial.png";
+import FileUploadTutorial from "../../assets/Tutorial Slide Decks/File Upload Tutorial.png";
+import FillingOutInfoTutorial from "../../assets/Tutorial Slide Decks/Filling Information Tutorial.png";
 import slide4 from "../../assets/Team Photos/Jake Swanson.jpg";
 import slide5 from "../../assets/Team Photos/Joey Hemmerle.jpg";
 import slide6 from "../../assets/Team Photos/Luke Ciarletta.png";
@@ -12,14 +12,19 @@ import slide11 from "../../assets/Team Photos/Ricardo Guzman Volpe.jpeg";
 import slide12 from "../../assets/Team Photos/Ricardo Guzman Volpe.jpeg";
 import slide13 from "../../assets/Team Photos/Ricardo Guzman Volpe.jpeg";
 import SearchTutorial from "../../assets/Tutorial Slide Decks/Search Tutorial.png";
-import slide15 from "../../assets/Team Photos/Ricardo Guzman Volpe.jpeg";
+import FilterTutorial from "../../assets/Tutorial Slide Decks/Filters Tutorial.png";
+import ViewingTutorial from "../../assets/Tutorial Slide Decks/Viewing Tutorial.png";
+import DownloadingTutorial from "../../assets/Tutorial Slide Decks/Downloading Tutorial.png";
 import slide16 from "../../assets/Team Photos/Ricardo Guzman Volpe.jpeg";
-import slide17 from "../../assets/Team Photos/Ricardo Guzman Volpe.jpeg";
 
 export const slideDecks = {
-    slide1,
-    slide2,
-    slide3,
+    SearchTutorial,
+    FilterTutorial,
+    ViewingTutorial,
+    DownloadingTutorial,
+    AddingContentTutorial,
+    FileUploadTutorial,
+    FillingOutInfoTutorial,
     slide4,
     slide5,
     slide6,
@@ -30,8 +35,5 @@ export const slideDecks = {
     slide11,
     slide12,
     slide13,
-    SearchTutorial,
-    slide15,
     slide16,
-    slide17,
 };
