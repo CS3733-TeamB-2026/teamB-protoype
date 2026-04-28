@@ -17,7 +17,6 @@ export type ServiceReqFormValues = {
     createdDate: Date;
     createdTime: string; // HH:MM:SS string from <input type="time" step="1">
     deadline: Date | undefined;
-    ownerId: number;
     assigneeId: number | undefined;
     type: "reviewClaim" | "requestAdjuster" | "checkClaim" | "none";
 };
@@ -34,7 +33,6 @@ export function getErrors(values: ServiceReqFormValues): Record<string, string> 
     const e: Record<string, string> = {};
     if (!values.name.trim()) e.name = "Name is required.";
     if (!values.assigneeId) e.assigneeId = "Assignee is required.";
-    if (!values.ownerId) e.ownerId = "Owner is required.";
     if (values.type === "none") e.type = "Service Request Type is required.";
     if (!values.createdDate) e.createdDate = "Created Date is required.";
     if (!values.createdTime) e.createdTime = "Created Time is required.";
@@ -43,14 +41,13 @@ export function getErrors(values: ServiceReqFormValues): Record<string, string> 
 }
 
 /** Starting values for the Add form. */
-export function initialValues(userId: number): ServiceReqFormValues {
+export function initialValues(): ServiceReqFormValues {
     return {
         id: undefined,
         name: "",
         createdDate: new Date(),
-        createdTime: nowTimeString(), // HH:MM:SS string from <input type="time" step="1">
+        createdTime: nowTimeString(),
         deadline: undefined,
-        ownerId: userId,
         assigneeId: undefined,
         type: "none",
     };
@@ -72,7 +69,6 @@ export function buildServiceReqJSON(values: ServiceReqFormValues): string {
     return JSON.stringify({
         id: values.id,
         name: values.name,
-        ownerId: values.ownerId,
         assigneeId: values.assigneeId,
         type: values.type,
         created: created.toISOString(),
@@ -86,7 +82,6 @@ export function fromServiceReqItem(item: ServiceReq): ServiceReqFormValues {
     return {
         id: item.id,
         name: item.name,
-        ownerId: item.ownerId,
         assigneeId: item.assigneeId ?? undefined,
         type: item.type as "reviewClaim" | "requestAdjuster" | "checkClaim" | "none",
         createdDate: createdDate,

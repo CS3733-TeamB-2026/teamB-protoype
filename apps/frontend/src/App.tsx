@@ -5,6 +5,7 @@ import Footer from './components/layout/Footer.tsx'
 import { SidebarProvider } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/layout/AppSidebar.tsx";
 import Home from "@/pages/Home.tsx";
+import TutorialPage from "@/features/tutorial/Tutorial.tsx";
 import AddEmployee from "@/features/employees/AddEmployee.tsx";
 import UnderwriterPersona from "@/pages/UnderwriterPersona.tsx";
 import BusinessAnalystPersona from "@/pages/BusinessAnalystPersona.tsx";
@@ -27,6 +28,11 @@ import AppearanceSettings from "@/features/settings/sections/AppearanceSettings"
 import ProfileSettings from "@/features/settings/sections/ProfileSettings.tsx"
 import ExperationCalendar from "@/features/content/listing/ExpirationCalendar.tsx"
 import ViewServiceReqs from "@/features/servicereqs/ViewServiceReqs.tsx";
+import SearchContent from "@/features/SearchContent.tsx";
+import ViewCollections from "@/features/collections/ViewCollections.tsx";
+import { ViewSingleCollection } from "@/features/collections/ViewSingleCollection.tsx";
+
+import ViewNotifications from "@/features/notifications/ViewNotifications.tsx";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const { isAuthenticated } = useAuth0();
@@ -68,13 +74,19 @@ function App() {
                             <Route path="/actuarialanalyst" element={<ActuarialAnalystPersona/>}/>
                             <Route path="/exloperations" element={<EXLOperationsPersona/>}/>
                             <Route path="/businessoperations" element={<BusinessOperationsPersona/>}/>
+                            <Route path="/tutorial" element={<TutorialPage />} />
                             <Route path="/files" element={<ProtectedRoute><ViewContent/></ProtectedRoute>}/>
                             <Route path="/files/bulk" element={<ProtectedRoute><BulkUploadPage/></ProtectedRoute>}/>
                             <Route path="/employeehome" element={<ProtectedRoute><Dashboard/></ProtectedRoute>}/>
                             <Route path="/calendar" element={<ExperationCalendar/>}/>
                             <Route path="/file/:id" element={<ProtectedRoute><ViewSingleFile/></ProtectedRoute>}/>
+                            <Route path="/collections" element={<ProtectedRoute><ViewCollections/></ProtectedRoute>}/>
+                            <Route path="/collections/:id" element={<ProtectedRoute><ViewSingleCollection/></ProtectedRoute>}/>
                             <Route path="/servicereqs" element={<ProtectedRoute><ViewServiceReqs/></ProtectedRoute>}/>
+                            <Route path="/notifications" element={<ProtectedRoute><ViewNotifications/></ProtectedRoute>}/>
+                            <Route path="/search" element={<ProtectedRoute><SearchContent/></ProtectedRoute>}/>
                             <Route path="/settings" element={<ProtectedRoute><SettingsLayout/></ProtectedRoute>}>
+
                                 <Route index element={<ProtectedRoute><Navigate to="profile" replace /></ProtectedRoute>} />
                                 <Route path="appearance" element={<ProtectedRoute><AppearanceSettings/></ProtectedRoute>} />
                                 <Route path="profile" element={<ProtectedRoute><ProfileSettings/></ProtectedRoute>} />

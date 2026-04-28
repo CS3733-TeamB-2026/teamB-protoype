@@ -1,4 +1,4 @@
-import { Home, User, ChevronDown, Users, X, Library, LayoutDashboard, Upload, NetworkIcon, CalendarClock } from "lucide-react"
+import { Home, User, ChevronDown, Users, X, Library, LayoutDashboard, Upload, NetworkIcon, CalendarClock, Search, BookMarked } from "lucide-react"
 import React from "react"
 import {Link} from "react-router-dom";
 import {
@@ -42,6 +42,7 @@ const navItems: NavItem[] = [
     { title: "Bulk Upload", icon: Upload, href: "/files/bulk", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"], langKey: 'sidebar.bulkUpload' },
     { title: "Manage Employees", icon: Users, href: "/usermanagement", children: [
         ], access: ["admin"], langKey: 'sidebar.manageEmployees' },
+    { title: "Collections", icon: BookMarked, href: "/collections", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"] },
     { title: "Service Requests", icon: NetworkIcon, href: "/servicereqs", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"] },
     { title: "Expiration Calendar", icon: CalendarClock, href: "/calendar", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"] },
     { title: "Personas", icon: User, href: "/", children: [
@@ -51,6 +52,7 @@ const navItems: NavItem[] = [
             {title: "EXL Operations", icon: User, href: "/exloperations", children: [], access: [], langKey: "sidebar.exlOperations"},
             {title: "Business Operations", icon: User, href: "/businessoperations", children: [], access: [], langKey: "sidebar.businessOperations"},
         ], access: [], langKey: "sidebar.personas" },
+    { title: "Search", icon: Search, href: "/search", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"] },
 ]
 
 function AppSidebar() {

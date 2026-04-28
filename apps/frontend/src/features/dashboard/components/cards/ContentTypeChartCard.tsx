@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/chart";
 import type { ContentItem } from "@/lib/types";
 import DashboardCard from "@/features/dashboard/components/cards/DashboardCard.tsx";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Info, X } from "lucide-react";
 
 const chartConfig = {
     count: { label: "Files" },
@@ -41,6 +43,7 @@ function categorize(filename: string) {
 function ContentTypeChartCard() {
 
     const [content, setContent] = useState<ContentItem[]>([]);
+    const [open, setOpen] = useState(false);
     const { getAccessTokenSilently } = useAuth0();
 
     //Fetch all content
@@ -103,6 +106,25 @@ function ContentTypeChartCard() {
                 <CardDescription>Current distribution of file types in database.</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 pb-0 pl-0 pr-4">
+                <Popover open={open} onOpenChange={setOpen}>
+                    <PopoverTrigger asChild>
+                        <Info
+                            className="absolute right-1 top-1 w-8 h-8 cursor-pointer"
+                        />
+                    </PopoverTrigger>
+
+                    <PopoverContent className="w-64 relative">
+                        {/* X button in the top-right of the popup */}
+                        <X
+                            className="absolute right-2 top-2 w-4 h-4 cursor-pointer text-gray-500 hover:text-gray-700"
+                            onClick={() => setOpen(false)}
+                        />
+
+                        <p className="pr-6">
+                            Shows the current distribution of file types stored in the database.
+                        </p>
+                    </PopoverContent>
+                </Popover>
                 <ChartContainer
                     config={chartConfig}
                     className="mx-auto aspect-square max-h-75 w-full"

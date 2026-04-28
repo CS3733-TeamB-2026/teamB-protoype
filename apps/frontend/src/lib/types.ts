@@ -66,6 +66,47 @@ export type ServiceReq = {
     assigneeId: number | null;
     assignee: Employee | null;
 }
+export type NotificationItem = {
+    id: string;
+    type: "change" | "ownership" | "expiration";
+    contentId: number;
+    contentName: string;
+    triggeredBy: { id: number; firstName: string; lastName: string } | null;
+    createdAt: string;
+    dismissedAt?: string;
+    metadata: {
+        changedFields?: string[];
+        before?: Record<string, unknown>;
+        after?: Record<string, unknown>;
+        oldOwnerId?: number | null;
+        newOwnerId?: number | null;
+        oldOwnerName?: string | null;
+        newOwnerName?: string | null;
+        daysLeft?: number;
+        hoursLeft?: number;
+        expired?: boolean;
+        threshold?: "3d" | "1h" | "expired";
+    };
+}
+export type NotificationTab = "active" | "dismissed";
 
-/** Alias kept for backwards compatibility with edit/form helpers. */
-export type ServiceReqItem = ServiceReq;
+export type CollectionItem = {
+    collectionId: number;
+    contentId: number;
+    position: number;
+    content: ContentItem;
+};
+
+export type Collection = {
+    id: number;
+    displayName: string;
+    ownerId: number;
+    owner: Employee;
+    public: boolean;
+    items: CollectionItem[];
+};
+
+export type CollectionFavorite = {
+    employeeId: number;
+    collectionId: number;
+};

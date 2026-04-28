@@ -32,6 +32,9 @@ apps/
       types.ts             Shared req/res type aliases
     helpers/
       auth0Management.ts   Auth0 Management API client
+      getEmployee.ts       Resolves JWT → EmployeeModel; used by every protected handler
+      permissions.ts       isAdmin / isUserOrAdmin / isPersonaOrAdmin — extracted so permission logic is testable without Express
+      validateUrl.ts       assertPublicUrl — SSRF-safe URL validator (DNS-resolves before fetching)
 
   frontend/src/
     pages/                 Top-level routed pages
@@ -46,8 +49,8 @@ packages/db/
   prisma/schema.prisma     DB schema
   lib/prisma.ts            Prisma client
   lib/supabase.ts          Supabase client
-  queries/                 Data-access classes: Content, Employee, Login,
-                           Bookmark, ServiceReqs, Bucket, Helper
+  queries/                 Data-access classes: Content, Employee, Bookmark,
+                           Collection, ServiceReqs, Bucket, Helper
 ```
 
 ---
@@ -89,7 +92,9 @@ app.get("/api/preview", content.previewContent)   // public
 app.use('/api', checkJwt)                         // everything below is protected
 ```
 
-The authenticated user's Auth0 `sub` is read from `req.auth.payload.sub` and resolved to an internal `Employee` via `queryEmployeeByAuth(auth0Id)`. New employees are created through `POST /api/employee/auth`, which provisions an Auth0 user first and then writes the `Employee` row with the returned `auth0Id`.
+The authenticated user's Auth0 `sub` is read from `req.auth.payload.sub` and resolved to an internal `Employee` via `getEmployee(req)` (`helpers/getEmployee.ts`). This helper is used by every protected handler so the employee record is verified on every call and the `auth0Id` is never forwarded to the frontend. The one exception is `getMe`, which reads `req.auth.payload.sub` directly — it is the bootstrap call made before the employee record is guaranteed to exist, so a 404 is intentional.
+
+New employees are created through `POST /api/employee/auth`, which provisions an Auth0 user first and then writes the `Employee` row with the returned `auth0Id`.
 
 ### API routes
 
@@ -106,10 +111,10 @@ All routes are JSON unless noted. File-upload routes use `multipart/form-data` w
 - `GET    /api/content/download/:id` — streams the file inline with the correct MIME type
 - `GET    /api/content/publicUrl/:id` — short-lived (120 s) signed URL
 - `POST   /api/content` — create (multipart; `linkURL` *xor* `fileURI`, never both)
-- `PUT    /api/content` — update; requires `employeeID` matching `checkedOutById`, else `409 { lockReleased: true }`
-- `DELETE /api/content/:id?employeeID=...` — same lock check; also deletes the Supabase file if present
-- `POST   /api/content/checkout` — `{ id, employeeID }`; fails with the current holder's name if taken
-- `POST   /api/content/checkin`  — `{ id, employeeID }`
+- `PUT    /api/content` — update; employee identity from JWT, else `409 { lockReleased: true }` if lock mismatch
+- `DELETE /api/content/:id` — same lock check; also deletes the Supabase file if present
+- `POST   /api/content/:id/checkout` — employee from JWT; 403 if persona doesn't match `targetPersona` (admins bypass); 409 if already locked by someone else
+- `POST   /api/content/:id/checkin` — admin can force-checkin any item; non-admins can only checkin their own lock
 
 **Bookmarks** (`/api/bookmark`) — user derived from the JWT, not the URL
 - `GET    /api/bookmark`
@@ -130,9 +135,21 @@ All routes are JSON unless noted. File-upload routes use `multipart/form-data` w
 **Login** (`/api/login`) — legacy local auth, retained for compatibility
 - `POST /api/login`, `POST /api/login/create`, `PUT /api/login`, `DELETE /api/login`
 
+**Collections** (`/api/collections`) — visibility rules applied at the DB layer for `GET /api/collections`; post-query for single fetches
+- `GET    /api/collections` — public collections + caller's own (all for admins)
+- `POST   /api/collections` — create; owner is derived from JWT, not the request body
+- `GET    /api/collections/favorites` — caller's favorited collections
+- `GET    /api/collections/:id` — single collection; 403 if private and caller is not owner/admin
+- `PUT    /api/collections/:id` — update name, visibility, owner, and full ordered item list (owner or admin only)
+- `DELETE /api/collections/:id` — cascades to CollectionItem and CollectionFavorite (owner or admin only)
+- `POST   /api/collections/:id/favorite` — add favorite; guards against favoriting inaccessible private collections
+- `DELETE /api/collections/:id/favorite` — remove favorite
+
+> **Route order matters**: `GET /api/collections/favorites` must be registered **before** `GET /api/collections/:id` to avoid Express matching `"favorites"` as an ID.
+
 **Service Requests** — `GET/POST/PUT /api/servicereqs`, `DELETE /api/servicereq`, plus `/api/assigned`.
 
-> **Route order matters in `apps/backend/src/app.ts`**: `checkout`, `checkin`, `info`, `download`, `publicUrl`, and `tags` must be registered **before** `/:id`, otherwise Express 5 will match them to the parameterized route first.
+> **Route order matters in `apps/backend/src/app.ts`**: `info`, `download`, `publicUrl`, `tags`, and `search` must be registered **before** `/:id`, otherwise Express 5 will match them to the parameterized route first. `checkout` and `checkin` are sub-routes under `/:id` and are unaffected.
 
 ### Checkout / check-in (server side)
 
@@ -156,12 +173,18 @@ All storage operations go through `packages/db/queries/bucket.ts` (`Bucket.uploa
 Schema at `packages/db/prisma/schema.prisma`.
 
 - **Employee** — `id`, `firstName`, `lastName`, `persona`, `auth0Id`, `profilePhotoURI`
-- **Login** — local username/passwordHash keyed to `employeeID` (legacy)
 - **Content** — `displayName`, `linkURL` *xor* `fileURI`, `ownerId`, `contentType` (`reference` | `workflow`), `status` (`new` | `inProgress` | `complete`), `targetPersona`, `tags: string[]`, `lastModified`, `expiration`, `checkedOutById`, `checkedOutAt`
 - **Bookmark** — join table (`bookmarkerId`, `bookmarkedContentId`) with a composite unique key
+- **Collection** — `displayName`, `ownerId`, `public`; items stored in **CollectionItem** (`collectionId`, `contentId`, `position`) — explicit join table so item order is preserved. Favorites stored in **CollectionFavorite** (`employeeId`, `collectionId`).
 - **ServiceRequest** — `name`, `created`, `deadline`, `type`, `assigneeId`, `ownerId`
 
 Enums (`Persona`, `Status`, `ContentType`, `RequestType`) are mapped from strings via the `Helper` class (`packages/db/queries/helper.ts`), so the API accepts plain strings from the frontend.
+
+### Separation of concerns: `packages/db` vs `apps/backend`
+
+The query classes in `packages/db/queries/` are a pure data layer — they talk to the database and nothing else. **They do not enforce permissions.** Deciding whether a requesting employee is allowed to read or mutate a resource (ownership checks, admin access, private-visibility rules) is the responsibility of the route handler in `apps/backend/src/hooks/`. This keeps the query classes reusable and testable in isolation.
+
+All joined `Employee` records use the shared `employeeSelect` constant (`packages/db/queries/helper.ts`), which explicitly excludes `auth0Id` so it is never serialised into an API response.
 
 ---
 
@@ -262,10 +285,10 @@ Every item is either a **file** (`fileURI`) or a **link** (`linkURL`), never bot
 #### Checkout / check-in flow
 
 1. Pencil icon → `ConfirmCheckoutDialog` opens.
-2. Confirm → `POST /api/content/checkout`. If taken, backend returns the holder's name; dialog stays closed.
+2. Confirm → `POST /api/content/:id/checkout`. If taken, backend returns the holder's name; dialog stays closed. 403 if the caller's persona doesn't match `targetPersona` (admins bypass).
 3. On success, `EditContentDialog` opens. A 5-second poll compares `data.checkedOutById` to `user.id` as strings. Mismatch = lock lost → dialog closes with toast.
 4. Submit → `PUT /api/content`. `409 { lockReleased: true }` → close + toast.
-5. Cancel/close → `POST /api/content/checkin` (skipped if already expired server-side).
+5. Cancel/close → `POST /api/content/:id/checkin` (skipped if already expired server-side).
 
 The three confirm dialogs are near-identical `AlertDialog` wrappers with an async `onConfirm` and a local `loading` flag that gates the close handler. `ForceCheckinDialog` is admin-only — it checkins using the current holder's `employeeID`.
 
@@ -277,7 +300,7 @@ Both dialogs share `ContentFormFields` (UI), `useContentForm` (state), and `buil
 | ---------------------- | ----------------------------- | ---------------------------------------- |
 | Method                 | `POST /api/content`           | `PUT /api/content`                       |
 | Initial values         | `initialValues(userId, persona)` | `fromContentItem(content)`            |
-| Extra fields on submit | —                             | `id`, `employeeID`                       |
+| Extra fields on submit | —                             | `id` (employee identity from JWT)        |
 | Source field required  | yes                           | no (keeps existing file/link)            |
 | 409 handling           | —                             | `{ lockReleased: true }` → close + toast |
 
@@ -371,7 +394,7 @@ Search matches name, type, owner full name, assignee full name. `highlightRange`
 ### Known issues / TODOs
 
 - `queryContentByOwnerId` (in `packages/db/queries/content.ts`) uses `localStorage` on the server — unfixed.
-- `queryContentByName` needs case-insensitive search.
+- `queryContentByName` needs case-insensitive search. → 'queryContentByName' no longer exists - Ricardo
 
 ---
 
