@@ -79,4 +79,18 @@ export class Employee {
         });
     }
 
+    public static async getDashboardLayout(employeeId: number) {
+        return prisma.employee.findUnique({
+            where: { id: employeeId },
+            select: { widgetLayout: true },
+        });
+    }
+
+    public static async updateDashboardLayout(employeeId: number, layout: unknown) {
+        return prisma.employee.update({
+            where: { id: employeeId },
+            data: { widgetLayout: layout as any },
+        });
+    }
+
 }

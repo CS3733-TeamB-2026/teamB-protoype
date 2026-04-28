@@ -202,7 +202,8 @@ function ViewContent() {
                     setCachedPreview(item.linkURL!, preview);
                     setLinkPreviews((prev) => ({...prev, [item.id]: preview}));
                 })
-                .catch(() => {
+                .catch((err) => {
+                    console.error("Preview fetch failed for", item.linkURL, err);
                     setCachedPreview(item.linkURL!, null);
                     setLinkPreviews((prev) => ({...prev, [item.id]: null}));
                 });
@@ -1044,28 +1045,49 @@ function ViewContent() {
                                                                 </TableRow>
                                                             )}
                                                     {/* link preview */}
-                                                    {isExpanded && (
-                                                        <TableRow className="hover:bg-transparent">
-                                                            <TableCell
-                                                                colSpan={NUM_COLS}
-                                                                className="px-6 py-2 bg-muted/10 border-t border-border">
-                                                                <div
-                                                                    className="flex gap-6 text-xs text-muted-foreground mb-3">
-                                                                    {item.checkedOutBy && (
-                                                                        <span><span className="font-medium text-foreground">Editing </span>
-                                                                            {item.checkedOutBy.firstName} {item.checkedOutBy.lastName}</span>
-                                                                    )}
-                                                                </div>
+                                                    {isExpanded && isLink && (() => {
+                                                        const url = item.linkURL!;
+                                                        //checks for the v= tag on all youtube videos followed by an identifier
+                                                        const youtubeMatch = url.match(/[?&]v=([a-zA-Z0-9_-]+)/);
 
-                                                                {/* Horizontal timeline */}
-                                                                <Timeline
-                                                                    uploaded={item.lastModified}
-                                                                    expiration={item.expiration ?? null}
-                                                                    lastModified={item.lastModified}
-                                                                />
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    )}
+                                                        //youtube link embedding
+                                                        if (youtubeMatch) {
+                                                            return (
+                                                                <TableRow className="hover:bg-transparent">
+                                                                    <TableCell colSpan={NUM_COLS} className="p-0">
+                                                                        <iframe
+                                                                            //youtube embed data
+                                                                            src={`https://www.youtube.com/embed/${youtubeMatch[1]}`}
+                                                                            className="w-full border-0"
+                                                                            style={{ minHeight: "400px" }}
+                                                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                                            allowFullScreen
+                                                                            title={url}
+                                                                        />
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            );
+                                                        }
+
+                                                        //normal link preview
+                                                        return (
+                                                            <TableRow className="hover:bg-transparent">
+                                                                <TableCell colSpan={NUM_COLS} className="p-0">
+                                                                    <UrlPreviewLink
+                                                                        href={url}
+                                                                        status={
+                                                                            !(item.id in linkPreviews)
+                                                                                ? "loading"
+                                                                                : linkPreviews[item.id] === null
+                                                                                    ? "unreachable"
+                                                                                    : "ok"
+                                                                        }
+                                                                        preview={linkPreviews[item.id] ?? null}
+                                                                    />
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        );
+                                                    })()}
                                                     {/* file preview */}
                                                     {isExpanded && isFile && (
                                                         <TableRow className="hover:bg-transparent">

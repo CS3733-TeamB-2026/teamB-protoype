@@ -214,3 +214,34 @@ export const deleteEmployee = async (req: req, res: res) => {
         return res.status(500).end();
     }
 };
+
+export const getDashboardLayout = async (req: req, res: res) => {
+    try {
+        const employee = await getEmployee(req);
+        if (!employee) return res.status(404).json({ error: "Employee not found" });
+
+        const result = await q.Employee.getDashboardLayout(employee.id);
+        return res.status(200).json({ layout: result?.widgetLayout ?? null });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+export const updateDashboardLayout = async (req: req, res: res) => {
+    try {
+        const employee = await getEmployee(req);
+        if (!employee) return res.status(404).json({ error: "Employee not found" });
+
+        const { layout } = req.body;
+        if (!Array.isArray(layout)) {
+            return res.status(400).json({ error: "Invalid layout: expected array" });
+        }
+
+        await q.Employee.updateDashboardLayout(employee.id, layout);
+        return res.status(200).json({ success: true });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};

@@ -1,15 +1,19 @@
-import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
+import {CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import {Link} from "react-router-dom";
 import {Button} from "@/components/ui/button.tsx";
 import {CalendarClock, FolderOpen, Plus, UserPlus, Users} from "lucide-react";
 import { useUser } from "@/hooks/use-user.ts"
+import DashboardCard from "@/features/dashboard/components/cards/DashboardCard.tsx";
 
 function QuickLinksCard() {
 
     const {user} = useUser();
 
     return (
-        <Card className="border-t-secondary border-t-4 shadow-lg hover:scale-101 transition-transform">
+        <DashboardCard
+            size="small"
+            borderColor="secondary"
+        >
             <CardHeader>
                 <CardTitle className="capitalize text-2xl font-semibold text-center">
                     User Access: {user?.persona}
@@ -58,7 +62,7 @@ function QuickLinksCard() {
                     </Link>
                 </div>
             </CardContent>
-        </Card>
+        </DashboardCard>
     );
 }
 

@@ -1,4 +1,4 @@
-import { formatDistanceToNow, format, differenceInDays } from "date-fns"
+import { formatDistanceToNow, format, differenceInDays, differenceInHours, differenceInMinutes } from "date-fns"
 
 interface ContentTimelineProps {
     uploaded: string | Date
@@ -63,9 +63,11 @@ export function Timeline({ uploaded, expiration, lastModified }: ContentTimeline
                         }`}>
                         {isExpired
                             ? `Expired ${formatDistanceToNow(end)} ago`
-                            : `Expires in ${daysLeft} day${
-                                daysLeft !== 1 ? "s" : ""
-                            }`}
+                            : daysLeft! >= 1
+                                ? `Expires in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`
+                                : differenceInHours(end, now) >= 1
+                                    ? `Expires in ${differenceInHours(end, now)} hour${differenceInHours(end, now) !== 1 ? "s" : ""}`
+                                    : `Expires in ${differenceInMinutes(end, now)} minute${differenceInMinutes(end, now) !== 1 ? "s" : ""}`}
                     </p>
                 ) : (
                     <p className="absolute -top-5 left-1/2 -translate-x-1/2 text-xs text-muted-foreground whitespace-nowrap">
