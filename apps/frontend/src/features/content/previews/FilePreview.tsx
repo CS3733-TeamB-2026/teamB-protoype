@@ -106,6 +106,10 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
     // Auth0 returns a new function reference on every render, which would otherwise
     // cause the effect to re-run, revoking and recreating blob URLs unnecessarily.
     const getTokenRef = useRef(getAccessTokenSilently);
+
+    const hitCountLastTime = useRef(0) //use dummy value to make sure the first hit goes through
+    const hitCountLastEmployee = useRef(0)
+
     useEffect(() => { getTokenRef.current = getAccessTokenSilently; });
 
     // Triggers a real browser download by creating a temporary <a> element with
@@ -146,6 +150,10 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
         const run = async () => {
             try {
                 const token = await getTokenRef.current();
+
+                //get the contentId by grabbing the end of the infoSrc url - used for microsoft and hit count
+                const contentId = infoSrc?.split("/").at(-1) ?? null;
+                if (!contentId) { return }
 
                 // Fetch file size metadata independently of the file content so
                 // the size can be shown even for "none" preview files.
@@ -212,10 +220,39 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
                     localUrl = URL.createObjectURL(blob);
                     setObjectUrl(localUrl);
 
+                    //microsoft documents need this in addition to blob url
                     if (previewMode === "microsoft") {
-                        const contentId = infoSrc?.split("/").at(-1) ?? null;
-                        if (!contentId) { return }
                         await getPublicUrl(contentId);
+                    }
+
+                    //Adding to hit count
+                    //Prevent the hit count from being updated twice
+                    const res2 = await fetch("/api/employee/me", {
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`
+                        }
+                    })
+                    const myId = (await res2.json()).id
+
+                    //Only allow new hit from same employee if more than 30 seconds since last request
+                    if(myId != hitCountLastEmployee.current || Date.now() - hitCountLastTime.current > 30000) {
+                        hitCountLastTime.current = Date.now()
+                        hitCountLastEmployee.current = myId
+
+                        //Add to the hit count
+                        await fetch(`/api/content/hitCount/${contentId}`, {
+                            method: 'POST',
+                            headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${token}`,
+                            },
+                        })
+                    }
+                    else {
+                        //still update the request time and employee to prevent adding new hits every reload (or every other reload)
+                        hitCountLastTime.current = Date.now()
+                        hitCountLastEmployee.current = myId
                     }
 
                     setStatus("ready");

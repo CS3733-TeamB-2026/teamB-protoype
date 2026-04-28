@@ -1,6 +1,7 @@
 import * as p from "../generated/prisma/client";
 import {prisma} from "../lib/prisma";
-import {Helper} from "./helper";
+import {Helper, employeeSelect} from "./helper";
+import { Notification } from "./notification";
 
 
 export class Content {
@@ -16,7 +17,8 @@ export class Content {
         _expiration: Date | null,
         _targetPersona: string,
         _tags: string[],
-        _checkedOutById: number | null
+        _checkedOutById: number | null,
+        _textContent: string | null = null,
     ): Promise<p.Content> {
         const _personaTyped: p.Persona | null = Helper.personaHelper(_targetPersona)
         if (_personaTyped === null) {
@@ -35,8 +37,8 @@ export class Content {
             throw new Error("You do not have this content checked out.")
         }
 
-        return prisma.content.update({
-            where: {id: id},
+        const updated = await prisma.content.update({
+            where: { id: id },
             data: {
                 displayName: _name,
                 linkURL: _linkURL,
@@ -48,8 +50,43 @@ export class Content {
                 expiration: _expiration,
                 targetPersona: _personaTyped,
                 tags: _tags,
+                textContent: _textContent,
             }
         });
+
+        try {
+            const changedFields: Array<"displayName" | "linkURL" | "fileURI" | "contentType" | "status" | "expiration" | "targetPersona" | "tags"> = [];
+
+            if (content.displayName !== _name) changedFields.push("displayName");
+            if (content.linkURL !== _linkURL) changedFields.push("linkURL");
+            if (content.fileURI !== _fileURI) changedFields.push("fileURI");
+            if (content.contentType !== _contentType) changedFields.push("contentType");
+            if (content.status !== _statusTyped) changedFields.push("status");
+            if ((content.expiration?.getTime() ?? null) !== (_expiration?.getTime() ?? null)) {
+                changedFields.push("expiration");
+            }
+            if (content.targetPersona !== _personaTyped) changedFields.push("targetPersona");
+            if (JSON.stringify(content.tags) !== JSON.stringify(_tags)) changedFields.push("tags");
+
+            if (changedFields.length > 0) {
+                await Notification.emitChange(id, _checkedOutById, _personaTyped, changedFields);
+            }
+
+            if (content.ownerId !== _ownerId) {
+                const newOwner = _ownerId
+                    ? await prisma.employee.findUnique({
+                        where: { id: _ownerId },
+                        select: { firstName: true, lastName: true },
+                    })
+                    : null;
+                const newOwnerName = newOwner ? `${newOwner.firstName} ${newOwner.lastName}` : null;
+                await Notification.emitOwnership(id, _checkedOutById, _personaTyped, content.ownerId, _ownerId, newOwnerName);
+            }
+        } catch (err) {
+            console.error("Failed to emit notification:", err);
+        }
+
+        return updated;
     }
 
     public static async createContent(
@@ -63,6 +100,7 @@ export class Content {
         _expiration: Date | null,
         _targetPersona: string,
         _tags: string[] = [],
+        _textContent: string | null = null,
     ): Promise<p.Content> {
         if (!_linkURL && !_fileURI) {
             throw new Error("Content must have either a linkURL or a fileURI")
@@ -87,6 +125,7 @@ export class Content {
                 expiration: _expiration,
                 targetPersona: _personaTyped,
                 tags: _tags,
+                textContent: _textContent,
             }
         })
     }
@@ -99,7 +138,7 @@ export class Content {
 
     public static async queryAllContent() {
         return prisma.content.findMany({
-            include: {owner: true, checkedOutBy: true,},
+            include: {owner: { select: employeeSelect }, checkedOutBy: { select: employeeSelect },},
         })
     }
 
@@ -114,8 +153,8 @@ export class Content {
         return prisma.content.findMany({
             where: {targetPersona: _personaTyped},
             include: {
-                owner: true,
-                checkedOutBy: true,
+                owner: { select: employeeSelect },
+                checkedOutBy: { select: employeeSelect },
             },
         })
     }
@@ -123,7 +162,7 @@ export class Content {
     public static async queryContentById(_id: number): Promise<p.Content | null> {
         return prisma.content.findUnique({
             where: {id: _id},
-            include: { owner: true, checkedOutBy: true }
+            include: { owner: { select: employeeSelect }, checkedOutBy: { select: employeeSelect } }
         })
     }
 
@@ -131,7 +170,7 @@ export class Content {
     public static async checkoutContent(id: number, employeeID: number){
         const content = await prisma.content.findUnique({
             where: {id: id},
-            include: {owner: true, checkedOutBy: true,}
+            include: {owner: { select: employeeSelect }, checkedOutBy: { select: employeeSelect },}
         })
         if (!content) {
             throw new Error("Content not found");
@@ -149,8 +188,8 @@ export class Content {
                 checkedOutAt: new Date(),
             },
             include: {
-                owner: true,
-                checkedOutBy: true,
+                owner: { select: employeeSelect },
+                checkedOutBy: { select: employeeSelect },
             },
         });
     }
@@ -194,5 +233,33 @@ export class Content {
             where: {id: id},
             data: { hits: hits }
         })
+    }
+
+    public static async searchContent(query: string): Promise<p.Content[]> {
+        const results = await prisma.$queryRaw<p.Content[]>`
+        SELECT
+            id,
+            "displayName",
+            "linkURL",
+            "fileURI",
+            "contentType",
+            "status",
+            "targetPersona",
+            "tags",
+            "lastModified",
+            "expiration",
+            ts_rank("searchVector", plainto_tsquery('english', ${query})) AS rank,
+            ts_headline(
+                'english',
+                "textContent",
+                plainto_tsquery('english', ${query}),
+                'MaxWords=50, MinWords=20'
+            ) AS snippet
+        FROM "Content"
+        WHERE "searchVector" @@ plainto_tsquery('english', ${query})
+        ORDER BY rank DESC
+        LIMIT 20;
+    `;
+        return results;
     }
 }

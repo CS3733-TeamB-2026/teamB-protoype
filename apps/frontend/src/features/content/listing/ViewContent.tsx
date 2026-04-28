@@ -87,6 +87,7 @@ import {useLocale} from "@/languageSupport/localeContext.tsx";
 import {useTranslation} from "@/languageSupport/useTranslation.ts";
 import type {TranslationKey} from "@/languageSupport/keys.ts";
 import {ForceCheckinDialog} from "@/features/content/forms/ForceCheckinDialog.tsx";
+import {Timeline} from "@/features/content/components/Timeline.tsx";
 
 
 /**
@@ -355,7 +356,7 @@ function ViewContent() {
      */
     const handleDelete = async (id: number) => {
         const token = await getAccessTokenSilently();
-        const res = await fetch(`/api/content/${id}?employeeID=${user!.id}`, {
+        const res = await fetch(`/api/content/${id}`, {
             method: "DELETE",
             headers: {Authorization: `Bearer ${token}`},
         });
@@ -381,13 +382,9 @@ function ViewContent() {
     const handleCheckout = async (item: ContentItem) => {
         try {
             const token = await getAccessTokenSilently();
-            const res = await fetch("/api/content/checkout", {
+            const res = await fetch(`/api/content/${item.id}/checkout`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({id: item.id, employeeID: user!.id}),
+                headers: { Authorization: `Bearer ${token}` },
             });
             const data = await res.json();
             if (!res.ok) {
@@ -411,13 +408,9 @@ function ViewContent() {
     const handleCheckin = async (item: ContentItem) => {
         try {
             const token = await getAccessTokenSilently();
-            const res = await fetch("/api/content/checkin", {
+            const res = await fetch(`/api/content/${item.id}/checkin`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({id: item.id, employeeID: user!.id}),
+                headers: { Authorization: `Bearer ${token}` },
             });
             if (res.ok) {
                 setContent((prev) => prev.map((c) => c.id === item.id
@@ -432,19 +425,15 @@ function ViewContent() {
     };
     /**
      * Admin-only: forcibly releases the edit lock on `item`, even if another
-     * user currently holds it. Uses `/api/content/checkin` endpoint
-     * but passes the lock holder's ID so the backend lets it through.
+     * user currently holds it. The backend allows this because the caller's
+     * JWT identifies them as an admin.
      */
     const handleForceCheckin = async (item: ContentItem) => {
         try {
             const token = await getAccessTokenSilently();
-            const res = await fetch("/api/content/checkin", {
+            const res = await fetch(`/api/content/${item.id}/checkin`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ id: item.id, employeeID: item.checkedOutById }),
+                headers: { Authorization: `Bearer ${token}` },
             });
             if (res.ok) {
                 setContent((prev) => prev.map((c) => c.id === item.id
@@ -1050,49 +1039,28 @@ function ViewContent() {
                                                                 </TableRow>
                                                             )}
                                                     {/* link preview */}
-                                                    {isExpanded && isLink && (() => {
-                                                        const url = item.linkURL!;
-                                                        //checks for the v= tag on all youtube videos followed by an identifier
-                                                        const youtubeMatch = url.match(/[?&]v=([a-zA-Z0-9_-]+)/);
+                                                    {isExpanded && (
+                                                        <TableRow className="hover:bg-transparent">
+                                                            <TableCell
+                                                                colSpan={NUM_COLS}
+                                                                className="px-6 py-2 bg-muted/10 border-t border-border">
+                                                                <div
+                                                                    className="flex gap-6 text-xs text-muted-foreground mb-3">
+                                                                    {item.checkedOutBy && (
+                                                                        <span><span className="font-medium text-foreground">Editing </span>
+                                                                            {item.checkedOutBy.firstName} {item.checkedOutBy.lastName}</span>
+                                                                    )}
+                                                                </div>
 
-                                                        //youtube link embedding
-                                                        if (youtubeMatch) {
-                                                            return (
-                                                                <TableRow className="hover:bg-transparent">
-                                                                    <TableCell colSpan={NUM_COLS} className="p-0">
-                                                                        <iframe
-                                                                            //youtube embed data
-                                                                            src={`https://www.youtube.com/embed/${youtubeMatch[1]}`}
-                                                                            className="w-full border-0"
-                                                                            style={{ minHeight: "400px" }}
-                                                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                                            allowFullScreen
-                                                                            title={url}
-                                                                        />
-                                                                    </TableCell>
-                                                                </TableRow>
-                                                            );
-                                                        }
-
-                                                        //normal link preview
-                                                        return (
-                                                            <TableRow className="hover:bg-transparent">
-                                                                <TableCell colSpan={NUM_COLS} className="p-0">
-                                                                    <UrlPreviewLink
-                                                                        href={url}
-                                                                        status={
-                                                                            !(item.id in linkPreviews)
-                                                                                ? "loading"
-                                                                                : linkPreviews[item.id] === null
-                                                                                    ? "unreachable"
-                                                                                    : "ok"
-                                                                        }
-                                                                        preview={linkPreviews[item.id] ?? null}
-                                                                    />
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        );
-                                                    })()}
+                                                                {/* Horizontal timeline */}
+                                                                <Timeline
+                                                                    uploaded={item.lastModified}
+                                                                    expiration={item.expiration ?? null}
+                                                                    lastModified={item.lastModified}
+                                                                />
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    )}
                                                     {/* file preview */}
                                                     {isExpanded && isFile && (
                                                         <TableRow className="hover:bg-transparent">

@@ -54,14 +54,6 @@ export function ServiceReqFormFields({ values, patch, errors, showLastModified =
 
             <div className="flex flex-row gap-2 justify-center">
 
-                {/* Owner */}
-                <Field className="bg-background">
-                    <FieldLabel className="text-primary text-lg mb-1">Owner Employee</FieldLabel>
-                    <EmployeePicker
-                        selectedId={values.ownerId}
-                        onSelect={(id) => patch({ ownerId: id ?? undefined })}
-                    />
-                </Field>
                 {/* Assignee */}
                 <Field className="bg-background">
                     <FieldLabel className="text-primary text-lg mb-1">Assignee Employee</FieldLabel>
