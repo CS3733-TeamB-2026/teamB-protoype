@@ -14,13 +14,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ConfirmDeleteDialog } from "@/components/dialogs/ConfirmDeleteDialog";
 import { Hero } from "@/components/shared/Hero";
 import { EmployeeAvatar } from "@/components/shared/EmployeeAvatar";
+import { EmployeePicker } from "@/components/shared/EmployeePicker";
 import { ContentItemCard } from "@/components/shared/ContentItemCard";
 import { ContentIcon } from "@/features/content/components/ContentIcon";
 import { ContentPicker } from "@/components/shared/ContentPicker";
 import { getCategory, getOriginalFilename, lookupByFilename } from "@/lib/mime";
 import { useUser } from "@/hooks/use-user";
 import { usePageTitle } from "@/hooks/use-page-title";
-import type { Collection, CollectionItem, ContentItem } from "@/lib/types";
+import type { Collection, CollectionItem, ContentItem, Employee } from "@/lib/types";
 
 /**
  * Detail page for a single collection, identified by `:id` in the URL.
@@ -57,6 +58,10 @@ export function ViewSingleCollection() {
     const [savingVisibility, setSavingVisibility] = useState(false);
 
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
+    const [transferDialogOpen, setTransferDialogOpen] = useState(false);
+    const [transferTarget, setTransferTarget] = useState<Employee | null>(null);
+    const [savingTransfer, setSavingTransfer] = useState(false);
 
     const [editMode, setEditMode] = useState(false);
     const [draftItems, setDraftItems] = useState<CollectionItem[]>([]);
@@ -105,6 +110,34 @@ export function ViewSingleCollection() {
         } catch {
             setIsFavorited((prev) => !prev);
             toast.error("Failed to update favorite.");
+        }
+    };
+
+    const transferOwnership = async () => {
+        if (!collection || !transferTarget) return;
+        setSavingTransfer(true);
+        try {
+            const token = await getAccessTokenSilently();
+            const res = await fetch(`/api/collections/${collection.id}`, {
+                method: "PUT",
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    displayName: collection.displayName,
+                    isPublic: collection.public,
+                    ownerId: transferTarget.id,
+                    contentIds: collection.items.map((i) => i.contentId),
+                }),
+            });
+            if (!res.ok) throw new Error();
+            const updated: Collection = await res.json();
+            setCollection(updated);
+            setTransferDialogOpen(false);
+            setTransferTarget(null);
+            toast.success(`Ownership transferred to ${transferTarget.firstName} ${transferTarget.lastName}.`);
+        } catch {
+            toast.error("Failed to transfer ownership.");
+        } finally {
+            setSavingTransfer(false);
         }
     };
 
@@ -393,9 +426,19 @@ export function ViewSingleCollection() {
                         </div>
                     </CardHeader>
                     <CardContent className="pt-0">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <div className="group flex items-center gap-2 text-sm text-muted-foreground w-fit">
                             <span>Owner</span>
                             <EmployeeAvatar employee={collection.owner} size="sm" />
+                            {canEdit && (
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+                                    onClick={() => { setTransferTarget(null); setTransferDialogOpen(true); }}
+                                >
+                                    <Pencil className="w-3 h-3" />
+                                </Button>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
@@ -561,6 +604,37 @@ export function ViewSingleCollection() {
                 description={<span>This will permanently delete <strong>"{collection.displayName}"</strong> and all its items.</span>}
                 onConfirm={handleDelete}
             />
+
+            {/* Transfer ownership dialog — portal-rendered so the EmployeePicker dropdown is never clipped */}
+            <Dialog open={transferDialogOpen} onOpenChange={(open) => { if (!open) setTransferTarget(null); setTransferDialogOpen(open); }}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Transfer Ownership</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex flex-col gap-4">
+                        <EmployeePicker
+                            selectedId={transferTarget?.id ?? null}
+                            onSelect={(_, emp) => setTransferTarget(emp)}
+                            disabled={savingTransfer}
+                        />
+                        {user && collection.ownerId === user.id && (
+                            <p className="text-sm text-destructive">
+                                You will lose edit access to this collection immediately after transferring.
+                            </p>
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setTransferDialogOpen(false)} disabled={savingTransfer}>Cancel</Button>
+                        <Button
+                            onClick={() => void transferOwnership()}
+                            disabled={!transferTarget || transferTarget.id === collection.ownerId || savingTransfer}
+                            className="hover:bg-secondary hover:text-secondary-foreground active:scale-95 transition-all bg-primary text-primary-foreground rounded-lg px-4 py-1"
+                        >
+                            {savingTransfer ? <Loader2 className="w-4 h-4 animate-spin" /> : "Transfer"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Add content dialog — portal-rendered so the ContentPicker dropdown is never clipped */}
             <Dialog open={addDialogOpen} onOpenChange={(open) => { if (!open) setPickerItem(null); setAddDialogOpen(open); }}>
