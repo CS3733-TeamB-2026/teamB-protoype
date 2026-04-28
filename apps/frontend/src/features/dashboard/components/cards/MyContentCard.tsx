@@ -1,14 +1,18 @@
-import {Card, CardContent, CardHeader} from "@/components/ui/card.tsx";
+import {CardContent, CardHeader} from "@/components/ui/card.tsx";
 import MyFiles from "@/features/content/listing/MyFiles.tsx";
+import DashboardCard from "@/features/dashboard/components/cards/DashboardCard.tsx";
 
 function MyContentCard() {
     return (
-        <Card className="border-t-secondary border-t-4 shadow-lg hover:scale-101 transition-transform px-4 py-8">
+        <DashboardCard
+            size="small"
+            borderColor="secondary"
+        >
             <CardHeader className="text-left text-2xl! font-semibold">My Files: </CardHeader>
             <CardContent>
                 <MyFiles/>
             </CardContent>
-        </Card>
+        </DashboardCard>
     );
 }
 
