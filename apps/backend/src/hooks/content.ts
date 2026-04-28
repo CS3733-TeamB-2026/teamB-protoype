@@ -8,6 +8,8 @@ import { isAdmin, isPersonaOrAdmin } from "../helpers/permissions";
 import { extractText, SupportedMimeType } from "../../lib/extractors";
 import { generateEmbedding, embeddingToSql } from '../../lib/embeddings';
 import { prisma } from '../../../../packages/db/lib/prisma';
+import dns from "node:dns/promises";
+import {applyExpirationTagsToOne} from "../jobs/autoTag"
 
 const PREVIEW_MAX_BYTES = 2 * 1024 * 1024; // 2 MB
 
@@ -195,6 +197,7 @@ export const uploadFile = async (req: req, res: res) => {
             JSON.parse(payload.tags || "[]"),
             null    // textContent filled in background
         );
+        await applyExpirationTagsToOne(result.id);
 
         // Respond immediately
         res.status(201).json(result);
@@ -293,6 +296,7 @@ export const updateContent = async (req: req, res: res) => {
         if (oldURI && (uploaded || linkURL)) {
             await q.Bucket.deleteFile(oldURI).catch(console.error);
         }
+        await applyExpirationTagsToOne(result.id);
 
         // Respond immediately
         res.status(201).json(result);

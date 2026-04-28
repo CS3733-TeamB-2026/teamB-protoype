@@ -1,41 +1,60 @@
 import FacebookIcon from "@/assets/facebook-logo.png";
 import InstagramIcon from "@/assets/instagram-icon.png";
-import TwitterIcon from "@/assets/twitter-icon.png";
-import {useLocale} from "@/languageSupport/localeContext.tsx";
-import {useTranslation} from "@/languageSupport/useTranslation.ts";
+import TwitterIcon from "@/assets/x_icon.png";
+import { useLocale } from "@/languageSupport/localeContext.tsx";
+import { useTranslation } from "@/languageSupport/useTranslation.ts";
 
-//Global footer, this displays across ALL pages.
-function Footer (){
+function Footer() {
     const { locale } = useLocale();
     const { ts } = useTranslation(locale);
+
     return (
-        <>
-            {}
-            <footer className="shrink-0 bg-primary text-primary-foreground mt-auto py-8 px-6"
-                    style={{ background: "linear-gradient(to right, var(--primary-surface-dark), var(--primary-surface), var(--primary-surface-light)" }}>
-                <div className="w-full mx-auto grid grid-cols-1 md:grid-cols-3 items-center gap-6">
-                    <div className="text-center md:text-left justify-self-start">
-                        <h3 className="font-bold text-lg">{ts('footer.hanoverContentManager')}</h3>
-                        <p className="text-sm text-primary-foreground/70">&copy; {ts('footer.rightsReserved')}.</p>
-                    </div>
-                    <div className="flex items-center justify-center gap-5">
-                        <a href="https://www.facebook.com/hanoverinsurance/">
-                            <img src={FacebookIcon} alt="facebook" className="w-5 h-5"/>
-                        </a>
-                        <a href="https://x.com/The_Hanover">
-                            <img src={TwitterIcon} alt="twitter" className="w-5 h-5"/>
-                        </a>
-                        <a href="https://www.instagram.com/the.hanover/">
-                            <img src={InstagramIcon} alt="instagram" className="w-5 h-5"/>
-                        </a>
-                    </div>
-                    <div className="text-center md:text-right justify-self-end">
-                        <h3 className="font-bold text-lg">{ts('footer.notice')}</h3>
-                        <p className="text-sm text-primary-foreground/70">{ts('footer.WPI')}</p>
-                    </div>
+        <footer
+            className="shrink-0 mt-auto px-6 pt-10 pb-6 text-primary-foreground"
+            style={{
+                background:
+                    "linear-gradient(to right, var(--primary-surface-dark), var(--primary-surface), var(--primary-surface-light))",
+            }}>
+            <div className="max-w-5xl mx-auto flex flex-col items-center text-center">
+                <h2 className="text-lg font-semibold tracking-tight">
+                    {ts("footer.hanoverContentManager")}
+                </h2>
+                {/* Divider */}
+                <div className="w-80 h-0.5 bg-primary-foreground/20 rounded-full my-4 mb-5" />
+                {/* Social Icons */}
+                <div className="flex items-center gap-6 mb-6">
+                    <a href="https://www.facebook.com/hanoverinsurance/" className="group">
+                        <img
+                            src={FacebookIcon}
+                            alt="facebook"
+                            className="w-5 h-5 opacity-70 group-hover:opacity-100 group-hover:scale-110 transition
+                            saturate-0 contrast-500 brightness-60"/>
+                    </a>
+                    <a href="https://x.com/The_Hanover" className="group">
+                        <img
+                            src={TwitterIcon}
+                            alt="twitter"
+                            className="w-5 h-5 opacity-70 group-hover:opacity-100 group-hover:scale-110 transition saturate-0"/>
+                    </a>
+                    <a href="https://www.instagram.com/the.hanover/" className="group">
+                        <img
+                            src={InstagramIcon}
+                            alt="instagram"
+                            className="w-5 h-5 opacity-70 group-hover:opacity-100 group-hover:scale-110 transition
+                            saturate-0 contrast-500 brightness-60"/>
+                    </a>
                 </div>
-            </footer>
-        </>
-    )
+                {/* Info row */}
+                <div className="flex flex-col md:flex-row items-center gap-2 md:gap-6 text-xs text-primary-foreground/60">
+                    <span>&copy; {ts("footer.rightsReserved")}</span>
+                    <span className="hidden md:inline">•</span>
+                    <span>{ts("footer.notice")}</span>
+                    <span className="hidden md:inline">•</span>
+                    <span>{ts("footer.WPI")}</span>
+                </div>
+            </div>
+        </footer>
+    );
 }
+
 export default Footer;
