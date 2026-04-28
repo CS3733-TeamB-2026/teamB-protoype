@@ -11,9 +11,10 @@ import slide10 from "../../assets/Team Photos/Ricardo Guzman Volpe.jpeg";
 import slide11 from "../../assets/Team Photos/Ricardo Guzman Volpe.jpeg";
 import slide12 from "../../assets/Team Photos/Ricardo Guzman Volpe.jpeg";
 import slide13 from "../../assets/Team Photos/Ricardo Guzman Volpe.jpeg";
-import slide14 from "../../assets/Team Photos/Ricardo Guzman Volpe.jpeg";
+import SearchTutorial from "../../assets/Tutorial Slide Decks/Search Tutorial.png";
 import slide15 from "../../assets/Team Photos/Ricardo Guzman Volpe.jpeg";
 import slide16 from "../../assets/Team Photos/Ricardo Guzman Volpe.jpeg";
+import slide17 from "../../assets/Team Photos/Ricardo Guzman Volpe.jpeg";
 
 export const slideDecks = {
     slide1,
@@ -29,7 +30,8 @@ export const slideDecks = {
     slide11,
     slide12,
     slide13,
-    slide14,
+    SearchTutorial,
     slide15,
     slide16,
+    slide17,
 };

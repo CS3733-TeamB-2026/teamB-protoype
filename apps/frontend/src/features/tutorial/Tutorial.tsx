@@ -11,14 +11,12 @@ interface Step {
     image: SlideKey;
     tag?: { label: string; variant: "ui" | "warning" };
 }
-
 interface Section {
     label: string;
     title: string;
     steps: Step[];
     adminOnly?: boolean;
 }
-
 interface Slide {
     sectionIndex: number;
     sectionLabel: string;
@@ -56,7 +54,7 @@ const USER_SECTIONS: Section[] = [
         title: "Check-In / Check-Out System",
         steps: [
             { title: "Checking Out", desc: "Files in the system work with a check-in / check-out system. When you check out a document, only you have permissions to change it, however others can still view it. Once you are done editing the file, you'll just check it back in for the next person to use.", image: 'slide10' },
-            { title: "Making Edits", desc: "While checked out, download the file, make your changes locally, and re-upload the updated version using the Edit flow.", image: 'slide11' },
+            { title: "Making Edits", desc: "While checked out, download the file, make your changes locally, and re-upload the updated version using the Edit flow. Or alternatively, change document metadata without downloading.", image: 'slide11' },
             { title: "Checking In", desc: "Once finished, click Check In on the document page. This saves your changes and releases the lock for others.", image: 'slide12' },
             { title: "Who Has What?", desc: "A locked document shows a Checked Out badge with the name of the user who currently has it.", tag: { label: "Badge visible on document card", variant: "ui" }, image: 'slide13' },
         ],
@@ -65,9 +63,10 @@ const USER_SECTIONS: Section[] = [
         label: "Viewing Documents",
         title: "Viewing Documents",
         steps: [
-            { title: "Document Search", desc: "Use the search bar or filter by category to find documents. Results update as you type.", image: 'slide14' },
-            { title: "Viewing a Document", desc: "Click any document title to open its detail page, which shows metadata, version history, and a preview where available.", image: 'slide15' },
-            { title: "Downloading Files", desc: "Click Download on the document detail page to save a copy locally. No check-out needed for downloading.", image: 'slide16' },
+            { title: "Document Search", desc: "Use the search bar or filter by category to find documents. Results update and highlight as you type.", image: 'SearchTutorial' },
+            { title: "Document Filtering", desc: "Alternatively, you can also filter by category. There are simple filters and more advanced content filters", image: 'slide15' },
+            { title: "Viewing a Document", desc: "Click any document title to open its detail page, which shows metadata, version history, and a preview where available.", image: 'slide16' },
+            { title: "Downloading Files", desc: "Click Download on the document detail page to save a copy locally. No check-out needed for downloading.", image: 'slide17' },
         ],
     },
 ];
@@ -114,15 +113,6 @@ function buildSlides(sections: Section[], adminStartIndex: number): Slide[] {
         });
     });
     return slides;
-}
-
-function DisplayImage({ imageKey }: { imageKey: SlideKey }) {
-    const imageSrc = slideDecks[imageKey];
-    return (
-        <div className="flex-1 mt-5 rounded-lg border-2 border-dashed border-border bg-secondary flex flex-col items-center justify-center gap-2 text-muted-foreground text-xs font-mono min-h-0">
-            <img src={imageSrc} alt={imageKey} className="object-contain w-full h-full rounded-lg" />
-        </div>
-    );
 }
 function SectionPills({
                           sections,
@@ -238,13 +228,20 @@ function TutorialPage() {
                     </div>
                 </div>
 
-                <div className="bg-card border border-border rounded-xl p-6 shadow-sm flex-1 flex flex-col min-h-0 overflow-hidden">
+                <div className="bg-card border border-border rounded-xl p-6 shadow-sm flex flex-col min-h-0">
                     <h3 className="text-xl font-bold mb-3">{current.step.title}</h3>
                     <Separator className="mb-4" />
                     <p className="text-sm text-muted-foreground leading-relaxed">
                         {current.step.desc}
                     </p>
-                    <DisplayImage imageKey={current.step.image}/>
+                    <div className="mt-5 rounded-lg border-2 border-dashed border-border bg-secondary overflow-hidden"
+                         style={{ maxHeight: '60vh' }}>
+                        <img
+                            src={slideDecks[current.step.image]}
+                            alt={current.step.image}
+                            className="w-full h-auto block max-h-[60vh] object-contain object-top"
+                        />
+                    </div>
                 </div>
 
                 <div className="flex items-center justify-between mt-6 gap-3">
