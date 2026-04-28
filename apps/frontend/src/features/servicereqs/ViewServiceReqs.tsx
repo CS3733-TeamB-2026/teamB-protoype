@@ -14,6 +14,8 @@ import { useUser } from "@/hooks/use-user.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 import type { ServiceReq } from "@/lib/types.ts";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
+import {findMatches, highlightRange} from "@/lib/highlight.tsx";
+import { EmployeeAvatar } from "@/components/shared/EmployeeAvatar.tsx";
 
 function ViewServiceReqs() {
 
@@ -26,7 +28,7 @@ function ViewServiceReqs() {
     const [deleteTarget, setDeleteTarget] = useState<ServiceReq | null>(null);
     const [addOpen, setAddOpen] = useState(false);  // <-- new
     const user = useUser();
-    /*Update*/const [sort, toggleSort] = useSortState<"id" | "created" | "deadline" | "type" | "assignee" | "owner">({column: "id", direction: "asc"});
+    /*Update*/const [sort, toggleSort] = useSortState<"name" | "created" | "deadline" | "type" | "assignee" | "owner">({column: "type", direction: "asc"});
     const [searchTerm, setSearchTerm] = useState("");
     const { getAccessTokenSilently } = useAuth0();
 
@@ -54,11 +56,13 @@ function ViewServiceReqs() {
         const query = searchTerm.toLowerCase().trim().replace(/\s/g, "");
         if (!query) return true;
 
+        const ownerName = `${s.owner.firstName}${s.owner.lastName}`.toLowerCase();
+        const assigneeName = s.assignee ? `${s.assignee.firstName}${s.assignee.lastName}`.toLowerCase() : "";
         return (
-            s.id.toString().includes(query) ||
+            s.name.toString().includes(query) ||
             s.type.toLowerCase().includes(query) ||
-            s.assignee.toString().includes(query) ||
-            s.owner.toString().includes(query)
+            ownerName.includes(query) ||
+            assigneeName.includes(query)
         );
     });
 
@@ -88,14 +92,14 @@ function ViewServiceReqs() {
         <>
             <Hero
                 icon={Users}
-                title="View ServiceReqs"
-                description="View, update, and delete servicereqs."
+                title="View Service Requests"
+                description="View, update, and delete service requests."
             />
 
             <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center px-4">
                 <CardHeader>
-                    <CardTitle className="text-3xl text-primary mt-4">All ServiceReqs</CardTitle>
-                    <CardDescription>Total ServiceReqs: {servicereqs.length}</CardDescription>
+                    <CardTitle className="text-3xl text-primary mt-4">All Service Requests</CardTitle>
+                    <CardDescription>Total Service Requests: {servicereqs.length}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="flex items-center justify-between mb-4">
@@ -133,39 +137,45 @@ function ViewServiceReqs() {
                         <Table className="text-left">
                             <TableHeader>
                                 <TableRow className="hover:bg-transparent">
-                                    <TableHead className="uppercase tracking-wider text-muted-foreground select-none">Avatar</TableHead>
-                                    {/*Update me*/}
-                                    <SortableHead column="id" label="ID" sort={sort} onSort={toggleSort} />
+                                    <SortableHead column="name" label="Name" sort={sort} onSort={toggleSort} />
                                     <SortableHead column="type" label="Type" sort={sort} onSort={toggleSort} />
                                     <SortableHead column="created" label="Created" sort={sort} onSort={toggleSort} className="w-full" />
                                     <SortableHead column="deadline" label="Deadline" sort={sort} onSort={toggleSort} />
-                                    <SortableHead column="assignee" label="AssigneeID" sort={sort} onSort={toggleSort} />
-                                    <SortableHead column="owner" label="OwnerID" sort={sort} onSort={toggleSort} />
+                                    <SortableHead column="assignee" label="Assignee" sort={sort} onSort={toggleSort} />
+                                    <SortableHead column="owner" label="Owner" sort={sort} onSort={toggleSort} />
                                     <TableHead className="uppercase tracking-wider text-muted-foreground select-none">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {applySortState(filteredServiceReqs, sort, (s, col) => {
-                                    if (col === "id") return s.id;
+                                    if (col === "name") return s.name;
                                     if (col === "type") return s.type;
                                     if (col === "created") return s.created;
                                     if (col === "deadline") return s.deadline;
-                                    if (col === "assignee") return s.assignee;
-                                    if (col === "owner") return s.owner;
+                                    if (col === "assignee") return s.assignee ? `${s.assignee.lastName} ${s.assignee.firstName}` : "";
+                                    if (col === "owner") return `${s.owner.lastName} ${s.owner.firstName}`;
                                 }).map((servicereq) => {
+                                    const matches = findMatches(servicereq.name, searchTerm)
                                     return (
                                         <TableRow key={servicereq.id}>
-                                            <TableCell className="text-right pr-4">{servicereq.id}</TableCell>
+                                            <TableCell className="text-right pr-4">{highlightRange(servicereq.name, 0, matches)}</TableCell>
                                             <TableCell className="font-medium">{servicereq.type}</TableCell>
-                                            <TableCell className="font-medium">{servicereq.created}</TableCell>
-                                            <TableCell className="font-medium">{servicereq.deadline}</TableCell>
-                                            <TableCell className="font-medium">{servicereq.assignee}</TableCell>
-                                            <TableCell className="font-medium">{servicereq.owner}</TableCell>
+                                            <TableCell className="font-medium">{new Date(servicereq.created).toLocaleDateString()}</TableCell>
+                                            <TableCell className="font-medium">{new Date(servicereq.deadline).toLocaleDateString()}</TableCell>
+                                            <TableCell>
+                                                {servicereq.assignee
+                                                    ? <EmployeeAvatar employee={servicereq.assignee} size="sm" />
+                                                    : <span className="text-muted-foreground">—</span>}
+                                            </TableCell>
+                                            <TableCell>
+                                                <EmployeeAvatar employee={servicereq.owner} size="sm" />
+                                            </TableCell>
                                             <TableCell>
                                                 <div className="flex justify-center gap-2">
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
+                                                        disabled={servicereq.ownerId !== user.user?.id && servicereq.assigneeId !== user.user?.id && user.user?.persona !== "admin"}
                                                         onClick={() => {
                                                             setEditingServiceReq(servicereq);
                                                             setEditOpen(true);
@@ -176,7 +186,7 @@ function ViewServiceReqs() {
                                                     <Button
                                                         variant="destructive"
                                                         size="sm"
-                                                        disabled={servicereq.id === user?.id}
+                                                        disabled={servicereq.ownerId !== user.user?.id && servicereq.assigneeId !== user.user?.id && user.user?.persona !== "admin"}
                                                         onClick={() => setDeleteTarget(servicereq)}
                                                     >
                                                         <Trash2 className="w-4 h-4" />

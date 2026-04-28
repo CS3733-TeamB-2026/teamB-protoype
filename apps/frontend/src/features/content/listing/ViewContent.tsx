@@ -72,8 +72,10 @@ import {invalidateFileCacheById} from "@/features/content/previews/file-cache.ts
 import {useAuth0} from "@auth0/auth0-react"
 import {highlight} from "@/lib/highlight.tsx";
 import {formatLabel, formatName} from "@/lib/utils.ts";
+import { EmployeeAvatar } from "@/components/shared/EmployeeAvatar.tsx";
 import {toast} from "sonner";
-import type { ContentItem, BookmarkRecord, DocType, ContentStatus, ContentType, Persona, UrlPreview } from "@/lib/types.ts";
+import type { ContentItem, BookmarkRecord, ContentStatus, ContentType, Persona, UrlPreview } from "@/lib/types.ts";
+import { ALL_CATEGORIES } from "@/lib/mime.ts";
 import {usePageTitle} from "@/hooks/use-page-title.ts";
 import {ConfirmCheckoutDialog} from "@/features/content/forms/ConfirmCheckoutDialog.tsx";
 import {ConfirmCheckinDialog} from "@/features/content/forms/ConfirmCheckinDialog.tsx";
@@ -86,6 +88,7 @@ import {useTranslation} from "@/languageSupport/useTranslation.ts";
 import type {TranslationKey} from "@/languageSupport/keys.ts";
 import {ForceCheckinDialog} from "@/features/content/forms/ForceCheckinDialog.tsx";
 import InfoButton from "@/components/layout/InformationAlert";
+import {Timeline} from "@/features/content/components/Timeline.tsx";
 
 
 /**
@@ -354,7 +357,7 @@ function ViewContent() {
      */
     const handleDelete = async (id: number) => {
         const token = await getAccessTokenSilently();
-        const res = await fetch(`/api/content/${id}?employeeID=${user!.id}`, {
+        const res = await fetch(`/api/content/${id}`, {
             method: "DELETE",
             headers: {Authorization: `Bearer ${token}`},
         });
@@ -380,13 +383,9 @@ function ViewContent() {
     const handleCheckout = async (item: ContentItem) => {
         try {
             const token = await getAccessTokenSilently();
-            const res = await fetch("/api/content/checkout", {
+            const res = await fetch(`/api/content/${item.id}/checkout`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({id: item.id, employeeID: user!.id}),
+                headers: { Authorization: `Bearer ${token}` },
             });
             const data = await res.json();
             if (!res.ok) {
@@ -410,13 +409,9 @@ function ViewContent() {
     const handleCheckin = async (item: ContentItem) => {
         try {
             const token = await getAccessTokenSilently();
-            const res = await fetch("/api/content/checkin", {
+            const res = await fetch(`/api/content/${item.id}/checkin`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({id: item.id, employeeID: user!.id}),
+                headers: { Authorization: `Bearer ${token}` },
             });
             if (res.ok) {
                 setContent((prev) => prev.map((c) => c.id === item.id
@@ -431,19 +426,15 @@ function ViewContent() {
     };
     /**
      * Admin-only: forcibly releases the edit lock on `item`, even if another
-     * user currently holds it. Uses `/api/content/checkin` endpoint
-     * but passes the lock holder's ID so the backend lets it through.
+     * user currently holds it. The backend allows this because the caller's
+     * JWT identifies them as an admin.
      */
     const handleForceCheckin = async (item: ContentItem) => {
         try {
             const token = await getAccessTokenSilently();
-            const res = await fetch("/api/content/checkin", {
+            const res = await fetch(`/api/content/${item.id}/checkin`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ id: item.id, employeeID: item.checkedOutById }),
+                headers: { Authorization: `Bearer ${token}` },
             });
             if (res.ok) {
                 setContent((prev) => prev.map((c) => c.id === item.id
@@ -473,16 +464,6 @@ function ViewContent() {
         setEditOpen(true);
     };
 
-    const docTypeLabels: Record<DocType, string> = {
-        office: "Office (PDF, Word..)",
-        audio: "Audio",
-        video: "Video",
-        images: "Images",
-        html: "HTML",
-        zip: "ZIP",
-        "plain text": "Plain Text",
-        links: "Links"
-    }
 
     // Total column count used for colSpan on the expanded detail rows.
     const NUM_COLS = 8;
@@ -745,8 +726,7 @@ function ViewContent() {
                                         <div>
                                             <p className="font-medium mb-2">{ts('file.type')}</p>
                                             <div className="flex flex-col gap-1.5">
-                                                {Object.entries(docTypeLabels).map(([key]) => {
-                                                    const dt = key as DocType
+                                                {ALL_CATEGORIES.map((dt) => {
 
                                                     return (
                                                         <label key={dt} className="flex items-center gap-2">
@@ -814,7 +794,7 @@ function ViewContent() {
                                     </TableHeader>
                                     <TableBody>
                                         {/* pre sorts the content */}
-                                        {paginatedContent.map((item) => {
+                                        {paginatedContent.map((item, index) => {
                                             const isFile = !!item.fileURI;
                                             const isLink = !!item.linkURL;
                                             const originalFilename = isFile
@@ -830,7 +810,7 @@ function ViewContent() {
                                             return (
                                                 <React.Fragment key={item.id}>
                                                     <TableRow
-                                                        className={`cursor-pointer ${item.checkedOutById === user!.id ? "bg-accent/10 border-l-4 border-l-accent" : ""} ${isExpanded ? "bg-muted/80 hover:bg-muted/90" : ""} ${isCheckedOut(item) ? "opacity-50" : ""}`}
+                                                        className={`cursor-pointer ${item.checkedOutById === user!.id ? "bg-accent/10 border-l-4 border-l-accent" : ""} ${index % 2 === 0 ? "bg-muted/15" : ""} ${isExpanded ? "bg-muted/80 hover:bg-muted/90" : ""} ${isCheckedOut(item) ? "opacity-50" : ""}`}
                                                         onClick={() => toggleExpand(item.id)}
                                                         tabIndex={0}
                                                         onKeyDown={(e) => {
@@ -871,8 +851,10 @@ function ViewContent() {
                                                         {/* This section just defines all the little label
                                                         cells in the top of the previewer */}
                                                         {/* owner */}
-                                                        <TableCell className="hidden sm:table-cell text-foreground">
-                                                            {formatName(item.owner)}
+                                                        <TableCell className="hidden sm:table-cell">
+                                                            {item.owner
+                                                                ? <EmployeeAvatar employee={item.owner} size="sm" />
+                                                                : <span className="text-muted-foreground">—</span>}
                                                         </TableCell>
                                                         {/* status */}
                                                         <TableCell className="hidden sm:table-cell text-center">
@@ -1059,49 +1041,28 @@ function ViewContent() {
                                                                 </TableRow>
                                                             )}
                                                     {/* link preview */}
-                                                    {isExpanded && isLink && (() => {
-                                                        const url = item.linkURL!;
-                                                        //checks for the v= tag on all youtube videos followed by an identifier
-                                                        const youtubeMatch = url.match(/[?&]v=([a-zA-Z0-9_-]+)/);
+                                                    {isExpanded && (
+                                                        <TableRow className="hover:bg-transparent">
+                                                            <TableCell
+                                                                colSpan={NUM_COLS}
+                                                                className="px-6 py-2 bg-muted/10 border-t border-border">
+                                                                <div
+                                                                    className="flex gap-6 text-xs text-muted-foreground mb-3">
+                                                                    {item.checkedOutBy && (
+                                                                        <span><span className="font-medium text-foreground">Editing </span>
+                                                                            {item.checkedOutBy.firstName} {item.checkedOutBy.lastName}</span>
+                                                                    )}
+                                                                </div>
 
-                                                        //youtube link embedding
-                                                        if (youtubeMatch) {
-                                                            return (
-                                                                <TableRow className="hover:bg-transparent">
-                                                                    <TableCell colSpan={NUM_COLS} className="p-0">
-                                                                        <iframe
-                                                                            //youtube embed data
-                                                                            src={`https://www.youtube.com/embed/${youtubeMatch[1]}`}
-                                                                            className="w-full border-0"
-                                                                            style={{ minHeight: "400px" }}
-                                                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                                                            allowFullScreen
-                                                                            title={url}
-                                                                        />
-                                                                    </TableCell>
-                                                                </TableRow>
-                                                            );
-                                                        }
-
-                                                        //normal link preview
-                                                        return (
-                                                            <TableRow className="hover:bg-transparent">
-                                                                <TableCell colSpan={NUM_COLS} className="p-0">
-                                                                    <UrlPreviewLink
-                                                                        href={url}
-                                                                        status={
-                                                                            !(item.id in linkPreviews)
-                                                                                ? "loading"
-                                                                                : linkPreviews[item.id] === null
-                                                                                    ? "unreachable"
-                                                                                    : "ok"
-                                                                        }
-                                                                        preview={linkPreviews[item.id] ?? null}
-                                                                    />
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        );
-                                                    })()}
+                                                                {/* Horizontal timeline */}
+                                                                <Timeline
+                                                                    uploaded={item.lastModified}
+                                                                    expiration={item.expiration ?? null}
+                                                                    lastModified={item.lastModified}
+                                                                />
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    )}
                                                     {/* file preview */}
                                                     {isExpanded && isFile && (
                                                         <TableRow className="hover:bg-transparent">

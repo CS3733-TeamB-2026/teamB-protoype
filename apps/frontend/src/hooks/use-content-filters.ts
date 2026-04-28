@@ -1,7 +1,7 @@
 import {useState} from "react";
-import type { ContentItem, BookmarkRecord, DocType, ContentStatus, ContentType, Persona } from "@/lib/types.ts";
-import {getExtension, getOriginalFilename } from "@/lib/mime.ts";
-import { mapExtensionToDocType } from "@/lib/docTypeMap.ts";
+import type { ContentItem, BookmarkRecord, ContentStatus, ContentType, Persona } from "@/lib/types.ts";
+import { type Category, getOriginalFilename, lookupByFilename } from "@/lib/mime.ts";
+
 {/*CHANGE THIS TO ADD MORE TABS!!*/}
 export type ContentTab = "forYou" | "all" | "owned" | "bookmarks";
 
@@ -38,7 +38,7 @@ export function useContentFilters(
         contentType: [] as ContentType[],
         persona: [] as Persona[],
         tags: [] as string[],
-        docType: [] as DocType[]
+        docType: [] as Category[]
     });
 
     /**
@@ -77,13 +77,10 @@ export function useContentFilters(
         const matchesBookmark =
             activeTab !== "bookmarks" || bookmarks.some((b) => b.bookmarkedContentId === item.id);
 
-        const ext = item.fileURI
-            ? getExtension(getOriginalFilename(item.fileURI))
-            : null
-        const docType: DocType | null = ext
-            ? mapExtensionToDocType(ext)
+        const docType: Category | null = item.fileURI
+            ? (lookupByFilename(getOriginalFilename(item.fileURI))?.category ?? null)
             : item.linkURL
-                ? "links"
+                ? "link"
                 : null
         const matchesDocType =
             advancedFilters.docType.length === 0 ||

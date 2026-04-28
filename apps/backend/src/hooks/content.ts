@@ -1,56 +1,31 @@
 import * as q from "@softeng-app/db";
 import mime from "mime-types";
-import * as cheerio from 'cheerio';
+import * as cheerio from "cheerio";
+import { req, res } from "./types";
+import { getEmployee } from "../helpers/getEmployee";
+import { assertPublicUrl } from "../helpers/validateUrl";
+import { isAdmin, isPersonaOrAdmin } from "../helpers/permissions";
+import { extractText, SupportedMimeType } from "../../lib/extractors";
+import { generateEmbedding, embeddingToSql } from '../../lib/embeddings';
+import { prisma } from '../../../../packages/db/lib/prisma';
 import dns from "node:dns/promises";
-import {req, res} from "./types"
-
-/** Returns true if the IPv4/IPv6 address is a loopback, private, or link-local address. */
-function isPrivateIP(ip: string): boolean {
-    const v4 = [
-        /^127\./,                          // 127.0.0.0/8  loopback
-        /^10\./,                           // 10.0.0.0/8   RFC-1918
-        /^172\.(1[6-9]|2\d|3[01])\./,     // 172.16.0.0/12 RFC-1918
-        /^192\.168\./,                     // 192.168.0.0/16 RFC-1918
-        /^169\.254\./,                     // 169.254.0.0/16 link-local / AWS metadata
-        /^0\./,                            // 0.0.0.0/8
-    ];
-    if (v4.some(r => r.test(ip))) return true;
-    // IPv6 loopback, link-local (fe80::/10), unique-local (fc00::/7)
-    if (ip === "::1") return true;
-    if (/^fe[89ab][0-9a-f]:/i.test(ip)) return true;
-    if (/^f[cd][0-9a-f]{2}:/i.test(ip)) return true;
-    return false;
-}
-
-/**
- * Validates that a URL is safe to fetch as a server-side proxy:
- * - scheme must be http or https
- * - all DNS-resolved addresses must be public (blocks SSRF)
- */
-async function assertPublicUrl(rawUrl: string): Promise<void> {
-    let parsed: URL;
-    try { parsed = new URL(rawUrl); } catch { throw new Error("Invalid URL"); }
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-        throw new Error("Only http/https URLs are allowed");
-    }
-    const addresses = await dns.lookup(parsed.hostname, { all: true });
-    for (const { address } of addresses) {
-        if (isPrivateIP(address)) throw new Error("URL resolves to a private/internal address");
-    }
-}
+import {applyExpirationTagsToOne} from "../jobs/autoTag"
 
 const PREVIEW_MAX_BYTES = 2 * 1024 * 1024; // 2 MB
 
 export const previewContent = async (req: req, res: res) => {
     try {
         const url = req.query.url as string;
-        if (!url) return res.status(400).json({ message: "Missing url parameter" });
+        if (!url)
+            return res.status(400).json({ message: "Missing url parameter" });
         try {
             await assertPublicUrl(url);
         } catch (e: any) {
             return res.status(400).json({ message: e.message });
         }
-        const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
+        const response = await fetch(url, {
+            signal: AbortSignal.timeout(5000),
+        });
         const buffer = await response.arrayBuffer();
         if (buffer.byteLength > PREVIEW_MAX_BYTES) {
             return res.status(400).json({ message: "Response too large" });
@@ -58,11 +33,17 @@ export const previewContent = async (req: req, res: res) => {
         const html = new TextDecoder().decode(buffer);
         const $ = cheerio.load(html);
         const base = new URL(url);
-        const og = (prop: string) => $(`meta[property="og:${prop}"]`).attr("content") ?? null;
-        const meta = (name: string) => $(`meta[name="${name}"]`).attr("content") ?? null;
+        const og = (prop: string) =>
+            $(`meta[property="og:${prop}"]`).attr("content") ?? null;
+        const meta = (name: string) =>
+            $(`meta[name="${name}"]`).attr("content") ?? null;
         const resolve = (href: string | null) => {
             if (!href) return null;
-            try { return new URL(href, base.origin).href; } catch { return null; }
+            try {
+                return new URL(href, base.origin).href;
+            } catch {
+                return null;
+            }
         };
         // Try favicon sources in priority order: high-res first, then smaller, then Apple touch icon
         const rawFavicon =
@@ -73,7 +54,9 @@ export const previewContent = async (req: req, res: res) => {
             $('link[rel="apple-touch-icon"]').attr("href") ??
             null;
         // Fall back to Google's favicon service, which is highly reliable
-        const favicon = resolve(rawFavicon) ?? `https://www.google.com/s2/favicons?domain=${base.hostname}&sz=32`;
+        const favicon =
+            resolve(rawFavicon) ??
+            `https://www.google.com/s2/favicons?domain=${base.hostname}&sz=32`;
         return res.status(200).json({
             title: og("title") ?? $("title").text() ?? null,
             description: og("description") ?? meta("description") ?? null,
@@ -100,7 +83,7 @@ export const getAllContent = async (req: req, res: res) => {
     }
 };
 
-export const getAllTags = async (req: req, res: res) => {
+export const getAllTags = async (_req: req, res: res) => {
     try {
         const content = await q.Content.queryAllContent();
         const tags = [...new Set(content.flatMap((item) => item.tags ?? []))];
@@ -164,15 +147,15 @@ export const downloadContent = async (req: req, res: res) => {
 
 export const getPublicFileUrl = async (req: req, res: res) => {
     try {
-        const id = parseInt(req.params.id)
-        const publicUrl = await q.Bucket.createPublicUrl(id)
+        const id = parseInt(req.params.id);
+        const publicUrl = await q.Bucket.createPublicUrl(id);
         if (!publicUrl) return res.status(404).end();
         return res.status(200).json(publicUrl);
     } catch (error) {
         console.error(error);
         return res.status(500).end();
     }
-}
+};
 
 function buildFileURI(ownerID: string, filename: string): string {
     return `${ownerID}/${crypto.randomUUID()}/${filename}`;
@@ -182,13 +165,25 @@ export const uploadFile = async (req: req, res: res) => {
     const payload = req.body;
     let fileURI: string | null = null;
     let uploaded = false;
+    let textContent: string | null = null;
+
     try {
+        const employee = await getEmployee(req);
+        if (!employee)
+            return res.status(404).json({ error: "Employee not found" });
+
+        // ownerID comes from the body (not the JWT) so admins can upload content
+        // on behalf of another employee. Caller existence is still verified above.
         if (req.file) {
             fileURI = buildFileURI(payload.ownerID, req.file.originalname);
-            const uploadResult = await q.Bucket.uploadFile(req.file.buffer, fileURI);
+            const uploadResult = await q.Bucket.uploadFile(
+                req.file.buffer,
+                fileURI,
+            );
             uploaded = true;
             fileURI = uploadResult.path;
         }
+
         const result = await q.Content.createContent(
             payload.name,
             payload.linkURL || null,
@@ -200,8 +195,50 @@ export const uploadFile = async (req: req, res: res) => {
             payload.expiration ? new Date(payload.expiration) : null,
             payload.targetPersona,
             JSON.parse(payload.tags || "[]"),
+            null    // textContent filled in background
         );
-        return res.status(201).json(result);
+        await applyExpirationTagsToOne(result.id);
+
+        // Respond immediately
+        res.status(201).json(result);
+
+        // Process extraction + embedding in background
+        const fileBuffer = req.file?.buffer ?? null;
+        const mimeType = req.file?.mimetype ?? null;
+
+        setImmediate(async () => {
+            try {
+                let textContent: string | null = null;
+
+                if (fileBuffer && mimeType) {
+                    textContent = await extractText(fileBuffer, mimeType as SupportedMimeType);
+                } else if (payload.linkURL) {
+                    textContent = await extractText(null, 'url', payload.linkURL);
+                }
+
+                const embeddingInput = [
+                    payload.name,
+                    payload.contentType,
+                    payload.targetPersona,
+                    JSON.parse(payload.tags || "[]").join(' '),
+                    textContent ?? '',
+                ].join(' ');
+
+                const embedding = await generateEmbedding(embeddingInput);
+
+                await prisma.$executeRaw`
+                    UPDATE "Content"
+                    SET
+                        "textContent" = ${textContent},
+                        "embedding" = ${embeddingToSql(embedding)}::vector
+                    WHERE id = ${result.id}
+                `;
+
+                console.log(`[background] Processed content id=${result.id}`);
+            } catch (err) {
+                console.error(`[background] Failed to process content id=${result.id}:`, err);
+            }
+        });
     } catch (error) {
         if (uploaded && fileURI) {
             await q.Bucket.deleteFile(fileURI).catch(console.error);
@@ -216,16 +253,31 @@ export const updateContent = async (req: req, res: res) => {
     let newFileURI: string | null = null;
     let uploaded = false;
     try {
-        const oldContent = await q.Content.queryContentById(parseInt(payload.id));
+        const employee = await getEmployee(req);
+        if (!employee)
+            return res.status(404).json({ error: "Employee not found" });
+
+        const oldContent = await q.Content.queryContentById(
+            parseInt(payload.id),
+        );
         const oldURI: string | null = oldContent?.fileURI ?? null;
         if (req.file) {
             newFileURI = buildFileURI(payload.ownerID, req.file.originalname);
-            const uploadResult = await q.Bucket.uploadFile(req.file.buffer, newFileURI);
+            const uploadResult = await q.Bucket.uploadFile(
+                req.file.buffer,
+                newFileURI,
+            );
             uploaded = true;
             newFileURI = uploadResult.path;
         }
         const linkURL = payload.linkURL || null;
-        const fileURIForUpdate = uploaded ? newFileURI : (linkURL ? null : oldURI);
+        const fileURIForUpdate = uploaded
+            ? newFileURI
+            : linkURL
+              ? null
+              : oldURI;
+
+        // Update metadata immediately, text/embedding filled in background
         const result = await q.Content.updateContent(
             parseInt(payload.id),
             payload.name,
@@ -238,12 +290,57 @@ export const updateContent = async (req: req, res: res) => {
             payload.expiration ? new Date(payload.expiration) : null,
             payload.targetPersona,
             JSON.parse(payload.tags || "[]"),
-            parseInt(payload.employeeID),
+            employee.id,
+            null    // textContent filled in background
         );
         if (oldURI && (uploaded || linkURL)) {
             await q.Bucket.deleteFile(oldURI).catch(console.error);
         }
-        return res.status(201).json(result);
+        await applyExpirationTagsToOne(result.id);
+
+        // Respond immediately
+        res.status(201).json(result);
+
+        // Capture buffer before setImmediate since req may not be available later
+        const fileBuffer = req.file?.buffer ?? null;
+        const mimeType = req.file?.mimetype ?? null;
+
+        setImmediate(async () => {
+            try {
+                let textContent: string | null = null;
+
+                if (fileBuffer && mimeType) {
+                    textContent = await extractText(fileBuffer, mimeType as SupportedMimeType);
+                } else if (linkURL) {
+                    textContent = await extractText(null, 'url', linkURL);
+                } else if (oldContent?.textContent) {
+                    // no new file or URL — keep existing text content
+                    textContent = oldContent.textContent;
+                }
+
+                const embeddingInput = [
+                    payload.name,
+                    payload.contentType,
+                    payload.targetPersona,
+                    JSON.parse(payload.tags || "[]").join(' '),
+                    textContent ?? '',
+                ].join(' ');
+
+                const embedding = await generateEmbedding(embeddingInput);
+
+                await prisma.$executeRaw`
+                    UPDATE "Content"
+                    SET
+                        "textContent" = ${textContent},
+                        "embedding" = ${embeddingToSql(embedding)}::vector
+                    WHERE id = ${result.id}
+                `;
+
+                console.log(`[background] Processed content id=${result.id}`);
+            } catch (err) {
+                console.error(`[background] Failed to process content id=${result.id}:`, err);
+            }
+        });
     } catch (error) {
         if (uploaded && newFileURI) {
             await q.Bucket.deleteFile(newFileURI).catch(console.error);
@@ -252,26 +349,51 @@ export const updateContent = async (req: req, res: res) => {
         // updateContent throws "You do not have this content checked out."
         // when the caller's employeeID doesn't match the row's checkedOutById.
         // This happens after a force check-in, a lock expiry, or a check-in from another tab.
-        if (error instanceof Error && error.message === "You do not have this content checked out.") {
-            return res.status(409).json({ lockReleased: true, message: "This item has been forcibly checked in." });
+        if (
+            error instanceof Error &&
+            error.message === "You do not have this content checked out."
+        ) {
+            return res
+                .status(409)
+                .json({
+                    lockReleased: true,
+                    message: "This item has been forcibly checked in.",
+                });
         }
         return res.status(500).end();
     }
 };
 
+/**
+ * Deletes a content item and its Supabase file (if any).
+ * Requires the caller to hold the checkout lock — same gate as updateContent.
+ * Returns 409 both when the item is not checked out and when someone else holds it,
+ * so the frontend can display a consistent "lock required" message in both cases.
+ */
 export const deleteContent = async (req: req, res: res) => {
     try {
+        const employee = await getEmployee(req);
+        if (!employee)
+            return res.status(404).json({ error: "Employee not found" });
+
         const id = parseInt(req.params.id);
         const content = await q.Content.queryContentById(id);
-        const employeeID = req.query.employeeID ? parseInt(req.query.employeeID as string) : null;
         if (!content) {
             return res.status(404).json({ message: "File not found" });
         }
-        if (content.checkedOutById === null || content.checkedOutById !== employeeID) {
-            return res.status(409).json({ lockReleased: true, message: "This item has been forcibly checked in." });
+        if (
+            content.checkedOutById === null ||
+            content.checkedOutById !== employee.id
+        ) {
+            return res
+                .status(409)
+                .json({
+                    lockReleased: true,
+                    message: "This item has been forcibly checked in.",
+                });
         }
         if (content.fileURI) {
-            await q.Bucket.deleteFile(content.fileURI)
+            await q.Bucket.deleteFile(content.fileURI);
         }
         await q.Content.deleteContent(id);
         return res.status(205).json(content);
@@ -281,27 +403,113 @@ export const deleteContent = async (req: req, res: res) => {
     }
 };
 
+/**
+ * Acquires a pessimistic edit lock on a content item.
+ * Requires two DB reads: one to verify persona access, one inside the query class to
+ * detect an existing lock. 403 if the caller's persona doesn't match targetPersona.
+ */
 export const checkoutContent = async (req: req, res: res) => {
     try {
+        const employee = await getEmployee(req);
+        if (!employee)
+            return res.status(404).json({ error: "Employee not found" });
 
-        const {id, employeeID} = req.body;
-        const result = await q.Content.checkoutContent(parseInt(id), parseInt(employeeID));
+        const contentId = parseInt(req.params.id);
 
+        const content = await q.Content.queryContentById(contentId);
+        if (!content) return res.status(404).json({ error: "Content not found" });
+
+        // Only employees whose persona matches the content's targetPersona (or admins) may check out
+        if (!isPersonaOrAdmin(content.targetPersona, employee)) {
+            return res.status(403).json({ error: "Your persona does not have access to this content" });
+        }
+
+        const result = await q.Content.checkoutContent(contentId, employee.id);
         return res.status(200).json(result);
     } catch (error: any) {
         console.error(error);
         return res.status(500).end();
     }
-}
+};
 
+/**
+ * Releases the edit lock on a content item.
+ * Non-admins must hold the lock themselves; admins can force-checkin any item.
+ * The admin path skips the ownership DB read since no check is needed.
+ */
 export const checkinContent = async (req: req, res: res) => {
     try {
-        const { id, employeeID } = req.body;
-        await q.Content.checkinContent(parseInt(id), parseInt(employeeID));
+        const employee = await getEmployee(req);
+        if (!employee)
+            return res.status(404).json({ error: "Employee not found" });
+
+        const contentId = parseInt(req.params.id);
+
+        // Admins can force check-in any item; non-admins can only check in their own lock
+        if (!isAdmin(employee)) {
+            const content = await q.Content.queryContentById(contentId);
+            if (content?.checkedOutById !== employee.id) {
+                return res
+                    .status(403)
+                    .json({ error: "You do not have this item checked out." });
+            }
+        }
+
+        await q.Content.checkinContent(contentId, employee.id);
         return res.status(200).json({ message: "Checked in" });
     } catch (error: any) {
         console.error(error);
         return res.status(500).end();
     }
-}
+};
 
+export const getTotalHitCount = async (req: req, res: res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const count = await q.Content.getTotalHitCount(id);
+        return res.status(200).json(count);
+    } catch (error: any) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+export const getEmployeeHitCount = async (req: req, res: res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const employeeId = parseInt(req.body.employeeId);
+        const count = await q.Content.getEmployeeHitCount(id, employeeId);
+        return res.status(200).json(count);
+    } catch (error: any) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+export const addHit = async (req: req, res: res) => {
+    try {
+        const employee = await getEmployee(req);
+        if (!employee) return res.status(404).json({ error: "Employee not found" });
+
+        const id = parseInt(req.params.id);
+        await q.Content.addHit(id, employee.id);
+        return res.status(201).end();
+    } catch (error: any) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+export const searchContent = async (req: req, res: res) => {
+    const { q: searchQuery } = req.query;
+    if (!searchQuery || typeof searchQuery !== 'string') {
+        return res.status(400).json({ error: 'Search query is required' });
+    }
+    try {
+        const results = await q.Content.semanticSearch(searchQuery);
+        return res.status(200).json(results);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};

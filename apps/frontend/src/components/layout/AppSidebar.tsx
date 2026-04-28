@@ -1,4 +1,4 @@
-import { Home, User, ChevronDown, Users, X, Library, LayoutDashboard, Upload, NetworkIcon } from "lucide-react"
+import { Home, User, ChevronDown, Users, X, Library, LayoutDashboard, Upload, NetworkIcon, CalendarClock, Search, BookMarked } from "lucide-react"
 import React from "react"
 import {Link} from "react-router-dom";
 import {
@@ -28,7 +28,7 @@ type NavItem = {
     href: string;
     children: NavItem[];
     access: string[];
-    langKey: TranslationKey;
+    langKey?: TranslationKey;
 }
 
 /*
@@ -42,7 +42,9 @@ const navItems: NavItem[] = [
     { title: "Bulk Upload", icon: Upload, href: "/files/bulk", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"], langKey: 'sidebar.bulkUpload' },
     { title: "Manage Employees", icon: Users, href: "/usermanagement", children: [
         ], access: ["admin"], langKey: 'sidebar.manageEmployees' },
-    { title: "Service Requests", icon: NetworkIcon, href: "/servicereqs", children: [], access: ["admin", "underwriter", "businessAnalyst"], langKey: 'sidebar.servicereqs' },
+    { title: "Collections", icon: BookMarked, href: "/collections", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"] },
+    { title: "Service Requests", icon: NetworkIcon, href: "/servicereqs", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"] },
+    { title: "Expiration Calendar", icon: CalendarClock, href: "/calendar", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"] },
     { title: "Personas", icon: User, href: "/", children: [
             {title: "Underwriter", icon: User, href: "/underwriter", children: [], access: [], langKey: 'sidebar.underwriter'},
             {title: "Business Analyst", icon: User, href: "/businessanalyst", children: [], access: [], langKey: "sidebar.businessAnalyst"},
@@ -50,6 +52,7 @@ const navItems: NavItem[] = [
             {title: "EXL Operations", icon: User, href: "/exloperations", children: [], access: [], langKey: "sidebar.exlOperations"},
             {title: "Business Operations", icon: User, href: "/businessoperations", children: [], access: [], langKey: "sidebar.businessOperations"},
         ], access: [], langKey: "sidebar.personas" },
+    { title: "Search", icon: Search, href: "/search", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"] },
 ]
 
 function AppSidebar() {
@@ -90,7 +93,7 @@ function AppSidebar() {
                                     <CollapsibleTrigger asChild>
                                         <SidebarMenuButton className="active:scale-[0.98] shrink-0 px-2 py-4 my-1 text-md transition-all duration-200 hover:opacity-80">
                                             <item.icon />
-                                            <span>{ts(item.langKey)}</span>
+                                            <span>{ item.langKey ? ts(item.langKey) : item.title}</span>
                                             <ChevronDown className="transition-transform duration-200 [[data-state=open]>&]:rotate-180"/>
                                         </SidebarMenuButton>
                                     </CollapsibleTrigger>
@@ -105,7 +108,7 @@ function AppSidebar() {
                                                     <SidebarMenuButton onClick={ () => toggleSidebar() } className= "active:scale-[0.98] shrink-0 px-2 py-4 my-1 text-md transition-all duration-200 hover:opacity-80" asChild>
                                                         <Link to={childItem.href}>
                                                             <childItem.icon />
-                                                            <span>{ts(childItem.langKey)}</span>
+                                                            <span>{childItem.langKey? ts(childItem.langKey) : childItem.title}</span>
                                                         </Link>
                                                     </SidebarMenuButton>
                                                 </SidebarMenuItem>
@@ -121,7 +124,7 @@ function AppSidebar() {
                                 <SidebarMenuButton onClick={ () => toggleSidebar() } className="active:scale-[0.98] shrink-0 px-2 py-4 my-1 text-md transition-all duration-200 hover:opacity-90 hover: group/item" asChild>
                                     <Link to={item.href}>
                                         <item.icon />
-                                        <span className="">{ts(item.langKey)}</span>
+                                        <span className="">{item.langKey ? ts(item.langKey) : item.title}</span>
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>

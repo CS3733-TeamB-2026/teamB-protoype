@@ -15,12 +15,17 @@ import {
 import { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import type { Employee } from "@/lib/types.ts";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
+import { Info, X } from "lucide-react";
 
 // Maps each persona key to a human-readable label for the chart legend and tooltip.
 const chartConfig = {
     count: { label: "Employees" },
     underwriter: { label: "Underwriters"},
     businessAnalyst: { label: "Business Analysts"},
+    actuarialAnalyst: { label: "Actuarial Analysts"},
+    EXLOperator: { label: "EXL Operator"},
+    businessOps: { label: "Business Ops"},
     admin: { label: "Administrators"},
 } satisfies ChartConfig;
 
@@ -33,6 +38,7 @@ const chartConfig = {
 function EmployeeChartCard() {
 
     const [employees, setEmployees] = useState([]);
+    const [open, setOpen] = useState<boolean>(false);
     const { getAccessTokenSilently } = useAuth0();
 
     // Fetch the full employee list once on mount using a fresh Auth0 token.
@@ -64,16 +70,35 @@ function EmployeeChartCard() {
     const chartData = Object.entries(counts).map(([persona, count], i) => ({
         persona,
         count,
-        fill: `var(--chart-${i + 1})`,
+        fill: `var(--chart-${ i === 5 ? 3 : (i % 5) + 1 })`,
     }));
 
     return (
-        <Card className="border-t-secondary border-t-4 shadow-lg hover:scale-101 transition-transform sm:col-span-1 flex flex-col">
+        <Card className="relative border-t-secondary border-t-4 shadow-lg hover:scale-101 transition-transform sm:col-span-1 flex flex-col">
             <CardHeader className="items-center pb-0">
                 <CardTitle className="capitalize text-2xl font-semibold">Department Breakdown</CardTitle>
                 <CardDescription>Current headcount by department.</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-row items-center justify-center gap-4 pb-0 mr-10">
+                <Popover open={open} onOpenChange={setOpen}>
+                    <PopoverTrigger asChild>
+                        <Info
+                            className="absolute right-1 top-1 w-8 h-8 cursor-pointer"
+                        />
+                    </PopoverTrigger>
+
+                    <PopoverContent className="w-64 relative">
+                        {/* X button in the top-right of the popup */}
+                        <X
+                            className="absolute right-2 top-2 w-4 h-4 cursor-pointer text-gray-500 hover:text-gray-700"
+                            onClick={() => setOpen(false)}
+                        />
+
+                        <p className="pr-6">
+                            Shows the current distribution of employees across departments.
+                        </p>
+                    </PopoverContent>
+                </Popover>
                 <ChartContainer
                     config={chartConfig}
                     className="w-60 h-60 shrink-0"

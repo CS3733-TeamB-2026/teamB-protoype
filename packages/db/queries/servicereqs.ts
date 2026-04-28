@@ -1,38 +1,86 @@
 import * as p from "../generated/prisma/client";
 import {prisma} from "../lib/prisma";
-import {Helper} from "./helper";
+import {Helper, employeeSelect} from "./helper";
 
 export class ServiceReqs {
-    public static async queryAllServiceReqs(): Promise<p.ServiceRequest[]> {
-        return prisma.serviceRequest.findMany({})
+
+    /** Fetches a single service request by ID, used by the backend hook for ownership checks before update/delete. */
+    public static async queryServiceReqById(id: number) {
+        return prisma.serviceRequest.findUnique({
+            where: { id },
+            include: {
+                owner: { select: employeeSelect },
+                assignee: { select: employeeSelect },
+            },
+        });
     }
 
-    public static async queryAssignedServiceReqs(): Promise<p.ServiceRequest[]> {
+    public static async queryAllServiceReqs() {
         return prisma.serviceRequest.findMany({
-            where: {assigneeId: {not: null}}
-        })
+            include: {
+                owner: { select: employeeSelect },
+                assignee: { select: employeeSelect },
+            },
+        });
     }
 
-    public static async queryServiceReqsByAssigned(id: number): Promise<p.ServiceRequest[]> {
+    public static async queryAssignedServiceReqs() {
         return prisma.serviceRequest.findMany({
-            where: {assigneeId: id}
-        })
+            where: { assigneeId: { not: null } },
+            include: {
+                owner: { select: employeeSelect },
+                assignee: { select: employeeSelect },
+            },
+        });
+    }
+
+    public static async queryServiceReqsByAssigned(id: number) {
+        return prisma.serviceRequest.findMany({
+            where: { assigneeId: id },
+            include: {
+                owner: { select: employeeSelect },
+                assignee: { select: employeeSelect },
+            },
+        });
     }
 
     public static async createServiceReq(
-        _created: Date, _deadline: Date, _type_string: string, _assignee: number, _owner: number): Promise<void> {
+        _name: string, _created: Date, _deadline: Date, _type_string: string, _assigneeId: number, _ownerId: number): Promise<p.ServiceRequest> {
+        let _type: p.RequestType = Helper.requestHelper(_type_string)
+        return prisma.serviceRequest.create({
+            data: {
+                name: _name,
+                created: _created,
+                deadline: _deadline,
+                type: _type,
+                assigneeId: _assigneeId,
+                ownerId: _ownerId
+            }
+        })
+    }
+
+    public static async updateServiceReq(
+        _id: number, _name: string, _created: Date, _deadline: Date, _type_string: string, _assigneeId: number, _ownerId: number): Promise<p.ServiceRequest> {
         let _type: p.RequestType | null = Helper.requestHelper(_type_string)
         if (_type == null) {
             throw new Error("Service Request type not specified")
         }
-        await prisma.serviceRequest.create({
+        return prisma.serviceRequest.update({
+            where: {id: _id},
             data: {
+                name: _name,
                 created: _created,
                 deadline: _deadline,
                 type: _type,
-                assigneeId: _assignee,
-                ownerId: _owner
+                assigneeId: _assigneeId,
+                ownerId: _ownerId
             }
+        })
+    }
+
+    public static async deleteServiceReq(_id: number): Promise<void> {
+        await prisma.serviceRequest.delete({
+            where: {id: _id},
         })
     }
 }

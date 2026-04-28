@@ -32,14 +32,14 @@ interface Props {
  * Dialog for editing an existing content item via `PUT /api/content`.
  *
  * This dialog should only be opened after a successful checkout (`POST
- * /api/content/checkout`), which acquires a pessimistic lock. Two mechanisms
+ * /api/content/:id/checkout`), which acquires a pessimistic lock. Two mechanisms
  * handle lock expiry (the backend clears locks after 2 minutes):
  *
  * 1. A 5-second polling interval re-fetches the item and closes the dialog if
  *    `checkedOutById` no longer matches the current user — meaning the lock
  *    expired and was cleared by the server's cleanup job.
  * 2. When the dialog closes normally (user cancels or saves), `onOpenChange`
- *    fires a `POST /api/content/checkin` to explicitly release the lock. The
+ *    fires a `POST /api/content/:id/checkin` to explicitly release the lock. The
  *    checkin is skipped when `expired` is true to avoid a redundant call after
  *    the server already cleared the lock.
  *
@@ -68,7 +68,6 @@ export function EditContentDialog({ content, open, onOpenChange, onSave }: Props
 
         const formData = buildContentFormData(values);
         formData.append("id", content.id.toString());
-        formData.append("employeeID", String(user.id));
 
         const token = await getAccessTokenSilently();
         const hasFile = values.uploadMode === "file" && values.file !== null;
