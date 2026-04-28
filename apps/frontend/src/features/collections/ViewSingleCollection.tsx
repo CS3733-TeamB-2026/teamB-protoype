@@ -1,19 +1,22 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { AlertCircle, ArrowLeft, ArrowUp, ArrowDown, BookMarked, Loader2, Pencil, X, Plus } from "lucide-react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { AlertCircle, ArrowLeft, ArrowUp, ArrowDown, BookMarked, Check, Lock, LockOpen, Loader2, Pencil, Star, Trash2, X, Plus } from "lucide-react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ConfirmDeleteDialog } from "@/components/dialogs/ConfirmDeleteDialog";
 import { Hero } from "@/components/shared/Hero";
 import { EmployeeAvatar } from "@/components/shared/EmployeeAvatar";
 import { ContentItemCard } from "@/components/shared/ContentItemCard";
 import { ContentIcon } from "@/features/content/components/ContentIcon";
-import { ContentPicker } from "@/features/collections/ContentPicker";
+import { ContentPicker } from "@/components/shared/ContentPicker";
 import { getCategory, getOriginalFilename, lookupByFilename } from "@/lib/mime";
 import { useUser } from "@/hooks/use-user";
 import { usePageTitle } from "@/hooks/use-page-title";
@@ -23,10 +26,21 @@ export function ViewSingleCollection() {
     const { id } = useParams<{ id: string }>();
     const { getAccessTokenSilently } = useAuth0();
     const { user } = useUser();
+    const navigate = useNavigate();
 
     const [collection, setCollection] = useState<Collection | null>(null);
+    const [isFavorited, setIsFavorited] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    const [nameEditMode, setNameEditMode] = useState(false);
+    const [draftName, setDraftName] = useState("");
+    const [savingName, setSavingName] = useState(false);
+
+    const [visibilityConfirmOpen, setVisibilityConfirmOpen] = useState(false);
+    const [savingVisibility, setSavingVisibility] = useState(false);
+
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
     const [editMode, setEditMode] = useState(false);
     const [draftItems, setDraftItems] = useState<CollectionItem[]>([]);
@@ -40,12 +54,15 @@ export function ViewSingleCollection() {
         const load = async () => {
             try {
                 const token = await getAccessTokenSilently();
-                const res = await fetch(`/api/collections/${id}`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                if (!res.ok) throw new Error(`${res.status}`);
-                const data: Collection = await res.json();
+                const headers = { Authorization: `Bearer ${token}` };
+                const [colRes, favRes] = await Promise.all([
+                    fetch(`/api/collections/${id}`, { headers }),
+                    fetch("/api/collections/favorites", { headers }),
+                ]);
+                if (!colRes.ok) throw new Error(`${colRes.status}`);
+                const [data, favData] = await Promise.all([colRes.json(), favRes.json()]) as [Collection, { collectionId: number }[]];
                 setCollection(data);
+                setIsFavorited(favData.some((f) => f.collectionId === data.id));
             } catch {
                 setError("Collection not found or failed to load.");
             } finally {
@@ -57,6 +74,104 @@ export function ViewSingleCollection() {
 
     const canEdit = user && collection &&
         (user.persona === "admin" || collection.ownerId === user.id);
+
+    const toggleFavorite = async () => {
+        if (!collection) return;
+        setIsFavorited((prev) => !prev);
+        try {
+            const token = await getAccessTokenSilently();
+            const res = await fetch(`/api/collections/${collection.id}/favorite`, {
+                method: isFavorited ? "DELETE" : "POST",
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!res.ok) throw new Error();
+            toast.success(isFavorited ? "Removed from favorites." : "Added to favorites.");
+        } catch {
+            setIsFavorited((prev) => !prev);
+            toast.error("Failed to update favorite.");
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!collection) return;
+        const token = await getAccessTokenSilently();
+        const res = await fetch(`/api/collections/${collection.id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+            toast.success(`"${collection.displayName}" deleted.`);
+            navigate("/collections");
+        } else {
+            toast.error("Failed to delete collection.");
+        }
+    };
+
+    const enterNameEdit = () => {
+        if (!collection) return;
+        setDraftName(collection.displayName);
+        setNameEditMode(true);
+    };
+
+    const cancelNameEdit = () => {
+        setNameEditMode(false);
+        setDraftName("");
+    };
+
+    const saveName = async () => {
+        if (!collection || !draftName.trim()) return;
+        setSavingName(true);
+        try {
+            const token = await getAccessTokenSilently();
+            const res = await fetch(`/api/collections/${collection.id}`, {
+                method: "PUT",
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    displayName: draftName.trim(),
+                    isPublic: collection.public,
+                    ownerId: collection.ownerId,
+                    contentIds: collection.items.map((i) => i.contentId),
+                }),
+            });
+            if (!res.ok) throw new Error();
+            const updated: Collection = await res.json();
+            setCollection(updated);
+            setNameEditMode(false);
+            setDraftName("");
+            toast.success("Name updated.");
+        } catch {
+            toast.error("Failed to update name.");
+        } finally {
+            setSavingName(false);
+        }
+    };
+
+    const toggleVisibility = async () => {
+        if (!collection) return;
+        setSavingVisibility(true);
+        try {
+            const token = await getAccessTokenSilently();
+            const res = await fetch(`/api/collections/${collection.id}`, {
+                method: "PUT",
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    displayName: collection.displayName,
+                    isPublic: !collection.public,
+                    ownerId: collection.ownerId,
+                    contentIds: collection.items.map((i) => i.contentId),
+                }),
+            });
+            if (!res.ok) throw new Error();
+            const updated: Collection = await res.json();
+            setCollection(updated);
+            setVisibilityConfirmOpen(false);
+            toast.success(`Collection is now ${updated.public ? "public" : "private"}.`);
+        } catch {
+            toast.error("Failed to update visibility.");
+        } finally {
+            setSavingVisibility(false);
+        }
+    };
 
     const enterEditMode = () => {
         if (!collection) return;
@@ -174,17 +289,91 @@ export function ViewSingleCollection() {
 
                 {/* Meta card */}
                 <Card className="shadow-sm">
-                    <CardHeader className="pb-3">
+                    <CardHeader>
                         <div className="flex items-start justify-between gap-4">
-                            <div>
-                                <CardTitle className="text-2xl text-primary">{collection.displayName}</CardTitle>
+                            <div className="flex-1 min-w-0">
+                                {nameEditMode ? (
+                                    <div className="flex items-center gap-2">
+                                        <Input
+                                            className="text-2xl! font-semibold h-auto py-0.5 px-1 text-primary"
+                                            value={draftName}
+                                            onChange={(e) => setDraftName(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter") void saveName();
+                                                if (e.key === "Escape") cancelNameEdit();
+                                            }}
+                                            disabled={savingName}
+                                            autoFocus
+                                        />
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground" onClick={() => void saveName()} disabled={savingName || !draftName.trim()}>
+                                            {savingName ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                                        </Button>
+                                        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground" onClick={cancelNameEdit} disabled={savingName}>
+                                            <X className="w-3.5 h-3.5" />
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div className="group flex items-center gap-2">
+                                        <CardTitle className="text-2xl text-primary">{collection.displayName}</CardTitle>
+                                        {canEdit && (
+                                            <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground" onClick={enterNameEdit}>
+                                                <Pencil className="w-3.5 h-3.5" />
+                                            </Button>
+                                        )}
+                                    </div>
+                                )}
                                 <CardDescription className="mt-1">
                                     {collection.items.length} item{collection.items.length !== 1 ? "s" : ""}
                                 </CardDescription>
                             </div>
-                            <Badge variant={collection.public ? "default" : "secondary"} className="shrink-0 mt-1">
-                                {collection.public ? "Public" : "Private"}
-                            </Badge>
+                            <div className="flex items-center gap-2 shrink-0">
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className={isFavorited ? "text-accent hover:text-accent/70" : "text-muted-foreground hover:text-foreground"}
+                                    onClick={() => void toggleFavorite()}
+                                    aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
+                                >
+                                    <Star className="w-4 h-4" fill={isFavorited ? "currentColor" : "none"} />
+                                </Button>
+                                {canEdit && (
+                                    <Button
+                                        variant="destructive"
+                                        size="sm"
+                                        onClick={() => setDeleteConfirmOpen(true)}
+                                        aria-label="Delete collection"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                )}
+                                {canEdit ? (
+                                    <ToggleGroup
+                                        type="single"
+                                        value={collection.public ? "public" : "private"}
+                                        onValueChange={(v) => { if (v && v !== (collection.public ? "public" : "private")) setVisibilityConfirmOpen(true); }}
+                                        className="rounded-full border border-input bg-muted/20 p-0.5 gap-0.5 w-fit"
+                                    >
+                                        <ToggleGroupItem value="private" className="rounded-full! px-3 gap-1.5 text-xs">
+                                            <Lock className="w-3.5 h-3.5" /> Private
+                                        </ToggleGroupItem>
+                                        <ToggleGroupItem value="public" className="rounded-full! px-3 gap-1.5 text-xs">
+                                            <LockOpen className="w-3.5 h-3.5" /> Public
+                                        </ToggleGroupItem>
+                                    </ToggleGroup>
+                                ) : (
+                                    <ToggleGroup
+                                        type="single"
+                                        value={collection.public ? "public" : "private"}
+                                        disabled
+                                        className="rounded-full border border-input bg-muted/20 p-0.5 w-fit"
+                                    >
+                                        <ToggleGroupItem value={collection.public ? "public" : "private"} className="rounded-full! px-3 gap-1.5 text-xs">
+                                            {collection.public ? <LockOpen className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+                                            {collection.public ? "Public" : "Private"}
+                                        </ToggleGroupItem>
+                                    </ToggleGroup>
+                                )}
+                            </div>
                         </div>
                     </CardHeader>
                     <CardContent className="pt-0">
@@ -197,7 +386,7 @@ export function ViewSingleCollection() {
 
                 {/* Content card */}
                 <Card className="shadow-sm">
-                    <CardHeader className="pb-3">
+                    <CardHeader>
                         <div className="flex items-center justify-between">
                             <CardTitle className="text-lg">Content</CardTitle>
                             {canEdit && !editMode && (
@@ -255,7 +444,7 @@ export function ViewSingleCollection() {
                                                             </TableCell>
                                                             <TableCell>
                                                                 <div className="flex items-center gap-2">
-                                                                    <ContentIcon category={category} isLink={!!item.content.linkURL} className="w-4 h-4 shrink-0 text-muted-foreground" />
+                                                                    <ContentIcon category={category} isLink={!!item.content.linkURL} className="w-4 h-4 shrink-0" />
                                                                     <span className="text-sm font-medium truncate">{item.content.displayName}</span>
                                                                 </div>
                                                             </TableCell>
@@ -324,6 +513,38 @@ export function ViewSingleCollection() {
                 </Card>
 
             </div>
+
+            {/* Visibility confirmation dialog */}
+            <AlertDialog open={visibilityConfirmOpen} onOpenChange={savingVisibility ? undefined : setVisibilityConfirmOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Change visibility?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {collection.public
+                                ? "This will make the collection private. Only you and admins will be able to see it."
+                                : "This will make the collection public. All employees will be able to see it."}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={savingVisibility}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            disabled={savingVisibility}
+                            onClick={(e) => { e.preventDefault(); void toggleVisibility(); }}
+                        >
+                            {savingVisibility
+                                ? <Loader2 className="w-4 h-4 animate-spin" />
+                                : collection.public ? "Make Private" : "Make Public"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            <ConfirmDeleteDialog
+                open={deleteConfirmOpen}
+                onOpenChange={setDeleteConfirmOpen}
+                description={<span>This will permanently delete <strong>"{collection.displayName}"</strong> and all its items.</span>}
+                onConfirm={handleDelete}
+            />
 
             {/* Add content dialog — portal-rendered so the ContentPicker dropdown is never clipped */}
             <Dialog open={addDialogOpen} onOpenChange={(open) => { if (!open) setPickerItem(null); setAddDialogOpen(open); }}>

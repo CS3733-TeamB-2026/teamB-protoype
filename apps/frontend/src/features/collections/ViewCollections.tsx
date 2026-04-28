@@ -245,22 +245,24 @@ function ViewCollections() {
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="flex justify-center gap-1" onClick={(e) => e.stopPropagation()}>
-                                                            <button
-                                                                className={`w-8 h-8 flex items-center justify-center rounded-md transition-colors ${isFavorited ? "text-accent hover:text-accent/70" : "text-muted-foreground hover:text-foreground"}`}
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className={isFavorited ? "text-accent hover:text-accent/70" : "text-muted-foreground hover:text-foreground"}
                                                                 onClick={(e) => toggleFavorite(collection, e)}
                                                                 aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
                                                             >
                                                                 <Star className="w-4 h-4" fill={isFavorited ? "currentColor" : "none"} />
-                                                            </button>
-                                                            {canDelete(collection) && (
-                                                                <button
-                                                                    className="w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-destructive"
-                                                                    onClick={(e) => { e.stopPropagation(); setDeleteTarget(collection); }}
-                                                                    aria-label="Delete collection"
-                                                                >
-                                                                    <Trash2 className="w-4 h-4" />
-                                                                </button>
-                                                            )}
+                                                            </Button>
+                                                            <Button
+                                                                variant="destructive"
+                                                                size="sm"
+                                                                disabled={!canDelete(collection)}
+                                                                onClick={(e) => { e.stopPropagation(); setDeleteTarget(collection); }}
+                                                                aria-label="Delete collection"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </Button>
                                                         </div>
                                                     </TableCell>
                                                 </TableRow>

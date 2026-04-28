@@ -153,7 +153,7 @@ function SelectedPreview({ item }: { item: ContentItem }) {
 
     return (
         <span className="flex items-center gap-2 text-sm min-w-0">
-            <ContentIcon category={category} isLink={!!item.linkURL} className="w-4 h-4 shrink-0 text-muted-foreground" />
+            <ContentIcon category={category} isLink={!!item.linkURL} className="w-4 h-4 shrink-0" />
             <span className="truncate">{item.displayName}</span>
         </span>
     );
