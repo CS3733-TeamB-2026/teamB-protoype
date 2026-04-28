@@ -21,18 +21,12 @@ async function signPhotoUrl<T extends { profilePhotoURI: string | null }>(employ
     return { ...employee, profilePhotoURI: signedUrl };
 }
 
-/**
- * Uploads or replaces the caller's profile photo (max 5 MB, images only).
- * Uses raw auth0Id instead of getEmployee because the upload is always self-service —
- * there is no ownership transfer here, unlike content uploads.
- */
+/** Uploads or replaces the caller's profile photo (max 5 MB, images only). */
 export const uploadProfilePhoto = async (req: req, res: res)=> {
-    const auth0Id = req.auth?.payload.sub;
     let fileURI: string | null = null;
     let uploaded = false;
 
     try {
-        if (!auth0Id) return res.status(401).end();
         if (!req.file) return res.status(400).json({ message: "No file uploaded" });
         if (!req.file.mimetype.startsWith("image/")) {
             return res.status(400).json({ message: "File must be an image" });
@@ -41,7 +35,7 @@ export const uploadProfilePhoto = async (req: req, res: res)=> {
             return res.status(400).json({ message: "File must be under 5MB" });
         }
 
-        const employee = await q.Employee.queryEmployeeByAuth(auth0Id);
+        const employee = await getEmployee(req);
         if (!employee) return res.status(404).json({ message: "No employee found" });
 
         const oldURI = employee.profilePhotoURI;
