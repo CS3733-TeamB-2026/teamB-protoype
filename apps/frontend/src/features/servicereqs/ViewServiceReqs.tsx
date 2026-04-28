@@ -157,7 +157,7 @@ function ViewServiceReqs() {
                                 }).map((servicereq) => {
                                     const matches = findMatches(servicereq.name, searchTerm)
                                     return (
-                                        <TableRow key={servicereq.id}>
+                                    <TableRow key={servicereq.id}>
                                             <TableCell className="text-left pr-4">
                                                 <p className="text-sm font-medium truncat">
                                                 {highlightRange(

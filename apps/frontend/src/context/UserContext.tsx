@@ -39,6 +39,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             const res = await fetch("/api/employee/me", {
                 headers: { Authorization: `Bearer ${token}` },
             });
+            if (!res.ok) {
+                setUser(null);
+                return;
+            }
             const data = await res.json();
             setUser({
                 ...data,
