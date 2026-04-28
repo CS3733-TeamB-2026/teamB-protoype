@@ -12,6 +12,7 @@ import { getOriginalFilename } from "@/lib/mime.ts";
 import type { ContentItem } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
+import { Timeline } from "@/features/content/components/Timeline.tsx"
 
 /**
  * Full-page file viewer for a single content item.
@@ -117,6 +118,12 @@ export function ViewSingleFile() {
                                     </span>
                                 )}
                             </div>
+
+                            <Timeline
+                                uploaded={item.lastModified}
+                                expiration={item.expiration ?? null}
+                                lastModified={item.lastModified}
+                            />
 
                             {originalFilename && (
                                 <FilePreview
