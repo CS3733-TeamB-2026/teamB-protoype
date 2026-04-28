@@ -64,7 +64,7 @@ export class Content {
         _expiration: Date | null,
         _targetPersona: string,
         _tags: string[],
-        _checkedOutById: number,
+        _checkedOutById: number | null,
         _textContent: string | null = null,
     ): Promise<p.Content> {
         const _personaTyped: p.Persona | null = Helper.personaHelper(_targetPersona)
