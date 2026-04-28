@@ -1,11 +1,13 @@
-import { Info } from "lucide-react";
+import { CircleQuestionMark } from "lucide-react";
 import React from "react";
+
 
 interface InfoButtonProps {
     content: React.ReactNode;
+    size?: string;
 }
 
-function InfoButton({ content }: InfoButtonProps) {
+function InfoButton({ content, size = "w-7 h-7" }: InfoButtonProps) {
     const [hovered, setHovered] = React.useState(false);
 
     return (
@@ -15,7 +17,7 @@ function InfoButton({ content }: InfoButtonProps) {
                 onMouseLeave={() => setHovered(false)}
                 className="relative"
             >
-                <Info className={`w-7 h-7 cursor-pointer duration-200 ${hovered ? "text-accent" : "opacity-20"}`} />
+                <CircleQuestionMark className={`${size} cursor-pointer duration-200 ${hovered ? "text-accent" : "opacity-10"}`} />
 
                 {hovered && (
                     <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-50 w-72 rounded-lg border border-border bg-card shadow-lg p-3 text-xs text-muted-foreground">

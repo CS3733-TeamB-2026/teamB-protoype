@@ -606,7 +606,7 @@ function ViewContent() {
                                         className="w-64 h-10 text-base pl-2! pr-8 border border-gray-700 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-gray-500"
                                     />
                                 </div>
-                                <InfoButton content="Documents must be checked out before editing." />
+                                <InfoButton content="You can search for document names and text within documents here." />
                             </div>
 
                             <div className="flex flex-row gap-2">
@@ -654,7 +654,10 @@ function ViewContent() {
                                     className="mt-10 shrink-0 w-48 rounded-lg border p-3 bg-muted/20 text-left text-sm">
                                     <div className="flex flex-col gap-4">
                                         <div>
-                                            <p className="font-medium mb-2">{(ts('status'))}</p>
+                                            <span className="flex items-center justify-between mb-2">
+                                                <p className="font-medium">{(ts('status'))}</p>
+                                                <InfoButton content={"Here you can add advanced filters, add as many as you'd like!"} size="w-5 h-5"/>
+                                            </span>
                                             <div className="flex flex-col gap-1.5">
                                                 {["new", "inProgress", "complete"].map((status) => (
                                                     <label key={status} className="flex items-center gap-2">
