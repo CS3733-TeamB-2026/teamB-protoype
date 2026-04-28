@@ -1,6 +1,6 @@
 import * as q from "@softeng-app/db";
 
-export async function applyExpirationTags() {
+export async function applyExpirationTagsToAll() {
     const all = await q.Content.queryAllContent();
 
     const now = new Date();
@@ -44,4 +44,51 @@ export async function applyExpirationTags() {
             item.checkedOutById
         );
     }
+}
+
+export async function applyExpirationTagsToOne(contentId: number) {
+    const item = await q.Content.queryContentById(contentId);
+
+    const now = new Date();
+    if(!item || !item.expiration || item.tags.includes('Expired')){
+        return;
+    }
+
+    const diff = (item.expiration.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+
+    const tags = new Set(item.tags ?? [])
+
+    if(diff > 7){
+        return;
+    }else if (diff > 0){
+        if(tags.has('Expiring Soon')){
+            return;
+        }
+        tags.add('Expiring Soon')
+    }else{
+        if(tags.has('Expiring Soon')){
+            tags.delete('Expiring Soon');
+        }
+        if(tags.has('Expired')){
+            return;
+        }
+        tags.add('Expired');
+    }
+
+    const tagList : string[] = [...tags]
+
+    await q.Content.updateContent(
+        item.id,
+        item.displayName,
+        item.linkURL,
+        item.fileURI,
+        item.ownerId,
+        item.contentType,
+        item.status,
+        item.lastModified,
+        item.expiration,
+        item.targetPersona,
+        tagList,
+        item.checkedOutById
+    );
 }

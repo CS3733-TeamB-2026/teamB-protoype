@@ -3,6 +3,7 @@ import mime from "mime-types";
 import * as cheerio from 'cheerio';
 import dns from "node:dns/promises";
 import {req, res} from "./types"
+import {applyExpirationTagsToOne} from "../jobs/autoTag"
 
 /** Returns true if the IPv4/IPv6 address is a loopback, private, or link-local address. */
 function isPrivateIP(ip: string): boolean {
@@ -201,6 +202,7 @@ export const uploadFile = async (req: req, res: res) => {
             payload.targetPersona,
             JSON.parse(payload.tags || "[]"),
         );
+        await applyExpirationTagsToOne(result.id);
         return res.status(201).json(result);
     } catch (error) {
         if (uploaded && fileURI) {
@@ -243,6 +245,7 @@ export const updateContent = async (req: req, res: res) => {
         if (oldURI && (uploaded || linkURL)) {
             await q.Bucket.deleteFile(oldURI).catch(console.error);
         }
+        await applyExpirationTagsToOne(result.id);
         return res.status(201).json(result);
     } catch (error) {
         if (uploaded && newFileURI) {
