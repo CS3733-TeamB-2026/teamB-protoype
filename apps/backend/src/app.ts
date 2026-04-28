@@ -12,6 +12,7 @@ import * as employee from './hooks/employee'
 import * as bookmark from './hooks/bookmark'
 import * as collection from './hooks/collection'
 import * as notifications from './hooks/notifications'
+import * as previews from './hooks/preview'
 import { auth } from 'express-oauth2-jwt-bearer'
 
 const app = express();
@@ -37,13 +38,12 @@ app.post("/api/servicereqs",servicereqs.createServiceReq)
 app.put("/api/servicereqs", servicereqs.updateServiceReq)
 app.delete("/api/servicereqs/:id", servicereqs.deleteServiceReq)
 // Content
-app.get("/api/content/hitCount/:id", content.getTotalHitCount)
-app.get("/api/content/empHitCount/:id", content.getEmployeeHitCount)
 app.get("/api/content/info/:id", content.getContentInfo)
 app.get("/api/content/download/:id", content.downloadContent)
 app.get("/api/content/publicUrl/:id", content.getPublicFileUrl)
 app.get("/api/content/search", content.searchContent)
 app.get("/api/content/tags", content.getAllTags)
+app.get("/api/content/transaction-summary", content.getTransactionSummary)
 app.get("/api/content/:id", content.getContentById)
 app.get("/api/content", content.getAllContent)
 app.post("/api/content/hitCount/:id", content.addHit)
@@ -56,6 +56,10 @@ app.delete("/api/content/:id", content.deleteContent)
 app.get("/api/bookmark", bookmark.getBookmarks)
 app.post("/api/bookmark/:contentId", bookmark.addBookmark)
 app.delete("/api/bookmark/:contentId", bookmark.removeBookmark)
+// Previews
+app.get("/api/previews", previews.getPreviews)
+app.post("/api/previews/:contentId", previews.addPreview)
+app.get("/api/preview/hits/:contentId")
 // Collections
 app.get("/api/collections/favorites", collection.getFavorites)
 app.get("/api/collections/:id", collection.getCollectionById)
@@ -68,6 +72,8 @@ app.put("/api/collections/:id", collection.updateCollection)
 // Employee
 app.get("/api/employee/all", employee.getAllEmployees)
 app.get("/api/employee/me", employee.getMe);
+app.get("/api/employee/dashboard-layout", employee.getDashboardLayout)
+app.put("/api/employee/dashboard-layout", employee.updateDashboardLayout)
 app.get("/api/employee/:id", employee.getEmployeeById)
 app.get("/api/employee", employee.getAllEmployees)
 app.post("/api/employee/auth", employee.createEmployeeWithAuth0)

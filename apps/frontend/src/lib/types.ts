@@ -40,6 +40,7 @@ export type ContentItem = {
     targetPersona: Persona;
     status: ContentStatus;
     tags: string[];
+    lastPreviewed: string;
 }
 
 export type BookmarkRecord = {
