@@ -31,26 +31,27 @@ model Employee {
 }
 
 model Content {
-  id                   Int                      @id @default(autoincrement())
-  linkURL              String?                  @unique
+  id                   Int                         @id @default(autoincrement())
+  linkURL              String?                     @unique
   lastModified         DateTime
   expiration           DateTime?
   status               Status
   contentType          ContentType
   targetPersona        Persona
   displayName          String
-  fileURI              String?                  @unique
+  fileURI              String?                     @unique
   checkedOutAt         DateTime?
   checkedOutById       Int?
   ownerId              Int?
   tags                 String[]
-  hits                 Int[]                    @default([])
+  hits                 Int[]                       @default([])
   textContent          String?
-  searchVector         Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, COALESCE(\"textContent\", ''::text))"))
+  searchVector         Unsupported("tsvector")?    @default(dbgenerated("to_tsvector('english'::regconfig, COALESCE(\"textContent\", ''::text))"))
+  embedding            Unsupported("vector(384)")?
   bookmarks            Bookmark[]
-  checkedOutBy         Employee?                @relation("CheckedOut", fields: [checkedOutById], references: [id])
-  owner                Employee?                @relation("Owned", fields: [ownerId], references: [id])
-  notifications        Notification[]           @relation("Notified")
+  checkedOutBy         Employee?                   @relation("CheckedOut", fields: [checkedOutById], references: [id])
+  owner                Employee?                   @relation("Owned", fields: [ownerId], references: [id])
+  notifications        Notification[]              @relation("Notified")
   expirationDismissals ExpirationDismissal[]
   collectionItems      CollectionItem[]
 
