@@ -24,6 +24,14 @@ interface Props {
     onOpenChange: (open: boolean) => void;
 }
 
+/**
+ * Dialog for creating a new collection with a name and visibility setting.
+ *
+ * `submitted` is set on the first submit attempt and gates validation display so
+ * errors don't appear before the user has interacted with the form. State is reset
+ * both on explicit Reset and whenever the dialog closes, so reopening it is always fresh.
+ * On success the user is navigated directly to the new collection's detail page.
+ */
 export function AddCollectionDialog({ open, onOpenChange }: Props) {
     const { getAccessTokenSilently } = useAuth0();
     const navigate = useNavigate();

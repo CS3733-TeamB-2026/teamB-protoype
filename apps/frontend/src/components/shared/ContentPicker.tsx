@@ -109,6 +109,7 @@ export function ContentPicker({ selectedId, onSelect, excludeIds = [], disabled 
                         />
                     </div>
 
+                    {/* overscroll-contain prevents scroll from propagating to a parent Dialog */}
                     <div className="overflow-y-auto max-h-72 overscroll-contain">
                         {loading ? (
                             <div className="flex items-center justify-center py-8 gap-2 text-muted-foreground">

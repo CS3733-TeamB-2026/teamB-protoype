@@ -22,6 +22,17 @@ import type { Collection, CollectionFavorite } from "@/lib/types";
 
 type CollectionTab = "all" | "mine" | "favorites";
 
+/**
+ * Collections list page — sortable table of all collections visible to the current user.
+ *
+ * Collections and the current user's favorites are fetched in parallel on mount.
+ * Favorites are stored as a `number[]` of collection IDs rather than full objects,
+ * since the backend returns flat `CollectionFavorite` join records.
+ *
+ * Favorite toggling is optimistic: the local ID list is updated immediately and
+ * rolled back if the API call fails. Tab counts always reflect the unfiltered data
+ * (all/mine/favorites) so the numbers don't change as the user types in the search box.
+ */
 function ViewCollections() {
     usePageTitle("Collections");
 

@@ -22,6 +22,22 @@ import { useUser } from "@/hooks/use-user";
 import { usePageTitle } from "@/hooks/use-page-title";
 import type { Collection, CollectionItem, ContentItem } from "@/lib/types";
 
+/**
+ * Detail page for a single collection, identified by `:id` in the URL.
+ *
+ * Collection data and the current user's full favorites list are fetched in parallel
+ * on mount; `isFavorited` is derived from that list rather than a per-collection flag.
+ *
+ * Three independent edit surfaces share one PUT endpoint (full replacement, not PATCH):
+ *   - Inline name editing (Enter to save, Escape to cancel)
+ *   - Visibility toggle (Private ↔ Public) via an AlertDialog confirmation
+ *   - Content items editor (add / reorder / remove), committed as an ordered `contentIds` array
+ *
+ * The content picker lives inside a portal Dialog rather than inline in the Card so its
+ * absolute-positioned dropdown is never clipped by the Card's overflow boundary.
+ * `excludeIds` is derived from `draftItems` (the in-progress edit copy) so newly added
+ * items are immediately excluded from the picker without waiting for a save.
+ */
 export function ViewSingleCollection() {
     const { id } = useParams<{ id: string }>();
     const { getAccessTokenSilently } = useAuth0();
