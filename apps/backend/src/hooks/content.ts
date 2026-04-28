@@ -421,11 +421,11 @@ export const addHit = async (req: req, res: res) => {
 
 export const searchContent = async (req: req, res: res) => {
     const { q: searchQuery } = req.query;
-    if (!searchQuery || typeof searchQuery !== "string") {
-        return res.status(400).json({ error: "Search query is required" });
+    if (!searchQuery || typeof searchQuery !== 'string') {
+        return res.status(400).json({ error: 'Search query is required' });
     }
     try {
-        const results = await q.Content.searchContent(searchQuery);
+        const results = await q.Content.semanticSearch(searchQuery);
         return res.status(200).json(results);
     } catch (error) {
         console.error(error);

@@ -14,5 +14,10 @@
 		"@tailwindcss/vite": "^4.2.2",
 		"react-router-dom": "^7.13.2",
 		"tailwindcss": "^4.2.2"
+	},
+	"pnpm": {
+		"overrides": {
+			"sharp": "0.33.5"
+		}
 	}
 }
