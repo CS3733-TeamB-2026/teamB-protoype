@@ -14,40 +14,83 @@ import { Separator } from "@/components/ui/separator.tsx";
 import { useUser } from "@/hooks/use-user.ts";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
 import { toast } from "sonner";
-import type { NotificationItem } from "@/lib/types.ts";
 import { NotificationCard } from "@/features/notifications/NotificationCard.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { Tabs, TabsTrigger } from "@/components/ui/tabs";
+import { SlidingTabs } from "@/components/shared/SlidingTabs.tsx";
+import type { NotificationItem, NotificationTab } from "@/lib/types.ts";
 
+/**
+ * Periodically polls for updates, allows users to dismiss notifications,
+ * and supports filtering by notification type (change, ownership, expiration).
+ * It also includes pagination for handling large numbers of notifications.
+ *
+ * @returns A React component that renders the comprehensive notifications view.
+ */
 export default function ViewNotifications() {
     usePageTitle("Notifications");
     const { user } = useUser();
     const { getAccessTokenSilently } = useAuth0();
 
-    const [items, setItems] = useState<NotificationItem[]>([]);
+    const [activeItems, setActiveItems] = useState<NotificationItem[]>([]);
+    const [dismissedItems, setDismissedItems] = useState<NotificationItem[]>([]);
+    const [activeTab, setActiveTab] = useState<NotificationTab>("active");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(25);
+
+    // Filtering state
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
     const [typeFilters, setTypeFilters] = useState<Array<"change" | "ownership" | "expiration">>([]);
 
+    /**
+     * Refreshes both notification lists from the server without triggering a loading state.
+     * Used for background polling. Displays a toast error if the request fails.
+     */
     const refreshNotifications = useCallback(async () => {
         try {
             const token = await getAccessTokenSilently();
-            const res = await fetch(`/api/notifications`, {
-                headers: { Authorization: `Bearer ${token}` },
-                cache: "no-store",
-            });
-            const data: NotificationItem[] = await res.json();
-            setItems(data);
+            const [activeRes, dismissedRes] = await Promise.all([
+                fetch(`/api/notifications`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                    cache: "no-store",
+                }),
+                fetch(`/api/notifications/dismissed`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                    cache: "no-store",
+                }),
+            ]);
+            const activeData: NotificationItem[] = await activeRes.json();
+            const dismissedData: NotificationItem[] = await dismissedRes.json();
+            setActiveItems(activeData);
+            setDismissedItems(dismissedData);
         } catch {
             toast.error("Failed to refresh notifications.");
         }
     }, [getAccessTokenSilently]);
-    const handleDismiss = async (id: string) => {
-        setItems((prev) => prev.filter((n) => n.id !== id));
 
+    /**
+     * Dismisses a single notification optimistically and sends the request to the backend.
+     * Moves the item from active to dismissed state immediately, restoring or showing
+     * an error toast if the backend request fails.
+     *
+     * @param id The unique identifier for the notification or expiration alert.
+     */
+    const handleDismiss = async (id: string) => {
+        const dismissedAt = new Date().toISOString();
+        setActiveItems((prev) => {
+            const target = prev.find((n) => n.id === id);
+            if (target && !id.startsWith("exp-")) {
+                setDismissedItems((d) => {
+                    if (d.some((existing) => existing.id === id)) return d;
+                    return [{ ...target, dismissedAt }, ...d];
+                });
+            }
+            return prev.filter((n) => n.id !== id);
+        });
         try {
             const token = await getAccessTokenSilently();
             const body = id.startsWith("exp-")
@@ -70,37 +113,58 @@ export default function ViewNotifications() {
         }
     };
 
+    const userId = user?.id;
 
-
+    // Initial load of both notification feeds
     useEffect(() => {
-        if (!user) return;
-        const fetchNotifications = async () => {
+        if (!userId) return;
+        const fetchAll = async () => {
             try {
                 const token = await getAccessTokenSilently();
-                const res = await fetch(`/api/notifications`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                    cache: "no-store",
-                });
-                const data: NotificationItem[] = await res.json();
-                setItems(data);
+                const [activeRes, dismissedRes] = await Promise.all([
+                    fetch(`/api/notifications`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                        cache: "no-store",
+                    }),
+                    fetch(`/api/notifications/dismissed`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                        cache: "no-store",
+                    }),
+                ]);
+                const activeData: NotificationItem[] = await activeRes.json();
+                const dismissedData: NotificationItem[] = await dismissedRes.json();
+                setActiveItems(activeData);
+                setDismissedItems(dismissedData);
                 setLoading(false);
             } catch {
                 setError("Failed to load notifications.");
                 setLoading(false);
             }
         };
-        void fetchNotifications();
-    }, [getAccessTokenSilently, user]);
+        void fetchAll();
+    }, [getAccessTokenSilently, userId]);
 
+    // Setup periodic polling for new notifications
     useEffect(() => {
-        const id = setInterval(refreshNotifications, 20_000);
+        const id = setInterval(refreshNotifications, 20_000); // 20 seconds
         return () => clearInterval(id);
     }, [refreshNotifications]);
 
+    // Reset to first page on filter / tab change, and clear expiration filter
+    // when on Dismissed tab (since dismissed expirations aren't shown)
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setCurrentPage(1);
-    }, [typeFilters]);
+    }, [typeFilters, activeTab]);
+
+    useEffect(() => {
+        if (activeTab === "dismissed") {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setTypeFilters((prev) =>
+                prev.includes("expiration") ? prev.filter((t) => t !== "expiration") : prev,
+            );
+        }
+    }, [activeTab]);
 
     if (!user) return (
         <div className="flex items-center justify-center min-h-screen bg-secondary">
@@ -108,13 +172,14 @@ export default function ViewNotifications() {
         </div>
     );
 
+    const items = activeTab === "active" ? activeItems : dismissedItems;
     const filteredItems = typeFilters.length === 0
         ? items
         : items.filter((n) => typeFilters.includes(n.type));
 
     const activeFilterCount = typeFilters.length;
-
     const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
+
     const paginated = filteredItems.slice(
         (currentPage - 1) * pageSize,
         currentPage * pageSize,
@@ -129,6 +194,25 @@ export default function ViewNotifications() {
                 </p>
                 <Separator className="bg-primary mt-4" />
             </div>
+
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as NotificationTab)}>
+                <SlidingTabs activeTab={activeTab} indicatorColor="bg-foreground">
+                    <TabsTrigger
+                        value="active"
+                        className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0"
+                    >
+                        Active
+                        <span className="ml-2 text-xs opacity-70">{activeItems.length}</span>
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="dismissed"
+                        className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0"
+                    >
+                        Dismissed
+                        <span className="ml-2 text-xs opacity-70">{dismissedItems.length}</span>
+                    </TabsTrigger>
+                </SlidingTabs>
+            </Tabs>
 
             {loading && (
                 <div className="flex items-center justify-center py-16 gap-3 text-muted-foreground">
@@ -147,13 +231,17 @@ export default function ViewNotifications() {
             {!loading && !error && items.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
                     <Bell className="w-10 h-10"/>
-                    <p className="text-sm">You have no notifications.</p>
+                    <p className="text-sm">
+                        {activeTab === "active"
+                            ? "You have no notifications."
+                            : "You haven't dismissed any notifications."}
+                    </p>
                 </div>
             )}
 
             {!loading && !error && items.length > 0 && (
                 <>
-                    <div className="flex flex-row justify-between items-baseline mb-4">
+                    <div className="flex flex-row justify-between items-baseline mb-4 mt-4">
                         <div className="flex flex-row gap-2 items-center">
                             <Button
                                 variant="outline"
@@ -176,7 +264,10 @@ export default function ViewNotifications() {
                                     <div>
                                         <p className="font-medium mb-2 text-foreground">Type</p>
                                         <div className="flex flex-col gap-1.5">
-                                            {(["change", "ownership", "expiration"] as const).map((type) => (
+                                            {(activeTab === "active"
+                                                    ? ["change", "ownership", "expiration"] as const
+                                                    : ["change", "ownership"] as const
+                                            ).map((type) => (
                                                 <label key={type} className="flex items-center gap-2">
                                                     <input
                                                         type="checkbox"
@@ -214,7 +305,7 @@ export default function ViewNotifications() {
                                     <NotificationCard
                                         key={n.id}
                                         notification={n}
-                                        onDismiss={handleDismiss}
+                                        onDismiss={activeTab === "active" ? handleDismiss : undefined}
                                     />
                                 ))}
                             </div>

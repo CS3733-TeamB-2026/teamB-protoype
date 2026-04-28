@@ -73,6 +73,7 @@ export type NotificationItem = {
     contentName: string;
     triggeredBy: { id: number; firstName: string; lastName: string } | null;
     createdAt: string;
+    dismissedAt?: string;
     metadata: {
         changedFields?: string[];
         before?: Record<string, unknown>;
@@ -87,6 +88,7 @@ export type NotificationItem = {
         threshold?: "3d" | "1h" | "expired";
     };
 }
+export type NotificationTab = "active" | "dismissed";
 
 /** Alias kept for backwards compatibility with edit/form helpers. */
 export type ServiceReqItem = ServiceReq;

@@ -12,10 +12,18 @@ type Props = {
     onDismiss?: (id: string) => void;
 };
 
+/**
+ * Formats the name of the user who triggered a notification.
+ * Falls back to "Someone" if the user information is not available.
+ *
+ * @param t The user object containing firstName and lastName, or null.
+ * @returns A formatted string representing the user's name.
+ */
 function formatTriggeredBy(t: NotificationItem["triggeredBy"]): string {
     return t ? `${t.firstName} ${t.lastName}` : "Someone";
 }
 
+// Maps internal database field names to human-readable labels for display
 const FIELD_LABELS: Record<string, string> = {
     displayName: "name",
     linkURL: "link",
@@ -27,11 +35,24 @@ const FIELD_LABELS: Record<string, string> = {
     tags: "tags",
 };
 
+/**
+ * Converts a list of raw field names into a human-readable, comma-separated string.
+ * Uses `FIELD_LABELS` to map internal names to friendly labels.
+ *
+ * @param fields An array of string field names.
+ * @returns A formatted string, or "details" if the array is empty or undefined.
+ */
 function humanizeFields(fields: string[] | undefined): string {
     if (!fields || fields.length === 0) return "details";
     return fields.map((f) => FIELD_LABELS[f] ?? f).join(", ");
 }
 
+/**
+ * Determines the primary headline and secondary detail text for a notification based on its type and metadata.
+ *
+ * @param n The notification item to process.
+ * @returns An object containing the generated `headline` and `detail` strings.
+ */
 function renderNotification(n: NotificationItem): { headline: string; detail: string | null } {
     if (n.type === "change") {
         return {
@@ -61,6 +82,12 @@ function renderNotification(n: NotificationItem): { headline: string; detail: st
     };
 }
 
+/**
+ * Selects the appropriate icon component to display alongside the notification based on its type.
+ *
+ * @param n The notification item.
+ * @returns A React Element representing the icon.
+ */
 function renderIcon(n: NotificationItem, size: string) {
     if (n.type === "change") return <FileText className={cn(size, "text-primary")} />;
     if (n.type === "ownership") return <UserRoundCog className={cn(size, "text-primary")} />;
@@ -68,6 +95,14 @@ function renderIcon(n: NotificationItem, size: string) {
     return <Clock className={cn(size, "text-accent")} />;
 }
 
+/**
+ * Formats an ISO timestamp into a user-friendly string.
+ * Shows only the time if it's today, the short weekday if it's within the last 7 days,
+ * and the short month and day for older dates.
+ *
+ * @param iso The ISO 8601 string representation of the date.
+ * @returns A formatted date/time string.
+ */
 function formatTimestamp(iso: string): string {
     const d = new Date(iso);
     const now = new Date();
@@ -81,10 +116,24 @@ function formatTimestamp(iso: string): string {
     return d.toLocaleDateString([], { month: "short", day: "numeric" });
 }
 
+/**
+ * A UI component that displays a single notification item.
+ * It can render in two modes: a `compact` mode (used in popovers/dropdowns) and a full-size card mode.
+ * The card is clickable and navigates the user to the associated content file.
+ * It also provides a dismiss button if an `onDismiss` handler is provided.
+ *
+ * @param props.notification The notification data to display.
+ * @param props.compact Whether to render the card in a compact, list-item style. Defaults to false.
+ * @param props.onSelect An optional callback fired when the card is clicked.
+ * @param props.onDismiss An optional callback fired when the dismiss button is clicked, receiving the notification ID.
+ */
 export function NotificationCard({ notification, compact = false, onSelect, onDismiss }: Props) {
     const { headline, detail } = renderNotification(notification);
     const timestamp = formatTimestamp(notification.createdAt);
 
+    /**
+     * Handles the click event for the dismiss button, preventing it from triggering the card's navigation link.
+     */
     const handleDismiss = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
