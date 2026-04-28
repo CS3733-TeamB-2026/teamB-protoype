@@ -1,5 +1,6 @@
 import { CircleQuestionMark } from "lucide-react";
 import React from "react";
+import { createPortal } from "react-dom";
 
 interface InfoButtonProps {
     content: React.ReactNode;
@@ -8,49 +9,57 @@ interface InfoButtonProps {
 
 function InfoButton({ content, size = "w-7 h-7" }: InfoButtonProps) {
     const [hovered, setHovered] = React.useState(false);
-    const [offset, setOffset] = React.useState(0);
 
-    //this is so it doesn't go off the screen
+    //had to make things work through a portal because the cards were cutting off.
+    //portals just render on top of the heirarchy
     const popupRef = React.useRef<HTMLDivElement>(null);
+    const triggerRef = React.useRef<HTMLDivElement>(null);
+    const [popupStyle, setPopupStyle] = React.useState<React.CSSProperties>({});
 
     React.useEffect(() => {
-        if (hovered && popupRef.current) {
-            const rect = popupRef.current.getBoundingClientRect();
+        if (hovered && triggerRef.current) {
+            const triggerRect = triggerRef.current.getBoundingClientRect();
             const padding = 8;
+            const popUpWidth = 288; //equivalent to w-72
 
-            if (rect.right > window.innerWidth - padding) {
-                setOffset(window.innerWidth - padding - rect.right);
-            } else if (rect.left < padding) {
-                setOffset(padding - rect.left);
-            } else {
-                setOffset(0);
-            }
+            const left = triggerRect.left + triggerRect.width / 2 - popUpWidth / 2;
+            const top = triggerRect.bottom + 4;
+
+            const maxLeft = window.innerWidth - popUpWidth - padding;
+            const clampedLeft = Math.max(padding, Math.min(left, maxLeft));
+
+            setPopupStyle({
+                position: "fixed",
+                top: top,
+                left: clampedLeft,
+                width: popUpWidth,
+                zIndex: 9999,
+            });
         }
     }, [hovered]);
+
+    const popup = hovered && createPortal(
+        <div
+            ref={popupRef}
+            style={popupStyle}
+            className="rounded-lg border border-border bg-card shadow-lg p-3 text-xs text-muted-foreground"
+        >
+            {content}
+        </div>,
+        document.body
+    );
 
     return (
         <div className="relative flex items-center">
             <div
+                ref={triggerRef}
                 onMouseEnter={() => setHovered(true)}
-                onMouseLeave={() => { setHovered(false); setOffset(0); }}
+                onMouseLeave={() => { setHovered(false);}}
                 className="relative"
             >
                 <CircleQuestionMark className={`${size} cursor-pointer duration-200 ${hovered ? "text-accent" : "opacity-10"}`} />
-
-                {hovered && (
-                    <div
-                        ref={popupRef}
-                        style={{ transform: `translateX(calc(-50% + ${offset}px))` }}
-                        className="absolute left-1/2 top-full mt-2 z-50 w-72 rounded-lg border border-border bg-card shadow-lg p-3 text-xs text-muted-foreground"
-                    >
-                        <div
-                            style={{ marginLeft: `${-offset}px` }}
-                            className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 bg-card border-l border-t border-border"
-                        />
-                        {content}
-                    </div>
-                )}
             </div>
+            {popup}
         </div>
     );
 }
