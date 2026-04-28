@@ -29,6 +29,7 @@ import ExperationCalendar from "@/features/content/listing/ExpirationCalendar.ts
 import ViewServiceReqs from "@/features/servicereqs/ViewServiceReqs.tsx";
 import SearchContent from "@/features/SearchContent.tsx";
 import ViewCollections from "@/features/collections/ViewCollections.tsx";
+import { ViewSingleCollection } from "@/features/collections/ViewSingleCollection.tsx";
 
 import ViewNotifications from "@/features/notifications/ViewNotifications.tsx";
 
@@ -78,6 +79,7 @@ function App() {
                             <Route path="/calendar" element={<ExperationCalendar/>}/>
                             <Route path="/file/:id" element={<ProtectedRoute><ViewSingleFile/></ProtectedRoute>}/>
                             <Route path="/collections" element={<ProtectedRoute><ViewCollections/></ProtectedRoute>}/>
+                            <Route path="/collections/:id" element={<ProtectedRoute><ViewSingleCollection/></ProtectedRoute>}/>
                             <Route path="/servicereqs" element={<ProtectedRoute><ViewServiceReqs/></ProtectedRoute>}/>
                             <Route path="/notifications" element={<ProtectedRoute><ViewNotifications/></ProtectedRoute>}/>
                             <Route path="/search" element={<ProtectedRoute><SearchContent/></ProtectedRoute>}/>
