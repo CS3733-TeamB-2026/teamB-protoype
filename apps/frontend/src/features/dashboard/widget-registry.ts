@@ -16,16 +16,16 @@ export type WidgetLayoutEntry = {
 };
 
 export const WIDGET_REGISTRY = {
-    hello: { component: HelloCard, label: "Welcome", defaultSize: "medium" },
-    clock: { component: ClockCard, label: "Clock", defaultSize: "small" },
-    employeeChart: { component: EmployeeChartCard, label: "Employees", defaultSize: "small" },
-    contentTypeChart: { component: ContentTypeChartCard, label: "Content Types", defaultSize: "medium" },
-    quickLinks: { component: QuickLinksCard, label: "Quick Links", defaultSize: "small" },
-    bookmarked: { component: BookmarkedCard, label: "Favorites", defaultSize: "small" },
-    myContent: { component: MyContentCard, label: "My Content", defaultSize: "small" },
-    recentFiles: { component: RecentFilesCard, label: "Recent Files", defaultSize: "medium" },
-    links: { component: LinksCard, label: "Links", defaultSize: "small" },
-} satisfies Record<string, { component: React.ComponentType; label: string; defaultSize: WidgetSize }>;
+    hello: { component: HelloCard, label: "Welcome", defaultSize: "medium", description: "Greets you on your dashboard." },
+    clock: { component: ClockCard, label: "Clock", defaultSize: "small", description: "Displays current time." },
+    employeeChart: { component: EmployeeChartCard, label: "Employees", defaultSize: "small", description: "Displays employee role headcounts." },
+    contentTypeChart: { component: ContentTypeChartCard, label: "Content Types", defaultSize: "medium", description: "Displays content type distribution." },
+    quickLinks: { component: QuickLinksCard, label: "Quick Links", defaultSize: "small", description: "Helpful links." },
+    bookmarked: { component: BookmarkedCard, label: "Favorites", defaultSize: "small", description: "Shows your bookmarked files." },
+    myContent: { component: MyContentCard, label: "My Content", defaultSize: "small", description: "Shows content you own." },
+    recentFiles: { component: RecentFilesCard, label: "Recent Files", defaultSize: "medium", description: "Shows recent files." },
+    links: { component: LinksCard, label: "Role Links", defaultSize: "small", description: "Shows role specific links." },
+} satisfies Record<string, { component: React.ComponentType; label: string; defaultSize: WidgetSize; description: string }>;
 
 export type WidgetId = keyof typeof WIDGET_REGISTRY;
 export type WidgetSize = "small" | "medium" | "full";

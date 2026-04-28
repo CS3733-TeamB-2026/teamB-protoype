@@ -2,9 +2,9 @@
 import {Hero} from "@/components/shared/Hero.tsx";
 import {LayoutDashboard} from "lucide-react"
 import { usePageTitle } from "@/hooks/use-page-title.ts";
-import {DEFAULT_LAYOUT, WIDGET_REGISTRY, type WidgetSize} from "@/features/dashboard/widget-registry.ts";
-
-const layout = DEFAULT_LAYOUT;
+import {DEFAULT_LAYOUT, WIDGET_REGISTRY, type WidgetSize, type WidgetLayoutEntry} from "@/features/dashboard/widget-registry.ts";
+import {useState} from "react";
+import DashboardCustomizeSheet from "@/features/dashboard/components/DashboardCustomizeSheet.tsx";
 
 const sizeClasses: Record<WidgetSize, string> = {
     small: "col-span-1",
@@ -17,6 +17,8 @@ function Dashboard() {
     usePageTitle("Dashboard");
     //const user = useUser();
 
+    const [layout, setLayout] = useState<WidgetLayoutEntry[]>(DEFAULT_LAYOUT);
+
     return (
         <>
             {/* Hero */}
@@ -27,6 +29,9 @@ function Dashboard() {
             />
 
             {/* Display Cards */}
+            <div className="flex flex-row items-center justify-end mx-25 mt-8">
+                <DashboardCustomizeSheet layout={layout} setLayout={setLayout} />
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-8 mx-15">
                 {
                     layout.filter(w => w.visible).map(({id, size}) => {
