@@ -5,6 +5,7 @@ import Footer from './components/layout/Footer.tsx'
 import { SidebarProvider } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/layout/AppSidebar.tsx";
 import Home from "@/pages/Home.tsx";
+import TutorialPage from "@/features/tutorial/Tutorial.tsx";
 import AddEmployee from "@/features/employees/AddEmployee.tsx";
 import UnderwriterPersona from "@/pages/UnderwriterPersona.tsx";
 import BusinessAnalystPersona from "@/pages/BusinessAnalystPersona.tsx";
@@ -73,6 +74,7 @@ function App() {
                             <Route path="/actuarialanalyst" element={<ActuarialAnalystPersona/>}/>
                             <Route path="/exloperations" element={<EXLOperationsPersona/>}/>
                             <Route path="/businessoperations" element={<BusinessOperationsPersona/>}/>
+                            <Route path="/tutorial" element={<TutorialPage />} />
                             <Route path="/files" element={<ProtectedRoute><ViewContent/></ProtectedRoute>}/>
                             <Route path="/files/bulk" element={<ProtectedRoute><BulkUploadPage/></ProtectedRoute>}/>
                             <Route path="/employeehome" element={<ProtectedRoute><Dashboard/></ProtectedRoute>}/>
