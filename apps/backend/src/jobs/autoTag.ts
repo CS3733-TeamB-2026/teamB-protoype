@@ -41,7 +41,8 @@ export async function applyExpirationTagsToAll() {
             item.expiration,
             item.targetPersona,
             tagList,
-            item.checkedOutById
+            item.checkedOutById,
+            item.textContent
         );
     }
 }
@@ -89,6 +90,7 @@ export async function applyExpirationTagsToOne(contentId: number) {
         item.expiration,
         item.targetPersona,
         tagList,
-        item.checkedOutById
+        item.checkedOutById,
+        item.textContent
     );
 }

@@ -3,7 +3,7 @@ import mime from "mime-types";
 import * as cheerio from "cheerio";
 import { req, res } from "./types";
 import { getEmployee } from "../helpers/getEmployee";
-import { assertPublicUrl, isPrivateIP } from "../helpers/validateUrl";
+import { assertPublicUrl } from "../helpers/validateUrl";
 import { isAdmin, isPersonaOrAdmin } from "../helpers/permissions";
 import { extractText, SupportedMimeType } from "../../lib/extractors";
 import dns from "node:dns/promises";
