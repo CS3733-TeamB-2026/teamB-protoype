@@ -513,3 +513,133 @@ export const searchContent = async (req: req, res: res) => {
         return res.status(500).end();
     }
 };
+
+export const getTransactionSummary = async (req: req, res: res) => {
+    try {
+        const employee = await getEmployee(req);
+        if (!employee) return res.status(404).json({ error: "Employee not found" });
+
+        const isAdminUser = isAdmin(employee);
+
+        // Get all content visible to user
+        const allContent = await q.Content.queryAllContent();
+        const visibleContent = isAdminUser
+            ? allContent
+            : allContent.filter(c => c.targetPersona === employee.persona);
+
+        // Aggregate hits by owner
+        const hitsByOwner: Record<number, {
+            firstName: string;
+            lastName: string;
+            persona: string;
+            totalHits: number;
+            contentCount: number;
+        }> = {};
+
+        for (const content of visibleContent) {
+            if (!content.ownerId) continue;
+
+            const hitCount = content.hits?.length ?? 0;
+
+            if (!hitsByOwner[content.ownerId]) {
+                const owner = await q.Employee.queryEmployeeById(content.ownerId);
+                if (owner) {
+                    hitsByOwner[content.ownerId] = {
+                        firstName: owner.firstName,
+                        lastName: owner.lastName,
+                        persona: owner.persona,
+                        totalHits: hitCount,
+                        contentCount: 1,
+                    };
+                }
+            } else {
+                hitsByOwner[content.ownerId].totalHits += hitCount;
+                hitsByOwner[content.ownerId].contentCount += 1;
+            }
+        }
+
+        // Aggregate hits by persona
+        const hitsByPersona: Record<string, number> = {};
+        for (const content of visibleContent) {
+            const hitCount = content.hits?.length ?? 0;
+            hitsByPersona[content.targetPersona] =
+                (hitsByPersona[content.targetPersona] ?? 0) + hitCount;
+        }
+
+        // Content currency (last modified) by owner
+        const contentCurrency: Array<{
+            ownerId: number;
+            ownerName: string;
+            ownerPersona: string;
+            totalContent: number;
+            avgAge: number;
+            mostRecentUpdate: string;
+            oldestUpdate: string;
+        }> = [];
+
+        const ownerGroups = new Map<number, any[]>();
+        for (const content of visibleContent) {
+            if (!content.ownerId) continue;
+            if (!ownerGroups.has(content.ownerId)) {
+                ownerGroups.set(content.ownerId, []);
+            }
+            ownerGroups.get(content.ownerId)!.push(content);
+        }
+
+        const now = Date.now();
+        for (const [ownerId, contents] of ownerGroups) {
+            const owner = await q.Employee.queryEmployeeById(ownerId);
+            if (!owner) continue;
+
+            const lastModifiedDates = contents.map(c => c.lastModified.getTime());
+            const avgAge = Math.round(
+                (now - (lastModifiedDates.reduce((a, b) => a + b, 0) / lastModifiedDates.length)) /
+                (1000 * 60 * 60 * 24)
+            );
+
+            contentCurrency.push({
+                ownerId,
+                ownerName: `${owner.firstName} ${owner.lastName}`,
+                ownerPersona: owner.persona,
+                totalContent: contents.length,
+                avgAge,
+                mostRecentUpdate: new Date(Math.max(...lastModifiedDates)).toISOString(),
+                oldestUpdate: new Date(Math.min(...lastModifiedDates)).toISOString(),
+            });
+        }
+
+        // Expiration status (check tags from autoTag job)
+        const expirationCounts = {
+            expired: 0,
+            'expiring-soon': 0,
+            ok: 0,
+        };
+
+        for (const content of visibleContent) {
+            if (content.tags.includes('Expired')) {
+                expirationCounts.expired++;
+            } else if (content.tags.includes('Expiring Soon')) {
+                expirationCounts['expiring-soon']++;
+            } else {
+                expirationCounts.ok++;
+            }
+        }
+
+        return res.status(200).json({
+            summary: {
+                totalContent: visibleContent.length,
+                totalHits: visibleContent.reduce((sum, c) => sum + (c.hits?.length ?? 0), 0),
+                uniqueOwners: Object.keys(hitsByOwner).length,
+            },
+            hitsByOwner: Object.entries(hitsByOwner)
+                .map(([id, data]) => ({ ownerId: parseInt(id), ...data }))
+                .sort((a, b) => b.totalHits - a.totalHits),
+            hitsByPersona,
+            contentCurrency: contentCurrency.sort((a, b) => a.avgAge - b.avgAge),
+            expirationStatus: expirationCounts,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};

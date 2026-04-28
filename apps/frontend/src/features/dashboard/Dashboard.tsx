@@ -11,6 +11,7 @@ import RecentFilesCard from "@/features/dashboard/components/cards/RecentFilesCa
 import EmployeeChartCard from "@/features/dashboard/components/cards/EmployeeChartCard.tsx"
 import ContentTypeChartCard from "@/features/dashboard/components/cards/ContentTypeChartCard.tsx";
 import LinksCard from "@/features/dashboard/components/cards/LinksCard.tsx";
+import ReportCard from "@/features/dashboard/components/cards/ReportCard.tsx";
 
 const cards = [
     HelloCard,
@@ -22,6 +23,7 @@ const cards = [
     MyContentCard,
     RecentFilesCard,
     LinksCard,
+    ReportCard,
 ]
 
 function Dashboard() {
