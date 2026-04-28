@@ -27,7 +27,7 @@ function WidgetRow({
     };
 
     return (
-        <div ref={setNodeRef} style={style} className="my-3 ml-6 mr-6">
+        <div ref={setNodeRef} style={style} className="mb-6 ml-6 mr-6">
             <div className="flex flex-row items-center justify-between gap-4">
                 <div className="flex flex-row items-center justify-between gap-4">
                     <button
@@ -54,25 +54,23 @@ function WidgetRow({
                         </Label>
                     </div>
                 </div>
-                <div className="flex flex-row justify-center items-center">
-                    <RadioGroup
-                        className="gap-1 mr-3"
-                        value={layoutEntry.size}
-                        onValueChange={(value) =>
-                            onUpdate({ size: value as WidgetSize })
-                        }
-                    >
-                        {(["small", "medium", "full"] as WidgetSize[]).map((size) => (
-                            <div key={size} className="flex items-center space-x-2">
-                                <RadioGroupItem value={size} id={`${layoutEntry.id}-${size}`} />
-                                <Label htmlFor={`${layoutEntry.id}-${size}`} className="capitalize text-md">
-                                    {size}
-                                </Label>
-                            </div>
-                        ))}
-                    </RadioGroup>
-                </div>
             </div>
+            <RadioGroup
+                className="px-5 mr-3 mt-2 flex flex-row justify-between items-center"
+                value={layoutEntry.size}
+                onValueChange={(value) =>
+                    onUpdate({ size: value as WidgetSize })
+                }
+            >
+                {(["small", "medium", "full"] as WidgetSize[]).map((size) => (
+                    <div key={size} className="flex items-center space-x-2">
+                        <RadioGroupItem value={size} id={`${layoutEntry.id}-${size}`} className="border-primary" />
+                        <Label htmlFor={`${layoutEntry.id}-${size}`} className="capitalize text-sm">
+                            {size}
+                        </Label>
+                    </div>
+                ))}
+            </RadioGroup>
         </div>
     )
 }
