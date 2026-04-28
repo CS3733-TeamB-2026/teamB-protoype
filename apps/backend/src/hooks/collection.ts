@@ -1,7 +1,7 @@
 import * as q from "@softeng-app/db";
 import { req, res } from "./types";
 import { getEmployee } from "../helpers/getEmployee";
-import { isAdmin, isOwnerOrAdmin } from "../helpers/permissions";
+import { isAdmin, isUserOrAdmin } from "../helpers/permissions";
 
 /** Returns collections visible to the caller — all for admins, public+own for regular employees. */
 export const getAllCollections = async (req: req, res: res) => {
@@ -9,7 +9,7 @@ export const getAllCollections = async (req: req, res: res) => {
         const employee = await getEmployee(req);
         if (!employee) return res.status(404).json({ error: "Employee not found" });
 
-        const collections = await q.Collection.queryAll(employee.id, isAdmin(employee.persona));
+        const collections = await q.Collection.queryAll(employee.id, isAdmin(employee));
         return res.status(200).json(collections);
     } catch (error) {
         console.error(error);
@@ -26,7 +26,7 @@ export const getCollectionById = async (req: req, res: res) => {
         const collectionId = parseInt(req.params.id);
         const collection = await q.Collection.queryById(collectionId);
 
-        if (!collection.public && !isOwnerOrAdmin(collection.ownerId, employee.id, employee.persona)) {
+        if (!collection.public && !isUserOrAdmin(collection.ownerId, employee)) {
             return res.status(403).json({ error: "Access denied" });
         }
 
@@ -61,7 +61,7 @@ export const updateCollection = async (req: req, res: res) => {
         const collectionId = parseInt(req.params.id);
         const existing = await q.Collection.queryById(collectionId);
 
-        if (!isOwnerOrAdmin(existing.ownerId, employee.id, employee.persona)) {
+        if (!isUserOrAdmin(existing.ownerId, employee)) {
             return res.status(403).json({ error: "Access denied" });
         }
         const { displayName, isPublic, ownerId, contentIds } = req.body;
@@ -88,7 +88,7 @@ export const deleteCollection = async (req: req, res: res) => {
         const collectionId = parseInt(req.params.id);
         const existing = await q.Collection.queryById(collectionId);
 
-        if (!isOwnerOrAdmin(existing.ownerId, employee.id, employee.persona)) {
+        if (!isUserOrAdmin(existing.ownerId, employee)) {
             return res.status(403).json({ error: "Access denied" });
         }
 
@@ -124,7 +124,7 @@ export const addFavorite = async (req: req, res: res) => {
 
         // Prevent favoriting a private collection the employee can't see
         const collection = await q.Collection.queryById(collectionId);
-        if (!collection.public && !isOwnerOrAdmin(collection.ownerId, employee.id, employee.persona)) {
+        if (!collection.public && !isUserOrAdmin(collection.ownerId, employee)) {
             return res.status(403).json({ error: "Access denied" });
         }
 

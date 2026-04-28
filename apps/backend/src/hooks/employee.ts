@@ -2,7 +2,7 @@ import * as q from "@softeng-app/db";
 import {req, res} from "./types"
 import { createAuth0User } from "../helpers/auth0Management";
 import { getEmployee } from "../helpers/getEmployee";
-import { isAdmin, isOwnerOrAdmin } from "../helpers/permissions";
+import { isAdmin, isUserOrAdmin } from "../helpers/permissions";
 
 function buildPhotoURI(employeeId: number, filename:string): string {
     return `${employeeId}/${crypto.randomUUID()}/${filename}`;
@@ -21,18 +21,12 @@ async function signPhotoUrl<T extends { profilePhotoURI: string | null }>(employ
     return { ...employee, profilePhotoURI: signedUrl };
 }
 
-/**
- * Uploads or replaces the caller's profile photo (max 5 MB, images only).
- * Uses raw auth0Id instead of getEmployee because the upload is always self-service —
- * there is no ownership transfer here, unlike content uploads.
- */
+/** Uploads or replaces the caller's profile photo (max 5 MB, images only). */
 export const uploadProfilePhoto = async (req: req, res: res)=> {
-    const auth0Id = req.auth?.payload.sub;
     let fileURI: string | null = null;
     let uploaded = false;
 
     try {
-        if (!auth0Id) return res.status(401).end();
         if (!req.file) return res.status(400).json({ message: "No file uploaded" });
         if (!req.file.mimetype.startsWith("image/")) {
             return res.status(400).json({ message: "File must be an image" });
@@ -41,7 +35,7 @@ export const uploadProfilePhoto = async (req: req, res: res)=> {
             return res.status(400).json({ message: "File must be under 5MB" });
         }
 
-        const employee = await q.Employee.queryEmployeeByAuth(auth0Id);
+        const employee = await getEmployee(req);
         if (!employee) return res.status(404).json({ message: "No employee found" });
 
         const oldURI = employee.profilePhotoURI;
@@ -137,7 +131,7 @@ export const createEmployee = async (req: req, res: res) => {
     try {
         const caller = await getEmployee(req);
         if (!caller) return res.status(404).json({ error: "Employee not found" });
-        if (!isAdmin(caller.persona)) return res.status(403).json({ error: "Admin only" });
+        if (!isAdmin(caller)) return res.status(403).json({ error: "Admin only" });
 
         const result = await q.Employee.createEmployee(
             payload.id,
@@ -158,7 +152,7 @@ export const createEmployeeWithAuth0 = async (req: req, res: res) => {
     try {
         const caller = await getEmployee(req);
         if (!caller) return res.status(404).json({ error: "Employee not found" });
-        if (!isAdmin(caller.persona)) return res.status(403).json({ error: "Admin only" });
+        if (!isAdmin(caller)) return res.status(403).json({ error: "Admin only" });
 
         const auth0Id = await createAuth0User(username, password, email);
 
@@ -187,11 +181,11 @@ export const updateEmployee = async (req: req, res: res) => {
     try {
         const caller = await getEmployee(req);
         if (!caller) return res.status(404).json({ error: "Employee not found" });
-        if (!isOwnerOrAdmin(parseInt(payload.id), caller.id, caller.persona))
+        if (!isUserOrAdmin(parseInt(payload.id), caller))
             return res.status(403).json({ error: "Access denied" });
 
         // Non-admins cannot change persona — use the existing value to prevent self-escalation
-        const persona = isAdmin(caller.persona) ? payload.persona : caller.persona;
+        const persona = isAdmin(caller) ? payload.persona : caller.persona;
 
         const result = await q.Employee.updateEmployee(
             payload.id,
@@ -211,7 +205,7 @@ export const deleteEmployee = async (req: req, res: res) => {
     try {
         const caller = await getEmployee(req);
         if (!caller) return res.status(404).json({ error: "Employee not found" });
-        if (!isAdmin(caller.persona)) return res.status(403).json({ error: "Admin only" });
+        if (!isAdmin(caller)) return res.status(403).json({ error: "Admin only" });
 
         await q.Employee.deleteEmployee(payload.id);
         return res.status(204).end();

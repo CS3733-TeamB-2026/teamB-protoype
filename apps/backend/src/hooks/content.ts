@@ -4,6 +4,7 @@ import * as cheerio from "cheerio";
 import { req, res } from "./types";
 import { getEmployee } from "../helpers/getEmployee";
 import { assertPublicUrl } from "../helpers/validateUrl";
+import { isAdmin, isPersonaOrAdmin } from "../helpers/permissions";
 import { extractText, SupportedMimeType } from "../../lib/extractors";
 
 const PREVIEW_MAX_BYTES = 2 * 1024 * 1024; // 2 MB
@@ -78,7 +79,7 @@ export const getAllContent = async (req: req, res: res) => {
     }
 };
 
-export const getAllTags = async (req: req, res: res) => {
+export const getAllTags = async (_req: req, res: res) => {
     try {
         const content = await q.Content.queryAllContent();
         const tags = [...new Set(content.flatMap((item) => item.tags ?? []))];
@@ -282,6 +283,12 @@ export const updateContent = async (req: req, res: res) => {
     }
 };
 
+/**
+ * Deletes a content item and its Supabase file (if any).
+ * Requires the caller to hold the checkout lock — same gate as updateContent.
+ * Returns 409 both when the item is not checked out and when someone else holds it,
+ * so the frontend can display a consistent "lock required" message in both cases.
+ */
 export const deleteContent = async (req: req, res: res) => {
     try {
         const employee = await getEmployee(req);
@@ -315,18 +322,28 @@ export const deleteContent = async (req: req, res: res) => {
     }
 };
 
+/**
+ * Acquires a pessimistic edit lock on a content item.
+ * Requires two DB reads: one to verify persona access, one inside the query class to
+ * detect an existing lock. 403 if the caller's persona doesn't match targetPersona.
+ */
 export const checkoutContent = async (req: req, res: res) => {
     try {
         const employee = await getEmployee(req);
         if (!employee)
             return res.status(404).json({ error: "Employee not found" });
 
-        const { id } = req.body;
-        const result = await q.Content.checkoutContent(
-            parseInt(id),
-            employee.id,
-        );
+        const contentId = parseInt(req.params.id);
 
+        const content = await q.Content.queryContentById(contentId);
+        if (!content) return res.status(404).json({ error: "Content not found" });
+
+        // Only employees whose persona matches the content's targetPersona (or admins) may check out
+        if (!isPersonaOrAdmin(content.targetPersona, employee)) {
+            return res.status(403).json({ error: "Your persona does not have access to this content" });
+        }
+
+        const result = await q.Content.checkoutContent(contentId, employee.id);
         return res.status(200).json(result);
     } catch (error: any) {
         console.error(error);
@@ -334,17 +351,21 @@ export const checkoutContent = async (req: req, res: res) => {
     }
 };
 
+/**
+ * Releases the edit lock on a content item.
+ * Non-admins must hold the lock themselves; admins can force-checkin any item.
+ * The admin path skips the ownership DB read since no check is needed.
+ */
 export const checkinContent = async (req: req, res: res) => {
     try {
         const employee = await getEmployee(req);
         if (!employee)
             return res.status(404).json({ error: "Employee not found" });
 
-        const { id } = req.body;
-        const contentId = parseInt(id);
+        const contentId = parseInt(req.params.id);
 
         // Admins can force check-in any item; non-admins can only check in their own lock
-        if (employee.persona !== "admin") {
+        if (!isAdmin(employee)) {
             const content = await q.Content.queryContentById(contentId);
             if (content?.checkedOutById !== employee.id) {
                 return res
