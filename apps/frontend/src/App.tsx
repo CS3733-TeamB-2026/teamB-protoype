@@ -28,6 +28,7 @@ import ProfileSettings from "@/features/settings/sections/ProfileSettings.tsx"
 import ExperationCalendar from "@/features/content/listing/ExpirationCalendar.tsx"
 import ViewServiceReqs from "@/features/servicereqs/ViewServiceReqs.tsx";
 import SearchContent from "@/features/SearchContent.tsx";
+import ViewCollections from "@/features/collections/ViewCollections.tsx";
 
 import ViewNotifications from "@/features/notifications/ViewNotifications.tsx";
 
@@ -76,6 +77,7 @@ function App() {
                             <Route path="/employeehome" element={<ProtectedRoute><Dashboard/></ProtectedRoute>}/>
                             <Route path="/calendar" element={<ExperationCalendar/>}/>
                             <Route path="/file/:id" element={<ProtectedRoute><ViewSingleFile/></ProtectedRoute>}/>
+                            <Route path="/collections" element={<ProtectedRoute><ViewCollections/></ProtectedRoute>}/>
                             <Route path="/servicereqs" element={<ProtectedRoute><ViewServiceReqs/></ProtectedRoute>}/>
                             <Route path="/notifications" element={<ProtectedRoute><ViewNotifications/></ProtectedRoute>}/>
                             <Route path="/search" element={<ProtectedRoute><SearchContent/></ProtectedRoute>}/>

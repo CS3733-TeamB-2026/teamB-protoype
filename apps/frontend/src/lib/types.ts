@@ -83,5 +83,23 @@ export type NotificationItem = {
     };
 }
 
-/** Alias kept for backwards compatibility with edit/form helpers. */
-export type ServiceReqItem = ServiceReq;
+export type CollectionItem = {
+    collectionId: number;
+    contentId: number;
+    position: number;
+    content: ContentItem;
+};
+
+export type Collection = {
+    id: number;
+    displayName: string;
+    ownerId: number;
+    owner: Employee;
+    public: boolean;
+    items: CollectionItem[];
+};
+
+export type CollectionFavorite = {
+    employeeId: number;
+    collectionId: number;
+};
