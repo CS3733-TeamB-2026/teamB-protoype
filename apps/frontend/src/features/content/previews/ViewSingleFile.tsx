@@ -12,6 +12,7 @@ import { getOriginalFilename } from "@/lib/mime.ts";
 import type { ContentItem } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
+import { Timeline } from "@/features/content/components/Timeline.tsx"
 
 /**
  * Full-page file viewer for a single content item.
@@ -48,14 +49,6 @@ export function ViewSingleFile() {
                 const data: ContentItem = await res.json();
                 setItem(data);
 
-                //Add to the hit count
-                await fetch(`/api/content/hitCount/${id}`, {
-                    method: 'POST',
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                })
             } catch (error) {
                 setError("File not found or failed to load.");
                 console.error(error);
@@ -117,6 +110,12 @@ export function ViewSingleFile() {
                                     </span>
                                 )}
                             </div>
+
+                            <Timeline
+                                uploaded={item.lastModified}
+                                expiration={item.expiration ?? null}
+                                lastModified={item.lastModified}
+                            />
 
                             {originalFilename && (
                                 <FilePreview

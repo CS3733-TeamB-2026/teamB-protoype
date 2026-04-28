@@ -73,15 +73,22 @@ export type NotificationItem = {
     contentName: string;
     triggeredBy: { id: number; firstName: string; lastName: string } | null;
     createdAt: string;
+    dismissedAt?: string;
     metadata: {
         changedFields?: string[];
+        before?: Record<string, unknown>;
+        after?: Record<string, unknown>;
         oldOwnerId?: number | null;
         newOwnerId?: number | null;
+        oldOwnerName?: string | null;
         newOwnerName?: string | null;
         daysLeft?: number;
+        hoursLeft?: number;
         expired?: boolean;
+        threshold?: "3d" | "1h" | "expired";
     };
 }
+export type NotificationTab = "active" | "dismissed";
 
 export type CollectionItem = {
     collectionId: number;

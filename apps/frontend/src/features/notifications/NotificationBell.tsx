@@ -11,9 +11,20 @@ import { Button } from "@/components/ui/button.tsx";
 import { useUser } from "@/hooks/use-user.ts";
 import type { NotificationItem } from "@/lib/types.ts";
 import { NotificationCard } from "@/features/notifications/NotificationCard.tsx";
+{/*import { toast } from "sonner";*/}
 
 const PAGE_SIZE = 5;
 
+/**
+ * A notification bell component that displays unread notifications for the current user.
+ * It periodically polls the backend for updates and allows the user to dismiss notifications
+ * directly from the popup. Clicking on a notification routes the user to the content, and
+ * clicking "View all" navigates to the full notifications page.
+ *
+ * This component utilizes a `Popover` to display a compact list of recent notifications.
+ *
+ * @returns A React component rendering the bell icon with a badge, or `null` if the user is not authenticated.
+ */
 export function NotificationBell() {
     const { user } = useUser();
     const { getAccessTokenSilently } = useAuth0();
@@ -21,6 +32,12 @@ export function NotificationBell() {
     const [items, setItems] = useState<NotificationItem[]>([]);
     const [open, setOpen] = useState(false);
 
+
+    /**
+     * Fetches the latest notifications from the backend API.
+     * Requires an active Auth0 token for authorization.
+     * Silently catches errors to prevent disrupting the user experience if the network fails.
+     */
     const load = useCallback(async () => {
         if (!user) return;
         try {
@@ -31,12 +48,28 @@ export function NotificationBell() {
             });
             if (!res.ok) return;
             const data: NotificationItem[] = await res.json();
-            setItems(data);
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setItems((prev) => {
+                // Detect newly-arrived notifications (not present in prev) and toast them
+                const prevIds = new Set(prev.map((n) => n.id));
+                const newOnes = data.filter((n) => !prevIds.has(n.id));
+                // Skip the very first load (when prev is empty) to avoid a wave of toasts
+                if (prev.length > 0 && newOnes.length > 0) {
+                    if (newOnes.length === 1) {
+
+                        {/* toast.info(`New notification: ${newOnes[0].contentName}`); */}
+                    } else {
+                        {/*  toast.info(`${newOnes.length} new notifications`); */}
+                    }
+                }
+                return data;
+            });
         } catch {
-            //silent
+            // silent — bell is best-effort
         }
     }, [getAccessTokenSilently, user]);
 
+    // Initial load and periodic polling every 30 seconds
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         void load();
@@ -44,10 +77,45 @@ export function NotificationBell() {
         return () => clearInterval(id);
     }, [load]);
 
+    /**
+     * Dismisses a notification both optimistically on the client and persistently on the server.
+     * Figures out the dismissal type (regular notification or expiration alert) based on the ID prefix.
+     *
+     * @param id The unique identifier of the notification to dismiss.
+     */
+    const handleDismiss = async (id: string) => {
+        setItems((prev) => prev.filter((n) => n.id !== id));
+
+        try {
+            const token = await getAccessTokenSilently();
+            
+            // Expiration IDs are prefixed with "exp-" and contain the threshold (e.g., "exp-123-3d")
+            const body = id.startsWith("exp-")
+                ? (() => {
+                    const match = id.match(/^exp-(\d+)-(.+)$/);
+                    if (!match) return null;
+                    return { kind: "expiration", contentId: Number(match[1]), threshold: match[2] };
+                })()
+                : { kind: "notification", notificationId: Number(id) };
+
+            if (!body) return;
+
+            await fetch(`/api/notifications/dismiss`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                body: JSON.stringify(body),
+            });
+        } catch {
+            // Silently fail — the next polling cycle will restore the notification if the request failed
+        }
+    };
+
     if (!user) return null;
 
     const count = items.length;
     const pageItems = items.slice(0, PAGE_SIZE);
+    
+    // Format the badge to show "9+" if there are more than 9 notifications
     const badge = count === 0 ? null : count > 9 ? "9+" : String(count);
 
     return (
@@ -83,6 +151,7 @@ export function NotificationBell() {
                                     compact
                                     index={i}
                                     onSelect={() => setOpen(false)}
+                                    onDismiss={handleDismiss}
                                 />
                             ))}
                         </div>

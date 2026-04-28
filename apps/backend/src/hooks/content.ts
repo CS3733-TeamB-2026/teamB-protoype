@@ -6,6 +6,8 @@ import { getEmployee } from "../helpers/getEmployee";
 import { assertPublicUrl } from "../helpers/validateUrl";
 import { isAdmin, isPersonaOrAdmin } from "../helpers/permissions";
 import { extractText, SupportedMimeType } from "../../lib/extractors";
+import dns from "node:dns/promises";
+import {applyExpirationTagsToOne} from "../jobs/autoTag"
 
 const PREVIEW_MAX_BYTES = 2 * 1024 * 1024; // 2 MB
 
@@ -204,6 +206,7 @@ export const uploadFile = async (req: req, res: res) => {
             JSON.parse(payload.tags || "[]"),
             textContent,
         );
+        await applyExpirationTagsToOne(result.id);
         return res.status(201).json(result);
     } catch (error) {
         if (uploaded && fileURI) {
@@ -259,6 +262,7 @@ export const updateContent = async (req: req, res: res) => {
         if (oldURI && (uploaded || linkURL)) {
             await q.Bucket.deleteFile(oldURI).catch(console.error);
         }
+        await applyExpirationTagsToOne(result.id);
         return res.status(201).json(result);
     } catch (error) {
         if (uploaded && newFileURI) {
