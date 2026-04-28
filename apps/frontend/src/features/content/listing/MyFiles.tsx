@@ -22,6 +22,7 @@ function MyFiles() {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 const data: ContentItem[] = await res.json();
+                // Client-side filter — /api/content has no ownerId param, so we filter after fetch.
                 setOwnedItems(data.filter((item) => item.ownerId === user.id).slice(0, 5));
                 setLoading(false);
             } catch {

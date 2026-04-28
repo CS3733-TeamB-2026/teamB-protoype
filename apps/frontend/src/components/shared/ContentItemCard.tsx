@@ -18,6 +18,22 @@ interface Props {
 
 const btnClass = "w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground";
 
+/**
+ * Compact one-line row for a single content item.
+ *
+ * Used across dashboard listing cards and collection detail views. Renders a
+ * favicon (for links) or `ContentIcon` (for files), display name, subtitle,
+ * a `ContentExtBadge`, and a nav button that routes to `/file/:id` for files
+ * or opens `linkURL` in a new tab for links.
+ *
+ * Link favicons are fetched via `/api/preview` and shared with the session-level
+ * `preview-cache.ts`. The initializer seeds from cache so favicons already loaded
+ * by ViewContent appear immediately with no extra request.
+ *
+ * The `actions` slot renders between the subtitle text and the badge, allowing
+ * callers to inject urgency badges, drag handles, or remove buttons without
+ * altering the base layout.
+ */
 export function ContentItemCard({ item, subtitle, actions }: Props) {
     const originalFilename = item.fileURI ? getOriginalFilename(item.fileURI) : null;
     const mimeType = originalFilename ? lookupByFilename(originalFilename)?.mimeType : null;
@@ -31,6 +47,7 @@ export function ContentItemCard({ item, subtitle, actions }: Props) {
 
     useEffect(() => {
         if (!item.linkURL) return;
+        // Skip fetch if already attempted — null means the previous request failed.
         if (getCachedPreview(item.linkURL) !== undefined) return;
         fetch(`/api/preview?url=${encodeURIComponent(item.linkURL)}`)
             .then((r) => r.json())
@@ -46,6 +63,7 @@ export function ContentItemCard({ item, subtitle, actions }: Props) {
 
     const defaultSubtitle = `Updated ${new Date(item.lastModified).toLocaleDateString()}`;
 
+    // Disabled ghost button when item has neither a file nor a link — preserves right-side alignment.
     const navButton = (() => {
         const icon = <HugeiconsIcon icon={LinkSquare01Icon} className="w-4 h-4" />;
         if (item.fileURI) return (

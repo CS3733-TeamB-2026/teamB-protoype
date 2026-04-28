@@ -20,6 +20,8 @@ function RecentFiles() {
                 const token = await getAccessTokenSilently();
                 const headers = { Authorization: `Bearer ${token}` };
 
+                // Fetch both in parallel; bookmark IDs are cross-referenced against
+                // the full content list because /api/bookmark returns IDs only.
                 const [bookmarkRes, contentRes] = await Promise.all([
                     fetch(`/api/bookmark`, { headers }),
                     fetch(`/api/content?persona=${encodeURIComponent(user.persona)}`, { headers }),
