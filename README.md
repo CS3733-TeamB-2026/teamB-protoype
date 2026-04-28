@@ -33,7 +33,7 @@ apps/
     helpers/
       auth0Management.ts   Auth0 Management API client
       getEmployee.ts       Resolves JWT → EmployeeModel; used by every protected handler
-      permissions.ts       isAdmin / isOwnerOrAdmin — extracted so permission logic is testable without Express
+      permissions.ts       isAdmin / isUserOrAdmin / isPersonaOrAdmin — extracted so permission logic is testable without Express
       validateUrl.ts       assertPublicUrl — SSRF-safe URL validator (DNS-resolves before fetching)
 
   frontend/src/
@@ -92,7 +92,7 @@ app.get("/api/preview", content.previewContent)   // public
 app.use('/api', checkJwt)                         // everything below is protected
 ```
 
-The authenticated user's Auth0 `sub` is read from `req.auth.payload.sub` and resolved to an internal `Employee` via `getEmployee(req)` (`helpers/getEmployee.ts`). This helper is used by every protected handler so the employee record is verified on every call and the `auth0Id` is never forwarded to the frontend. The two exceptions are `getMe` and `uploadProfilePhoto`, which read `req.auth.payload.sub` directly — `getMe` is the bootstrap call made before the employee record is guaranteed to exist, so a 404 is intentional.
+The authenticated user's Auth0 `sub` is read from `req.auth.payload.sub` and resolved to an internal `Employee` via `getEmployee(req)` (`helpers/getEmployee.ts`). This helper is used by every protected handler so the employee record is verified on every call and the `auth0Id` is never forwarded to the frontend. The one exception is `getMe`, which reads `req.auth.payload.sub` directly — it is the bootstrap call made before the employee record is guaranteed to exist, so a 404 is intentional.
 
 New employees are created through `POST /api/employee/auth`, which provisions an Auth0 user first and then writes the `Employee` row with the returned `auth0Id`.
 
@@ -113,8 +113,8 @@ All routes are JSON unless noted. File-upload routes use `multipart/form-data` w
 - `POST   /api/content` — create (multipart; `linkURL` *xor* `fileURI`, never both)
 - `PUT    /api/content` — update; employee identity from JWT, else `409 { lockReleased: true }` if lock mismatch
 - `DELETE /api/content/:id` — same lock check; also deletes the Supabase file if present
-- `POST   /api/content/checkout` — `{ id }`; employee from JWT; fails if already checked out
-- `POST   /api/content/checkin`  — `{ id }`; admin can force-checkin any item; non-admins can only checkin their own lock
+- `POST   /api/content/:id/checkout` — employee from JWT; 403 if persona doesn't match `targetPersona` (admins bypass); 409 if already locked by someone else
+- `POST   /api/content/:id/checkin` — admin can force-checkin any item; non-admins can only checkin their own lock
 
 **Bookmarks** (`/api/bookmark`) — user derived from the JWT, not the URL
 - `GET    /api/bookmark`
@@ -149,7 +149,7 @@ All routes are JSON unless noted. File-upload routes use `multipart/form-data` w
 
 **Service Requests** — `GET/POST/PUT /api/servicereqs`, `DELETE /api/servicereq`, plus `/api/assigned`.
 
-> **Route order matters in `apps/backend/src/app.ts`**: `checkout`, `checkin`, `info`, `download`, `publicUrl`, and `tags` must be registered **before** `/:id`, otherwise Express 5 will match them to the parameterized route first.
+> **Route order matters in `apps/backend/src/app.ts`**: `info`, `download`, `publicUrl`, `tags`, and `search` must be registered **before** `/:id`, otherwise Express 5 will match them to the parameterized route first. `checkout` and `checkin` are sub-routes under `/:id` and are unaffected.
 
 ### Checkout / check-in (server side)
 
@@ -285,10 +285,10 @@ Every item is either a **file** (`fileURI`) or a **link** (`linkURL`), never bot
 #### Checkout / check-in flow
 
 1. Pencil icon → `ConfirmCheckoutDialog` opens.
-2. Confirm → `POST /api/content/checkout`. If taken, backend returns the holder's name; dialog stays closed.
+2. Confirm → `POST /api/content/:id/checkout`. If taken, backend returns the holder's name; dialog stays closed. 403 if the caller's persona doesn't match `targetPersona` (admins bypass).
 3. On success, `EditContentDialog` opens. A 5-second poll compares `data.checkedOutById` to `user.id` as strings. Mismatch = lock lost → dialog closes with toast.
 4. Submit → `PUT /api/content`. `409 { lockReleased: true }` → close + toast.
-5. Cancel/close → `POST /api/content/checkin` (skipped if already expired server-side).
+5. Cancel/close → `POST /api/content/:id/checkin` (skipped if already expired server-side).
 
 The three confirm dialogs are near-identical `AlertDialog` wrappers with an async `onConfirm` and a local `loading` flag that gates the close handler. `ForceCheckinDialog` is admin-only — it checkins using the current holder's `employeeID`.
 
@@ -300,7 +300,7 @@ Both dialogs share `ContentFormFields` (UI), `useContentForm` (state), and `buil
 | ---------------------- | ----------------------------- | ---------------------------------------- |
 | Method                 | `POST /api/content`           | `PUT /api/content`                       |
 | Initial values         | `initialValues(userId, persona)` | `fromContentItem(content)`            |
-| Extra fields on submit | —                             | `id`, `employeeID`                       |
+| Extra fields on submit | —                             | `id` (employee identity from JWT)        |
 | Source field required  | yes                           | no (keeps existing file/link)            |
 | 409 handling           | —                             | `{ lockReleased: true }` → close + toast |
 

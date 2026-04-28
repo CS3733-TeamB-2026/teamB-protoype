@@ -283,6 +283,12 @@ export const updateContent = async (req: req, res: res) => {
     }
 };
 
+/**
+ * Deletes a content item and its Supabase file (if any).
+ * Requires the caller to hold the checkout lock — same gate as updateContent.
+ * Returns 409 both when the item is not checked out and when someone else holds it,
+ * so the frontend can display a consistent "lock required" message in both cases.
+ */
 export const deleteContent = async (req: req, res: res) => {
     try {
         const employee = await getEmployee(req);
@@ -316,6 +322,11 @@ export const deleteContent = async (req: req, res: res) => {
     }
 };
 
+/**
+ * Acquires a pessimistic edit lock on a content item.
+ * Requires two DB reads: one to verify persona access, one inside the query class to
+ * detect an existing lock. 403 if the caller's persona doesn't match targetPersona.
+ */
 export const checkoutContent = async (req: req, res: res) => {
     try {
         const employee = await getEmployee(req);
@@ -340,6 +351,11 @@ export const checkoutContent = async (req: req, res: res) => {
     }
 };
 
+/**
+ * Releases the edit lock on a content item.
+ * Non-admins must hold the lock themselves; admins can force-checkin any item.
+ * The admin path skips the ownership DB read since no check is needed.
+ */
 export const checkinContent = async (req: req, res: res) => {
     try {
         const employee = await getEmployee(req);
