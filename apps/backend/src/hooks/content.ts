@@ -463,6 +463,43 @@ export const checkinContent = async (req: req, res: res) => {
     }
 };
 
+export const getTotalHitCount = async (req: req, res: res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const count = await q.Content.getTotalHitCount(id);
+        return res.status(200).json(count);
+    } catch (error: any) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+export const getEmployeeHitCount = async (req: req, res: res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const employeeId = parseInt(req.body.employeeId);
+        const count = await q.Content.getEmployeeHitCount(id, employeeId);
+        return res.status(200).json(count);
+    } catch (error: any) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+export const addHit = async (req: req, res: res) => {
+    try {
+        const employee = await getEmployee(req);
+        if (!employee) return res.status(404).json({ error: "Employee not found" });
+
+        const id = parseInt(req.params.id);
+        await q.Content.addHit(id, employee.id);
+        return res.status(201).end();
+    } catch (error: any) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
 export const searchContent = async (req: req, res: res) => {
     const { q: searchQuery } = req.query;
     if (!searchQuery || typeof searchQuery !== 'string') {
