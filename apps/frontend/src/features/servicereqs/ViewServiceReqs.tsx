@@ -16,6 +16,7 @@ import type { ServiceReq } from "@/lib/types.ts";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
 import {findMatches, highlightRange} from "@/lib/highlight.tsx";
 import { EmployeeAvatar } from "@/components/shared/EmployeeAvatar.tsx";
+import {formatLabel} from "@/lib/utils.ts";
 
 function ViewServiceReqs() {
 
@@ -48,7 +49,7 @@ function ViewServiceReqs() {
             }
         }
 
-        fetchServiceReqs();
+        void fetchServiceReqs();
 
     }, [getAccessTokenSilently]);
 
@@ -137,9 +138,8 @@ function ViewServiceReqs() {
                         <Table className="text-left">
                             <TableHeader>
                                 <TableRow className="hover:bg-transparent">
-                                    <SortableHead column="name" label="Name" sort={sort} onSort={toggleSort} />
-                                    <SortableHead column="type" label="Type" sort={sort} onSort={toggleSort} />
-                                    <SortableHead column="created" label="Created" sort={sort} onSort={toggleSort} className="w-full" />
+                                    <SortableHead column="name" label="Name" sort={sort} onSort={toggleSort} className="w-full" />
+                                    <SortableHead column="created" label="Created" sort={sort} onSort={toggleSort} />
                                     <SortableHead column="deadline" label="Deadline" sort={sort} onSort={toggleSort} />
                                     <SortableHead column="assignee" label="Assignee" sort={sort} onSort={toggleSort} />
                                     <SortableHead column="owner" label="Owner" sort={sort} onSort={toggleSort} />
@@ -158,27 +158,71 @@ function ViewServiceReqs() {
                                     const matches = findMatches(servicereq.name, searchTerm)
                                     return (
                                         <TableRow key={servicereq.id}>
-                                            <TableCell className="text-right pr-4">{highlightRange(servicereq.name, 0, matches)}</TableCell>
-                                            <TableCell className="font-medium">{servicereq.type}</TableCell>
-                                            <TableCell className="font-medium">{new Date(servicereq.created).toLocaleDateString()}</TableCell>
-                                            <TableCell className="font-medium">{new Date(servicereq.deadline).toLocaleDateString()}</TableCell>
-                                            <TableCell>
-                                                {servicereq.assignee
-                                                    ? <EmployeeAvatar employee={servicereq.assignee} size="sm" />
-                                                    : <span className="text-muted-foreground">—</span>}
+                                            <TableCell className="text-left pr-4">
+                                                <p className="text-sm font-medium truncat">
+                                                {highlightRange(
+                                                    servicereq.name,
+                                                    0,
+                                                    matches,
+                                                )}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">{formatLabel(servicereq.type)}</p>
+                                            </TableCell>
+                                            <TableCell className="font-medium">
+                                                {new Date(
+                                                    servicereq.created,
+                                                ).toLocaleDateString()}
+                                            </TableCell>
+                                            <TableCell className="font-medium">
+                                                {new Date(
+                                                    servicereq.deadline,
+                                                ).toLocaleDateString()}
                                             </TableCell>
                                             <TableCell>
-                                                <EmployeeAvatar employee={servicereq.owner} size="sm" />
+                                                {servicereq.assignee ? (
+                                                    <EmployeeAvatar
+                                                        employee={
+                                                            servicereq.assignee
+                                                        }
+                                                        size="sm"
+                                                    />
+                                                ) : (
+                                                    <span className="text-muted-foreground">
+                                                        —
+                                                    </span>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
+                                                <EmployeeAvatar
+                                                    employee={
+                                                        servicereq.owner
+                                                    }
+                                                    size="sm"
+                                                />
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex justify-center gap-2">
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
-                                                        disabled={servicereq.ownerId !== user.user?.id && servicereq.assigneeId !== user.user?.id && user.user?.persona !== "admin"}
+                                                        disabled={
+                                                            servicereq.ownerId !==
+                                                                user.user
+                                                                    ?.id &&
+                                                            servicereq.assigneeId !==
+                                                                user.user
+                                                                    ?.id &&
+                                                            user.user
+                                                                ?.persona !==
+                                                                "admin"
+                                                        }
                                                         onClick={() => {
-                                                            setEditingServiceReq(servicereq);
-                                                            setEditOpen(true);
+                                                            setEditingServiceReq(
+                                                                servicereq,
+                                                            );
+                                                            setEditOpen(
+                                                                true,
+                                                            );
                                                         }}
                                                     >
                                                         <Pencil className="w-4 h-4" />
@@ -186,15 +230,29 @@ function ViewServiceReqs() {
                                                     <Button
                                                         variant="destructive"
                                                         size="sm"
-                                                        disabled={servicereq.ownerId !== user.user?.id && servicereq.assigneeId !== user.user?.id && user.user?.persona !== "admin"}
-                                                        onClick={() => setDeleteTarget(servicereq)}
+                                                        disabled={
+                                                            servicereq.ownerId !==
+                                                                user.user
+                                                                    ?.id &&
+                                                            servicereq.assigneeId !==
+                                                                user.user
+                                                                    ?.id &&
+                                                            user.user
+                                                                ?.persona !==
+                                                                "admin"
+                                                        }
+                                                        onClick={() =>
+                                                            setDeleteTarget(
+                                                                servicereq,
+                                                            )
+                                                        }
                                                     >
                                                         <Trash2 className="w-4 h-4" />
                                                     </Button>
                                                 </div>
                                             </TableCell>
                                         </TableRow>
-                                    )})}
+                                    );})}
                             </TableBody>
                         </Table>
                     )}

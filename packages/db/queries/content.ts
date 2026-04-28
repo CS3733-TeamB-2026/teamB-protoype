@@ -2,9 +2,56 @@ import * as p from "../generated/prisma/client";
 import {prisma} from "../lib/prisma";
 import {Helper, employeeSelect} from "./helper";
 import { Notification } from "./notification";
+import { generateEmbedding, embeddingToSql } from '../../../apps/backend/lib/embeddings';
 
+
+// helper to build the text we embed
+function buildEmbeddingInput(
+    name: string,
+    contentType: string,
+    persona: string,
+    tags: string[],
+    textContent: string | null
+): string {
+    return [
+        name,
+        contentType,
+        persona,
+        tags.join(' '),
+        textContent ?? '',
+    ].join(' ');
+}
 
 export class Content {
+    public static async semanticSearch(query: string): Promise<p.Content[]> {
+        const embedding = await generateEmbedding(query);
+        const embeddingStr = embeddingToSql(embedding);
+
+        return prisma.$queryRaw<p.Content[]>`
+        SELECT
+            id,
+            "displayName",
+            "linkURL",
+            "fileURI",
+            "contentType",
+            "status",
+            "targetPersona",
+            "tags",
+            "lastModified",
+            "expiration",
+            "textContent",
+            "ownerId",
+            "checkedOutById",
+            "checkedOutAt",
+            "hits",
+            1 - ("embedding" <=> ${embeddingStr}::vector) AS similarity
+        FROM "Content"
+        WHERE "embedding" IS NOT NULL
+        ORDER BY "embedding" <=> ${embeddingStr}::vector
+        LIMIT 20;
+    `;
+    }
+
     public static async updateContent(
         id: number,
         _name: string,
@@ -36,6 +83,14 @@ export class Content {
         if (content.checkedOutById !== _checkedOutById) {
             throw new Error("You do not have this content checked out.")
         }
+
+        const embeddingInput = buildEmbeddingInput(_name, _contentType, _personaTyped, _tags, _textContent);
+        const embedding = await generateEmbedding(embeddingInput);
+
+        await prisma.$executeRaw`
+            UPDATE "Content" SET "embedding" = ${embeddingToSql(embedding)}::vector
+            WHERE id = ${id}
+        `;
 
         const updated = await prisma.content.update({
             where: { id: id },
@@ -113,21 +168,28 @@ export class Content {
             throw new Error("No persona type provided")
         }
         const _statusTyped: p.Status = Helper.statusHelper(_status)
-        return prisma.content.create({
-            data: {
-                displayName: _name,
-                linkURL: _linkURL,
-                fileURI: _fileURI,
-                ownerId: _ownerId,
-                contentType: _contentType,
-                status: _statusTyped,
-                lastModified: _lastModified,
-                expiration: _expiration,
-                targetPersona: _personaTyped,
-                tags: _tags,
-                textContent: _textContent,
-            }
-        })
+
+        const embeddingInput = buildEmbeddingInput(_name, _contentType, _personaTyped, _tags, _textContent);
+        const embedding = await generateEmbedding(embeddingInput);
+
+        // Prisma doesn't support vector type, use $executeRaw to insert then return
+        await prisma.$executeRaw`
+        INSERT INTO "Content" (
+            "displayName", "linkURL", "fileURI", "ownerId", "contentType",
+            "status", "lastModified", "expiration", "targetPersona", "tags",
+            "textContent", "embedding"
+        ) VALUES (
+            ${_name}, ${_linkURL}, ${_fileURI}, ${_ownerId}, ${_contentType}::"ContentType",
+            ${_statusTyped}::"Status", ${_lastModified}, ${_expiration}, ${_personaTyped}::"Persona",
+            ${_tags}::text[], ${_textContent}, ${embeddingToSql(embedding)}::vector
+    )
+`;
+
+// fetch and return the created record
+        return prisma.content.findFirst({
+            where: { displayName: _name, fileURI: _fileURI, linkURL: _linkURL },
+            orderBy: { id: 'desc' },
+        }) as Promise<p.Content>;
     }
 
     public static async deleteContent(id: number): Promise<void> {

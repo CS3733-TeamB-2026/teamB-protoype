@@ -1,20 +1,72 @@
-import pdfParse from 'pdf-parse-fork';
-const officeParser = await import('officeparser');
 import mammoth from 'mammoth';
 import * as cheerio from 'cheerio';
 import axios from 'axios';
+import Tesseract from 'tesseract.js';
+import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
+
 
 export type SupportedMimeType =
     | 'application/pdf'
     | 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     | 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     | 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+    | 'image/jpeg'
+    | 'image/png'
+    | 'image/webp'
+    | 'image/tiff'
     | 'text/plain'
     | 'text/csv'
     | 'text/markdown'
     | 'text/x-markdown'
     | 'text/html'
     | 'url';
+
+async function ocrImage(buffer: Buffer): Promise<string> {
+    const { data: { text } } = await Tesseract.recognize(buffer, 'eng', {
+        logger: () => {}, // suppress progress logs
+    });
+    return text.trim();
+}
+
+async function ocrPdf(buffer: Buffer): Promise<string> {
+    const loadingTask = pdfjs.getDocument({ data: new Uint8Array(buffer) });
+    const pdf = await loadingTask.promise;
+    const textParts: string[] = [];
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+
+        // First try native text extraction
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items
+            .map((item: any) => ('str' in item ? item.str : ''))
+            .join(' ')
+            .trim();
+
+        if (pageText.length > 50) {
+            // Page has real text, no need for OCR
+            textParts.push(pageText);
+        } else {
+            // Page is likely scanned, render to canvas and OCR
+            const viewport = page.getViewport({ scale: 2.0 });
+            const { createCanvas } = await import('canvas');
+            const canvas = createCanvas(viewport.width, viewport.height);
+            const context = canvas.getContext('2d');
+
+            await page.render({
+                canvasContext: context as any,
+                viewport,
+                canvas: canvas as any,
+            }).promise;
+
+            const imageBuffer = canvas.toBuffer('image/png');
+            const ocrText = await ocrImage(imageBuffer);
+            if (ocrText) textParts.push(ocrText);
+        }
+    }
+
+    return textParts.join('\n').trim();
+}
 
 // promisify officeParser
 async function parseOfficeFile(buffer: Buffer): Promise<string> {
@@ -57,8 +109,7 @@ export async function extractText(
         switch (fileType) {
             case 'application/pdf': {
                 if (!fileBuffer) return null;
-                const pdf = await pdfParse(fileBuffer);
-                return pdf.text;
+                return await ocrPdf(fileBuffer);
             }
 
             case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': {
@@ -89,7 +140,12 @@ export async function extractText(
             case 'url': {
                 let html: string;
                 if (url) {
-                    const response = await axios.get<string>(url, { timeout: 10000 });
+                    const response = await axios.get<string>(url, {
+                        timeout: 10000,
+                        headers: {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                        },
+                    });
                     html = response.data;
                 } else if (fileBuffer) {
                     html = fileBuffer.toString('utf-8');
@@ -99,6 +155,14 @@ export async function extractText(
                 const $ = cheerio.load(html);
                 $('script, style, nav, footer, head').remove();
                 return $('body').text().replace(/\s+/g, ' ').trim();
+            }
+
+            case 'image/jpeg':
+            case 'image/png':
+            case 'image/webp':
+            case 'image/tiff': {
+                if (!fileBuffer) return null;
+                return await ocrImage(fileBuffer);
             }
 
             default:
