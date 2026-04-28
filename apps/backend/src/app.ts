@@ -70,6 +70,8 @@ app.post("/api/employee/photo", upload.single("photo"), employee.uploadProfilePh
 app.get("/api/employee/all", employee.getAllEmployees)
 app.get("/api/employee", employee.getAllEmployees)
 app.get("/api/employee/me", employee.getMe);
+app.get("/api/employee/dashboard-layout", employee.getDashboardLayout)
+app.put("/api/employee/dashboard-layout", employee.updateDashboardLayout)
 app.post("/api/employee/auth", employee.createEmployeeWithAuth0)
 app.post("/api/employee", employee.createEmployee)
 app.get("/api/employee/:id", employee.getEmployeeById)
