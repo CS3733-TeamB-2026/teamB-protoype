@@ -241,7 +241,7 @@ export function FilePreview({ filename, src, infoSrc, mode = "inline" }: Props) 
                         hitCountLastEmployee.current = myId
 
                         //Add to the hit count
-                        await fetch(`/api/content/hitCount/${contentId}`, {
+                        await fetch(`/api/preview/hits/${contentId}`, {
                             method: 'POST',
                             headers: {
                                 "Content-Type": "application/json",
