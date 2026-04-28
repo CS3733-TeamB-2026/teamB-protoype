@@ -6,9 +6,10 @@ import {
     SheetHeader,
     SheetTitle,
     SheetTrigger,
+    SheetFooter,
 } from "@/components/ui/sheet";
 import { Settings2 } from "lucide-react"
-import { type WidgetLayoutEntry, type WidgetId } from "@/features/dashboard/widget-registry.ts";
+import { type WidgetLayoutEntry, type WidgetId, DEFAULT_LAYOUT } from "@/features/dashboard/widget-registry.ts";
 import WidgetRow from "@/features/dashboard/components/WidgetRow.tsx";
 import {
     DndContext,
@@ -59,22 +60,22 @@ function DashboardCustomizeSheet({ layout, setLayout }: DashboardCustomizeSheetP
 
 
     return (
-        <Sheet>
+        <Sheet modal={false}>
             <SheetTrigger asChild>
-                <Button variant="outline">
+                <Button className="px-4 py-4 bg-accent-dark hover:bg-accent-dark/80 active:scale-97">
                     <Settings2 className="mr-2 h-4 w-4" />
                     Customize
                 </Button>
             </SheetTrigger>
             <SheetContent className="w-200 sm:w-250 overflow-y-auto">
                 <SheetHeader>
-                    <SheetTitle>Customize Dashboard</SheetTitle>
+                    <SheetTitle className="text-2xl text-primary">Customize Dashboard</SheetTitle>
                     <SheetDescription>
                         Show, hide, and resize widgets on your dashboard.
                     </SheetDescription>
                 </SheetHeader>
 
-                <div className="py-6">
+                <div className="py-2">
                     <DndContext
                         sensors={sensors}
                         collisionDetection={closestCenter}
@@ -94,6 +95,16 @@ function DashboardCustomizeSheet({ layout, setLayout }: DashboardCustomizeSheetP
                         </SortableContext>
                     </DndContext>
                 </div>
+                <SheetFooter>
+                    <Button
+                        variant="outline"
+                        onClick={() => {
+                            setLayout(DEFAULT_LAYOUT)
+                        }}
+                    >
+                        Reset to Default
+                    </Button>
+                </SheetFooter>
             </SheetContent>
         </Sheet>
     );

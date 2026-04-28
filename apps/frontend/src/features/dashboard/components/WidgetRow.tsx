@@ -27,7 +27,7 @@ function WidgetRow({
     };
 
     return (
-        <div ref={setNodeRef} style={style} className="my-3 mx-6">
+        <div ref={setNodeRef} style={style} className="my-3 ml-6 mr-6">
             <div className="flex flex-row items-center justify-between gap-4">
                 <div className="flex flex-row items-center justify-between gap-4">
                     <button
