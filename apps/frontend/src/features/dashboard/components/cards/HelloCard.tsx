@@ -1,8 +1,9 @@
-import {Card, CardDescription, CardHeader, CardTitle} from "@/components/ui/card.tsx";
+import {CardDescription, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
 import {LayoutDashboard} from "lucide-react";
 import { useUser } from "@/hooks/use-user.ts";
 import { useAvatarUrl } from "@/hooks/use-avatar-url";
+import DashboardCard from "@/features/dashboard/components/cards/DashboardCard.tsx";
 
 function HelloCard() {
 
@@ -10,7 +11,10 @@ function HelloCard() {
     const avatarUrl = useAvatarUrl(user?.id, user?.profilePhotoURI);
 
     return (
-        <Card className="border-t-primary-light border-t-4 md:col-span-2 py-8 px-4 shadow-lg hover:scale-101 transition-transform">
+        <DashboardCard
+            size="medium"
+            borderColor="primary"
+        >
             <CardHeader>
                 <div className="flex justify-between items-center">
                     <div className="flex flex-row gap-5 items-center">
@@ -27,7 +31,7 @@ function HelloCard() {
                 </div>
 
             </CardHeader>
-        </Card>
+        </DashboardCard>
         );
 }
 
