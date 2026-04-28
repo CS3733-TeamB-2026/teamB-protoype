@@ -49,14 +49,6 @@ export function ViewSingleFile() {
                 const data: ContentItem = await res.json();
                 setItem(data);
 
-                //Add to the hit count
-                await fetch(`/api/content/hitCount/${id}`, {
-                    method: 'POST',
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                })
             } catch (error) {
                 setError("File not found or failed to load.");
                 console.error(error);
