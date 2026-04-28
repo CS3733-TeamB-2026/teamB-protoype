@@ -7,6 +7,7 @@ import RecentFilesCard from "@/features/dashboard/components/cards/RecentFilesCa
 import EmployeeChartCard from "@/features/dashboard/components/cards/EmployeeChartCard.tsx"
 import ContentTypeChartCard from "@/features/dashboard/components/cards/ContentTypeChartCard.tsx";
 import LinksCard from "@/features/dashboard/components/cards/LinksCard.tsx";
+import ReportCard from "@/features/dashboard/components/cards/ReportCard.tsx";
 import React from "react";
 
 export type WidgetLayoutEntry = {
@@ -25,6 +26,7 @@ export const WIDGET_REGISTRY = {
     myContent: { component: MyContentCard, label: "My Content", defaultSize: "small", description: "Shows content you own." },
     recentFiles: { component: RecentFilesCard, label: "Recent Files", defaultSize: "medium", description: "Shows recent files." },
     links: { component: LinksCard, label: "Role Links", defaultSize: "small", description: "Shows role specific links." },
+    reports: { component: ReportCard, label: "Reports", defaultSize: "full", description: "Shows reports and analytics" },
 } satisfies Record<string, { component: React.ComponentType; label: string; defaultSize: WidgetSize; description: string }>;
 
 export type WidgetId = keyof typeof WIDGET_REGISTRY;
