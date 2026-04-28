@@ -15,7 +15,7 @@ function InfoButton({ content }: InfoButtonProps) {
                 onMouseLeave={() => setHovered(false)}
                 className="relative"
             >
-                <Info className={`w-10 h-10 cursor-pointer duration-200 ${hovered ? "text-accent" : "opacity-20"}`} />
+                <Info className={`w-7 h-7 cursor-pointer duration-200 ${hovered ? "text-accent" : "opacity-20"}`} />
 
                 {hovered && (
                     <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 z-50 w-72 rounded-lg border border-border bg-card shadow-lg p-3 text-xs text-muted-foreground">
