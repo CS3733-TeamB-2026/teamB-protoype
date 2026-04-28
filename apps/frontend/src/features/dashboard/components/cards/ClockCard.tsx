@@ -1,6 +1,7 @@
-import {Card, CardContent} from "@/components/ui/card.tsx";
+import {CardContent} from "@/components/ui/card.tsx";
 import {Clock} from "lucide-react";
 import {useEffect, useState} from "react";
+import DashboardCard from "@/features/dashboard/components/cards/DashboardCard.tsx";
 
 function ClockCard() {
 
@@ -22,14 +23,17 @@ function ClockCard() {
     }, []);
 
     return (
-        <Card className="border-t-accent border-t-4 shadow-lg hover:scale-101 transition-transform px-4 py-4 flex flex-row justify-center items-center">
+        <DashboardCard
+            size="small"
+            borderColor="accent"
+        >
             <CardContent className="p-0">
                 <div className="flex flex-row items-center gap-5 justify-center">
                     <Clock className="w-15! h-15!"/>
                     <p className="text-lg font-semibold">It is {currentDateTime.time} on {currentDateTime.day}.</p>
                 </div>
             </CardContent>
-        </Card>
+        </DashboardCard>
     );
 }
 export default ClockCard;
