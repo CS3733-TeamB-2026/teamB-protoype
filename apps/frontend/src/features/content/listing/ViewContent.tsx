@@ -381,13 +381,9 @@ function ViewContent() {
     const handleCheckout = async (item: ContentItem) => {
         try {
             const token = await getAccessTokenSilently();
-            const res = await fetch("/api/content/checkout", {
+            const res = await fetch(`/api/content/${item.id}/checkout`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({id: item.id}),
+                headers: { Authorization: `Bearer ${token}` },
             });
             const data = await res.json();
             if (!res.ok) {
@@ -411,13 +407,9 @@ function ViewContent() {
     const handleCheckin = async (item: ContentItem) => {
         try {
             const token = await getAccessTokenSilently();
-            const res = await fetch("/api/content/checkin", {
+            const res = await fetch(`/api/content/${item.id}/checkin`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({id: item.id}),
+                headers: { Authorization: `Bearer ${token}` },
             });
             if (res.ok) {
                 setContent((prev) => prev.map((c) => c.id === item.id
@@ -438,13 +430,9 @@ function ViewContent() {
     const handleForceCheckin = async (item: ContentItem) => {
         try {
             const token = await getAccessTokenSilently();
-            const res = await fetch("/api/content/checkin", {
+            const res = await fetch(`/api/content/${item.id}/checkin`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ id: item.id }),
+                headers: { Authorization: `Bearer ${token}` },
             });
             if (res.ok) {
                 setContent((prev) => prev.map((c) => c.id === item.id

@@ -4,6 +4,7 @@ import * as cheerio from "cheerio";
 import { req, res } from "./types";
 import { getEmployee } from "../helpers/getEmployee";
 import { assertPublicUrl } from "../helpers/validateUrl";
+import { isAdmin, isPersonaOrAdmin } from "../helpers/permissions";
 import { extractText, SupportedMimeType } from "../../lib/extractors";
 
 const PREVIEW_MAX_BYTES = 2 * 1024 * 1024; // 2 MB
@@ -78,7 +79,7 @@ export const getAllContent = async (req: req, res: res) => {
     }
 };
 
-export const getAllTags = async (req: req, res: res) => {
+export const getAllTags = async (_req: req, res: res) => {
     try {
         const content = await q.Content.queryAllContent();
         const tags = [...new Set(content.flatMap((item) => item.tags ?? []))];
@@ -321,12 +322,17 @@ export const checkoutContent = async (req: req, res: res) => {
         if (!employee)
             return res.status(404).json({ error: "Employee not found" });
 
-        const { id } = req.body;
-        const result = await q.Content.checkoutContent(
-            parseInt(id),
-            employee.id,
-        );
+        const contentId = parseInt(req.params.id);
 
+        const content = await q.Content.queryContentById(contentId);
+        if (!content) return res.status(404).json({ error: "Content not found" });
+
+        // Only employees whose persona matches the content's targetPersona (or admins) may check out
+        if (!isPersonaOrAdmin(content.targetPersona, employee)) {
+            return res.status(403).json({ error: "Your persona does not have access to this content" });
+        }
+
+        const result = await q.Content.checkoutContent(contentId, employee.id);
         return res.status(200).json(result);
     } catch (error: any) {
         console.error(error);
@@ -340,11 +346,10 @@ export const checkinContent = async (req: req, res: res) => {
         if (!employee)
             return res.status(404).json({ error: "Employee not found" });
 
-        const { id } = req.body;
-        const contentId = parseInt(id);
+        const contentId = parseInt(req.params.id);
 
         // Admins can force check-in any item; non-admins can only check in their own lock
-        if (employee.persona !== "admin") {
+        if (!isAdmin(employee)) {
             const content = await q.Content.queryContentById(contentId);
             if (content?.checkedOutById !== employee.id) {
                 return res

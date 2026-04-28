@@ -1,11 +1,14 @@
-import type { Persona } from "@softeng-app/db";
-
 /** Returns true if the employee holds the admin persona. */
-export function isAdmin(persona: Persona | string): boolean {
-    return persona === "admin";
+export function isAdmin(employee: { persona: string }): boolean {
+    return employee.persona === "admin";
 }
 
 /** Returns true if the employee is the owner of the resource or is an admin. */
-export function isOwnerOrAdmin(ownerId: number, employeeId: number, persona: Persona | string): boolean {
-    return ownerId === employeeId || isAdmin(persona);
+export function isUserOrAdmin(ownerId: number, employee: { id: number; persona: string }): boolean {
+    return ownerId === employee.id || isAdmin(employee);
+}
+
+/** Returns true if the employee holds the given persona or is an admin. */
+export function isPersonaOrAdmin(persona: string, employee: { persona: string }): boolean {
+    return employee.persona === persona || isAdmin(employee);
 }

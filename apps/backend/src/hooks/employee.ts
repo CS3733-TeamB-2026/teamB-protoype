@@ -2,7 +2,7 @@ import * as q from "@softeng-app/db";
 import {req, res} from "./types"
 import { createAuth0User } from "../helpers/auth0Management";
 import { getEmployee } from "../helpers/getEmployee";
-import { isAdmin, isOwnerOrAdmin } from "../helpers/permissions";
+import { isAdmin, isUserOrAdmin } from "../helpers/permissions";
 
 function buildPhotoURI(employeeId: number, filename:string): string {
     return `${employeeId}/${crypto.randomUUID()}/${filename}`;
@@ -137,7 +137,7 @@ export const createEmployee = async (req: req, res: res) => {
     try {
         const caller = await getEmployee(req);
         if (!caller) return res.status(404).json({ error: "Employee not found" });
-        if (!isAdmin(caller.persona)) return res.status(403).json({ error: "Admin only" });
+        if (!isAdmin(caller)) return res.status(403).json({ error: "Admin only" });
 
         const result = await q.Employee.createEmployee(
             payload.id,
@@ -158,7 +158,7 @@ export const createEmployeeWithAuth0 = async (req: req, res: res) => {
     try {
         const caller = await getEmployee(req);
         if (!caller) return res.status(404).json({ error: "Employee not found" });
-        if (!isAdmin(caller.persona)) return res.status(403).json({ error: "Admin only" });
+        if (!isAdmin(caller)) return res.status(403).json({ error: "Admin only" });
 
         const auth0Id = await createAuth0User(username, password, email);
 
@@ -187,11 +187,11 @@ export const updateEmployee = async (req: req, res: res) => {
     try {
         const caller = await getEmployee(req);
         if (!caller) return res.status(404).json({ error: "Employee not found" });
-        if (!isOwnerOrAdmin(parseInt(payload.id), caller.id, caller.persona))
+        if (!isUserOrAdmin(parseInt(payload.id), caller))
             return res.status(403).json({ error: "Access denied" });
 
         // Non-admins cannot change persona — use the existing value to prevent self-escalation
-        const persona = isAdmin(caller.persona) ? payload.persona : caller.persona;
+        const persona = isAdmin(caller) ? payload.persona : caller.persona;
 
         const result = await q.Employee.updateEmployee(
             payload.id,
@@ -211,7 +211,7 @@ export const deleteEmployee = async (req: req, res: res) => {
     try {
         const caller = await getEmployee(req);
         if (!caller) return res.status(404).json({ error: "Employee not found" });
-        if (!isAdmin(caller.persona)) return res.status(403).json({ error: "Admin only" });
+        if (!isAdmin(caller)) return res.status(403).json({ error: "Admin only" });
 
         await q.Employee.deleteEmployee(payload.id);
         return res.status(204).end();
