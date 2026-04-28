@@ -11,10 +11,12 @@ import RecentFilesCard from "@/features/dashboard/components/cards/RecentFilesCa
 import EmployeeChartCard from "@/features/dashboard/components/cards/EmployeeChartCard.tsx"
 import ContentTypeChartCard from "@/features/dashboard/components/cards/ContentTypeChartCard.tsx";
 import LinksCard from "@/features/dashboard/components/cards/LinksCard.tsx";
+import PreviewedFilesCard from "@/features/dashboard/components/cards/PreviewedFilesCard.tsx";
 
 const cards = [
     HelloCard,
     ClockCard,
+    PreviewedFilesCard,
     EmployeeChartCard,
     ContentTypeChartCard,
     QuickLinksCard,

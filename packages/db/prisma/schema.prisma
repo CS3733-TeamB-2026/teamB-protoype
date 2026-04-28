@@ -116,6 +116,14 @@ model Bookmark {
   @@schema("public")
 }
 
+model Preview {
+  previewerId         Int
+  previewedContentId  Int
+  previewedContent    Content  @relation(fields: [previewedContentId], references: [id])
+  previewer           Employee @relation(fields: [previewerId], references: [id])
+  previewDate         DateTime?
+}
+
 model Notification {
   id                     Int                     @id @default(autoincrement())
   type                   NotificationType
