@@ -6,6 +6,8 @@ import { getEmployee } from "../helpers/getEmployee";
 import { assertPublicUrl } from "../helpers/validateUrl";
 import { isAdmin, isPersonaOrAdmin } from "../helpers/permissions";
 import { extractText, SupportedMimeType } from "../../lib/extractors";
+import { generateEmbedding, embeddingToSql } from '../../lib/embeddings';
+import { prisma } from '../../../../packages/db/lib/prisma';
 
 const PREVIEW_MAX_BYTES = 2 * 1024 * 1024; // 2 MB
 
@@ -178,17 +180,6 @@ export const uploadFile = async (req: req, res: res) => {
             );
             uploaded = true;
             fileURI = uploadResult.path;
-
-            // Extract text from the uploaded file
-            textContent = await extractText(
-                req.file.buffer,
-                req.file.mimetype as SupportedMimeType
-            );
-        }
-
-        // If no file but a URL was provided, extract text from the URL
-        if (!textContent && payload.linkURL) {
-            textContent = await extractText(null, 'url', payload.linkURL);
         }
 
         const result = await q.Content.createContent(
@@ -202,9 +193,49 @@ export const uploadFile = async (req: req, res: res) => {
             payload.expiration ? new Date(payload.expiration) : null,
             payload.targetPersona,
             JSON.parse(payload.tags || "[]"),
-            textContent,
+            null    // textContent filled in background
         );
-        return res.status(201).json(result);
+
+        // Respond immediately
+        res.status(201).json(result);
+
+        // Process extraction + embedding in background
+        const fileBuffer = req.file?.buffer ?? null;
+        const mimeType = req.file?.mimetype ?? null;
+
+        setImmediate(async () => {
+            try {
+                let textContent: string | null = null;
+
+                if (fileBuffer && mimeType) {
+                    textContent = await extractText(fileBuffer, mimeType as SupportedMimeType);
+                } else if (payload.linkURL) {
+                    textContent = await extractText(null, 'url', payload.linkURL);
+                }
+
+                const embeddingInput = [
+                    payload.name,
+                    payload.contentType,
+                    payload.targetPersona,
+                    JSON.parse(payload.tags || "[]").join(' '),
+                    textContent ?? '',
+                ].join(' ');
+
+                const embedding = await generateEmbedding(embeddingInput);
+
+                await prisma.$executeRaw`
+                    UPDATE "Content"
+                    SET
+                        "textContent" = ${textContent},
+                        "embedding" = ${embeddingToSql(embedding)}::vector
+                    WHERE id = ${result.id}
+                `;
+
+                console.log(`[background] Processed content id=${result.id}`);
+            } catch (err) {
+                console.error(`[background] Failed to process content id=${result.id}:`, err);
+            }
+        });
     } catch (error) {
         if (uploaded && fileURI) {
             await q.Bucket.deleteFile(fileURI).catch(console.error);
@@ -242,6 +273,8 @@ export const updateContent = async (req: req, res: res) => {
             : linkURL
               ? null
               : oldURI;
+
+        // Update metadata immediately, text/embedding filled in background
         const result = await q.Content.updateContent(
             parseInt(payload.id),
             payload.name,
@@ -255,11 +288,55 @@ export const updateContent = async (req: req, res: res) => {
             payload.targetPersona,
             JSON.parse(payload.tags || "[]"),
             employee.id,
+            null    // textContent filled in background
         );
         if (oldURI && (uploaded || linkURL)) {
             await q.Bucket.deleteFile(oldURI).catch(console.error);
         }
-        return res.status(201).json(result);
+
+        // Respond immediately
+        res.status(201).json(result);
+
+        // Capture buffer before setImmediate since req may not be available later
+        const fileBuffer = req.file?.buffer ?? null;
+        const mimeType = req.file?.mimetype ?? null;
+
+        setImmediate(async () => {
+            try {
+                let textContent: string | null = null;
+
+                if (fileBuffer && mimeType) {
+                    textContent = await extractText(fileBuffer, mimeType as SupportedMimeType);
+                } else if (linkURL) {
+                    textContent = await extractText(null, 'url', linkURL);
+                } else if (oldContent?.textContent) {
+                    // no new file or URL — keep existing text content
+                    textContent = oldContent.textContent;
+                }
+
+                const embeddingInput = [
+                    payload.name,
+                    payload.contentType,
+                    payload.targetPersona,
+                    JSON.parse(payload.tags || "[]").join(' '),
+                    textContent ?? '',
+                ].join(' ');
+
+                const embedding = await generateEmbedding(embeddingInput);
+
+                await prisma.$executeRaw`
+                    UPDATE "Content"
+                    SET
+                        "textContent" = ${textContent},
+                        "embedding" = ${embeddingToSql(embedding)}::vector
+                    WHERE id = ${result.id}
+                `;
+
+                console.log(`[background] Processed content id=${result.id}`);
+            } catch (err) {
+                console.error(`[background] Failed to process content id=${result.id}:`, err);
+            }
+        });
     } catch (error) {
         if (uploaded && newFileURI) {
             await q.Bucket.deleteFile(newFileURI).catch(console.error);
