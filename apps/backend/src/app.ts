@@ -76,6 +76,8 @@ app.put("/api/employee", employee.updateEmployee)
 app.delete("/api/employee", employee.deleteEmployee)
 //notifications
 app.get("/api/notifications", notifications.getNotifications)
+app.post("/api/notifications/dismiss", notifications.dismissNotification);
+app.get("/api/notifications/dismissed", notifications.getDismissedNotifications);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
