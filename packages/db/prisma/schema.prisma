@@ -15,6 +15,7 @@ model Employee {
   persona                Persona
   auth0Id                String?                 @unique
   profilePhotoURI        String?
+  widgetLayout           Json?
   bookmarks              Bookmark[]
   previews               Preview[]
   checkedOutContent      Content[]               @relation("CheckedOut")

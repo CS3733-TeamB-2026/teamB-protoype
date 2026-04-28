@@ -1,6 +1,5 @@
 import { Pie, PieChart } from "recharts";
 import {
-    Card,
     CardContent,
     CardDescription,
     CardHeader,
@@ -15,6 +14,7 @@ import {
 import { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import type { Employee } from "@/lib/types.ts";
+import DashboardCard from "@/features/dashboard/components/cards/DashboardCard.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { Info, X } from "lucide-react";
 
@@ -74,7 +74,10 @@ function EmployeeChartCard() {
     }));
 
     return (
-        <Card className="relative border-t-secondary border-t-4 shadow-lg hover:scale-101 transition-transform sm:col-span-1 flex flex-col">
+        <DashboardCard
+            size="small"
+            borderColor="secondary"
+        >
             <CardHeader className="items-center pb-0">
                 <CardTitle className="capitalize text-2xl font-semibold">Department Breakdown</CardTitle>
                 <CardDescription>Current headcount by department.</CardDescription>
@@ -125,7 +128,7 @@ function EmployeeChartCard() {
                     ))}
                 </div>
             </CardContent>
-        </Card>
+        </DashboardCard>
     );
 }
 

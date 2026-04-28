@@ -260,7 +260,7 @@ export function ContentFormFields({ values, patch, errors, mode, disabled = fals
 
             {/* Dates */}
             <div className="flex flex-wrap items-end gap-4  py-4">
-                <Field className=" flex-1">
+                <Field className="flex-1">
                     <FieldLabel className="text-primary text-lg" htmlFor="date-modified">
                         Last Modified Date
                     </FieldLabel>
@@ -301,28 +301,57 @@ export function ContentFormFields({ values, patch, errors, mode, disabled = fals
                         className="font-normal md:text-sm h-10! appearance-none  [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
                     />
                 </Field>
-
-                <Field className=" flex-1">
-                    <FieldLabel className="text-primary text-lg" htmlFor="date-expiration">
-                        Expiration Date
+                <Field>
+                    <FieldLabel className="text-primary text-lg">
+                        Expires?:
                     </FieldLabel>
-                    <Popover open={openExpirationDate} onOpenChange={setOpenExpirationDate}>
-                        <PopoverTrigger asChild>
-                            <Button variant="outline" id="date-expiration" className="justify-start font-normal text-sm h-10">
-                                {values.dateExpiration ? values.dateExpiration.toLocaleDateString() : "Select date"}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-                            <Calendar
-                                mode="single"
-                                selected={values.dateExpiration}
-                                defaultMonth={values.dateExpiration}
-                                captionLayout="dropdown"
-                                onSelect={(date) => { patch({ dateExpiration: date }); setOpenExpirationDate(false); }}
-                            />
-                        </PopoverContent>
-                    </Popover>
                 </Field>
+
+                <RadioGroup
+                    value={values.expires}
+                    onValueChange={(v) => {
+                        patch({
+                            expires: v as "expires" | "forever",
+                            ...(v === "forever" ? { dateExpiration: undefined } : {}),
+                        });
+                    }}
+                    className="flex gap-6 pb-2">
+                    <div className="flex items-center gap-2">
+                        <RadioGroupItem value="expires" id="expires-yes" />
+                        <Label htmlFor="expires-yes" className="md:text-sm">Yes</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <RadioGroupItem value="forever" id="expires-forever" />
+                        <Label htmlFor="expires-forever" className="md:text-sm">No</Label>
+                    </div>
+                </RadioGroup>
+
+                {values.expires === "expires" && (
+                    <Field className="flex-1">
+                        <FieldLabel className="text-primary text-lg" htmlFor="date-expiration">
+                            Expiration Date
+                        </FieldLabel>
+                        <Popover open={openExpirationDate} onOpenChange={setOpenExpirationDate}>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" id="date-expiration" className="justify-start font-normal text-sm h-10">
+                                    {values.dateExpiration ? values.dateExpiration.toLocaleDateString() : "Select date"}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                                <Calendar
+                                    mode="single"
+                                    selected={values.dateExpiration}
+                                    defaultMonth={values.dateExpiration}
+                                    captionLayout="dropdown"
+                                    onSelect={(date) => { patch({ dateExpiration: date }); setOpenExpirationDate(false); }}
+                                />
+                            </PopoverContent>
+                        </Popover>
+                        {errors.dateExpiration && (
+                            <FieldDescription className="text-destructive">{errors.dateExpiration}</FieldDescription>
+                        )}
+                    </Field>
+                )}
             </div>
 
             <div className="py-6"><Separator className="bg-primary" /></div>

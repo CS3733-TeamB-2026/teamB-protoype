@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import {Bar, BarChart, CartesianGrid, XAxis, YAxis} from "recharts";
 import { useAuth0 } from "@auth0/auth0-react";
 import {
-    Card,
     CardContent,
     CardDescription,
     CardHeader,
@@ -15,6 +14,7 @@ import {
     ChartTooltipContent,
 } from "@/components/ui/chart";
 import type { ContentItem } from "@/lib/types";
+import DashboardCard from "@/features/dashboard/components/cards/DashboardCard.tsx";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Info, X } from "lucide-react";
 
@@ -97,7 +97,10 @@ function ContentTypeChartCard() {
     }, [content]);
 
     return (
-        <Card className="relative border-t-secondary border-t-4 shadow-lg hover:scale-101 transition-transform md:col-span-2 flex flex-col">
+        <DashboardCard
+            size="medium"
+            borderColor="secondary"
+        >
             <CardHeader className="items-center pb-0">
                 <CardTitle className="capitalize text-2xl font-semibold">Content Type Breakdown</CardTitle>
                 <CardDescription>Current distribution of file types in database.</CardDescription>
@@ -149,7 +152,7 @@ function ContentTypeChartCard() {
                     </BarChart>
                 </ChartContainer>
             </CardContent>
-        </Card>
+        </DashboardCard>
     )
 
 }
