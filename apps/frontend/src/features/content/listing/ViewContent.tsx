@@ -85,6 +85,7 @@ import {useLocale} from "@/languageSupport/localeContext.tsx";
 import {useTranslation} from "@/languageSupport/useTranslation.ts";
 import type {TranslationKey} from "@/languageSupport/keys.ts";
 import {ForceCheckinDialog} from "@/features/content/forms/ForceCheckinDialog.tsx";
+import InfoButton from "@/components/layout/InformationAlert";
 
 
 /**
@@ -624,6 +625,7 @@ function ViewContent() {
                                         className="w-64 h-10 text-base pl-2! pr-8 border border-gray-700 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-gray-500"
                                     />
                                 </div>
+                                <InfoButton content="Documents must be checked out before editing." />
                             </div>
 
                             <div className="flex flex-row gap-2">
