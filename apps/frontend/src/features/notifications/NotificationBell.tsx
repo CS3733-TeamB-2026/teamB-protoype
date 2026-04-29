@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Bell } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button.tsx";
 import { useUser } from "@/hooks/use-user.ts";
 import type { NotificationItem } from "@/lib/types.ts";
 import { NotificationCard } from "@/features/notifications/NotificationCard.tsx";
-{/*import { toast } from "sonner";*/}
+import { toast } from "sonner";
 
 const PAGE_SIZE = 5;
 
@@ -31,7 +31,9 @@ export function NotificationBell() {
 
     const [items, setItems] = useState<NotificationItem[]>([]);
     const [open, setOpen] = useState(false);
-
+    
+    const initialLoadDone = useRef(false);
+    const prevIdsRef = useRef<Set<string>>(new Set());
 
     /**
      * Fetches the latest notifications from the backend API.
@@ -48,33 +50,36 @@ export function NotificationBell() {
             });
             if (!res.ok) return;
             const data: NotificationItem[] = await res.json();
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setItems((prev) => {
-                // Detect newly-arrived notifications (not present in prev) and toast them
-                const prevIds = new Set(prev.map((n) => n.id));
-                const newOnes = data.filter((n) => !prevIds.has(n.id));
-                // Skip the very first load (when prev is empty) to avoid a wave of toasts
-                if (prev.length > 0 && newOnes.length > 0) {
-                    if (newOnes.length === 1) {
-
-                        {/* toast.info(`New notification: ${newOnes[0].contentName}`); */}
-                    } else {
-                        {/*  toast.info(`${newOnes.length} new notifications`); */}
-                    }
+            
+            // Detect newly-arrived notifications (not present in our previous fetch) and toast them
+            if (initialLoadDone.current) {
+                const newOnes = data.filter((n) => !prevIdsRef.current.has(n.id));
+                if (newOnes.length === 1) {
+                    toast.info(`New notification: ${newOnes[0].contentName}`);
+                } else if (newOnes.length > 1) {
+                    toast.info(`${newOnes.length} new notifications`);
                 }
-                return data;
-            });
+            } else {
+                initialLoadDone.current = true;
+            }
+            
+            // Update the known IDs and the UI items
+            prevIdsRef.current = new Set(data.map((n) => n.id));
+            setItems(data);
         } catch {
             // silent — bell is best-effort
         }
     }, [getAccessTokenSilently, user]);
 
-    // Initial load and periodic polling every 30 seconds
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        void load();
-        const id = setInterval(load, 30_000);
-        return () => clearInterval(id);
+        const timeoutId = setTimeout(() => {
+            void load();
+        }, 0);
+        const id = setInterval(load, 9_000);
+        return () => {
+            clearTimeout(timeoutId);
+            clearInterval(id);
+        };
     }, [load]);
 
     /**
@@ -85,6 +90,9 @@ export function NotificationBell() {
      */
     const handleDismiss = async (id: string) => {
         setItems((prev) => prev.filter((n) => n.id !== id));
+        // We also remove it from our known IDs so if it magically comes back from a stale poll, 
+        // we handle it properly, though the backend shouldn't return dismissed ones.
+        prevIdsRef.current.delete(id);
 
         try {
             const token = await getAccessTokenSilently();
