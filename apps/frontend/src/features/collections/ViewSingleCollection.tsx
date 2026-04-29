@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import {
     AlertCircle,
     ArrowLeft,
@@ -13,7 +13,6 @@ import {
     Pencil,
     X,
     Plus,
-    Link,
 } from "lucide-react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { toast } from "sonner";
@@ -39,9 +38,6 @@ import type { Collection, CollectionItem, ContentItem, Employee } from "@/lib/ty
 /**
  * Detail page for a single collection, identified by `:id` in the URL.
  *
- * Collection data and the current user's full favorites list are fetched in parallel
- * on mount; `isFavorited` is derived from that list rather than a per-collection flag.
- *
  * Three independent edit surfaces share one PUT endpoint (full replacement, not PATCH):
  *   - Inline name editing (Enter to save, Escape to cancel)
  *   - Visibility toggle (Private ↔ Public) via an AlertDialog confirmation
@@ -51,6 +47,10 @@ import type { Collection, CollectionItem, ContentItem, Employee } from "@/lib/ty
  * absolute-positioned dropdown is never clipped by the Card's overflow boundary.
  * `excludeIds` is derived from `draftItems` (the in-progress edit copy) so newly added
  * items are immediately excluded from the picker without waiting for a save.
+ *
+ * The Back button uses `navigate(-1)` (browser history); "View Collections" always
+ * navigates to `/collections`. The error fallback uses a static `<Link>` for the same
+ * reason — there is no history to go back to when the fetch itself fails on direct load.
  */
 export function ViewSingleCollection() {
     const { id } = useParams<{ id: string }>();
@@ -291,7 +291,7 @@ export function ViewSingleCollection() {
                 <ArrowLeft className="w-4 h-4" /> Back to Collections
             </Link>
         </div>
-    );
+);
 
     const displayedItems = editMode ? draftItems : collection.items;
     const excludeIds = draftItems.map((i) => i.contentId);

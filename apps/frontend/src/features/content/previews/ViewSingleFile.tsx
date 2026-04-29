@@ -88,7 +88,7 @@ export function ViewSingleFile() {
                         variant="outline"
                         onClick={() => navigate("/files")}
                         className="text-sm text-muted-foreground hover:text-foreground w-fit"
-                    >/
+                    >
                         View Content
                     </Button>
                 </div>
