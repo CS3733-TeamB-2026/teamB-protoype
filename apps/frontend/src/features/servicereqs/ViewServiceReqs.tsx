@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.tsx";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {Loader2, Pencil, Trash2, Search, Plus, StickyNote, File, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { Hero } from "@/components/shared/Hero.tsx";
@@ -32,29 +32,26 @@ function ViewServiceReqs() {
     const [addOpen, setAddOpen] = useState(false);
     const [expandedId, setExpandedId] = useState<number | null>(null);
     const user = useUser();
-    /*Update*/const [sort, toggleSort] = useSortState<"name" | "created" | "deadline" | "type" | "assignee" | "owner">({column: "type", direction: "asc"});
+    const [sort, toggleSort] = useSortState<"name" | "created" | "deadline" | "type" | "assignee" | "owner">({column: "name", direction: "asc"});
     const [searchTerm, setSearchTerm] = useState("");
     const { getAccessTokenSilently } = useAuth0();
 
-    useEffect(() => {
-
-        const fetchServiceReqs = async () => {
-            try {
-                const token = await getAccessTokenSilently();
-                const res = await fetch("/api/servicereqs", {
-                    headers: {Authorization: `Bearer ${token}`},
-                })
-                const data = await res.json();
-                setServiceReqs(data);
-                setLoading(false);
-            } catch {
-                setLoading(false);
-            }
+    const fetchServiceReqs = React.useCallback(async () => {
+        try {
+            const token = await getAccessTokenSilently();
+            const res = await fetch("/api/servicereqs", {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await res.json();
+            setServiceReqs(data);
+        } catch {
+            // ignore
+        } finally {
+            setLoading(false);
         }
-
-        void fetchServiceReqs();
-
     }, [getAccessTokenSilently]);
+
+    useEffect(() => { void fetchServiceReqs(); }, [fetchServiceReqs]);
 
     const filteredServiceReqs = servicereqs.filter((s) => {
         const query = searchTerm.toLowerCase().trim().replace(/\s/g, "");
@@ -72,7 +69,7 @@ function ViewServiceReqs() {
 
     const handleDelete = async (servicereq: ServiceReq) => {
         const token = await getAccessTokenSilently();
-        const res = await fetch(`/api/servicereq`, {
+        const res = await fetch(`/api/servicereqs/${servicereq.id}`, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
@@ -167,9 +164,8 @@ function ViewServiceReqs() {
                                         user.user?.persona === "admin";
                                     const stripe = index % 2 === 0 ? "bg-muted/10" : "";
                                     return (
-                                    <>
+                                    <React.Fragment key={servicereq.id}>
                                         <TableRow
-                                            key={servicereq.id}
                                             className={`cursor-pointer ${stripe}`}
                                             onClick={() => setExpandedId(isExpanded ? null : servicereq.id)}
                                         >
@@ -182,13 +178,13 @@ function ViewServiceReqs() {
                                             <TableCell>
                                                 <div className="flex items-center gap-1 text-muted-foreground">
                                                     {servicereq.notes && (
-                                                        <StickyNote className="w-3.5 h-3.5" title="Has notes" />
+                                                        <StickyNote className="w-3.5 h-3.5" />
                                                     )}
                                                     {servicereq.linkedContent && (
-                                                        <File className="w-3.5 h-3.5" title="Linked content" />
+                                                        <File className="w-3.5 h-3.5" />
                                                     )}
                                                     {servicereq.linkedCollection && (
-                                                        <FolderOpen className="w-3.5 h-3.5" title="Linked collection" />
+                                                        <FolderOpen className="w-3.5 h-3.5" />
                                                     )}
                                                 </div>
                                             </TableCell>
@@ -243,7 +239,7 @@ function ViewServiceReqs() {
                                                 </TableCell>
                                             </TableRow>
                                         )}
-                                    </>
+                                    </React.Fragment>
                                     );})}
                             </TableBody>
                         </Table>
@@ -254,7 +250,7 @@ function ViewServiceReqs() {
             <ConfirmDeleteDialog
                 open={!!deleteTarget}
                 onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
-                description={deleteTarget ? <span>This will permanently delete <strong>{deleteTarget.id}</strong>.</span> : undefined}
+                description={deleteTarget ? <span>This will permanently delete <strong>{deleteTarget.name}</strong>.</span> : undefined}
                 onConfirm={() => handleDelete(deleteTarget!)}
             />
 
@@ -264,11 +260,7 @@ function ViewServiceReqs() {
                     content={editingServiceReq}
                     open={editOpen}
                     onOpenChange={setEditOpen}
-                    onSave={(updated: ServiceReq) =>
-                        setServiceReqs((prev) =>
-                            prev.map((s) => (s.id === updated.id ? updated : s))
-                        )
-                    }
+                    onSave={() => void fetchServiceReqs()}
                 />
             )}
 
@@ -276,7 +268,7 @@ function ViewServiceReqs() {
             <AddServiceReqDialog
                 open={addOpen}
                 onOpenChange={setAddOpen}
-                onSave={(created: ServiceReq) => setServiceReqs((prev) => [...prev, created])}
+                onSave={() => void fetchServiceReqs()}
             />
         </>
     );
