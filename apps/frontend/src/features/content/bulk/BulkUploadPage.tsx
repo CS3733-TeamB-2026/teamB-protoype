@@ -185,8 +185,8 @@ export function BulkUploadPage() {
             setUploadIndex(i + 1);
             setEntries(prev => prev.map(e => e.id === entry.id ? { ...e, status: "uploading" } : e));
 
-            const lastMod = new Date(entry.file.lastModified);
             const values: ContentFormValues = {
+                expires: meta.dateExpiration ? "expires" : "forever",
                 name: entry.name,
                 linkUrl: "",
                 ownerID: meta.ownerID,
@@ -195,7 +195,6 @@ export function BulkUploadPage() {
                 targetPersona: meta.targetPersona,
                 uploadMode: "file",
                 file: entry.file,
-                lastModifiedTime: lastMod.toTimeString().substring(0, 8),
                 dateExpiration: meta.dateExpiration,
                 tags: meta.tags,
             };
