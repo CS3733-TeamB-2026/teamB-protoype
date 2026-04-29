@@ -88,10 +88,6 @@ function ContentTypeChartCard() {
             }))
             .sort((a, b) => b.count - a.count);
 
-        console.log("CONTENT LENGTH:", content.length);
-        console.log("COUNTS:", counts);
-        console.log("CHART DATA:", result);
-
         return result;
 
     }, [content]);

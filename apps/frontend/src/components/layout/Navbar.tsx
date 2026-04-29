@@ -75,7 +75,7 @@ function Navbar() {
                 {/* user avatar popover */}
                 {isAuthenticated && <NotificationBell />}
                 <Popover open={userOpen} onOpenChange={setUserOpen}>
-                    <PopoverTrigger asChild>
+                    <PopoverTrigger className="ml-2" asChild>
                         {
                             isAuthenticated && !user ?
                                 <div className="flex items-center justify-center">

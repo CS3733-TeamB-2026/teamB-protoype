@@ -1,4 +1,4 @@
-import { Home, User, ChevronDown, Users, X, Library, LayoutDashboard, Upload, NetworkIcon, CalendarClock, Search, BookMarked } from "lucide-react"
+import { FileText, HelpCircle, Home, User, ChevronDown, Users, X, Library, LayoutDashboard, Upload, NetworkIcon, CalendarClock, Search, BookMarked } from "lucide-react"
 import React from "react"
 import {Link} from "react-router-dom";
 import {
@@ -138,7 +138,20 @@ function AppSidebar() {
             <hr className="w-[calc(100%-2rem)] mx-auto h-px bg-primary border-none" />
 
             <SidebarFooter className="p-4 border-t-2">
-                <p className="text-xs text-muted-foreground">CS3733 D26</p>
+                <div className="flex flex-row items-center justify-between pl-0 pr-2">
+                    <Link to="/about">
+                        <Button className="px-4 py-2 text-sm" variant="outline" onClick={ () => toggleSidebar() } >
+                            <HelpCircle />
+                            About
+                        </Button>
+                    </Link>
+                    <Link to="/credits">
+                        <Button className="px-4 py-2 text-sm" variant="outline" onClick={ () => toggleSidebar() }  >
+                            <FileText />
+                            Credits
+                        </Button>
+                    </Link>
+                </div>
             </SidebarFooter>
 
         </Sidebar>

@@ -4,6 +4,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover.tsx";
 import { Info, X, TrendingUp, FileText, Clock } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import DashboardCard from "@/features/dashboard/components/cards/DashboardCard.tsx";
 
 interface TransactionSummary {
     summary: {
@@ -72,7 +73,7 @@ function ReportCard() {
 
     if (loading) {
         return (
-            <Card className="border-t-accent border-t-4 shadow-lg md:col-span-2 lg:col-span-3 flex items-center justify-center min-h-96">
+            <Card className="border-t-secondary border-t-4 shadow-lg md:col-span-2 lg:col-span-3 flex items-center justify-center min-h-96">
                 <div className="text-center">
                     <p className="text-muted-foreground">Loading report data...</p>
                 </div>
@@ -82,7 +83,10 @@ function ReportCard() {
 
     if (error) {
         return (
-            <Card className="border-t-destructive border-t-4 shadow-lg md:col-span-2 lg:col-span-3">
+            <DashboardCard
+                size="medium"
+                borderColor="secondary"
+            >
                 <CardHeader>
                     <CardTitle className="text-2xl font-semibold">Reports</CardTitle>
                 </CardHeader>
@@ -95,7 +99,7 @@ function ReportCard() {
                         </p>
                     </div>
                 </CardContent>
-            </Card>
+            </DashboardCard>
         );
     }
 
@@ -336,7 +340,10 @@ function ReportCard() {
     );
 
     return (
-        <Card className="border-t-accent border-t-4 shadow-lg md:col-span-2 lg:col-span-3 flex flex-col">
+        <DashboardCard
+            size="medium"
+            borderColor="secondary"
+        >
             <CardHeader className="pb-4">
                 <div className="flex justify-between items-start">
                     <div>
@@ -406,7 +413,7 @@ function ReportCard() {
                 {activeTab === 'currency' && renderCurrency()}
                 {activeTab === 'expiration' && renderExpiration()}
             </CardContent>
-        </Card>
+        </DashboardCard>
     );
 }
 
