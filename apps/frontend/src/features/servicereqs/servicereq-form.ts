@@ -1,15 +1,18 @@
-import type { ServiceReqItem } from "@/lib/types.ts";
+import type { ServiceReq, RequestType } from "@/lib/types.ts";
 
 /**
  * Shared form state for both Add and Edit service req dialogs.
  *
- * `type` uses `"none"` as a sentinel for "not selected" so
- * that shadcn `<Select>` can show a placeholder item — the backend receives an
- * empty string for these when `"none"` is submitted (see `buildServiceReqFormData`).
+ * `type` uses `"none"` as a sentinel for "not selected" so that shadcn
+ * `<Select>` can show a placeholder item — validated and rejected by `getErrors`.
  *
- * `createdDate` + `createdTime` are kept separate because the date
- * picker returns a `Date` and the time input returns an HH:MM:SS string; they
- * are merged into a single ISO timestamp only in `buildContentFormData`.
+ * `createdDate` + `createdTime` are kept separate because the date picker returns
+ * a `Date` and the time input returns an HH:MM:SS string; they are merged into a
+ * single ISO timestamp only in `buildServiceReqJSON`.
+ *
+ * `linkMode` drives the picker shown in the form. `buildServiceReqJSON` sends only
+ * the active link ID and nulls the other, so the backend never receives both at once.
+ * `notes` is stored as `""` and serialised as `null` when blank.
  */
 export type ServiceReqFormValues = {
     id: number | undefined,
@@ -17,9 +20,12 @@ export type ServiceReqFormValues = {
     createdDate: Date;
     createdTime: string; // HH:MM:SS string from <input type="time" step="1">
     deadline: Date | undefined;
-    ownerId: number;
     assigneeId: number | undefined;
-    type: "reviewClaim" | "requestAdjuster" | "checkClaim" | "none";
+    type: RequestType | "none";
+    notes: string;
+    linkMode: "none" | "content" | "collection"; // controls which picker is shown; only one ID is sent
+    linkedContentId: number | null;
+    linkedCollectionId: number | null;
 };
 
 export function nowTimeString(): string {
@@ -34,7 +40,6 @@ export function getErrors(values: ServiceReqFormValues): Record<string, string> 
     const e: Record<string, string> = {};
     if (!values.name.trim()) e.name = "Name is required.";
     if (!values.assigneeId) e.assigneeId = "Assignee is required.";
-    if (!values.ownerId) e.ownerId = "Owner is required.";
     if (values.type === "none") e.type = "Service Request Type is required.";
     if (!values.createdDate) e.createdDate = "Created Date is required.";
     if (!values.createdTime) e.createdTime = "Created Time is required.";
@@ -43,20 +48,23 @@ export function getErrors(values: ServiceReqFormValues): Record<string, string> 
 }
 
 /** Starting values for the Add form. */
-export function initialValues(userId: number): ServiceReqFormValues {
+export function initialValues(): ServiceReqFormValues {
     return {
         id: undefined,
         name: "",
         createdDate: new Date(),
-        createdTime: nowTimeString(), // HH:MM:SS string from <input type="time" step="1">
+        createdTime: nowTimeString(),
         deadline: undefined,
-        ownerId: userId,
         assigneeId: undefined,
         type: "none",
+        notes: "",
+        linkMode: "none",
+        linkedContentId: null,
+        linkedCollectionId: null,
     };
 }
 
-/** Build a FormData with all fields shared between create and update. */
+/** Serialise form state to a JSON string for both create and update requests. */
 export function buildServiceReqJSON(values: ServiceReqFormValues): string {
     if (values.assigneeId === undefined) throw new Error("Assignee is required.");
     if (values.type === undefined) throw new Error("Type is required.");
@@ -72,25 +80,33 @@ export function buildServiceReqJSON(values: ServiceReqFormValues): string {
     return JSON.stringify({
         id: values.id,
         name: values.name,
-        ownerId: values.ownerId,
         assigneeId: values.assigneeId,
         type: values.type,
         created: created.toISOString(),
         deadline: deadlineDate.toISOString(),
+        notes: values.notes.trim() || null,
+        linkedContentId: values.linkMode === "content" ? values.linkedContentId : null,
+        linkedCollectionId: values.linkMode === "collection" ? values.linkedCollectionId : null,
     })
 }
 
 /** Populate form values from an existing ServiceReqItem for the Edit form. */
-export function fromServiceReqItem(item: ServiceReqItem): ServiceReqFormValues {
+export function fromServiceReqItem(item: ServiceReq): ServiceReqFormValues {
     const createdDate = new Date(item.created);
+    const linkMode = item.linkedContentId != null ? "content"
+        : item.linkedCollectionId != null ? "collection"
+        : "none";
     return {
         id: item.id,
         name: item.name,
-        ownerId: item.ownerId,
-        assigneeId: item.assigneeId,
-        type: item.type,
+        assigneeId: item.assigneeId ?? undefined,
+        type: item.type as RequestType | "none",
         createdDate: createdDate,
         createdTime: createdDate.toTimeString().substring(0, 8),
         deadline: new Date(item.deadline),
+        notes: item.notes ?? "",
+        linkMode,
+        linkedContentId: item.linkedContentId,
+        linkedCollectionId: item.linkedCollectionId,
     };
 }

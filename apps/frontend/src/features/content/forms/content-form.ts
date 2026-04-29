@@ -18,6 +18,7 @@ import type { ContentItem, ContentType, ContentStatus } from "@/lib/types.ts";
  * depending on the mode.
  */
 export type ContentFormValues = {
+    expires: "expires" | "forever";
     name: string;
     linkUrl: string;
     ownerID: number | null;
@@ -27,9 +28,6 @@ export type ContentFormValues = {
     targetPersona: string;
     uploadMode: "url" | "file";
     file: File | null;
-    dateModified: Date | undefined;
-    /** HH:MM:SS string from `<input type="time" step="1">`, merged with `dateModified` on submit. */
-    lastModifiedTime: string;
     dateExpiration: Date | undefined;
     tags: string[];
 };
@@ -64,6 +62,9 @@ export function getErrors(values: ContentFormValues, isEdit = false): Record<str
     if (!values.targetPersona) e.persona = "Target persona is required.";
     if (values.contentType === "none") e.contentType = "Please select a document type.";
     if (values.status === "none") e.status = "Please select a status.";
+    if (values.expires === "expires" && !values.dateExpiration) {
+        e.dateExpiration = "Please select an expiration date.";
+    }
     return e;
 }
 
@@ -80,12 +81,11 @@ export function initialValues(userId: number, userPersona = ""): ContentFormValu
         linkUrl: "",
         ownerID: userId,
         contentType: "none",
+        expires: "forever",
         status: "none",
         targetPersona: userPersona,
         uploadMode: "url",
         file: null,
-        dateModified: new Date(),
-        lastModifiedTime: nowTimeString(),
         dateExpiration: undefined,
         tags: [],
     };
@@ -112,13 +112,7 @@ export function buildContentFormData(values: ContentFormValues): FormData {
     formData.append("contentType", values.contentType === "none" ? "" : values.contentType);
     formData.append("status", values.status === "none" ? "" : values.status);
 
-    // Merge the date picker value and the separate time input into one timestamp.
-    const lastModifiedDate = values.dateModified ? new Date(values.dateModified) : new Date();
-    const [lmh, lmm, lms] = values.lastModifiedTime.split(":").map(Number);
-    lastModifiedDate.setHours(lmh, lmm, lms ?? 0, 0);
-    formData.append("lastModified", lastModifiedDate.toISOString());
-
-    if (values.dateExpiration) {
+    if (values.expires === "expires" && values.dateExpiration) {
         const expDate = new Date(values.dateExpiration);
         expDate.setHours(0, 0, 0, 0);
         formData.append("expiration", expDate.toISOString());
@@ -181,6 +175,8 @@ export function fromContentItem(item: ContentItem): ContentFormValues {
         ownerID: item.ownerId ?? null,
         contentType: item.contentType,
         status: item.status,
+        expires: item.expiration ? "expires" : "forever",
+        dateExpiration: item.expiration ? new Date(item.expiration) : undefined,
         targetPersona: item.targetPersona,
         // If the item has a link it's URL mode; otherwise file mode (no File
         // object — the server keeps the existing file unless a new one is sent).
@@ -188,9 +184,6 @@ export function fromContentItem(item: ContentItem): ContentFormValues {
         file: null,
         // Default to now so editing always stamps the current time unless the
         // user picks a file (which supplies its own lastModified timestamp).
-        dateModified: new Date(),
-        lastModifiedTime: nowTimeString(),
-        dateExpiration: item.expiration ? new Date(item.expiration) : undefined,
         tags: item.tags ?? [],
     };
 }

@@ -72,6 +72,7 @@ import {invalidateFileCacheById} from "@/features/content/previews/file-cache.ts
 import {useAuth0} from "@auth0/auth0-react"
 import {highlight} from "@/lib/highlight.tsx";
 import {formatLabel, formatName} from "@/lib/utils.ts";
+import { EmployeeAvatar } from "@/components/shared/EmployeeAvatar.tsx";
 import {toast} from "sonner";
 import type { ContentItem, BookmarkRecord, ContentStatus, ContentType, Persona, UrlPreview } from "@/lib/types.ts";
 import { ALL_CATEGORIES } from "@/lib/mime.ts";
@@ -86,8 +87,7 @@ import {useLocale} from "@/languageSupport/localeContext.tsx";
 import {useTranslation} from "@/languageSupport/useTranslation.ts";
 import type {TranslationKey} from "@/languageSupport/keys.ts";
 import {ForceCheckinDialog} from "@/features/content/forms/ForceCheckinDialog.tsx";
-
-
+import InfoButton from "@/components/layout/InformationAlert";
 /**
  * Main content list page — the primary view for browsing, searching, filtering,
  * and managing content items.
@@ -135,7 +135,6 @@ function ViewContent() {
      */
     const [linkPreviews, setLinkPreviews] = useState<Record<number, UrlPreview | null>>({});
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-
 
     const {user} = useUser();
     const navigate = useNavigate();
@@ -199,7 +198,8 @@ function ViewContent() {
                     setCachedPreview(item.linkURL!, preview);
                     setLinkPreviews((prev) => ({...prev, [item.id]: preview}));
                 })
-                .catch(() => {
+                .catch((err) => {
+                    console.error("Preview fetch failed for", item.linkURL, err);
                     setCachedPreview(item.linkURL!, null);
                     setLinkPreviews((prev) => ({...prev, [item.id]: null}));
                 });
@@ -354,7 +354,7 @@ function ViewContent() {
      */
     const handleDelete = async (id: number) => {
         const token = await getAccessTokenSilently();
-        const res = await fetch(`/api/content/${id}?employeeID=${user!.id}`, {
+        const res = await fetch(`/api/content/${id}`, {
             method: "DELETE",
             headers: {Authorization: `Bearer ${token}`},
         });
@@ -380,13 +380,9 @@ function ViewContent() {
     const handleCheckout = async (item: ContentItem) => {
         try {
             const token = await getAccessTokenSilently();
-            const res = await fetch("/api/content/checkout", {
+            const res = await fetch(`/api/content/${item.id}/checkout`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({id: item.id, employeeID: user!.id}),
+                headers: { Authorization: `Bearer ${token}` },
             });
             const data = await res.json();
             if (!res.ok) {
@@ -410,13 +406,9 @@ function ViewContent() {
     const handleCheckin = async (item: ContentItem) => {
         try {
             const token = await getAccessTokenSilently();
-            const res = await fetch("/api/content/checkin", {
+            const res = await fetch(`/api/content/${item.id}/checkin`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({id: item.id, employeeID: user!.id}),
+                headers: { Authorization: `Bearer ${token}` },
             });
             if (res.ok) {
                 setContent((prev) => prev.map((c) => c.id === item.id
@@ -431,19 +423,15 @@ function ViewContent() {
     };
     /**
      * Admin-only: forcibly releases the edit lock on `item`, even if another
-     * user currently holds it. Uses `/api/content/checkin` endpoint
-     * but passes the lock holder's ID so the backend lets it through.
+     * user currently holds it. The backend allows this because the caller's
+     * JWT identifies them as an admin.
      */
     const handleForceCheckin = async (item: ContentItem) => {
         try {
             const token = await getAccessTokenSilently();
-            const res = await fetch("/api/content/checkin", {
+            const res = await fetch(`/api/content/${item.id}/checkin`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ id: item.id, employeeID: item.checkedOutById }),
+                headers: { Authorization: `Bearer ${token}` },
             });
             if (res.ok) {
                 setContent((prev) => prev.map((c) => c.id === item.id
@@ -662,7 +650,10 @@ function ViewContent() {
                                     className="mt-10 shrink-0 w-48 rounded-lg border p-3 bg-muted/20 text-left text-sm">
                                     <div className="flex flex-col gap-4">
                                         <div>
-                                            <p className="font-medium mb-2">{(ts('status'))}</p>
+                                            <span className="flex items-center justify-between mb-2">
+                                                <p className="font-medium">{(ts('status'))}</p>
+                                                <InfoButton content={"Here you can add advanced filters, add as many as you'd like!"} size="w-5 h-5"/>
+                                            </span>
                                             <div className="flex flex-col gap-1.5">
                                                 {["new", "inProgress", "complete"].map((status) => (
                                                     <label key={status} className="flex items-center gap-2">
@@ -859,8 +850,10 @@ function ViewContent() {
                                                         {/* This section just defines all the little label
                                                         cells in the top of the previewer */}
                                                         {/* owner */}
-                                                        <TableCell className="hidden sm:table-cell text-foreground">
-                                                            {formatName(item.owner)}
+                                                        <TableCell className="hidden sm:table-cell">
+                                                            {item.owner
+                                                                ? <EmployeeAvatar employee={item.owner} size="sm" />
+                                                                : <span className="text-muted-foreground">—</span>}
                                                         </TableCell>
                                                         {/* status */}
                                                         <TableCell className="hidden sm:table-cell text-center">
@@ -1019,6 +1012,12 @@ function ViewContent() {
                                                                         <span>
                                                                             <span className="font-medium text-foreground">Editing </span>
                                                                             {item.checkedOutBy.firstName} {item.checkedOutBy.lastName}
+                                                                        </span>
+                                                                    )}
+                                                                    {item.created && (
+                                                                        <span>
+                                                                            <span className="font-medium text-foreground">Created:{" "}</span>
+                                                                            {new Date(item.created).toLocaleString()}
                                                                         </span>
                                                                     )}
                                                                     <span>

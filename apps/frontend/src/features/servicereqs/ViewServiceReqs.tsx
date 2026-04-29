@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.tsx";
-import { useEffect, useState } from "react";
-import {Loader2, Pencil, Trash2, Search, Plus } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import {Loader2, Pencil, Trash2, Search, Plus, StickyNote, File, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { Hero } from "@/components/shared/Hero.tsx";
 import { EditServiceReqDialog } from "@/features/servicereqs/EditServiceReqDialog.tsx";
@@ -15,7 +15,24 @@ import { useAuth0 } from "@auth0/auth0-react";
 import type { ServiceReq } from "@/lib/types.ts";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
 import {findMatches, highlightRange} from "@/lib/highlight.tsx";
+import { EmployeeAvatar } from "@/components/shared/EmployeeAvatar.tsx";
+import {formatLabel} from "@/lib/utils.ts";
+import { ContentItemCard } from "@/components/shared/ContentItemCard.tsx";
+import { CollectionCard } from "@/components/shared/CollectionCard.tsx";
 
+/**
+ * Full-page table for browsing, adding, editing, and deleting service requests.
+ *
+ * Clicking a row toggles an inline detail panel showing notes and any linked
+ * content item or collection. Edit/Delete buttons call `e.stopPropagation()` so
+ * they don't also toggle the expansion.
+ *
+ * After any mutation (add or edit), `fetchServiceReqs` is called again rather than
+ * patching state with the mutation response — this ensures `owner`, `assignee`, and
+ * linked relations are always fully populated from the authoritative query.
+ *
+ * Edit and delete are gated to the owner, the assignee, or any admin.
+ */
 function ViewServiceReqs() {
 
     usePageTitle("Manage Service Reqs");
@@ -25,47 +42,47 @@ function ViewServiceReqs() {
     const [editOpen, setEditOpen] = useState(false);
     const [editingServiceReq, setEditingServiceReq] = useState<ServiceReq | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<ServiceReq | null>(null);
-    const [addOpen, setAddOpen] = useState(false);  // <-- new
+    const [addOpen, setAddOpen] = useState(false);
+    const [expandedId, setExpandedId] = useState<number | null>(null); // id of the currently expanded detail row, null = collapsed
     const user = useUser();
-    /*Update*/const [sort, toggleSort] = useSortState<"name" | "created" | "deadline" | "type" | "assignee" | "owner">({column: "type", direction: "asc"});
+    const [sort, toggleSort] = useSortState<"name" | "created" | "deadline" | "type" | "assignee" | "owner">({column: "name", direction: "asc"});
     const [searchTerm, setSearchTerm] = useState("");
     const { getAccessTokenSilently } = useAuth0();
 
-    useEffect(() => {
-
-        const fetchServiceReqs = async () => {
-            try {
-                const token = await getAccessTokenSilently();
-                const res = await fetch("/api/servicereqs", {
-                    headers: {Authorization: `Bearer ${token}`},
-                })
-                const data = await res.json();
-                setServiceReqs(data);
-                setLoading(false);
-            } catch {
-                setLoading(false);
-            }
+    const fetchServiceReqs = React.useCallback(async () => {
+        try {
+            const token = await getAccessTokenSilently();
+            const res = await fetch("/api/servicereqs", {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await res.json();
+            setServiceReqs(data);
+        } catch {
+            // ignore
+        } finally {
+            setLoading(false);
         }
-
-        fetchServiceReqs();
-
     }, [getAccessTokenSilently]);
+
+    useEffect(() => { void fetchServiceReqs(); }, [fetchServiceReqs]);
 
     const filteredServiceReqs = servicereqs.filter((s) => {
         const query = searchTerm.toLowerCase().trim().replace(/\s/g, "");
         if (!query) return true;
 
+        const ownerName = `${s.owner.firstName}${s.owner.lastName}`.toLowerCase();
+        const assigneeName = s.assignee ? `${s.assignee.firstName}${s.assignee.lastName}`.toLowerCase() : "";
         return (
             s.name.toString().includes(query) ||
             s.type.toLowerCase().includes(query) ||
-            s.assigneeId.toString().includes(query) ||
-            s.ownerId.toString().includes(query)
+            ownerName.includes(query) ||
+            assigneeName.includes(query)
         );
     });
 
     const handleDelete = async (servicereq: ServiceReq) => {
         const token = await getAccessTokenSilently();
-        const res = await fetch(`/api/servicereq`, {
+        const res = await fetch(`/api/servicereqs/${servicereq.id}`, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
@@ -134,12 +151,12 @@ function ViewServiceReqs() {
                         <Table className="text-left">
                             <TableHeader>
                                 <TableRow className="hover:bg-transparent">
-                                    <SortableHead column="name" label="Name" sort={sort} onSort={toggleSort} />
-                                    <SortableHead column="type" label="Type" sort={sort} onSort={toggleSort} />
-                                    <SortableHead column="created" label="Created" sort={sort} onSort={toggleSort} className="w-full" />
+                                    <SortableHead column="name" label="Name" sort={sort} onSort={toggleSort} className="w-full" />
+                                    <TableHead className="w-20" />
+                                    <SortableHead column="created" label="Created" sort={sort} onSort={toggleSort} />
                                     <SortableHead column="deadline" label="Deadline" sort={sort} onSort={toggleSort} />
-                                    <SortableHead column="assignee" label="AssigneeID" sort={sort} onSort={toggleSort} />
-                                    <SortableHead column="owner" label="OwnerID" sort={sort} onSort={toggleSort} />
+                                    <SortableHead column="assignee" label="Assignee" sort={sort} onSort={toggleSort} />
+                                    <SortableHead column="owner" label="Owner" sort={sort} onSort={toggleSort} />
                                     <TableHead className="uppercase tracking-wider text-muted-foreground select-none">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -149,25 +166,65 @@ function ViewServiceReqs() {
                                     if (col === "type") return s.type;
                                     if (col === "created") return s.created;
                                     if (col === "deadline") return s.deadline;
-                                    if (col === "assignee") return s.assigneeId;
-                                    if (col === "owner") return s.ownerId;
-                                }).map((servicereq) => {
-                                    const matches = findMatches(servicereq.name, searchTerm)
+                                    if (col === "assignee") return s.assignee ? `${s.assignee.lastName} ${s.assignee.firstName}` : "";
+                                    if (col === "owner") return `${s.owner.lastName} ${s.owner.firstName}`;
+                                }).map((servicereq, index) => {
+                                    const matches = findMatches(servicereq.name, searchTerm);
+                                    const isExpanded = expandedId === servicereq.id;
+                                    const canEdit =
+                                        servicereq.ownerId === user.user?.id ||
+                                        servicereq.assigneeId === user.user?.id ||
+                                        user.user?.persona === "admin";
+                                    const stripe = index % 2 === 0 ? "bg-muted/10" : "";
                                     return (
-                                        <TableRow key={servicereq.id}>
-                                            <TableCell className="text-right pr-4">{highlightRange(servicereq.name, 0, matches)}</TableCell>
-                                            <TableCell className="font-medium">{servicereq.type}</TableCell>
-                                            <TableCell className="font-medium">{new Date(servicereq.created).toLocaleDateString()}</TableCell>
-                                            <TableCell className="font-medium">{new Date(servicereq.deadline).toLocaleDateString()}</TableCell>
-                                            <TableCell className="font-medium">{servicereq.assigneeId}</TableCell>
-                                            <TableCell className="font-medium">{servicereq.ownerId}</TableCell>
+                                    <React.Fragment key={servicereq.id}>
+                                        <TableRow
+                                            className={`cursor-pointer ${stripe}`}
+                                            onClick={() => setExpandedId(isExpanded ? null : servicereq.id)}
+                                        >
+                                            <TableCell className="text-left pr-4">
+                                                <p className="text-sm font-medium truncate">
+                                                    {highlightRange(servicereq.name, 0, matches)}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground">{formatLabel(servicereq.type)}</p>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-1 text-muted-foreground">
+                                                    {servicereq.notes && (
+                                                        <StickyNote className="w-3.5 h-3.5" />
+                                                    )}
+                                                    {servicereq.linkedContent && (
+                                                        <File className="w-3.5 h-3.5" />
+                                                    )}
+                                                    {servicereq.linkedCollection && (
+                                                        <FolderOpen className="w-3.5 h-3.5" />
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="font-medium">
+                                                {new Date(servicereq.created).toLocaleDateString()}
+                                            </TableCell>
+                                            <TableCell className="font-medium">
+                                                {new Date(servicereq.deadline).toLocaleDateString()}
+                                            </TableCell>
+                                            <TableCell>
+                                                {servicereq.assignee ? (
+                                                    <EmployeeAvatar employee={servicereq.assignee} size="sm" />
+                                                ) : (
+                                                    <span className="text-muted-foreground">—</span>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
+                                                <EmployeeAvatar employee={servicereq.owner} size="sm" />
+                                            </TableCell>
                                             <TableCell>
                                                 <div className="flex justify-center gap-2">
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
-                                                        disabled={servicereq.ownerId !== user.user?.id && servicereq.assigneeId !== user.user?.id && user.user?.persona !== "admin"}
-                                                        onClick={() => {
+                                                        disabled={!canEdit}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
                                                             setEditingServiceReq(servicereq);
                                                             setEditOpen(true);
                                                         }}
@@ -177,15 +234,26 @@ function ViewServiceReqs() {
                                                     <Button
                                                         variant="destructive"
                                                         size="sm"
-                                                        disabled={servicereq.ownerId !== user.user?.id && servicereq.assigneeId !== user.user?.id && user.user?.persona !== "admin"}
-                                                        onClick={() => setDeleteTarget(servicereq)}
+                                                        disabled={!canEdit}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setDeleteTarget(servicereq);
+                                                        }}
                                                     >
                                                         <Trash2 className="w-4 h-4" />
                                                     </Button>
                                                 </div>
                                             </TableCell>
                                         </TableRow>
-                                    )})}
+                                        {isExpanded && (
+                                            <TableRow key={`${servicereq.id}-detail`} className={`${stripe} hover:bg-inherit`}>
+                                                <TableCell colSpan={7} className="px-6 py-4">
+                                                    <ServiceReqDetail servicereq={servicereq} />
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </React.Fragment>
+                                    );})}
                             </TableBody>
                         </Table>
                     )}
@@ -195,7 +263,7 @@ function ViewServiceReqs() {
             <ConfirmDeleteDialog
                 open={!!deleteTarget}
                 onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
-                description={deleteTarget ? <span>This will permanently delete <strong>{deleteTarget.id}</strong>.</span> : undefined}
+                description={deleteTarget ? <span>This will permanently delete <strong>{deleteTarget.name}</strong>.</span> : undefined}
                 onConfirm={() => handleDelete(deleteTarget!)}
             />
 
@@ -205,11 +273,7 @@ function ViewServiceReqs() {
                     content={editingServiceReq}
                     open={editOpen}
                     onOpenChange={setEditOpen}
-                    onSave={(updated: ServiceReq) =>
-                        setServiceReqs((prev) =>
-                            prev.map((s) => (s.id === updated.id ? updated : s))
-                        )
-                    }
+                    onSave={() => void fetchServiceReqs()}
                 />
             )}
 
@@ -217,9 +281,42 @@ function ViewServiceReqs() {
             <AddServiceReqDialog
                 open={addOpen}
                 onOpenChange={setAddOpen}
-                onSave={(created: ServiceReq) => setServiceReqs((prev) => [...prev, created])}
+                onSave={() => void fetchServiceReqs()}
             />
         </>
+    );
+}
+
+/** Expanded detail panel rendered below a service request row. */
+function ServiceReqDetail({ servicereq }: { servicereq: ServiceReq }) {
+    const hasNotes = !!servicereq.notes?.trim();
+    const hasLinked = !!(servicereq.linkedContent || servicereq.linkedCollection);
+
+    if (!hasNotes && !hasLinked) {
+        return <p className="text-sm text-muted-foreground italic">No additional details.</p>;
+    }
+
+    return (
+        <div className="flex flex-col gap-3">
+            {hasNotes && (
+                <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Notes</p>
+                    <p className="text-sm whitespace-pre-wrap">{servicereq.notes}</p>
+                </div>
+            )}
+            {servicereq.linkedContent && (
+                <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Linked Content</p>
+                    <ContentItemCard item={servicereq.linkedContent} />
+                </div>
+            )}
+            {servicereq.linkedCollection && (
+                <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Linked Collection</p>
+                    <CollectionCard collection={servicereq.linkedCollection} />
+                </div>
+            )}
+        </div>
     );
 }
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { AlertCircle, ArrowLeft, FileText, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
@@ -12,6 +12,10 @@ import { getOriginalFilename } from "@/lib/mime.ts";
 import type { ContentItem } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
+import { Timeline } from "@/features/content/components/Timeline.tsx"
+import { useNavigate } from "react-router-dom";
+import {Button} from "@/components/ui/button";
+import {EmployeeAvatar} from "@/components/shared/EmployeeAvatar.tsx";
 
 /**
  * Full-page file viewer for a single content item.
@@ -30,6 +34,7 @@ export function ViewSingleFile() {
     const [item, setItem] = useState<ContentItem | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const navigate = useNavigate();
 
     usePageTitle("View File");
 
@@ -47,11 +52,14 @@ export function ViewSingleFile() {
                 if (!res.ok) throw new Error(`${res.status}`);
                 const data: ContentItem = await res.json();
                 setItem(data);
-            } catch {
+
+            } catch (error) {
                 setError("File not found or failed to load.");
+                console.error(error);
             } finally {
                 setLoading(false);
             }
+
         };
         void fetchItem();
     }, [id, getAccessTokenSilently]);
@@ -66,59 +74,87 @@ export function ViewSingleFile() {
                 description="Preview and download this file"
             />
 
-            <Card className="shadow-lg max-w-5xl mx-auto my-8">
-                <CardHeader>
-                    <Link to="/files" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2 w-fit">
-                        <ArrowLeft className="w-4 h-4" /> Back to files
-                    </Link>
-                    {item && (
-                        <CardTitle className="text-2xl text-primary">{item.displayName}</CardTitle>
-                    )}
-                </CardHeader>
+            <div className="max-w-5xl mx-auto my-8 px-4 flex flex-col gap-6">
 
-                <CardContent>
-                    {loading && (
-                        <div className="flex items-center justify-center py-16 gap-3 text-muted-foreground">
-                            <Loader2 className="w-6 h-6 animate-spin" />
-                            <p className="text-sm">Loading...</p>
-                        </div>
-                    )}
-                    {error && (
-                        <Alert variant="destructive" className="my-4">
-                            <AlertCircle />
-                            <AlertDescription>{error}</AlertDescription>
-                        </Alert>
-                    )}
-                    {item && (
-                        <div className="space-y-4">
-                            <div className="flex flex-wrap gap-2 text-sm">
-                                {item.owner && (
-                                    <span className="text-muted-foreground">
-                                        Owner: <span className="text-foreground">{item.owner.firstName} {item.owner.lastName}</span>
-                                    </span>
-                                )}
-                                <ContentStatusBadge status={item.status} />
-                                <ContentTypeBadge contentType={item.contentType} />
-                                <PersonaBadge persona={item.targetPersona} />
-                                {item.tags.length > 0 && (
-                                    <span className="text-muted-foreground">
-                                        Tags: <span className="text-foreground">{item.tags.join(", ")}</span>
-                                    </span>
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        onClick={() => navigate(-1)}
+                        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground w-fit"
+                    >
+                        <ArrowLeft className="w-4 h-4" /> Back
+                    </Button>
+                    <Button
+                        variant="outline"
+                        onClick={() => navigate("/files")}
+                        className="text-sm text-muted-foreground hover:text-foreground w-fit"
+                    >
+                        View Content
+                    </Button>
+                </div>
+
+                {(loading || error || item) && (
+                    <Card className="shadow-sm">
+                        <CardHeader>
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="flex-1 min-w-0">
+                                    {loading ? (
+                                        <div className="flex items-center gap-3 text-muted-foreground py-1">
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                            <p className="text-sm">Loading...</p>
+                                        </div>
+                                    ) : error ? (
+                                        <Alert variant="destructive">
+                                            <AlertCircle />
+                                            <AlertDescription>{error}</AlertDescription>
+                                        </Alert>
+                                    ) : item && (
+                                        <CardTitle className="text-2xl text-primary">{item.displayName}</CardTitle>
+                                    )}
+                                </div>
+                                {item && (
+                                    <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+                                        <ContentStatusBadge status={item.status} />
+                                        <ContentTypeBadge contentType={item.contentType} />
+                                        <PersonaBadge persona={item.targetPersona} />
+                                    </div>
                                 )}
                             </div>
-
-                            {originalFilename && (
-                                <FilePreview
-                                    filename={originalFilename}
-                                    src={`/api/content/download/${item.id}`}
-                                    infoSrc={`/api/content/info/${item.id}`}
-                                    mode="full"
+                        </CardHeader>
+                        {item && (
+                            <CardContent className="pt-0 flex flex-col gap-3">
+                                {item.owner && (
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground w-fit">
+                                        <span>Owner:</span>
+                                        <span className="text-foreground">{item.owner.firstName} {item.owner.lastName}</span>
+                                        <EmployeeAvatar employee={item.owner} size="sm" />
+                                    </div>
+                                )}
+                                {item.tags.length > 0 && (
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <span className="text-muted-foreground">Tags</span>
+                                        <span>{item.tags.join(", ")}</span>
+                                    </div>
+                                )}
+                                <Timeline
+                                    created={item.created}
+                                    expiration={item.expiration ?? null}
+                                    lastModified={item.lastModified}
                                 />
-                            )}
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+                                {originalFilename && (
+                                    <FilePreview
+                                        filename={originalFilename}
+                                        src={`/api/content/download/${item.id}`}
+                                        infoSrc={`/api/content/info/${item.id}`}
+                                        mode="full"
+                                    />
+                                )}
+                            </CardContent>
+                        )}
+                    </Card>
+                )}
+
+            </div>
         </>
     );
 }

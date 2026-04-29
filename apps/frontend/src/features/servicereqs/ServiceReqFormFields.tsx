@@ -5,8 +5,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { Textarea } from "@/components/ui/textarea.tsx";
+import { Label } from "@/components/ui/label.tsx";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { EmployeePicker } from "@/components/shared/EmployeePicker.tsx";
+import { ContentPicker } from "@/components/shared/ContentPicker.tsx";
+import { CollectionPicker } from "@/components/shared/CollectionPicker.tsx";
 import { type ServiceReqFormValues } from "@/features/servicereqs/servicereq-form.ts";
 
 interface Props {
@@ -19,14 +24,16 @@ interface Props {
 /**
  * Shared field set rendered by both `AddServiceReqDialog` and `EditServiceReqDialog`.
  *
- * Receives all form state via props (`values`, `patch`, `errors`) so it owns
- * no form logic itself — it is purely presentational. The parent passes a
- * `key` tied to `formKey` from `useServiceReqForm` so this component remounts on
- * reset, clearing the local `filePickError` state below.
+ * Purely presentational — all form state lives in the parent dialog via
+ * `useServiceReqForm` and flows in through props. The parent passes `key={formKey}`
+ * so this component remounts on reset, which clears the two popover-open states.
  *
- * `showLastModified` is false by default; the Add and Edit dialogs both pass
- * `true`. The prop exists so the field set could be embedded in a context
- * where the last-modified date is not user-editable.
+ * `showLastModified` is false by default. Both dialogs currently pass `true`; the
+ * prop exists to allow embedding the field set in a read-only or compact context.
+ *
+ * The Linked Resource section uses `linkMode` to switch between ContentPicker and
+ * CollectionPicker. Switching modes resets both IDs to null so stale selections
+ * from the previous picker are never serialised.
  */
 export function ServiceReqFormFields({ values, patch, errors, showLastModified = false }: Props) {
     const [openCreatedDate, setOpenCreatedDate] = React.useState(false);
@@ -54,14 +61,6 @@ export function ServiceReqFormFields({ values, patch, errors, showLastModified =
 
             <div className="flex flex-row gap-2 justify-center">
 
-                {/* Owner */}
-                <Field className="bg-background">
-                    <FieldLabel className="text-primary text-lg mb-1">Owner Employee</FieldLabel>
-                    <EmployeePicker
-                        selectedId={values.ownerId}
-                        onSelect={(id) => patch({ ownerId: id ?? undefined })}
-                    />
-                </Field>
                 {/* Assignee */}
                 <Field className="bg-background">
                     <FieldLabel className="text-primary text-lg mb-1">Assignee Employee</FieldLabel>
@@ -164,6 +163,67 @@ export function ServiceReqFormFields({ values, patch, errors, showLastModified =
                 </Field>
 
             </div>
+
+            <div className="py-6"><Separator className="bg-primary" /></div>
+
+            {/* Notes */}
+            <Field className="bg-background">
+                <FieldLabel className="text-primary text-lg" htmlFor="input-notes">Notes</FieldLabel>
+                <Textarea
+                    id="input-notes"
+                    placeholder="Add any notes..."
+                    value={values.notes}
+                    onChange={(e) => patch({ notes: e.target.value })}
+                    className="w-full resize-none"
+                    rows={4}
+                />
+            </Field>
+
+            <div className="py-6"><Separator className="bg-primary" /></div>
+
+            {/* Linked Resource */}
+            <Field className="bg-background">
+                <FieldLabel className="text-primary text-lg mb-4">Linked Resource</FieldLabel>
+                <RadioGroup
+                    value={values.linkMode}
+                    onValueChange={(v) => {
+                        const mode = v as ServiceReqFormValues["linkMode"];
+                        patch({
+                            linkMode: mode,
+                            linkedContentId: null,
+                            linkedCollectionId: null,
+                        });
+                    }}
+                    className="flex gap-6 pb-2"
+                >
+                    <div className="flex items-center gap-2">
+                        <RadioGroupItem value="none" id="link-none" />
+                        <Label htmlFor="link-none" className="md:text-sm">None</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <RadioGroupItem value="content" id="link-content" />
+                        <Label htmlFor="link-content" className="md:text-sm">Content</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <RadioGroupItem value="collection" id="link-collection" />
+                        <Label htmlFor="link-collection" className="md:text-sm">Collection</Label>
+                    </div>
+                </RadioGroup>
+
+                {values.linkMode === "content" && (
+                    <ContentPicker
+                        selectedId={values.linkedContentId}
+                        onSelect={(id) => patch({ linkedContentId: id })}
+                    />
+                )}
+                {values.linkMode === "collection" && (
+                    <CollectionPicker
+                        selectedId={values.linkedCollectionId}
+                        onSelect={(id) => patch({ linkedCollectionId: id })}
+                        publicOnly
+                    />
+                )}
+            </Field>
 
         </div>
     );

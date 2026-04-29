@@ -1,5 +1,15 @@
 import * as p from "../generated/prisma/client";
 
+// Shared across all query classes that join employees — auth0Id intentionally excluded
+// so it is never serialised into an API response.
+export const employeeSelect = {
+    id: true,
+    firstName: true,
+    lastName: true,
+    persona: true,
+    profilePhotoURI: true,
+} as const;
+
 export class Helper {
     public static personaHelper(_persona: string | null): p.Persona | null {
         if (_persona == "underwriter") {
@@ -19,7 +29,6 @@ export class Helper {
             return null
             //TODO: figure out a default return
         }
-
     }
 
     public static statusHelper(_status: string | null): p.Status {

@@ -1,6 +1,5 @@
 import { Pie, PieChart } from "recharts";
 import {
-    Card,
     CardContent,
     CardDescription,
     CardHeader,
@@ -15,6 +14,8 @@ import {
 import { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import type { Employee } from "@/lib/types.ts";
+import DashboardCard from "@/features/dashboard/components/cards/DashboardCard.tsx";
+import InfoButton from "@/components/layout/InformationAlert.tsx";
 
 // Maps each persona key to a human-readable label for the chart legend and tooltip.
 const chartConfig = {
@@ -71,12 +72,18 @@ function EmployeeChartCard() {
     }));
 
     return (
-        <Card className="border-t-secondary border-t-4 shadow-lg hover:scale-101 transition-transform sm:col-span-1 flex flex-col">
+        <DashboardCard
+            size="small"
+            borderColor="secondary"
+        >
             <CardHeader className="items-center pb-0">
                 <CardTitle className="capitalize text-2xl font-semibold">Department Breakdown</CardTitle>
                 <CardDescription>Current headcount by department.</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-row items-center justify-center gap-4 pb-0 mr-10">
+                <div className="absolute right-1 top-1 w-8 h-8 cursor-pointer">
+                    <InfoButton content={"Shows the current distribution of employees across departments."}/>
+                </div>
                 <ChartContainer
                     config={chartConfig}
                     className="w-60 h-60 shrink-0"
@@ -103,7 +110,7 @@ function EmployeeChartCard() {
                     ))}
                 </div>
             </CardContent>
-        </Card>
+        </DashboardCard>
     );
 }
 

@@ -6,5 +6,6 @@ node_modules/
 .idea/
 pnpm-lock.yaml
 generated/
-*.md
 .DS_Store
+CLAUDE.md
+collections-plan.md

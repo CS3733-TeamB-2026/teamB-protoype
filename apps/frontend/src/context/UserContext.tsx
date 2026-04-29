@@ -1,6 +1,7 @@
 import {createContext, useCallback, useContext, useEffect, useState} from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import type { Persona } from "@/lib/types.ts";
+import { invalidateAvatarCache } from "@/lib/avatar-cache";
 
 export type User = {
     id: number;
@@ -38,6 +39,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             const res = await fetch("/api/employee/me", {
                 headers: { Authorization: `Bearer ${token}` },
             });
+            if (!res.ok) {
+                setUser(null);
+                return;
+            }
             const data = await res.json();
             setUser({
                 ...data,
@@ -92,6 +97,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             body: formData,
         });
         if (!res.ok) throw new Error("Upload failed");
+        if (user) invalidateAvatarCache(user.id);
         await fetchUser();
         
     }, [fetchUser, getAccessTokenSilently]);

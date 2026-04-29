@@ -14,11 +14,15 @@ import { UserIcon, Settings, LogOut, LayoutDashboard, Languages} from "lucide-re
 import { Link, useNavigate } from "react-router-dom"
 import { useAuth0 } from "@auth0/auth0-react"
 import { useUser } from "@/hooks/use-user.ts"
+import { useAvatarUrl } from "@/hooks/use-avatar-url"
 import {useLocale} from "@/languageSupport/localeContext.tsx";
 import {useTranslation} from "@/languageSupport/useTranslation.ts";
 import DisclaimerAlert from "@/components/layout/DisclaimerAlert"
 import {useState} from "react";
 import React from "react";
+import { NotificationBell } from "@/features/notifications/NotificationBell.tsx";
+import InfoButton from "@/components/layout/InformationAlert.tsx";
+
 
 const LOCALES = [
     { code: "en_us", label: "English" },
@@ -38,6 +42,7 @@ function Navbar() {
     const { isAuthenticated, loginWithRedirect, logout } = useAuth0();
 
     const {user} = useUser();
+    const avatarUrl = useAvatarUrl(user?.id, user?.profilePhotoURI);
     const { locale, setLocale } = useLocale();
     const { ts } = useTranslation(locale);
 
@@ -69,8 +74,9 @@ function Navbar() {
                 <div className="flex-1" />
 
                 {/* user avatar popover */}
+                {isAuthenticated && <NotificationBell />}
                 <Popover open={userOpen} onOpenChange={setUserOpen}>
-                    <PopoverTrigger asChild>
+                    <PopoverTrigger className="ml-2" asChild>
                         {
                             isAuthenticated && !user ?
                                 <div className="flex items-center justify-center">
@@ -82,13 +88,8 @@ function Navbar() {
                                         { isAuthenticated ? user?.firstName + " " + user?.lastName : ts('nav.login')}
                                     </span>
                                     <Avatar className="cursor-pointer w-10 h-10 ">
-                                        {
-                                            user?.profilePhotoURI?
-                                                <AvatarImage src={user?.profilePhotoURI} />
-                                                :
-                                                <AvatarFallback className="bg-accent text-primary-foreground">{isAuthenticated ? " " + user?.firstName[0] + user?.lastName[0] : <UserIcon />}</AvatarFallback>
-                                        }
-
+                                        <AvatarImage src={avatarUrl} />
+                                        <AvatarFallback className="bg-accent text-primary-foreground">{isAuthenticated ? `${user?.firstName[0]}${user?.lastName[0]}` : <UserIcon />}</AvatarFallback>
                                     </Avatar>
                                 </button>
 
@@ -103,12 +104,8 @@ function Navbar() {
                                 <div className="flex flex-col gap-3">
                                     <div className="flex items-center gap-3">
                                         <Avatar className="cursor-pointer w-10 h-10 ">
-                                            {
-                                                user?.profilePhotoURI?
-                                                    <AvatarImage src={user?.profilePhotoURI} />
-                                                    :
-                                                    <AvatarFallback className="bg-accent text-primary-foreground">{isAuthenticated ? " " + user?.firstName[0] + user?.lastName[0] : <UserIcon />}</AvatarFallback>
-                                            }
+                                            <AvatarImage src={avatarUrl} />
+                                            <AvatarFallback className="bg-accent text-primary-foreground">{isAuthenticated ? `${user?.firstName[0]}${user?.lastName[0]}` : <UserIcon />}</AvatarFallback>
                                         </Avatar>
                                         <div>
                                             <p className="font-semibold text-lg text-primary">{user?.firstName + " " + user?.lastName}</p>
@@ -188,7 +185,11 @@ function Navbar() {
                             <button
                                 onClick={() => toggleCategory("language")}
                                 className="flex items-center justify-between w-full px-3 py-2 rounded-lg text-sm font-semibold transition-colors hover:bg-secondary"
-                            >{ts('settings.language')}
+                            >
+                                <span className="flex items-center gap-1">
+                                    {ts('settings.language')}
+                                    <InfoButton content={"Currently not every language has full support."} size={"w-5 h-5"}/>
+                                </span>
                                 <ChevronDown
                                     size={14}
                                     className={`transition-transform duration-200 ${openCategory === "language" ? "rotate-180" : ""}`}

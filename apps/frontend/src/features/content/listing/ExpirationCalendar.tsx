@@ -3,10 +3,12 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { useUser } from "@/hooks/use-user.ts";
 import { ContentIcon } from "@/features/content/components/ContentIcon.tsx";
 import { getCategory, getOriginalFilename } from "@/lib/mime.ts";
-import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import {Loader2, ChevronLeft, ChevronRight, Home as HomeIcon} from "lucide-react";
+import { ContentItemCard } from "@/components/shared/ContentItemCard.tsx";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
 import { Button } from "@/components/ui/button.tsx";
 import type { ContentItem } from "@/lib/types.ts";
+import {Hero} from "@/components/shared/Hero.tsx";
 
 const NOW = Date.now();
 
@@ -111,7 +113,11 @@ function ExpirationCalendar() {
 
     return (
         <>
-
+            <Hero
+                icon={HomeIcon}
+                title={"Expiration Calender"}
+                description={"See whats due soon."}
+            />
             <div className="max-w-6xl mx-auto my-6 px-4">
                 {loading && (
                     <div className="flex items-center justify-center py-24 gap-3 text-muted-foreground">
@@ -235,23 +241,17 @@ function ExpirationCalendar() {
                                     <div className="flex flex-col gap-2">
                                         {selectedItems.map(item => {
                                             const days = daysUntil(item.expiration!);
-                                            const originalFilename = item.fileURI ? getOriginalFilename(item.fileURI) : null;
-                                            const category = getCategory(null, originalFilename);
                                             return (
-                                                <div key={item.id} className="flex items-center justify-between p-3 rounded-lg border bg-background hover:bg-muted/40 transition-colors">
-                                                    <div className="flex items-center gap-3 min-w-0">
-                                                        <ContentIcon category={category} isLink={!!item.linkURL} className="w-4 h-4 shrink-0" />
-                                                        <div className="min-w-0">
-                                                            <p className="text-sm font-medium truncate">{item.displayName}</p>
-                                                            <p className="text-xs text-muted-foreground">
-                                                                {new Date(item.expiration!).toLocaleString()}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                    <span className={`text-xs font-semibold px-2 py-1 rounded-full shrink-0 ml-4 ${urgencyColor(days)}`}>
-                                                        {days < 0 ? `Expired ${Math.abs(days)}d ago` : days === 0 ? "Today" : `${days}d left`}
-                                                    </span>
-                                                </div>
+                                                <ContentItemCard
+                                                    key={item.id}
+                                                    item={item}
+                                                    subtitle={new Date(item.expiration!).toLocaleString()}
+                                                    actions={
+                                                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${urgencyColor(days)}`}>
+                                                            {days < 0 ? `Expired ${Math.abs(days)}d ago` : days === 0 ? "Today" : `${days}d left`}
+                                                        </span>
+                                                    }
+                                                />
                                             );
                                         })}
                                     </div>

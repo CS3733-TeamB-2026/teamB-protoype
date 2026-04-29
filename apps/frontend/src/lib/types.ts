@@ -15,48 +15,43 @@ export type ContentStatus =
     | "inProgress"
     | "complete";
 
-// Matches the Content model from Prisma (with joined owner)
+export type RequestType =
+    | "reviewClaim"
+    | "requestAdjuster"
+    | "checkClaim";
+
+export type Employee = {
+    id: number;
+    firstName: string;
+    lastName: string;
+    persona: Persona;
+    profilePhotoURI: string;
+}
+
+// Matches the Content model from Prisma (with joined owner/checkedOutBy)
 export type ContentItem = {
     id: number;
     displayName: string;
     linkURL: string | null;
     fileURI: string | null;
     ownerId: number | null;
-    owner: {
-        id: number;
-        firstName: string;
-        lastName: string;
-    } | null;
+    owner: Employee | null;
     checkedOutById: number | null;
     checkedOutAt: string | null;
-    checkedOutBy: {
-        id: number;
-        firstName: string;
-        lastName: string;
-    } | null;
+    checkedOutBy: Employee | null;
+    created: string | null;
     lastModified: string;
     expiration: string | null;
     contentType: ContentType;
     targetPersona: Persona;
     status: ContentStatus;
     tags: string[];
+    lastPreviewed: string;
 }
-
 
 export type BookmarkRecord = {
     bookmarkerId: number;
     bookmarkedContentId: number;
-}
-
-export type Employee = {
-    firstName: string;
-    lastName: string;
-    id: number;
-    persona: Persona;
-    profilePhotoURI: string;
-    login?: {
-        userName: string;
-    };
 }
 
 export type UrlPreview = {
@@ -72,7 +67,58 @@ export type ServiceReq = {
     name: string;
     created: string;
     deadline: string;
-    type: string;
-    assigneeId: number;
+    type: RequestType;
     ownerId: number;
+    owner: Employee;
+    assigneeId: number | null;
+    assignee: Employee | null;
+    notes: string | null;
+    linkedContentId: number | null;
+    linkedContent: ContentItem | null;
+    linkedCollectionId: number | null;
+    linkedCollection: Collection | null;
 }
+export type NotificationItem = {
+    id: string;
+    type: "change" | "ownership" | "expiration";
+    contentId: number;
+    contentName: string;
+    triggeredBy: { id: number; firstName: string; lastName: string } | null;
+    createdAt: string;
+    dismissedAt?: string;
+    metadata: {
+        changedFields?: string[];
+        before?: Record<string, unknown>;
+        after?: Record<string, unknown>;
+        oldOwnerId?: number | null;
+        newOwnerId?: number | null;
+        oldOwnerName?: string | null;
+        newOwnerName?: string | null;
+        daysLeft?: number;
+        hoursLeft?: number;
+        expired?: boolean;
+        threshold?: "3d" | "1h" | "expired";
+    };
+}
+export type NotificationTab = "active" | "dismissed";
+
+export type CollectionItem = {
+    collectionId: number;
+    contentId: number;
+    position: number;
+    content: ContentItem;
+};
+
+export type Collection = {
+    id: number;
+    displayName: string;
+    ownerId: number;
+    owner: Employee;
+    public: boolean;
+    items: CollectionItem[];
+};
+
+export type CollectionFavorite = {
+    employeeId: number;
+    collectionId: number;
+};

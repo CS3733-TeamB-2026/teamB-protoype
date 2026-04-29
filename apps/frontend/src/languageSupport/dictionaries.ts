@@ -50,6 +50,7 @@ export const en_us: Record<TranslationKey, string> = {
     'sidebar.viewEmployees': "View Employees",
     'sidebar.manageEmployees': "Manage Employees",
     'sidebar.team': "Team B - D26",
+    'sidebar.servicereqs': "Service Requests",
 
     'home.header': "Hanover Insurance - Content Management Application",
     'home.subheader': "CS3733 Team B D26",
@@ -122,7 +123,7 @@ export const en_us: Record<TranslationKey, string> = {
     'content.checkout': 'Check out',
     'content.checkoutTitle': 'Are you sure you want to checkout this content?',
     'content.checkoutDesc1': 'Check out ',
-    'content.checkoutDesc2': "? You'll be able to edit and delete it until you check it back in."
+    'content.checkoutDesc2': "? You'll be able to edit and delete it until you check it back in.",
 };
 
 export const sp_sp: Partial<Record<TranslationKey, string>> = {

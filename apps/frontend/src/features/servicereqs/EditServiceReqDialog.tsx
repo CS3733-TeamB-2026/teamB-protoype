@@ -14,15 +14,15 @@ import { Separator } from "@/components/ui/separator.tsx";
 import { toast } from "sonner";
 import { ServiceReqFormFields } from "@/features/servicereqs/ServiceReqFormFields.tsx";
 import { fromServiceReqItem, buildServiceReqJSON } from "@/features/servicereqs/servicereq-form.ts";
-import type { ServiceReqItem } from "@/lib/types.ts";
+import type { ServiceReq } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useServiceReqForm } from "@/features/servicereqs/use-servicereq-form.tsx";
 
 interface Props {
-    content: ServiceReqItem;
+    content: ServiceReq;
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onSave: (updated: ServiceReqItem) => void;
+    onSave: (updated: ServiceReq) => void;
 }
 
 /**

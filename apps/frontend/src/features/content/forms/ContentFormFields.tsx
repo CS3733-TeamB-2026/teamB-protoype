@@ -13,8 +13,9 @@ import { ALLOWED_ACCEPT_STRING, validateFileForUpload, stripExtension } from "@/
 import { UrlSourceField } from "@/features/content/forms/UrlSourceField.tsx";
 import { FilePickerCard } from "@/components/shared/FilePickerCard.tsx";
 import { EmployeePicker } from "@/components/shared/EmployeePicker.tsx";
-import { type ContentFormValues, nowTimeString } from "@/features/content/forms/content-form.ts";
+import { type ContentFormValues } from "@/features/content/forms/content-form.ts";
 import { TagInput } from "@/features/content/tags/TagInput.tsx";
+import InfoButton from "@/components/layout/InformationAlert.tsx";
 
 type ContentDialogMode = "add" | "edit";
 
@@ -56,7 +57,6 @@ interface Props {
  * `fromContentItem` in `content-form.ts`), not the stored last-modified value.
  */
 export function ContentFormFields({ values, patch, errors, mode, disabled = false }: Props) {
-    const [openModifiedDate, setOpenModifiedDate] = React.useState(false);
     const [openExpirationDate, setOpenExpirationDate] = React.useState(false);
     // Client-side MIME validation error lives here rather than in useContentForm
     // because it's produced before the file enters form state (we reject bad files
@@ -68,25 +68,21 @@ export function ContentFormFields({ values, patch, errors, mode, disabled = fals
     // restorePreAutoFill() consumes it — re-picking a file doesn't overwrite it.
     const preAutoFillState = useRef<{
         name: string;
-        dateModified: Date | undefined;
-        lastModifiedTime: string;
     } | null>(null);
 
     const savePreAutoFill = () => {
         if (!preAutoFillState.current) {
             preAutoFillState.current = {
                 name: values.name,
-                dateModified: values.dateModified,
-                lastModifiedTime: values.lastModifiedTime,
             };
         }
     };
 
     const restorePreAutoFill = (): Partial<ContentFormValues> => {
         if (!preAutoFillState.current) return {};
-        const { name, dateModified, lastModifiedTime } = preAutoFillState.current;
+        const name = preAutoFillState.current;
         preAutoFillState.current = null;
-        return { name, dateModified, lastModifiedTime };
+        return name;
     };
 
     const handleFileChange = (file: File | null) => {
@@ -108,12 +104,8 @@ export function ContentFormFields({ values, patch, errors, mode, disabled = fals
         }
 
         savePreAutoFill();
-        const lastMod = new Date(file.lastModified);
         const updates: Partial<ContentFormValues> = {
-            file,
-            // Pull last-modified from the file's own metadata rather than using now.
-            dateModified: lastMod,
-            lastModifiedTime: lastMod.toTimeString().substring(0, 8),
+            file
         };
         // Only autofill the name in add mode — in edit mode the existing display
         // name belongs to the record and shouldn't be silently replaced.
@@ -193,8 +185,6 @@ export function ContentFormFields({ values, patch, errors, mode, disabled = fals
                             if (mode === "edit") return;
                             savePreAutoFill();
                             patch({
-                                dateModified: new Date(),
-                                lastModifiedTime: nowTimeString(),
                                 ...(preview.title ? { name: preview.title } : {}),
                             });
                         }}
@@ -260,76 +250,67 @@ export function ContentFormFields({ values, patch, errors, mode, disabled = fals
 
             {/* Dates */}
             <div className="flex flex-wrap items-end gap-4  py-4">
-                <Field className=" flex-1">
-                    <FieldLabel className="text-primary text-lg" htmlFor="date-modified">
-                        Last Modified Date
+                <Field>
+                    <FieldLabel className="text-primary text-lg">
+                        Expires?:
                     </FieldLabel>
-                    <Popover open={openModifiedDate} onOpenChange={setOpenModifiedDate}>
-                        <PopoverTrigger asChild>
-                            <Button
-                                variant="outline"
-                                id="date-modified"
-                                className="justify-start font-normal text-sm h-10"
-                                disabled={values.uploadMode === "file" && values.file !== null}
-                            >
-                                {values.dateModified ? values.dateModified.toLocaleDateString() : "Select date"}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-                            <Calendar
-                                mode="single"
-                                selected={values.dateModified}
-                                defaultMonth={values.dateModified}
-                                captionLayout="dropdown"
-                                onSelect={(date) => { patch({ dateModified: date }); setOpenModifiedDate(false); }}
-                            />
-                        </PopoverContent>
-                    </Popover>
                 </Field>
 
-                <Field className="w-32">
-                    <FieldLabel className="text-primary text-lg" htmlFor="time-lastmodified">
-                        Time
-                    </FieldLabel>
-                    <Input
-                        type="time"
-                        id="time-lastmodified"
-                        step="1"
-                        value={values.lastModifiedTime}
-                        onChange={(e) => patch({ lastModifiedTime: e.target.value })}
-                        disabled={values.uploadMode === "file" && values.file !== null}
-                        className="font-normal md:text-sm h-10! appearance-none  [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-                    />
-                </Field>
+                <RadioGroup
+                    value={values.expires}
+                    onValueChange={(v) => {
+                        patch({
+                            expires: v as "expires" | "forever",
+                            ...(v === "forever" ? { dateExpiration: undefined } : {}),
+                        });
+                    }}
+                    className="flex gap-6 pb-2">
+                    <div className="flex items-center gap-2">
+                        <RadioGroupItem value="expires" id="expires-yes" />
+                        <Label htmlFor="expires-yes" className="md:text-sm">Yes</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <RadioGroupItem value="forever" id="expires-forever" />
+                        <Label htmlFor="expires-forever" className="md:text-sm">No</Label>
+                    </div>
+                </RadioGroup>
 
-                <Field className=" flex-1">
-                    <FieldLabel className="text-primary text-lg" htmlFor="date-expiration">
-                        Expiration Date
-                    </FieldLabel>
-                    <Popover open={openExpirationDate} onOpenChange={setOpenExpirationDate}>
-                        <PopoverTrigger asChild>
-                            <Button variant="outline" id="date-expiration" className="justify-start font-normal text-sm h-10">
-                                {values.dateExpiration ? values.dateExpiration.toLocaleDateString() : "Select date"}
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-                            <Calendar
-                                mode="single"
-                                selected={values.dateExpiration}
-                                defaultMonth={values.dateExpiration}
-                                captionLayout="dropdown"
-                                onSelect={(date) => { patch({ dateExpiration: date }); setOpenExpirationDate(false); }}
-                            />
-                        </PopoverContent>
-                    </Popover>
-                </Field>
+                {values.expires === "expires" && (
+                    <Field className="flex-1">
+                        <FieldLabel className="text-primary text-lg" htmlFor="date-expiration">
+                            Expiration Date
+                        </FieldLabel>
+                        <Popover open={openExpirationDate} onOpenChange={setOpenExpirationDate}>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" id="date-expiration" className="justify-start font-normal text-sm h-10">
+                                    {values.dateExpiration ? values.dateExpiration.toLocaleDateString() : "Select date"}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                                <Calendar
+                                    mode="single"
+                                    selected={values.dateExpiration}
+                                    defaultMonth={values.dateExpiration}
+                                    captionLayout="dropdown"
+                                    onSelect={(date) => { patch({ dateExpiration: date }); setOpenExpirationDate(false); }}
+                                />
+                            </PopoverContent>
+                        </Popover>
+                        {errors.dateExpiration && (
+                            <FieldDescription className="text-destructive">{errors.dateExpiration}</FieldDescription>
+                        )}
+                    </Field>
+                )}
             </div>
 
             <div className="py-6"><Separator className="bg-primary" /></div>
 
             {/* Tags */}
             <Field className="">
-                <FieldLabel className="text-primary text-lg">Tags</FieldLabel>
+                <FieldLabel className="text-primary text-lg">
+                    Tags
+                    <InfoButton content={"Add tags to help organize and search for this file."} size={"w-5 h-5"} />
+                </FieldLabel>
                 <TagInput value={values.tags} onChange={(tags) => patch({ tags })} disabled={disabled} />
             </Field>
 

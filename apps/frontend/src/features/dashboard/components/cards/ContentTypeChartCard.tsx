@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import {Bar, BarChart, CartesianGrid, XAxis, YAxis} from "recharts";
 import { useAuth0 } from "@auth0/auth0-react";
 import {
-    Card,
     CardContent,
     CardDescription,
     CardHeader,
@@ -15,6 +14,8 @@ import {
     ChartTooltipContent,
 } from "@/components/ui/chart";
 import type { ContentItem } from "@/lib/types";
+import InfoButton from "@/components/layout/InformationAlert.tsx";
+import DashboardCard from "@/features/dashboard/components/cards/DashboardCard.tsx";
 
 const chartConfig = {
     count: { label: "Files" },
@@ -85,21 +86,23 @@ function ContentTypeChartCard() {
             }))
             .sort((a, b) => b.count - a.count);
 
-        console.log("CONTENT LENGTH:", content.length);
-        console.log("COUNTS:", counts);
-        console.log("CHART DATA:", result);
-
         return result;
 
     }, [content]);
 
     return (
-        <Card className="border-t-secondary border-t-4 shadow-lg hover:scale-101 transition-transform md:col-span-2 flex flex-col">
+        <DashboardCard
+            size="medium"
+            borderColor="secondary"
+        >
             <CardHeader className="items-center pb-0">
                 <CardTitle className="capitalize text-2xl font-semibold">Content Type Breakdown</CardTitle>
                 <CardDescription>Current distribution of file types in database.</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 pb-0 pl-0 pr-4">
+                <div className="absolute right-1 top-1 w-8 h-8 cursor-pointer">
+                    <InfoButton content={"Shows the current distribution of file types stored in the database."}/>
+                </div>
                 <ChartContainer
                     config={chartConfig}
                     className="mx-auto aspect-square max-h-75 w-full"
@@ -127,7 +130,7 @@ function ContentTypeChartCard() {
                     </BarChart>
                 </ChartContainer>
             </CardContent>
-        </Card>
+        </DashboardCard>
     )
 
 }

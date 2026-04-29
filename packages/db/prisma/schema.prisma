@@ -1,7 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
@@ -12,86 +8,179 @@ datasource db {
   schemas  = ["public"]
 }
 
-//TODO: will not be used once Auth0 is online
-model Login {
-  userName     String
-  passwordHash String
-
-  employee   Employee @relation(fields: [employeeID], references: [id], onDelete: Cascade)
-  employeeID Int      @id
-
-  @@schema("public")
-}
-
 model Employee {
-  id              Int     @id
-  auth0Id         String? @unique
-  firstName       String
-  lastName        String
-  persona         Persona
-  profilePhotoURI String?
+  id                     Int                     @id
+  firstName              String
+  lastName               String
+  persona                Persona
+  auth0Id                String?                 @unique
+  profilePhotoURI        String?
+  widgetLayout           Json?
+  bookmarks              Bookmark[]
+  previews               Preview[]
+  checkedOutContent      Content[]               @relation("CheckedOut")
+  ownedContent           Content[]               @relation("Owned")
+  triggeredNotifications Notification[]          @relation("Triggered")
+  assignedRequests       ServiceRequest[]        @relation("AssignedTo")
+  ownedRequests          ServiceRequest[]        @relation("OwnedBy")
 
-  ownedContent      Content[] @relation("Owned")
-  checkedOutContent Content[] @relation("CheckedOut")
+  notificationDismissals NotificationDismissal[]
+  expirationDismissals   ExpirationDismissal[]
+  collections            Collection[]
+  collectionFavorites    CollectionFavorite[]
 
-  ownedRequests    ServiceRequest[] @relation("OwnedBy")
-  assignedRequests ServiceRequest[] @relation("AssignedTo")
-
-  login     Login?
-  bookmarks Bookmark[]
-
+  @@unique([firstName, lastName])
   @@schema("public")
 }
 
 model Content {
-  id          Int     @id @default(autoincrement())
-  displayName String
-  linkURL     String? @unique()
-  fileURI     String? @unique()
-
-  owner   Employee? @relation("Owned", fields: [ownerId], references: [id], onDelete: SetNull)
-  ownerId Int?
-
-  checkedOutById Int?
-  checkedOutAt   DateTime?
-  checkedOutBy   Employee? @relation("CheckedOut", fields: [checkedOutById], references: [id], onDelete: SetNull)
-
-  lastModified DateTime
-  expiration   DateTime?
-
-  contentType   ContentType
-  targetPersona Persona
-  status        Status
-  bookmarks     Bookmark[]
-
-  tags String[]
+  id                   Int                         @id @default(autoincrement())
+  linkURL              String?                     @unique
+  created              DateTime?
+  lastModified         DateTime
+  expiration           DateTime?
+  status               Status
+  contentType          ContentType
+  targetPersona        Persona
+  displayName          String
+  fileURI              String?                     @unique
+  checkedOutAt         DateTime?
+  checkedOutById       Int?
+  ownerId              Int?
+  tags                 String[]
+  textContent          String?
+  searchVector         Unsupported("tsvector")?    @default(dbgenerated("to_tsvector('english'::regconfig, COALESCE(\"textContent\", ''::text))"))
+  embedding            Unsupported("vector(384)")?
+  bookmarks            Bookmark[]
+  previews             Preview[]
+  checkedOutBy         Employee?                   @relation("CheckedOut", fields: [checkedOutById], references: [id])
+  owner                Employee?                   @relation("Owned", fields: [ownerId], references: [id])
+  notifications        Notification[]              @relation("Notified")
+  expirationDismissals ExpirationDismissal[]
+  collectionItems      CollectionItem[]
+  serviceRequests      ServiceRequest[]
 
   @@schema("public")
 }
 
 model ServiceRequest {
-  id      Int      @id @default(autoincrement())
-  owner   Employee @relation("OwnedBy", fields: [ownerId], references: [id])
-  ownerId Int
-
-  assignee   Employee? @relation("AssignedTo", fields: [assigneeId], references: [id], onDelete: SetNull)
-  assigneeId Int?
-
-  created  DateTime    @default(now())
-  deadline DateTime?
-  type     RequestType
-  name     String?
+  created            DateTime    @default(now())
+  deadline           DateTime?
+  type               RequestType
+  assigneeId         Int?
+  ownerId            Int
+  id                 Int         @id @default(autoincrement())
+  name               String?
+  notes              String?
+  linkedContentId    Int?
+  linkedCollectionId Int?
+  assignee           Employee?   @relation("AssignedTo", fields: [assigneeId], references: [id])
+  owner              Employee    @relation("OwnedBy", fields: [ownerId], references: [id])
+  linkedContent      Content?    @relation(fields: [linkedContentId], references: [id], onDelete: SetNull)
+  linkedCollection   Collection? @relation(fields: [linkedCollectionId], references: [id], onDelete: SetNull)
 
   @@schema("public")
 }
 
+model Collection {
+  id          Int      @id @default(autoincrement())
+  displayName String
+  owner       Employee @relation(fields: [ownerId], references: [id])
+  ownerId     Int
+  public      Boolean
+
+  items           CollectionItem[]
+  favorites       CollectionFavorite[]
+  serviceRequests ServiceRequest[]
+
+  @@schema("public")
+}
+
+model CollectionItem {
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  collectionId Int
+  content      Content    @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  contentId    Int
+  position     Int
+
+  @@id([collectionId, contentId])
+  @@schema("public")
+}
+
+model CollectionFavorite {
+  employee     Employee   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  employeeId   Int
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  collectionId Int
+
+  @@id([employeeId, collectionId])
+  @@schema("public")
+}
+
 model Bookmark {
-  bookmarker          Employee @relation(fields: [bookmarkerId], references: [id])
   bookmarkerId        Int
-  bookmarkedContent   Content  @relation(fields: [bookmarkedContentId], references: [id])
   bookmarkedContentId Int
+  bookmarkedContent   Content  @relation(fields: [bookmarkedContentId], references: [id])
+  bookmarker          Employee @relation(fields: [bookmarkerId], references: [id])
 
   @@id([bookmarkerId, bookmarkedContentId])
+  @@schema("public")
+}
+
+model Preview {
+  previewerId         Int
+  previewedContentId  Int
+  previewedContent    Content  @relation(fields: [previewedContentId], references: [id])
+  previewer           Employee @relation(fields: [previewerId], references: [id])
+  previewDate         DateTime @default(now())
+
+  @@id([previewerId, previewedContentId, previewDate])
+  @@schema("public")
+}
+
+model Notification {
+  id                     Int                     @id @default(autoincrement())
+  type                   NotificationType
+  contentId              Int
+  triggeredById          Int?
+  targetPersona          Persona
+  metadata               Json?
+  createdAt              DateTime                @default(now())
+  content                Content                 @relation("Notified", fields: [contentId], references: [id], onDelete: Cascade)
+  triggeredBy            Employee?               @relation("Triggered", fields: [triggeredById], references: [id], onDelete: SetNull)
+  notificationDismissals NotificationDismissal[]
+
+  @@index([targetPersona, createdAt])
+  @@schema("public")
+}
+
+model NotificationDismissal {
+  notificationId Int
+  employeeId     Int
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  employee       Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  dismissedAt    DateTime     @default(now())
+
+  @@id([notificationId, employeeId])
+  @@schema("public")
+}
+
+model ExpirationDismissal {
+  contentId   Int
+  employeeId  Int
+  threshold   String
+  content     Content  @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  dismissedAt DateTime @default(now())
+
+  @@id([contentId, employeeId, threshold])
+  @@schema("public")
+}
+
+enum NotificationType {
+  change
+  ownership
+
   @@schema("public")
 }
 
