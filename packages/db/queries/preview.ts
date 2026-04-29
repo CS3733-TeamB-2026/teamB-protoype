@@ -27,10 +27,10 @@ export class Preview {
     /* previewerId: Fill array with employeeIds to get hits for only those employees or leave null for all hits */
     public static async queryHits(
         contentId: number,
-        previewerIds: number[]
+        previewerIds?: number[]
     ): Promise<number> {
         let aggregations
-        if(previewerIds.length <= 0) {
+        if(previewerIds) {
             aggregations = await prisma.preview.aggregate({
                 _count: true,
                 where: { previewedContentId: contentId },

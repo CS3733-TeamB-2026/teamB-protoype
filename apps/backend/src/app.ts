@@ -58,7 +58,7 @@ app.delete("/api/bookmark/:contentId", bookmark.removeBookmark)
 // Previews
 app.get("/api/previews", previews.getPreviews)
 app.post("/api/previews/:contentId", previews.addPreview)
-app.get("/api/preview/hits/:contentId")
+app.get("/api/previews/hits/:contentId", previews.getHits)
 // Collections
 app.get("/api/collections", collection.getAllCollections)
 app.post("/api/collections", collection.createCollection)

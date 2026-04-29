@@ -502,7 +502,7 @@ export const getTransactionSummary = async (req: req, res: res) => {
         for (const content of visibleContent) {
             if (!content.ownerId) continue;
 
-            const hitCount = content.hits?.length ?? 0;
+            const hitCount = await q.Preview.queryHits(content.id)
 
             if (!hitsByOwner[content.ownerId]) {
                 const owner = await q.Employee.queryEmployeeById(content.ownerId);
@@ -524,7 +524,7 @@ export const getTransactionSummary = async (req: req, res: res) => {
         // Aggregate hits by persona
         const hitsByPersona: Record<string, number> = {};
         for (const content of visibleContent) {
-            const hitCount = content.hits?.length ?? 0;
+            const hitCount = await q.Preview.queryHits(content.id);
             hitsByPersona[content.targetPersona] =
                 (hitsByPersona[content.targetPersona] ?? 0) + hitCount;
         }
@@ -591,7 +591,7 @@ export const getTransactionSummary = async (req: req, res: res) => {
         return res.status(200).json({
             summary: {
                 totalContent: visibleContent.length,
-                totalHits: visibleContent.reduce((sum, c) => sum + (c.hits?.length ?? 0), 0),
+                totalHits: Object.values(hitsByPersona).reduce((a, b) => a + b, 0),
                 uniqueOwners: Object.keys(hitsByOwner).length,
             },
             hitsByOwner: Object.entries(hitsByOwner)
