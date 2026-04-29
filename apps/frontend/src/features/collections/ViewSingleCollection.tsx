@@ -382,7 +382,9 @@ export function ViewSingleCollection() {
                     </CardHeader>
                     <CardContent className="pt-0">
                         <div className="group flex items-center gap-2 text-sm text-muted-foreground w-fit">
-                            <span>Owner</span>
+                            <span className="text-muted-foreground">
+                                Owner: <span className="text-foreground">{collection.owner.firstName} {collection.owner.lastName}</span>
+                            </span>
                             <EmployeeAvatar employee={collection.owner} size="sm" />
                             {canEdit && (
                                 <Button
