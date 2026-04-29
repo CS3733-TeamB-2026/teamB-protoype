@@ -136,7 +136,6 @@ function ViewContent() {
     const [linkPreviews, setLinkPreviews] = useState<Record<number, UrlPreview | null>>({});
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
-
     const {user} = useUser();
     const navigate = useNavigate();
 
@@ -1013,6 +1012,12 @@ function ViewContent() {
                                                                         <span>
                                                                             <span className="font-medium text-foreground">Editing </span>
                                                                             {item.checkedOutBy.firstName} {item.checkedOutBy.lastName}
+                                                                        </span>
+                                                                    )}
+                                                                    {item.created && (
+                                                                        <span>
+                                                                            <span className="font-medium text-foreground">Created:{" "}</span>
+                                                                            {new Date(item.created).toLocaleString()}
                                                                         </span>
                                                                     )}
                                                                     <span>
