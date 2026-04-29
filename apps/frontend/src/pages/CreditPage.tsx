@@ -43,7 +43,7 @@ function Credits() {
 
                         {/* React */}
                         <CarouselItem className="md:basis-1/3">
-                            <Card className="shadow-md border-t-4 border-t-primary hover:shadow-lg transition-shadow">
+                            <Card className="shadow-md border-t-4 border-t-primary hover:shadow-lg transition-shadow h-80">
                                 <CardContent className="flex flex-col items-center text-center gap-4 pt-8 pb-8 px-6">
                                     <div className="p-4 rounded-full bg-primary/10">
                                         <div className="w-20 h-20 flex items-center justify-center">
@@ -56,7 +56,7 @@ function Credits() {
                                     </div>
                                     <h3 className="text-base font-semibold text-foreground">React</h3>
                                     <p className="text-sm text-muted-foreground">
-                                        The core UI library powering our frontend.
+                                        The core UI library powering our frontend .
                                     </p>
                                     <a href="https://react.dev" target="_blank" className="text-primary underline text-sm">
                                         react.dev
@@ -67,7 +67,7 @@ function Credits() {
 
                         {/* Shadcn UI */}
                         <CarouselItem className="md:basis-1/3">
-                            <Card className="shadow-md border-t-4 border-t-accent hover:shadow-lg transition-shadow">
+                            <Card className="shadow-md border-t-4 border-t-accent hover:shadow-lg transition-shadow h-80">
                                 <CardContent className="flex flex-col items-center text-center gap-4 pt-8 pb-8 px-6">
                                     <div className="p-4 rounded-full bg-accent/10">
                                         <div className="w-20 h-20 flex items-center justify-center">
@@ -91,7 +91,7 @@ function Credits() {
 
                         {/* Prisma */}
                         <CarouselItem className="md:basis-1/3">
-                            <Card className="shadow-md border-t-4 border-t-primary hover:shadow-lg transition-shadow">
+                            <Card className="shadow-md border-t-4 border-t-primary hover:shadow-lg transition-shadow h-80">
                                 <CardContent className="flex flex-col items-center text-center gap-4 pt-8 pb-8 px-6">
                                     <div className="p-4 rounded-full bg-primary/10">
                                         <div className="w-20 h-20 flex items-center justify-center">
@@ -115,7 +115,7 @@ function Credits() {
 
                         {/* PostgreSQL */}
                         <CarouselItem className="md:basis-1/3">
-                            <Card className="shadow-md border-t-4 border-t-primary hover:shadow-lg transition-shadow">
+                            <Card className="shadow-md border-t-4 border-t-primary hover:shadow-lg transition-shadow h-80">
                                 <CardContent className="flex flex-col items-center text-center gap-4 pt-8 pb-8 px-6">
                                     <div className="p-4 rounded-full bg-primary/10">
                                         <div className="w-20 h-20 flex items-center justify-center">
@@ -139,7 +139,7 @@ function Credits() {
 
                         {/* Express */}
                         <CarouselItem className="md:basis-1/3">
-                            <Card className="shadow-md border-t-4 border-t-accent hover:shadow-lg transition-shadow">
+                            <Card className="shadow-md border-t-4 border-t-accent hover:shadow-lg transition-shadow h-80">
                                 <CardContent className="flex flex-col items-center text-center gap-4 pt-8 pb-8 px-6">
                                     <div className="p-4 rounded-full bg-accent/10">
                                         <div className="w-20 h-20 flex items-center justify-center">
@@ -163,7 +163,7 @@ function Credits() {
 
                         {/* Tailwind */}
                         <CarouselItem className="md:basis-1/3">
-                            <Card className="shadow-md border-t-4 border-t-primary hover:shadow-lg transition-shadow">
+                            <Card className="shadow-md border-t-4 border-t-primary hover:shadow-lg transition-shadow h-80">
                                 <CardContent className="flex flex-col items-center text-center gap-4 pt-8 pb-8 px-6">
                                     <div className="p-4 rounded-full bg-primary/10">
                                         <div className="w-20 h-20 flex items-center justify-center">
@@ -187,7 +187,7 @@ function Credits() {
 
                         {/* Supabase */}
                         <CarouselItem className="md:basis-1/3">
-                            <Card className="shadow-md border-t-4 border-t-accent hover:shadow-lg transition-shadow">
+                            <Card className="shadow-md border-t-4 border-t-accent hover:shadow-lg transition-shadow h-80">
                                 <CardContent className="flex flex-col items-center text-center gap-4 pt-8 pb-8 px-6">
                                     <div className="p-4 rounded-full bg-accent/10">
                                         <div className="w-20 h-20 flex items-center justify-center">
@@ -211,8 +211,8 @@ function Credits() {
 
                     </CarouselContent>
 
-                    <CarouselPrevious />
-                    <CarouselNext />
+                    <CarouselPrevious className="shadow-md hover:shadow-lg transition-shadow"/>
+                    <CarouselNext className="shadow-md hover:shadow-lg transition-shadow" />
                 </Carousel>
             </div>
             <div className="mt-12"/>
