@@ -19,14 +19,8 @@ import { Button } from "@/components/ui/button.tsx";
 import { Tabs, TabsTrigger } from "@/components/ui/tabs";
 import { SlidingTabs } from "@/components/shared/SlidingTabs.tsx";
 import type { NotificationItem, NotificationTab } from "@/lib/types.ts";
+import { ClearAllDialog } from "@/features/notifications/ClearAllDialog.tsx";
 
-/**
- * Periodically polls for updates, allows users to dismiss notifications,
- * and supports filtering by notification type (change, ownership, expiration).
- * It also includes pagination for handling large numbers of notifications.
- *
- * @returns A React component that renders the comprehensive notifications view.
- */
 export default function ViewNotifications() {
     usePageTitle("Notifications");
     const { user } = useUser();
@@ -37,31 +31,18 @@ export default function ViewNotifications() {
     const [activeTab, setActiveTab] = useState<NotificationTab>("active");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-
-    // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(25);
-
-    // Filtering state
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
     const [typeFilters, setTypeFilters] = useState<Array<"change" | "ownership" | "expiration">>([]);
+    const [clearAllOpen, setClearAllOpen] = useState(false);
 
-    /**
-     * Refreshes both notification lists from the server without triggering a loading state.
-     * Used for background polling. Displays a toast error if the request fails.
-     */
     const refreshNotifications = useCallback(async () => {
         try {
             const token = await getAccessTokenSilently();
             const [activeRes, dismissedRes] = await Promise.all([
-                fetch(`/api/notifications`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                    cache: "no-store",
-                }),
-                fetch(`/api/notifications/dismissed`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                    cache: "no-store",
-                }),
+                fetch(`/api/notifications`, { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" }),
+                fetch(`/api/notifications/dismissed`, { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" }),
             ]);
             const activeData: NotificationItem[] = await activeRes.json();
             const dismissedData: NotificationItem[] = await dismissedRes.json();
@@ -72,13 +53,6 @@ export default function ViewNotifications() {
         }
     }, [getAccessTokenSilently]);
 
-    /**
-     * Dismisses a single notification optimistically and sends the request to the backend.
-     * Moves the item from active to dismissed state immediately, restoring or showing
-     * an error toast if the backend request fails.
-     *
-     * @param id The unique identifier for the notification or expiration alert.
-     */
     const handleDismiss = async (id: string) => {
         const dismissedAt = new Date().toISOString();
         setActiveItems((prev) => {
@@ -100,9 +74,7 @@ export default function ViewNotifications() {
                     return { kind: "expiration", contentId: Number(match[1]), threshold: match[2] };
                 })()
                 : { kind: "notification", notificationId: Number(id) };
-
             if (!body) return;
-
             await fetch(`/api/notifications/dismiss`, {
                 method: "POST",
                 headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -113,23 +85,45 @@ export default function ViewNotifications() {
         }
     };
 
+    const handleClearAll = async () => {
+        const snapshot = [...activeItems];
+        setActiveItems([]);
+        try {
+            const token = await getAccessTokenSilently();
+            await Promise.all(
+                snapshot.map((n) => {
+                    const body = n.id.startsWith("exp-")
+                        ? (() => {
+                            const match = n.id.match(/^exp-(\d+)-(.+)$/);
+                            if (!match) return null;
+                            return { kind: "expiration", contentId: Number(match[1]), threshold: match[2] };
+                        })()
+                        : { kind: "notification", notificationId: Number(n.id) };
+                    if (!body) return Promise.resolve();
+                    return fetch(`/api/notifications/dismiss`, {
+                        method: "POST",
+                        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                        body: JSON.stringify(body),
+                    });
+                })
+            );
+            toast.success("All notifications cleared.");
+        } catch {
+            setActiveItems(snapshot);
+            toast.error("Failed to clear notifications.");
+        }
+    };
+
     const userId = user?.id;
 
-    // Initial load of both notification feeds
     useEffect(() => {
         if (!userId) return;
         const fetchAll = async () => {
             try {
                 const token = await getAccessTokenSilently();
                 const [activeRes, dismissedRes] = await Promise.all([
-                    fetch(`/api/notifications`, {
-                        headers: { Authorization: `Bearer ${token}` },
-                        cache: "no-store",
-                    }),
-                    fetch(`/api/notifications/dismissed`, {
-                        headers: { Authorization: `Bearer ${token}` },
-                        cache: "no-store",
-                    }),
+                    fetch(`/api/notifications`, { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" }),
+                    fetch(`/api/notifications/dismissed`, { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" }),
                 ]);
                 const activeData: NotificationItem[] = await activeRes.json();
                 const dismissedData: NotificationItem[] = await dismissedRes.json();
@@ -144,31 +138,14 @@ export default function ViewNotifications() {
         void fetchAll();
     }, [getAccessTokenSilently, userId]);
 
-    // Setup periodic polling for new notifications
     useEffect(() => {
-        const id = setInterval(refreshNotifications, 20_000); // 20 seconds
+        const id = setInterval(refreshNotifications, 5_000);
         return () => clearInterval(id);
     }, [refreshNotifications]);
 
-    // Reset to first page on filter / tab change, and clear expiration filter
-    // when on Dismissed tab (since dismissed expirations aren't shown)
-    useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setCurrentPage(1);
-    }, [typeFilters, activeTab]);
-
-    useEffect(() => {
-        if (activeTab === "dismissed") {
-            // eslint-disable-next-line react-hooks/set-state-in-effect
-            setTypeFilters((prev) =>
-                prev.includes("expiration") ? prev.filter((t) => t !== "expiration") : prev,
-            );
-        }
-    }, [activeTab]);
-
     if (!user) return (
         <div className="flex items-center justify-center min-h-screen bg-secondary">
-            <Loader2 className="w-10 h-10 text-primary animate-spin"/>
+            <Loader2 className="w-10 h-10 text-primary animate-spin" />
         </div>
     );
 
@@ -176,14 +153,9 @@ export default function ViewNotifications() {
     const filteredItems = typeFilters.length === 0
         ? items
         : items.filter((n) => typeFilters.includes(n.type));
-
     const activeFilterCount = typeFilters.length;
     const totalPages = Math.max(1, Math.ceil(filteredItems.length / pageSize));
-
-    const paginated = filteredItems.slice(
-        (currentPage - 1) * pageSize,
-        currentPage * pageSize,
-    );
+    const paginated = filteredItems.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
     return (
         <div className="container max-w-5xl py-8 mx-auto">
@@ -195,7 +167,16 @@ export default function ViewNotifications() {
                 <Separator className="bg-primary mt-4" />
             </div>
 
-            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as NotificationTab)}>
+            <Tabs
+                value={activeTab}
+                onValueChange={(v) => {
+                    setActiveTab(v as NotificationTab);
+                    setCurrentPage(1);
+                    if (v === "dismissed") {
+                        setTypeFilters((prev) => prev.filter((t) => t !== "expiration"));
+                    }
+                }}
+            >
                 <SlidingTabs activeTab={activeTab} indicatorColor="bg-foreground">
                     <TabsTrigger
                         value="active"
@@ -216,21 +197,21 @@ export default function ViewNotifications() {
 
             {loading && (
                 <div className="flex items-center justify-center py-16 gap-3 text-muted-foreground">
-                    <Loader2 className="w-6 h-6 animate-spin"/>
+                    <Loader2 className="w-6 h-6 animate-spin" />
                     <p className="text-sm">Loading...</p>
                 </div>
             )}
 
             {error && (
                 <Alert variant="destructive" className="my-4">
-                    <AlertCircle/>
+                    <AlertCircle />
                     <AlertDescription>{error}</AlertDescription>
                 </Alert>
             )}
 
             {!loading && !error && items.length === 0 && (
                 <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
-                    <Bell className="w-10 h-10"/>
+                    <Bell className="w-10 h-10" />
                     <p className="text-sm">
                         {activeTab === "active"
                             ? "You have no notifications."
@@ -254,6 +235,15 @@ export default function ViewNotifications() {
                                         ? `Filters (${activeFilterCount})`
                                         : "Filters"}
                             </Button>
+                            {activeTab === "active" && activeItems.length > 0 && (
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setClearAllOpen(true)}
+                                    className="bg-card shadow-sm hover:bg-destructive hover:text-white h-11 text-base"
+                                >
+                                    Clear all
+                                </Button>
+                            )}
                         </div>
                     </div>
 
@@ -278,6 +268,7 @@ export default function ViewNotifications() {
                                                                     ? [...prev, type]
                                                                     : prev.filter((t) => t !== type),
                                                             );
+                                                            setCurrentPage(1);
                                                         }}
                                                     />
                                                     <span className="capitalize">{type}</span>
@@ -291,7 +282,10 @@ export default function ViewNotifications() {
                                         variant="secondary"
                                         size="sm"
                                         className="w-full"
-                                        onClick={() => setTypeFilters([])}
+                                        onClick={() => {
+                                            setTypeFilters([]);
+                                            setCurrentPage(1);
+                                        }}
                                     >
                                         Clear Filters
                                     </Button>
@@ -334,39 +328,17 @@ export default function ViewNotifications() {
                                 {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filteredItems.length)} of {filteredItems.length}
                             </span>
                             <div className="flex items-center gap-1">
-                                <button
-                                    onClick={() => setCurrentPage(1)}
-                                    disabled={currentPage === 1}
-                                    className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
-                                    title="First page"
-                                >
+                                <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed" title="First page">
                                     <ChevronsLeft className="w-4 h-4" />
                                 </button>
-                                <button
-                                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                                    disabled={currentPage === 1}
-                                    className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
-                                    title="Previous page"
-                                >
+                                <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed" title="Previous page">
                                     <ChevronLeft className="w-4 h-4" />
                                 </button>
-                                <span className="px-2">
-                                    Page {currentPage} of {totalPages}
-                                </span>
-                                <button
-                                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                                    disabled={currentPage === totalPages}
-                                    className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
-                                    title="Next page"
-                                >
+                                <span className="px-2">Page {currentPage} of {totalPages}</span>
+                                <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed" title="Next page">
                                     <ChevronRight className="w-4 h-4" />
                                 </button>
-                                <button
-                                    onClick={() => setCurrentPage(totalPages)}
-                                    disabled={currentPage === totalPages}
-                                    className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
-                                    title="Last page"
-                                >
+                                <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed" title="Last page">
                                     <ChevronsRight className="w-4 h-4" />
                                 </button>
                             </div>
@@ -374,6 +346,14 @@ export default function ViewNotifications() {
                     </div>
                 </>
             )}
+            <ClearAllDialog
+                open={clearAllOpen}
+                onOpenChange={setClearAllOpen}
+                onConfirm={async () => {
+                    await handleClearAll();
+                    setClearAllOpen(false);
+                }}
+            />
         </div>
     );
 }
