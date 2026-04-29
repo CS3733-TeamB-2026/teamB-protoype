@@ -5,6 +5,7 @@ import Footer from './components/layout/Footer.tsx'
 import { SidebarProvider } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/layout/AppSidebar.tsx";
 import Home from "@/pages/Home.tsx";
+import Credits from "@/pages/CreditPage.tsx";
 import TutorialPage from "@/features/tutorial/Tutorial.tsx";
 import AddEmployee from "@/features/employees/AddEmployee.tsx";
 import UnderwriterPersona from "@/pages/UnderwriterPersona.tsx";
@@ -81,6 +82,7 @@ function App() {
                             <Route path="/calendar" element={<ExperationCalendar/>}/>
                             <Route path="/file/:id" element={<ProtectedRoute><ViewSingleFile/></ProtectedRoute>}/>
                             <Route path="/collections" element={<ProtectedRoute><ViewCollections/></ProtectedRoute>}/>
+                            <Route path="/credits" element={<Credits />}/>
                             <Route path="/collections/:id" element={<ProtectedRoute><ViewSingleCollection/></ProtectedRoute>}/>
                             <Route path="/servicereqs" element={<ProtectedRoute><ViewServiceReqs/></ProtectedRoute>}/>
                             <Route path="/notifications" element={<ProtectedRoute><ViewNotifications/></ProtectedRoute>}/>
