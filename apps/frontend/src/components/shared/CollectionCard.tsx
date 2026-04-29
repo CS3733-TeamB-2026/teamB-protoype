@@ -22,7 +22,7 @@ export function CollectionCard({ collection, actions }: Props) {
     const itemCount = collection.items.length;
 
     return (
-        <Card className="flex items-center justify-between p-3 hover:bg-muted/50 transition-colors">
+        <Card className="flex flex-row items-center justify-between p-3 hover:bg-muted/50 transition-colors">
             <div className="flex items-center gap-3 flex-1 min-w-0">
                 <div className="w-5 h-5 shrink-0 flex items-center justify-center text-muted-foreground">
                     <HugeiconsIcon icon={FolderLibraryIcon} className="w-5 h-5" />
