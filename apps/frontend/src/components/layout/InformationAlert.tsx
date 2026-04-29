@@ -57,7 +57,7 @@ function InfoButton({ content, size = "w-7 h-7" }: InfoButtonProps) {
                 onMouseLeave={() => { setHovered(false);}}
                 className="relative"
             >
-                <CircleQuestionMark className={`${size} cursor-pointer duration-200 ${hovered ? "text-accent" : "opacity-10"}`} />
+                <CircleQuestionMark className={`${size} cursor-pointer ${hovered ? "text-accent" : "opacity-30"}`} />
             </div>
             {popup}
         </div>

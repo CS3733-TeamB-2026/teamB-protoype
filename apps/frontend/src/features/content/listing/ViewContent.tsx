@@ -607,7 +607,6 @@ function ViewContent() {
                                         className="w-64 h-10 text-base pl-2! pr-8 border border-gray-700 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-gray-500"
                                     />
                                 </div>
-                                <InfoButton content="You can search for document names and text within documents here." />
                             </div>
 
                             <div className="flex flex-row gap-2">
