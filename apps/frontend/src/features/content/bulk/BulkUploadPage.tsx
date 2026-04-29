@@ -195,7 +195,6 @@ export function BulkUploadPage() {
                 targetPersona: meta.targetPersona,
                 uploadMode: "file",
                 file: entry.file,
-                dateModified: lastMod,
                 lastModifiedTime: lastMod.toTimeString().substring(0, 8),
                 dateExpiration: meta.dateExpiration,
                 tags: meta.tags,
