@@ -15,6 +15,7 @@ import { FilePickerCard } from "@/components/shared/FilePickerCard.tsx";
 import { EmployeePicker } from "@/components/shared/EmployeePicker.tsx";
 import { type ContentFormValues, nowTimeString } from "@/features/content/forms/content-form.ts";
 import { TagInput } from "@/features/content/tags/TagInput.tsx";
+import InfoButton from "@/components/layout/InformationAlert.tsx";
 
 type ContentDialogMode = "add" | "edit";
 
@@ -358,7 +359,10 @@ export function ContentFormFields({ values, patch, errors, mode, disabled = fals
 
             {/* Tags */}
             <Field className="">
-                <FieldLabel className="text-primary text-lg">Tags</FieldLabel>
+                <FieldLabel className="text-primary text-lg">
+                    Tags
+                    <InfoButton content={"Add tags to help organize and search for this file."} size={"w-5 h-5"} />
+                </FieldLabel>
                 <TagInput value={values.tags} onChange={(tags) => patch({ tags })} disabled={disabled} />
             </Field>
 

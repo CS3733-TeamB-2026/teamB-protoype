@@ -29,6 +29,7 @@ import {
 } from "@/features/content/forms/content-form.ts";
 import { useUser } from "@/hooks/use-user.ts";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
+import InfoButton from "@/components/layout/InformationAlert.tsx";
 
 // ---------- Types ----------
 
@@ -481,7 +482,10 @@ export function BulkUploadPage() {
 
                             {/* Tags */}
                             <Field className="">
-                                <FieldLabel className="text-primary text-lg">Tags</FieldLabel>
+                                <FieldLabel className="text-primary text-lg">
+                                    Tags
+                                    <InfoButton content={"Add custom tags to help organize and search for this file."} size={"w-5 h-5"} />
+                                </FieldLabel>
                                 <TagInput value={meta.tags} onChange={tags => patchMeta({ tags })} disabled={uploading} />
                             </Field>
 
