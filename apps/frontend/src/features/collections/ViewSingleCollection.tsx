@@ -306,9 +306,14 @@ export function ViewSingleCollection() {
 
             <div className="max-w-5xl mx-auto my-8 px-4 flex flex-col gap-6">
 
-                <Button variant="outline" onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground w-fit">
-                    <ArrowLeft className="w-4 h-4" /> Back
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground w-fit">
+                        <ArrowLeft className="w-4 h-4" /> Back
+                    </Button>
+                    <Button variant="outline" onClick={() => navigate("/collections")} className="text-sm text-muted-foreground hover:text-foreground w-fit">
+                        View Collections
+                    </Button>
+                </div>
 
                 {/* Meta card */}
                 <Card className="shadow-sm">
