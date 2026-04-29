@@ -3,6 +3,7 @@ import { Separator } from "@/components/ui/separator";
 import { ChevronLeft, ChevronRight} from "lucide-react";
 import { useUser } from "@/hooks/use-user.ts";
 import { slideDecks } from '@/components/ui/slide-deck.tsx';
+import {Card} from "@/components/ui/card.tsx";
 
 type SlideKey = keyof typeof slideDecks;
 interface Step {
@@ -54,19 +55,13 @@ const USER_SECTIONS: Section[] = [
         title: "Changing & Editing Files",
         steps: [
             { title: "Find the Document", desc: "Search or browse the document list and click the document you want to update.", image: 'slide6' },
-            { title: "Open the Edit Menu", desc: "On the document detail page, click the Edit button (pencil icon) in the top-right corner.", image: 'slide7' },
-            { title: "Editing A File", desc: "Upload a new version of the file or change the title, category, or tags. Both can be done in the same edit session.", image: 'slide8' },
-            { title: "Saving Your Changes", desc: "Click Save to commit your edits. The document version history will be updated automatically.", tag: { label: "Note: document must be checked out to you first", variant: "warning" }, image: 'slide9' },
-        ],
-    },
-    {
-        label: "Check-In / Check-Out",
-        title: "Check-In / Check-Out System",
-        steps: [
-            { title: "Checking Out", desc: "Files in the system work with a check-in / check-out system. When you check out a document, only you have permissions to change it, however others can still view it. Once you are done editing the file, you'll just check it back in for the next person to use.", image: 'slide10' },
-            { title: "Making Edits", desc: "While checked out, download the file, make your changes locally, and re-upload the updated version using the Edit flow. Or alternatively, change document metadata without downloading.", image: 'slide11' },
-            { title: "Checking In", desc: "Once finished, click Check In on the document page. This saves your changes and releases the lock for others.", image: 'slide12' },
-            { title: "Who Has What?", desc: "A locked document shows a Checked Out badge with the name of the user who currently has it.", tag: { label: "Badge visible on document card", variant: "ui" }, image: 'slide13' },
+            { title: "Checking Out", desc: "Files in the system work with a check-in / check-out system. When you check out a document, only you have permissions to change it, however others can still view it. Once you are done editing the file, you'll just check it back in for the next person to use.", image: 'slide7' },
+            { title: "Open the Edit Menu", desc: "On the drop down after checking out, click the Edit button (pencil icon) in the top-right corner.", image: 'slide8' },
+            { title: "Editing File Metadata", desc: "Upload a new version of the file or change the title, category, or tags. Both can be done in the same edit session." +
+                    " While checked out, download the file, make your changes locally, and re-upload the updated version using the Edit flow.", image: 'slide9' },
+            { title: "Saving Your Changes", desc: "Click Save to commit your edits. The document version history will be updated automatically.", tag: { label: "Note: document must be checked out to you first", variant: "warning" }, image: 'slide10' },
+            { title: "Checking In", desc: "Once finished, click Check In on the document page. This saves your changes and releases the lock for others.", image: 'slide11' },
+            { title: "Who Has What?", desc: "A locked document shows a Checked Out badge with the name of the user who currently has it.", tag: { label: "Badge visible on document card", variant: "ui" }, image: 'slide12' },
         ],
     },
 ];
@@ -77,10 +72,9 @@ const ADMIN_SECTIONS: Section[] = [
         title: "Adding New Users",
         adminOnly: true,
         steps: [
-            { title: "Go to User Management", desc: "From the sidebar, navigate to Admin → User Management.", image: 'slide16' },
-            { title: 'Click "Add User"', desc: "Press the + Add User button in the top-right of the user list.", image: 'slide16' },
-            { title: "Fill in user details", desc: "Enter the employee's first name, last name, email, and assign a Persona (Standard User or Administrator).", image: 'slide16' },
-            { title: "Send invite / set password", desc: "Either send the user an email invite or set a temporary password they'll change on first login.", tag: { label: "Invite email sent automatically", variant: "ui" }, image: 'slide16' },
+            { title: "Go to User Management", desc: "From the sidebar, navigate to Manage Employees.", image: 'slide13' },
+            { title: "Click \"Add User\"", desc: "Press the + Add User button in the top-right of the user list.", image: 'slide14' },
+            { title: "Fill in user details", desc: "Enter the employee's first name, last name, email, and assign a Persona (Standard User or Administrator).", image: 'slide15' },
             { title: "Confirm the new account", desc: "The new user will appear in the user list immediately. You can edit or deactivate their account at any time.", image: 'slide16'},
         ],
     },
@@ -90,9 +84,9 @@ const ADMIN_SECTIONS: Section[] = [
         adminOnly: true,
         steps: [
             { title: "Find the user", desc: "In User Management, search by name or email, then click the user's row to open their profile.", image: 'slide16' },
-            { title: "Edit user details or role", desc: "Click Edit to change their name, email, or persona. Changing a user's persona takes effect immediately on their next action.", image: 'slide16' },
-            { title: "Reset password", desc: "Use the Reset Password option to send the user a reset link or set a new temporary password directly.", image: 'slide16' },
-            { title: "Deactivate an account", desc: "Toggle the Active switch to off to disable the account. The user's documents and history are preserved; they simply cannot log in.", tag: { label: "Deactivation also releases all their active check-outs", variant: "warning" }, image: 'slide16' },
+            { title: "Edit user details or role", desc: "Click Edit to change their name, email, or persona. Changing a user's persona takes effect immediately on their next action.", image: 'slide17' },
+            { title: "Delete Users", desc: "Careful! Pressing this button will permanently remove an employee and ANY content that they have uploaded!" +
+                    "To prevent their content from being removed, please change the owner to someone who is not being deleted.", image: 'slide18' },
         ],
     },
 ];
@@ -195,7 +189,7 @@ function TutorialPage() {
     }
 
     return (
-        <div className="flex flex-col min-h-screen bg-background">
+        <div className="flex flex-col min-h-screen bg-secondary">
             <div className="sticky top-0 z-10 bg-background/90 backdrop-blur border-b border-border px-6 py-3">
                 <SectionPills
                     sections={sections}
@@ -205,72 +199,74 @@ function TutorialPage() {
                     onJump={goTo}
                 />
             </div>
+            <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center px-4">
+                <div className="w-full px-3 py-3 flex flex-col" style={{ height: 'calc(100vh - 110px)' }}>
+                    <div className={`border-l-4 pl-4 mb-6`}>
+                        <h2 className="text-2xl font-bold">{current.sectionTitle}</h2>
+                    </div>
 
-            <div className="w-full px-72 py-6 flex flex-col" style={{ height: 'calc(100vh - 110px)' }}>
-                <div className={`border-l-4 pl-4 mb-6`}>
-                    <h2 className="text-lg font-bold">{current.sectionTitle}</h2>
-                </div>
-
-                <div className="mb-6">
-                    <div className="flex items-center justify-between mb-1.5">
+                    <div className="mb-6">
+                        <div className="flex items-center justify-between mb-1.5">
                         <span className={`text-xs font-semibold font-mono`}>
                             Step {current.stepIndex + 1} of {current.totalStepsInSection}
                         </span>
-                        <span className="text-xs text-muted-foreground">
+                            <span className="text-xs text-muted-foreground">
                             {Math.round(sectionProgress)}% of this section
                         </span>
+                        </div>
+                        <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
+                            <div
+                                className={`h-full rounded-full transition-all duration-500 ${progressBar}`}
+                                style={{ width: `${sectionProgress}%` }}
+                            />
+                        </div>
                     </div>
-                    <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
-                        <div
-                            className={`h-full rounded-full transition-all duration-500 ${progressBar}`}
-                            style={{ width: `${sectionProgress}%` }}
-                        />
+
+                    <div className="bg-card border border-border rounded-xl p-6 shadow-sm flex flex-col min-h-0">
+                        <h3 className="text-xl font-bold mb-3">{current.step.title}</h3>
+                        <Separator className="mb-4" />
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                            {current.step.desc}
+                        </p>
+                        <div className="mt-5 rounded-lg border-2 border-dashed border-border bg-secondary overflow-hidden"
+                             style={{ maxHeight: '60vh' }}>
+                            <img
+                                src={slideDecks[current.step.image]}
+                                alt={current.step.image}
+                                className="w-full h-auto block max-h-[60vh] object-contain object-top"
+                            />
+                        </div>
                     </div>
-                </div>
 
-                <div className="bg-card border border-border rounded-xl p-6 shadow-sm flex flex-col min-h-0">
-                    <h3 className="text-xl font-bold mb-3">{current.step.title}</h3>
-                    <Separator className="mb-4" />
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                        {current.step.desc}
-                    </p>
-                    <div className="mt-5 rounded-lg border-2 border-dashed border-border bg-secondary overflow-hidden"
-                         style={{ maxHeight: '60vh' }}>
-                        <img
-                            src={slideDecks[current.step.image]}
-                            alt={current.step.image}
-                            className="w-full h-auto block max-h-[60vh] object-contain object-top"
-                        />
-                    </div>
-                </div>
+                    <div className="flex items-center justify-between mt-6 gap-3">
+                        <button
+                            onClick={() => goTo(slideIndex - 1)}
+                            disabled={isFirst}
+                            className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold border border-border bg-card hover:bg-secondary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                            <ChevronLeft size={16} />
+                            Back
+                        </button>
 
-                <div className="flex items-center justify-between mt-6 gap-3">
-                    <button
-                        onClick={() => goTo(slideIndex - 1)}
-                        disabled={isFirst}
-                        className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold border border-border bg-card hover:bg-secondary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                    >
-                        <ChevronLeft size={16} />
-                        Back
-                    </button>
-
-                    <span className="text-xs text-muted-foreground font-mono select-none">
+                        <span className="text-xs text-muted-foreground font-mono select-none">
                         {slideIndex + 1} / {slides.length}
                     </span>
 
-                    <button
-                        onClick={handleNext}
-                        className={`flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold border border-border bg-card hover:bg-secondary transition-colors`}
-                    >
-                        {isLast
-                            ? "Finish Tutorial"
-                            : isLastInSection
-                                ? "Next Section"
-                                : "Next Step"}
-                        {!isLast && <ChevronRight size={16} />}
-                    </button>
+                        <button
+                            onClick={handleNext}
+                            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold border border-border bg-card hover:bg-secondary transition-colors`}
+                        >
+                            {isLast
+                                ? "Finish Tutorial"
+                                : isLastInSection
+                                    ? "Next Section"
+                                    : "Next Step"}
+                            {!isLast && <ChevronRight size={16} />}
+                        </button>
+                    </div>
                 </div>
-            </div>
+            </Card>
+
         </div>
     );
 }
