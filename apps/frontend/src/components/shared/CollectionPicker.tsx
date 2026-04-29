@@ -22,6 +22,11 @@ interface Props {
  * Mirrors the ContentPicker / EmployeePicker UX: a trigger button shows the
  * current selection, clicking opens a popover with a search input and a
  * scrollable CollectionCard list. Fetches all collections on mount.
+ *
+ * When `publicOnly` is true, private collections are filtered out client-side
+ * from the full list — the fetch still hits `/api/collections` unfiltered.
+ * Used in the service request form so only publicly shareable collections
+ * can be linked to a request.
  */
 export function CollectionPicker({ selectedId, onSelect, disabled = false, publicOnly = false }: Props) {
     const [open, setOpen] = useState(false);

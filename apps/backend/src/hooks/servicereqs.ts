@@ -29,6 +29,8 @@ export const createServiceReq = async (req: req, res: res) => {
         const employee = await getEmployee(req);
         if (!employee) return res.status(404).json({ error: "Employee not found" });
 
+        const linkedContentId = payload.linkedContentId ?? null;
+        const linkedCollectionId = linkedContentId ? null : (payload.linkedCollectionId ?? null);
         const result = await q.ServiceReqs.createServiceReq(
             payload.name,
             payload.created,
@@ -37,8 +39,8 @@ export const createServiceReq = async (req: req, res: res) => {
             payload.assigneeId,
             employee.id,
             payload.notes ?? null,
-            payload.linkedContentId ?? null,
-            payload.linkedCollectionId ?? null,
+            linkedContentId,
+            linkedCollectionId,
         );
         return res.status(201).json(result);
     } catch (error) {
@@ -58,6 +60,9 @@ export const updateServiceReq = async (req: req, res: res) => {
         if (!isUserOrAdmin(existing.ownerId, employee))
             return res.status(403).json({ error: "Access denied" });
 
+        const linkedContentId = payload.linkedContentId ?? null;
+        const linkedCollectionId = linkedContentId ? null : (payload.linkedCollectionId ?? null);
+
         // ownerId is taken from the existing record — ownership cannot be transferred via this endpoint
         const result = await q.ServiceReqs.updateServiceReq(
             payload.id,
@@ -68,8 +73,8 @@ export const updateServiceReq = async (req: req, res: res) => {
             payload.assigneeId,
             existing.ownerId,
             payload.notes ?? null,
-            payload.linkedContentId ?? null,
-            payload.linkedCollectionId ?? null,
+            linkedContentId,
+            linkedCollectionId,
         );
         return res.status(200).json(result);
     } catch (error) {

@@ -20,6 +20,19 @@ import {formatLabel} from "@/lib/utils.ts";
 import { ContentItemCard } from "@/components/shared/ContentItemCard.tsx";
 import { CollectionCard } from "@/components/shared/CollectionCard.tsx";
 
+/**
+ * Full-page table for browsing, adding, editing, and deleting service requests.
+ *
+ * Clicking a row toggles an inline detail panel showing notes and any linked
+ * content item or collection. Edit/Delete buttons call `e.stopPropagation()` so
+ * they don't also toggle the expansion.
+ *
+ * After any mutation (add or edit), `fetchServiceReqs` is called again rather than
+ * patching state with the mutation response — this ensures `owner`, `assignee`, and
+ * linked relations are always fully populated from the authoritative query.
+ *
+ * Edit and delete are gated to the owner, the assignee, or any admin.
+ */
 function ViewServiceReqs() {
 
     usePageTitle("Manage Service Reqs");
@@ -30,7 +43,7 @@ function ViewServiceReqs() {
     const [editingServiceReq, setEditingServiceReq] = useState<ServiceReq | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<ServiceReq | null>(null);
     const [addOpen, setAddOpen] = useState(false);
-    const [expandedId, setExpandedId] = useState<number | null>(null);
+    const [expandedId, setExpandedId] = useState<number | null>(null); // id of the currently expanded detail row, null = collapsed
     const user = useUser();
     const [sort, toggleSort] = useSortState<"name" | "created" | "deadline" | "type" | "assignee" | "owner">({column: "name", direction: "asc"});
     const [searchTerm, setSearchTerm] = useState("");

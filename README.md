@@ -147,7 +147,7 @@ All routes are JSON unless noted. File-upload routes use `multipart/form-data` w
 
 > **Route order matters**: `GET /api/collections/favorites` must be registered **before** `GET /api/collections/:id` to avoid Express matching `"favorites"` as an ID.
 
-**Service Requests** — `GET/POST/PUT /api/servicereqs`, `DELETE /api/servicereq`, plus `/api/assigned`.
+**Service Requests** — `GET/POST/PUT /api/servicereqs`, `DELETE /api/servicereqs/:id`, plus `/api/assigned`.
 
 > **Route order matters in `apps/backend/src/app.ts`**: `info`, `download`, `publicUrl`, `tags`, and `search` must be registered **before** `/:id`, otherwise Express 5 will match them to the parameterized route first. `checkout` and `checkin` are sub-routes under `/:id` and are unaffected.
 
@@ -230,6 +230,9 @@ Extend by adding a key to `keys.ts` and entries to `dictionaries.ts`.
 - **`EmployeeAvatar`** — avatar with initials fallback and HoverCard tooltip. `size`: `sm | default | lg`.
 - **`EmployeeCard`** — compact name + persona display; used as list rows inside `EmployeePicker`.
 - **`EmployeePicker`** — searchable employee dropdown. Controlled via `selectedId` / `onSelect(id, employee)`. Fetches `/api/employee/all` on mount. Supports `disabled` and a "None" option.
+- **`ContentItemCard`** — compact one-line row for a content item (file or link). Shows favicon or `ContentIcon`, display name, subtitle, `ContentExtBadge`, and a nav button. Accepts an `actions` slot for injecting buttons.
+- **`CollectionCard`** — compact one-line row for a collection. Shows item count, public/private indicator, and a link to the collection detail page. Accepts an `actions` slot.
+- **`CollectionPicker`** — searchable collection dropdown, same UX as `EmployeePicker`. Accepts `publicOnly` to restrict the list to public collections (filtering is client-side). Used in the service request form.
 - **`PersonaBadge`** — badge for a persona value.
 - **`SortableHead<T>`** — generic `<TableHead>` with sort-direction arrow. Pairs with `useSortState`.
 - **`SlidingTabs`** — animated underline tab strip.
@@ -374,7 +377,7 @@ Access control: Edit and Delete disabled unless the user is `ownerId`, `assignee
 
 Search matches name, type, owner full name, assignee full name. `highlightRange` on the name column. All columns sortable; default: type asc.
 
-**API endpoints** — `GET/POST/PUT /api/servicereqs`, `DELETE /api/servicereq`.
+**API endpoints** — `GET/POST/PUT /api/servicereqs`, `DELETE /api/servicereqs/:id`.
 
 ---
 
