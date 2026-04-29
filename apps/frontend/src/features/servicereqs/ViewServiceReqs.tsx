@@ -158,18 +158,19 @@ function ViewServiceReqs() {
                                     if (col === "deadline") return s.deadline;
                                     if (col === "assignee") return s.assignee ? `${s.assignee.lastName} ${s.assignee.firstName}` : "";
                                     if (col === "owner") return `${s.owner.lastName} ${s.owner.firstName}`;
-                                }).map((servicereq) => {
+                                }).map((servicereq, index) => {
                                     const matches = findMatches(servicereq.name, searchTerm);
                                     const isExpanded = expandedId === servicereq.id;
                                     const canEdit =
                                         servicereq.ownerId === user.user?.id ||
                                         servicereq.assigneeId === user.user?.id ||
                                         user.user?.persona === "admin";
+                                    const stripe = index % 2 === 0 ? "bg-muted/10" : "";
                                     return (
                                     <>
                                         <TableRow
                                             key={servicereq.id}
-                                            className="cursor-pointer"
+                                            className={`cursor-pointer ${stripe}`}
                                             onClick={() => setExpandedId(isExpanded ? null : servicereq.id)}
                                         >
                                             <TableCell className="text-left pr-4">
@@ -236,7 +237,7 @@ function ViewServiceReqs() {
                                             </TableCell>
                                         </TableRow>
                                         {isExpanded && (
-                                            <TableRow key={`${servicereq.id}-detail`} className="bg-muted/30 hover:bg-muted/30">
+                                            <TableRow key={`${servicereq.id}-detail`} className={`${stripe} hover:bg-inherit`}>
                                                 <TableCell colSpan={7} className="px-6 py-4">
                                                     <ServiceReqDetail servicereq={servicereq} />
                                                 </TableCell>
