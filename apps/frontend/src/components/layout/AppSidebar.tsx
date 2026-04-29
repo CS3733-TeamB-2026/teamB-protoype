@@ -140,13 +140,13 @@ function AppSidebar() {
             <SidebarFooter className="p-4 border-t-2">
                 <div className="flex flex-row items-center justify-between pl-0 pr-2">
                     <Link to="/about">
-                        <Button className="px-4 py-2 text-sm" variant="outline" onClick={ () => toggleSidebar() } >
+                        <Button className="cursor-pointer px-4 py-2 text-sm" variant="outline" onClick={ () => toggleSidebar() } >
                             <HelpCircle />
                             About
                         </Button>
                     </Link>
                     <Link to="/credits">
-                        <Button className="px-4 py-2 text-sm" variant="outline" onClick={ () => toggleSidebar() }  >
+                        <Button className="cursor-pointer px-4 py-2 text-sm" variant="outline" onClick={ () => toggleSidebar() }  >
                             <FileText />
                             Credits
                         </Button>

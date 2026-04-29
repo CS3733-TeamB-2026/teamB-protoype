@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { AlertCircle, ArrowLeft, FileText, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
@@ -13,6 +13,8 @@ import type { ContentItem } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
 import { Timeline } from "@/features/content/components/Timeline.tsx"
+import { useNavigate } from "react-router-dom";
+import {Button} from "@/components/ui/button";
 
 /**
  * Full-page file viewer for a single content item.
@@ -31,6 +33,7 @@ export function ViewSingleFile() {
     const [item, setItem] = useState<ContentItem | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const navigate = useNavigate();
 
     usePageTitle("View File");
 
@@ -72,9 +75,10 @@ export function ViewSingleFile() {
 
             <Card className="shadow-lg max-w-5xl mx-auto my-8">
                 <CardHeader>
-                    <Link to="/files" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2 w-fit">
-                        <ArrowLeft className="w-4 h-4" /> Back to files
-                    </Link>
+                    {/*TODO: this wont go back on powerpoints bc link and whatever*/}
+                    <Button variant="outline" onClick={ () => navigate(-1) } className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-2 w-fit">
+                        <ArrowLeft className="w-4 h-4" /> Back
+                    </Button>
                     {item && (
                         <CardTitle className="text-2xl text-primary">{item.displayName}</CardTitle>
                     )}
