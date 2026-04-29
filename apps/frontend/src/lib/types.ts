@@ -25,6 +25,7 @@ export type Employee = {
 
 // Matches the Content model from Prisma (with joined owner/checkedOutBy)
 export type ContentItem = {
+    created: string | Date;
     id: number;
     displayName: string;
     linkURL: string | null;

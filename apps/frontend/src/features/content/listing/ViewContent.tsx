@@ -88,9 +88,6 @@ import {useTranslation} from "@/languageSupport/useTranslation.ts";
 import type {TranslationKey} from "@/languageSupport/keys.ts";
 import {ForceCheckinDialog} from "@/features/content/forms/ForceCheckinDialog.tsx";
 import InfoButton from "@/components/layout/InformationAlert";
-import {Timeline} from "@/features/content/components/Timeline.tsx";
-
-
 /**
  * Main content list page — the primary view for browsing, searching, filtering,
  * and managing content items.

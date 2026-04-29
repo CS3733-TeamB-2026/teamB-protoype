@@ -112,7 +112,7 @@ export function ViewSingleFile() {
                             </div>
 
                             <Timeline
-                                uploaded={item.lastModified}
+                                created={item.created}
                                 expiration={item.expiration ?? null}
                                 lastModified={item.lastModified}
                             />
