@@ -31,7 +31,7 @@ import ViewServiceReqs from "@/features/servicereqs/ViewServiceReqs.tsx";
 import SearchContent from "@/features/SearchContent.tsx";
 import ViewCollections from "@/features/collections/ViewCollections.tsx";
 import { ViewSingleCollection } from "@/features/collections/ViewSingleCollection.tsx";
-
+import About from "@/pages/About.tsx"
 import ViewNotifications from "@/features/notifications/ViewNotifications.tsx";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -85,6 +85,7 @@ function App() {
                             <Route path="/servicereqs" element={<ProtectedRoute><ViewServiceReqs/></ProtectedRoute>}/>
                             <Route path="/notifications" element={<ProtectedRoute><ViewNotifications/></ProtectedRoute>}/>
                             <Route path="/search" element={<ProtectedRoute><SearchContent/></ProtectedRoute>}/>
+                            <Route path="/about" element={<About/>}/>
                             <Route path="/settings" element={<ProtectedRoute><SettingsLayout/></ProtectedRoute>}>
 
                                 <Route index element={<ProtectedRoute><Navigate to="profile" replace /></ProtectedRoute>} />

@@ -330,7 +330,7 @@ export function ViewSingleCollection() {
                 description={`${collection.items.length} item${collection.items.length !== 1 ? "s" : ""} · ${collection.public ? "Public" : "Private"}`}
             />
 
-            <div className="max-w-3xl mx-auto my-8 px-4 flex flex-col gap-6">
+            <div className="max-w-5xl mx-auto my-8 px-4 flex flex-col gap-6">
 
                 <Link to="/collections" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors w-fit">
                     <ArrowLeft className="w-4 h-4" /> Back to Collections
