@@ -9,7 +9,13 @@ export class ServiceReqs {
         owner: { select: employeeSelect },
         assignee: { select: employeeSelect },
         linkedContent: true,
-        linkedCollection: true,
+        linkedCollection: {
+            include: {
+                items: {
+                    include: { content: true },
+                },
+            },
+        },
     } as const;
 
     /** Fetches a single service request by ID, used by the backend hook for ownership checks before update/delete. */
@@ -57,7 +63,8 @@ export class ServiceReqs {
                 notes: _notes ?? null,
                 linkedContentId: _linkedContentId ?? null,
                 linkedCollectionId: _linkedCollectionId ?? null,
-            }
+            },
+            include: ServiceReqs.include,
         });
     }
 
@@ -82,7 +89,8 @@ export class ServiceReqs {
                 notes: _notes ?? null,
                 linkedContentId: _linkedContentId ?? null,
                 linkedCollectionId: _linkedCollectionId ?? null,
-            }
+            },
+            include: ServiceReqs.include,
         });
     }
 

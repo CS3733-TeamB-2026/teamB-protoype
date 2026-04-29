@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.tsx";
 import { useEffect, useState } from "react";
-import {Loader2, Pencil, Trash2, Search, Plus } from "lucide-react";
+import {Loader2, Pencil, Trash2, Search, Plus, StickyNote, File, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
 import { Hero } from "@/components/shared/Hero.tsx";
 import { EditServiceReqDialog } from "@/features/servicereqs/EditServiceReqDialog.tsx";
@@ -17,6 +17,8 @@ import { usePageTitle } from "@/hooks/use-page-title.ts";
 import {findMatches, highlightRange} from "@/lib/highlight.tsx";
 import { EmployeeAvatar } from "@/components/shared/EmployeeAvatar.tsx";
 import {formatLabel} from "@/lib/utils.ts";
+import { ContentItemCard } from "@/components/shared/ContentItemCard.tsx";
+import { CollectionCard } from "@/components/shared/CollectionCard.tsx";
 
 function ViewServiceReqs() {
 
@@ -27,7 +29,8 @@ function ViewServiceReqs() {
     const [editOpen, setEditOpen] = useState(false);
     const [editingServiceReq, setEditingServiceReq] = useState<ServiceReq | null>(null);
     const [deleteTarget, setDeleteTarget] = useState<ServiceReq | null>(null);
-    const [addOpen, setAddOpen] = useState(false);  // <-- new
+    const [addOpen, setAddOpen] = useState(false);
+    const [expandedId, setExpandedId] = useState<number | null>(null);
     const user = useUser();
     /*Update*/const [sort, toggleSort] = useSortState<"name" | "created" | "deadline" | "type" | "assignee" | "owner">({column: "type", direction: "asc"});
     const [searchTerm, setSearchTerm] = useState("");
@@ -139,6 +142,7 @@ function ViewServiceReqs() {
                             <TableHeader>
                                 <TableRow className="hover:bg-transparent">
                                     <SortableHead column="name" label="Name" sort={sort} onSort={toggleSort} className="w-full" />
+                                    <TableHead className="w-20" />
                                     <SortableHead column="created" label="Created" sort={sort} onSort={toggleSort} />
                                     <SortableHead column="deadline" label="Deadline" sort={sort} onSort={toggleSort} />
                                     <SortableHead column="assignee" label="Assignee" sort={sort} onSort={toggleSort} />
@@ -155,74 +159,64 @@ function ViewServiceReqs() {
                                     if (col === "assignee") return s.assignee ? `${s.assignee.lastName} ${s.assignee.firstName}` : "";
                                     if (col === "owner") return `${s.owner.lastName} ${s.owner.firstName}`;
                                 }).map((servicereq) => {
-                                    const matches = findMatches(servicereq.name, searchTerm)
+                                    const matches = findMatches(servicereq.name, searchTerm);
+                                    const isExpanded = expandedId === servicereq.id;
+                                    const canEdit =
+                                        servicereq.ownerId === user.user?.id ||
+                                        servicereq.assigneeId === user.user?.id ||
+                                        user.user?.persona === "admin";
                                     return (
-                                    <TableRow key={servicereq.id}>
+                                    <>
+                                        <TableRow
+                                            key={servicereq.id}
+                                            className="cursor-pointer"
+                                            onClick={() => setExpandedId(isExpanded ? null : servicereq.id)}
+                                        >
                                             <TableCell className="text-left pr-4">
-                                                <p className="text-sm font-medium truncat">
-                                                {highlightRange(
-                                                    servicereq.name,
-                                                    0,
-                                                    matches,
-                                                )}
+                                                <p className="text-sm font-medium truncate">
+                                                    {highlightRange(servicereq.name, 0, matches)}
                                                 </p>
                                                 <p className="text-xs text-muted-foreground">{formatLabel(servicereq.type)}</p>
                                             </TableCell>
-                                            <TableCell className="font-medium">
-                                                {new Date(
-                                                    servicereq.created,
-                                                ).toLocaleDateString()}
+                                            <TableCell>
+                                                <div className="flex items-center gap-1 text-muted-foreground">
+                                                    {servicereq.notes && (
+                                                        <StickyNote className="w-3.5 h-3.5" title="Has notes" />
+                                                    )}
+                                                    {servicereq.linkedContent && (
+                                                        <File className="w-3.5 h-3.5" title="Linked content" />
+                                                    )}
+                                                    {servicereq.linkedCollection && (
+                                                        <FolderOpen className="w-3.5 h-3.5" title="Linked collection" />
+                                                    )}
+                                                </div>
                                             </TableCell>
                                             <TableCell className="font-medium">
-                                                {new Date(
-                                                    servicereq.deadline,
-                                                ).toLocaleDateString()}
+                                                {new Date(servicereq.created).toLocaleDateString()}
+                                            </TableCell>
+                                            <TableCell className="font-medium">
+                                                {new Date(servicereq.deadline).toLocaleDateString()}
                                             </TableCell>
                                             <TableCell>
                                                 {servicereq.assignee ? (
-                                                    <EmployeeAvatar
-                                                        employee={
-                                                            servicereq.assignee
-                                                        }
-                                                        size="sm"
-                                                    />
+                                                    <EmployeeAvatar employee={servicereq.assignee} size="sm" />
                                                 ) : (
-                                                    <span className="text-muted-foreground">
-                                                        —
-                                                    </span>
+                                                    <span className="text-muted-foreground">—</span>
                                                 )}
                                             </TableCell>
                                             <TableCell>
-                                                <EmployeeAvatar
-                                                    employee={
-                                                        servicereq.owner
-                                                    }
-                                                    size="sm"
-                                                />
+                                                <EmployeeAvatar employee={servicereq.owner} size="sm" />
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex justify-center gap-2">
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
-                                                        disabled={
-                                                            servicereq.ownerId !==
-                                                                user.user
-                                                                    ?.id &&
-                                                            servicereq.assigneeId !==
-                                                                user.user
-                                                                    ?.id &&
-                                                            user.user
-                                                                ?.persona !==
-                                                                "admin"
-                                                        }
-                                                        onClick={() => {
-                                                            setEditingServiceReq(
-                                                                servicereq,
-                                                            );
-                                                            setEditOpen(
-                                                                true,
-                                                            );
+                                                        disabled={!canEdit}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setEditingServiceReq(servicereq);
+                                                            setEditOpen(true);
                                                         }}
                                                     >
                                                         <Pencil className="w-4 h-4" />
@@ -230,28 +224,25 @@ function ViewServiceReqs() {
                                                     <Button
                                                         variant="destructive"
                                                         size="sm"
-                                                        disabled={
-                                                            servicereq.ownerId !==
-                                                                user.user
-                                                                    ?.id &&
-                                                            servicereq.assigneeId !==
-                                                                user.user
-                                                                    ?.id &&
-                                                            user.user
-                                                                ?.persona !==
-                                                                "admin"
-                                                        }
-                                                        onClick={() =>
-                                                            setDeleteTarget(
-                                                                servicereq,
-                                                            )
-                                                        }
+                                                        disabled={!canEdit}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setDeleteTarget(servicereq);
+                                                        }}
                                                     >
                                                         <Trash2 className="w-4 h-4" />
                                                     </Button>
                                                 </div>
                                             </TableCell>
                                         </TableRow>
+                                        {isExpanded && (
+                                            <TableRow key={`${servicereq.id}-detail`} className="bg-muted/30 hover:bg-muted/30">
+                                                <TableCell colSpan={7} className="px-6 py-4">
+                                                    <ServiceReqDetail servicereq={servicereq} />
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </>
                                     );})}
                             </TableBody>
                         </Table>
@@ -287,6 +278,39 @@ function ViewServiceReqs() {
                 onSave={(created: ServiceReq) => setServiceReqs((prev) => [...prev, created])}
             />
         </>
+    );
+}
+
+/** Expanded detail panel rendered below a service request row. */
+function ServiceReqDetail({ servicereq }: { servicereq: ServiceReq }) {
+    const hasNotes = !!servicereq.notes?.trim();
+    const hasLinked = !!(servicereq.linkedContent || servicereq.linkedCollection);
+
+    if (!hasNotes && !hasLinked) {
+        return <p className="text-sm text-muted-foreground italic">No additional details.</p>;
+    }
+
+    return (
+        <div className="flex flex-col gap-3">
+            {hasNotes && (
+                <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Notes</p>
+                    <p className="text-sm whitespace-pre-wrap">{servicereq.notes}</p>
+                </div>
+            )}
+            {servicereq.linkedContent && (
+                <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Linked Content</p>
+                    <ContentItemCard item={servicereq.linkedContent} />
+                </div>
+            )}
+            {servicereq.linkedCollection && (
+                <div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Linked Collection</p>
+                    <CollectionCard collection={servicereq.linkedCollection} />
+                </div>
+            )}
+        </div>
     );
 }
 
