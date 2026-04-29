@@ -1,6 +1,20 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { AlertCircle, ArrowLeft, ArrowUp, ArrowDown, BookMarked, Check, Lock, LockOpen, Loader2, Pencil, X, Plus } from "lucide-react";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+    AlertCircle,
+    ArrowLeft,
+    ArrowUp,
+    ArrowDown,
+    BookMarked,
+    Check,
+    Lock,
+    LockOpen,
+    Loader2,
+    Pencil,
+    X,
+    Plus,
+    Link,
+} from "lucide-react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -42,6 +56,7 @@ export function ViewSingleCollection() {
     const { id } = useParams<{ id: string }>();
     const { getAccessTokenSilently } = useAuth0();
     const { user } = useUser();
+    const navigate = useNavigate();
 
     const [collection, setCollection] = useState<Collection | null>(null);
     const [loading, setLoading] = useState(true);
@@ -291,9 +306,9 @@ export function ViewSingleCollection() {
 
             <div className="max-w-5xl mx-auto my-8 px-4 flex flex-col gap-6">
 
-                <Link to="/collections" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors w-fit">
-                    <ArrowLeft className="w-4 h-4" /> Back to Collections
-                </Link>
+                <Button variant="outline" onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground w-fit">
+                    <ArrowLeft className="w-4 h-4" /> Back
+                </Button>
 
                 {/* Meta card */}
                 <Card className="shadow-sm">
