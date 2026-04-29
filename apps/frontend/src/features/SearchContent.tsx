@@ -1,31 +1,17 @@
 import { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import { Search, FileText, Link, Loader2 } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useNavigate } from "react-router-dom";
-
-type SearchResult = {
-    id: number;
-    displayName: string;
-    contentType: string;
-    fileURI: string | null;
-    linkURL: string | null;
-    status: string;
-    targetPersona: string;
-    tags: string[];
-    rank: number;
-    snippet: string | null;
-};
+import { ContentItemCard } from "@/components/shared/ContentItemCard.tsx";
 
 export default function SearchContent() {
     const { getAccessTokenSilently } = useAuth0();
-    const navigate = useNavigate();
-    const [query, setQuery] = useState("");
-    const [results, setResults] = useState<SearchResult[]>([]);
+    const [query, setQuery] = useState(window.localStorage.getItem("query") ?? "");
+    const [results, setResults] = useState<[]>([]);
     const [loading, setLoading] = useState(false);
     const [searched, setSearched] = useState(false);
+    window.localStorage.setItem("", query);
 
     const handleSearch = async () => {
         if (!query.trim()) return;
@@ -49,6 +35,14 @@ export default function SearchContent() {
         }
     };
 
+    const updateSearched = () => {
+        if (searched) return;
+        if (window.localStorage.getItem("query")) {
+            handleSearch();
+        }
+        return ""
+    }
+
     return (
         <div className="max-w-3xl mx-auto px-4 py-10">
             <h1 className="text-2xl font-semibold mb-6">Search Content</h1>
@@ -58,7 +52,7 @@ export default function SearchContent() {
                 <Input
                     placeholder="Search file contents..."
                     value={query}
-                    onChange={(e) => setQuery(e.target.value)}
+                    onChange={(e) => {setQuery(e.target.value); window.localStorage.setItem("query", e.currentTarget.value)}}
                     onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                     className="flex-1"
                 />
@@ -71,48 +65,14 @@ export default function SearchContent() {
             </div>
 
             {/* Results */}
+            {updateSearched()}
             {searched && !loading && results.length === 0 && (
                 <p className="text-muted-foreground text-sm">No results found for "{query}".</p>
             )}
 
             <div className="flex flex-col gap-4">
                 {results.map((result) => (
-                    <div
-                        key={result.id}
-                        onClick={() => navigate(`/file/${result.id}`)}
-                        className="border rounded-lg p-4 cursor-pointer hover:bg-accent transition-colors"
-                    >
-                        <div className="flex items-start gap-3">
-                            {result.fileURI
-                                ? <FileText className="w-5 h-5 mt-0.5 text-primary shrink-0" />
-                                : <Link className="w-5 h-5 mt-0.5 text-primary shrink-0" />
-                            }
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap mb-1">
-                                    <h2 className="font-medium truncate">{result.displayName}</h2>
-                                    <Badge variant="outline">{result.contentType}</Badge>
-                                    <Badge variant="secondary">{result.targetPersona}</Badge>
-                                </div>
-
-                                {/* Snippet */}
-                                {result.snippet && (
-                                    <p
-                                        className="text-sm text-muted-foreground line-clamp-2"
-                                        dangerouslySetInnerHTML={{ __html: result.snippet }}
-                                    />
-                                )}
-
-                                {/* Tags */}
-                                {result.tags?.length > 0 && (
-                                    <div className="flex gap-1 flex-wrap mt-2">
-                                        {result.tags.map((tag) => (
-                                            <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
+                    <ContentItemCard item={result} />
                 ))}
             </div>
         </div>
