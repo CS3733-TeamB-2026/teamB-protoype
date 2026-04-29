@@ -15,6 +15,11 @@ export type ContentStatus =
     | "inProgress"
     | "complete";
 
+export type RequestType =
+    | "reviewClaim"
+    | "requestAdjuster"
+    | "checkClaim";
+
 export type Employee = {
     id: number;
     firstName: string;
@@ -61,7 +66,7 @@ export type ServiceReq = {
     name: string;
     created: string;
     deadline: string;
-    type: string;
+    type: RequestType;
     ownerId: number;
     owner: Employee;
     assigneeId: number | null;
