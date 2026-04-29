@@ -38,16 +38,16 @@ app.post("/api/servicereqs",servicereqs.createServiceReq)
 app.put("/api/servicereqs", servicereqs.updateServiceReq)
 app.delete("/api/servicereqs/:id", servicereqs.deleteServiceReq)
 // Content
-app.get("/api/content", content.getAllContent)
-app.get("/api/content/tags", content.getAllTags)
-app.post("/api/content/:id/checkin", content.checkinContent)
-app.post("/api/content/:id/checkout", content.checkoutContent)
 app.get("/api/content/info/:id", content.getContentInfo)
 app.get("/api/content/download/:id", content.downloadContent)
 app.get("/api/content/publicUrl/:id", content.getPublicFileUrl)
 app.get("/api/content/search", content.searchContent)
+app.get("/api/content/tags", content.getAllTags)
 app.get("/api/content/transaction-summary", content.getTransactionSummary)
 app.get("/api/content/:id", content.getContentById)
+app.get("/api/content", content.getAllContent)
+app.post("/api/content/:id/checkin", content.checkinContent)
+app.post("/api/content/:id/checkout", content.checkoutContent)
 app.post("/api/content", upload.single("file"), content.uploadFile)
 app.put("/api/content", upload.single("file"), content.updateContent)
 app.delete("/api/content/:id", content.deleteContent)
@@ -60,28 +60,30 @@ app.get("/api/previews", previews.getPreviews)
 app.post("/api/previews/:contentId", previews.addPreview)
 app.get("/api/previews/hits/:contentId", previews.getHits)
 // Collections
-app.get("/api/collections", collection.getAllCollections)
-app.post("/api/collections", collection.createCollection)
 app.get("/api/collections/favorites", collection.getFavorites)
 app.get("/api/collections/:id", collection.getCollectionById)
-app.put("/api/collections/:id", collection.updateCollection)
-app.delete("/api/collections/:id", collection.deleteCollection)
+app.get("/api/collections", collection.getAllCollections)
 app.post("/api/collections/:id/favorite", collection.addFavorite)
+app.post("/api/collections", collection.createCollection)
 app.delete("/api/collections/:id/favorite", collection.removeFavorite)
+app.delete("/api/collections/:id", collection.deleteCollection)
+app.put("/api/collections/:id", collection.updateCollection)
 // Employee
-app.post("/api/employee/photo", upload.single("photo"), employee.uploadProfilePhoto);
 app.get("/api/employee/all", employee.getAllEmployees)
-app.get("/api/employee", employee.getAllEmployees)
 app.get("/api/employee/me", employee.getMe);
-app.post("/api/employee/auth", employee.createEmployeeWithAuth0)
-app.post("/api/employee", employee.createEmployee)
+app.get("/api/employee/dashboard-layout", employee.getDashboardLayout)
+app.put("/api/employee/dashboard-layout", employee.updateDashboardLayout)
 app.get("/api/employee/:id", employee.getEmployeeById)
+app.get("/api/employee", employee.getAllEmployees)
+app.post("/api/employee/auth", employee.createEmployeeWithAuth0)
+app.post("/api/employee/photo", upload.single("photo"), employee.uploadProfilePhoto);
+app.post("/api/employee", employee.createEmployee)
 app.put("/api/employee", employee.updateEmployee)
 app.delete("/api/employee", employee.deleteEmployee)
 //notifications
+app.get("/api/notifications/dismissed", notifications.getDismissedNotifications);
 app.get("/api/notifications", notifications.getNotifications)
 app.post("/api/notifications/dismiss", notifications.dismissNotification);
-app.get("/api/notifications/dismissed", notifications.getDismissedNotifications);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

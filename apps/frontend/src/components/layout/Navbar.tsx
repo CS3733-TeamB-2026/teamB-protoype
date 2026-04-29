@@ -21,6 +21,7 @@ import DisclaimerAlert from "@/components/layout/DisclaimerAlert"
 import {useState} from "react";
 import React from "react";
 import { NotificationBell } from "@/features/notifications/NotificationBell.tsx";
+import InfoButton from "@/components/layout/InformationAlert.tsx";
 
 
 const LOCALES = [
@@ -184,7 +185,11 @@ function Navbar() {
                             <button
                                 onClick={() => toggleCategory("language")}
                                 className="flex items-center justify-between w-full px-3 py-2 rounded-lg text-sm font-semibold transition-colors hover:bg-secondary"
-                            >{ts('settings.language')}
+                            >
+                                <span className="flex items-center gap-1">
+                                    {ts('settings.language')}
+                                    <InfoButton content={"Currently not every language has full support."} size={"w-5 h-5"}/>
+                                </span>
                                 <ChevronDown
                                     size={14}
                                     className={`transition-transform duration-200 ${openCategory === "language" ? "rotate-180" : ""}`}

@@ -2,9 +2,10 @@
 import {Hero} from "@/components/shared/Hero.tsx";
 import {LayoutDashboard} from "lucide-react"
 import { usePageTitle } from "@/hooks/use-page-title.ts";
-import {DEFAULT_LAYOUT, WIDGET_REGISTRY, type WidgetSize, type WidgetLayoutEntry} from "@/features/dashboard/widget-registry.ts";
-import {useState} from "react";
+import { WIDGET_REGISTRY, type WidgetSize} from "@/features/dashboard/widget-registry.ts";
 import DashboardCustomizeSheet from "@/features/dashboard/components/DashboardCustomizeSheet.tsx";
+import { useDashboardLayout } from "@/features/dashboard/use-dashboard-layout.ts"
+import { Loader2 } from "lucide-react";
 
 const sizeClasses: Record<WidgetSize, string> = {
     small: "col-span-1",
@@ -17,7 +18,18 @@ function Dashboard() {
     usePageTitle("Dashboard");
     //const user = useUser();
 
-    const [layout, setLayout] = useState<WidgetLayoutEntry[]>(DEFAULT_LAYOUT);
+    const { layout, setLayout, isLoading } = useDashboardLayout();
+
+    if (isLoading) {
+        return (
+            <>
+                <Hero icon={LayoutDashboard} description="Find all your tools here." title="Dashboard" />
+                <div className="flex justify-center items-center py-32">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+            </>
+        );
+    }
 
     return (
         <>

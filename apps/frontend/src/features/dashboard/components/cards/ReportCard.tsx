@@ -88,7 +88,7 @@ function ReportCard() {
                 </CardHeader>
                 <CardContent>
                     <div className="text-destructive text-sm">
-                        <p className="font-semibold mb-2">⚠️ Unable to load report data</p>
+                        <p className="font-semibold mb-2">Unable to load report data</p>
                         <p className="text-xs">{error}</p>
                         <p className="text-xs mt-2 text-muted-foreground">
                             Make sure the backend endpoint <code className="bg-muted px-2 py-1 rounded">/api/reports/transaction-summary</code> is implemented.

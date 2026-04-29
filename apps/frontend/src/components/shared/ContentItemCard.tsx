@@ -7,6 +7,8 @@ import { ContentIcon } from "@/features/content/components/ContentIcon.tsx";
 import { ContentExtBadge } from "@/features/content/components/ContentExtBadge.tsx";
 import { getCategory, getExtension, getOriginalFilename, lookupByFilename } from "@/lib/mime.ts";
 import { getCachedPreview, setCachedPreview } from "@/features/content/previews/preview-cache.ts";
+import { Button } from "@/components/ui/button.tsx";
+import { Card } from "@/components/ui/card.tsx";
 
 interface Props {
     item: ContentItem;
@@ -15,8 +17,6 @@ interface Props {
     /** Extra right-side content rendered before the nav button. */
     actions?: React.ReactNode;
 }
-
-const btnClass = "w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground";
 
 /**
  * Compact one-line row for a single content item.
@@ -67,24 +67,24 @@ export function ContentItemCard({ item, subtitle, actions }: Props) {
     const navButton = (() => {
         const icon = <HugeiconsIcon icon={LinkSquare01Icon} className="w-4 h-4" />;
         if (item.fileURI) return (
-            <Link to={`/file/${item.id}`} onClick={(e) => e.stopPropagation()}>
-                <button className={btnClass} title="View file">{icon}</button>
-            </Link>
+            <Button variant="ghost" size="icon" asChild onClick={(e) => e.stopPropagation()} title="View file">
+                <Link to={`/file/${item.id}`}>{icon}</Link>
+            </Button>
         );
         if (item.linkURL) return (
-            <a href={item.linkURL} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
-                <button className={btnClass} title="Open link">{icon}</button>
-            </a>
+            <Button variant="ghost" size="icon" asChild onClick={(e) => e.stopPropagation()} title="Open link">
+                <a href={item.linkURL} target="_blank" rel="noopener noreferrer">{icon}</a>
+            </Button>
         );
         return (
-            <button className="w-8 h-8 flex items-center justify-center rounded-md opacity-30 cursor-not-allowed text-muted-foreground" title="No file or link" disabled>
+            <Button variant="ghost" size="icon" disabled title="No file or link">
                 {icon}
-            </button>
+            </Button>
         );
     })();
 
     return (
-        <div className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+        <Card className="flex flex-row items-center justify-between p-3 hover:bg-muted/50 transition-colors">
             <div className="flex items-center gap-3 flex-1 min-w-0">
                 <div className="w-5 h-5 shrink-0 flex items-center justify-center">
                     {item.linkURL && preview?.favicon ? (
@@ -96,7 +96,7 @@ export function ContentItemCard({ item, subtitle, actions }: Props) {
                 <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{item.displayName}</p>
                     <p className="text-xs text-muted-foreground">
-                        {subtitle ?? defaultSubtitle}
+                    {subtitle ?? defaultSubtitle}
                     </p>
                 </div>
             </div>
@@ -105,6 +105,6 @@ export function ContentItemCard({ item, subtitle, actions }: Props) {
                 <ContentExtBadge category={category} ext={ext} isLink={!!item.linkURL} />
                 {navButton}
             </div>
-        </div>
+        </Card>
     );
 }
