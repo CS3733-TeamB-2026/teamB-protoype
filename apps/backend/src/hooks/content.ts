@@ -191,7 +191,6 @@ export const uploadFile = async (req: req, res: res) => {
             payload.ownerID ? parseInt(payload.ownerID) : null,
             payload.contentType,
             payload.status,
-            new Date(payload.lastModified),
             payload.expiration ? new Date(payload.expiration) : null,
             payload.targetPersona,
             JSON.parse(payload.tags || "[]"),
