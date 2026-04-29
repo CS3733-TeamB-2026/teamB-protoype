@@ -1,13 +1,13 @@
 import { formatDistanceToNow, format, differenceInDays, differenceInHours, differenceInMinutes } from "date-fns"
 
 interface ContentTimelineProps {
-    created: string | Date
+    created: string | null
     expiration: string | Date | null
-    lastModified?: string | Date
+    lastModified: string | Date
 }
 
 export function Timeline({ created, expiration, lastModified }: ContentTimelineProps) {
-    const start = new Date(created)
+    const start = created ? new Date(created) : new Date(lastModified)
     const end = expiration ? new Date(expiration) : null
     const now = new Date()
 

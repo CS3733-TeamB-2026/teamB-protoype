@@ -59,7 +59,7 @@ export class Content {
         _ownerId: number | null,
         _contentType: p.ContentType,
         _status: p.Status | null,
-        _lastModified: Date,
+        _lastModified: Date, //TODO remove (unused, automatically uses current date)
         _expiration: Date | null,
         _targetPersona: string,
         _tags: string[],
@@ -100,7 +100,7 @@ export class Content {
                 ownerId: _ownerId,
                 contentType: _contentType,
                 status: _statusTyped,
-                lastModified: _lastModified,
+                lastModified: new Date(),
                 expiration: _expiration,
                 targetPersona: _personaTyped,
                 tags: _tags,
@@ -150,7 +150,6 @@ export class Content {
         _ownerId: number | null,
         _contentType: p.ContentType,
         _status: p.Status | null,
-        _lastModified: Date,
         _expiration: Date | null,
         _targetPersona: string,
         _tags: string[] = [],
@@ -167,6 +166,8 @@ export class Content {
             throw new Error("No persona type provided")
         }
         const _statusTyped: p.Status = Helper.statusHelper(_status)
+        const _createdDate: Date = new Date()
+        const _lastModified: Date = new Date()
 
         const embeddingInput = buildEmbeddingInput(_name, _contentType, _personaTyped, _tags, _textContent);
         const embedding = await generateEmbedding(embeddingInput);
@@ -175,11 +176,11 @@ export class Content {
         await prisma.$executeRaw`
         INSERT INTO "Content" (
             "displayName", "linkURL", "fileURI", "ownerId", "contentType",
-            "status", "lastModified", "expiration", "targetPersona", "tags",
+            "status", "created", "lastModified", "expiration", "targetPersona", "tags",
             "textContent", "embedding"
         ) VALUES (
             ${_name}, ${_linkURL}, ${_fileURI}, ${_ownerId}, ${_contentType}::"ContentType",
-            ${_statusTyped}::"Status", ${_lastModified}, ${_expiration}, ${_personaTyped}::"Persona",
+            ${_statusTyped}::"Status", ${_createdDate}, ${_lastModified}, ${_expiration}, ${_personaTyped}::"Persona",
             ${_tags}::text[], ${_textContent}, ${embeddingToSql(embedding)}::vector
     )
 `;

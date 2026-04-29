@@ -28,9 +28,6 @@ export type ContentFormValues = {
     targetPersona: string;
     uploadMode: "url" | "file";
     file: File | null;
-    dateModified: Date | undefined;
-    /** HH:MM:SS string from `<input type="time" step="1">`, merged with `dateModified` on submit. */
-    lastModifiedTime: string;
     dateExpiration: Date | undefined;
     tags: string[];
 };
@@ -89,8 +86,6 @@ export function initialValues(userId: number, userPersona = ""): ContentFormValu
         targetPersona: userPersona,
         uploadMode: "url",
         file: null,
-        dateModified: new Date(),
-        lastModifiedTime: nowTimeString(),
         dateExpiration: undefined,
         tags: [],
     };
@@ -116,12 +111,6 @@ export function buildContentFormData(values: ContentFormValues): FormData {
     formData.append("ownerID", values.ownerID != null ? values.ownerID.toString() : "");
     formData.append("contentType", values.contentType === "none" ? "" : values.contentType);
     formData.append("status", values.status === "none" ? "" : values.status);
-
-    // Merge the date picker value and the separate time input into one timestamp.
-    const lastModifiedDate = values.dateModified ? new Date(values.dateModified) : new Date();
-    const [lmh, lmm, lms] = values.lastModifiedTime.split(":").map(Number);
-    lastModifiedDate.setHours(lmh, lmm, lms ?? 0, 0);
-    formData.append("lastModified", lastModifiedDate.toISOString());
 
     if (values.expires === "expires" && values.dateExpiration) {
         const expDate = new Date(values.dateExpiration);
@@ -195,8 +184,6 @@ export function fromContentItem(item: ContentItem): ContentFormValues {
         file: null,
         // Default to now so editing always stamps the current time unless the
         // user picks a file (which supplies its own lastModified timestamp).
-        dateModified: new Date(),
-        lastModifiedTime: nowTimeString(),
         tags: item.tags ?? [],
     };
 }

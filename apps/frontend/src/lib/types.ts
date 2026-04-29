@@ -30,7 +30,6 @@ export type Employee = {
 
 // Matches the Content model from Prisma (with joined owner/checkedOutBy)
 export type ContentItem = {
-    created: string | Date;
     id: number;
     displayName: string;
     linkURL: string | null;
@@ -40,6 +39,7 @@ export type ContentItem = {
     checkedOutById: number | null;
     checkedOutAt: string | null;
     checkedOutBy: Employee | null;
+    created: string | null;
     lastModified: string;
     expiration: string | null;
     contentType: ContentType;
