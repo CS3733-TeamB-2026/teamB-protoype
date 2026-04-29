@@ -2,57 +2,49 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Loader2, ChevronsUpDown } from "lucide-react";
-import { ContentItemCard } from "@/components/shared/ContentItemCard.tsx";
-import { ContentIcon } from "@/features/content/components/ContentIcon.tsx";
-import { getCategory, getOriginalFilename, lookupByFilename } from "@/lib/mime.ts";
-import type { ContentItem } from "@/lib/types.ts";
-import { useUser } from "@/hooks/use-user.ts";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { FolderLibraryIcon } from "@hugeicons/core-free-icons";
+import { CollectionCard } from "@/components/shared/CollectionCard.tsx";
+import type { Collection } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 
 interface Props {
     selectedId: number | null;
-    onSelect: (id: number | null, item: ContentItem | null) => void;
-    /** Content IDs to hide from the list (e.g. already in the collection). */
-    excludeIds?: number[];
+    onSelect: (id: number | null, collection: Collection | null) => void;
     disabled?: boolean;
 }
 
 /**
- * Dropdown picker for selecting a single ContentItem by display name search.
+ * Dropdown picker for selecting a single Collection by display name search.
  *
- * Mirrors the EmployeePicker UX: a trigger button shows the current selection,
- * clicking opens a popover with a search input and a scrollable ContentItemCard
- * list. Fetches all content visible to the current user's persona on mount.
- *
- * Pass `excludeIds` to hide items that are already members of a collection so
- * the user can't add duplicates.
+ * Mirrors the ContentPicker / EmployeePicker UX: a trigger button shows the
+ * current selection, clicking opens a popover with a search input and a
+ * scrollable CollectionCard list. Fetches all collections on mount.
  */
-export function ContentPicker({ selectedId, onSelect, excludeIds = [], disabled = false }: Props) {
+export function CollectionPicker({ selectedId, onSelect, disabled = false }: Props) {
     const [open, setOpen] = useState(false);
-    const [items, setItems] = useState<ContentItem[]>([]);
+    const [collections, setCollections] = useState<Collection[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const containerRef = useRef<HTMLDivElement>(null);
 
-    const { user } = useUser();
     const { getAccessTokenSilently } = useAuth0();
 
     useEffect(() => {
-        if (!user) return;
         const load = async () => {
             try {
                 const token = await getAccessTokenSilently();
-                const res = await fetch(`/api/content`, {
+                const res = await fetch("/api/collections", {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-                const data: ContentItem[] = await res.json();
-                setItems(data);
+                const data: Collection[] = await res.json();
+                setCollections(data);
             } finally {
                 setLoading(false);
             }
         };
         void load();
-    }, [user, getAccessTokenSilently]);
+    }, [getAccessTokenSilently]);
 
     useEffect(() => {
         if (!open) return;
@@ -65,15 +57,12 @@ export function ContentPicker({ selectedId, onSelect, excludeIds = [], disabled 
         return () => document.removeEventListener("mousedown", handleClick);
     }, [open]);
 
-    const selected = selectedId != null ? items.find((i) => i.id === selectedId) : undefined;
+    const selected = selectedId != null ? collections.find((c) => c.id === selectedId) : undefined;
 
-    const excludeSet = new Set(excludeIds);
-    const filtered = items
-        .filter((i) => !excludeSet.has(i.id))
-        .filter((i) => {
-            const q = search.toLowerCase().trim();
-            return !q || i.displayName.toLowerCase().includes(q);
-        });
+    const filtered = collections.filter((c) => {
+        const q = search.toLowerCase().trim();
+        return !q || c.displayName.toLowerCase().includes(q);
+    });
 
     return (
         <div ref={containerRef} className="relative">
@@ -90,9 +79,9 @@ export function ContentPicker({ selectedId, onSelect, excludeIds = [], disabled 
                         Loading...
                     </span>
                 ) : selected ? (
-                    <SelectedPreview item={selected} />
+                    <SelectedPreview collection={selected} />
                 ) : (
-                    <span className="text-muted-foreground">Select content...</span>
+                    <span className="text-muted-foreground">Select collection...</span>
                 )}
                 <ChevronsUpDown className="w-4 h-4 text-muted-foreground shrink-0 ml-2" />
             </Button>
@@ -101,7 +90,7 @@ export function ContentPicker({ selectedId, onSelect, excludeIds = [], disabled 
                 <div className="absolute top-full left-0 right-0 z-50 mt-1 rounded-lg border bg-popover shadow-md overflow-hidden">
                     <div className="p-2 border-b">
                         <Input
-                            placeholder="Search by name..."
+                            placeholder="Search collections..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="h-8"
@@ -118,23 +107,21 @@ export function ContentPicker({ selectedId, onSelect, excludeIds = [], disabled 
                             </div>
                         ) : filtered.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-6">
-                                {search ? "No matching content." : "No content available."}
+                                {search ? "No matching collections." : "No collections available."}
                             </p>
                         ) : (
                             <div className="p-1 flex flex-col gap-1">
-                                {filtered.map((item) => (
-                                    // Clicking anywhere on the card selects it; the nav button inside
-                                    // calls stopPropagation so it doesn't also trigger selection.
+                                {filtered.map((collection) => (
                                     <div
-                                        key={item.id}
-                                        className={`cursor-pointer rounded-md ${selectedId === item.id ? "ring-2 ring-accent" : ""}`}
+                                        key={collection.id}
+                                        className={`cursor-pointer rounded-md ${selectedId === collection.id ? "ring-2 ring-accent" : ""}`}
                                         onClick={() => {
-                                            onSelect(item.id, item);
+                                            onSelect(collection.id, collection);
                                             setOpen(false);
                                             setSearch("");
                                         }}
                                     >
-                                        <ContentItemCard item={item} />
+                                        <CollectionCard collection={collection} />
                                     </div>
                                 ))}
                             </div>
@@ -146,16 +133,12 @@ export function ContentPicker({ selectedId, onSelect, excludeIds = [], disabled 
     );
 }
 
-/** Compact icon + name shown inside the trigger button when an item is selected. */
-function SelectedPreview({ item }: { item: ContentItem }) {
-    const originalFilename = item.fileURI ? getOriginalFilename(item.fileURI) : null;
-    const mimeType = originalFilename ? lookupByFilename(originalFilename)?.mimeType : null;
-    const category = getCategory(mimeType, originalFilename);
-
+/** Compact icon + name shown inside the trigger button when a collection is selected. */
+function SelectedPreview({ collection }: { collection: Collection }) {
     return (
         <span className="flex items-center gap-2 text-sm min-w-0">
-            <ContentIcon category={category} isLink={!!item.linkURL} className="w-4 h-4 shrink-0" />
-            <span className="truncate">{item.displayName}</span>
+            <HugeiconsIcon icon={FolderLibraryIcon} className="w-4 h-4 shrink-0 text-muted-foreground" />
+            <span className="truncate">{collection.displayName}</span>
         </span>
     );
 }

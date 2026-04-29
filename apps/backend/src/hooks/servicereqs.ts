@@ -36,6 +36,9 @@ export const createServiceReq = async (req: req, res: res) => {
             payload.type,
             payload.assigneeId,
             employee.id,
+            payload.notes ?? null,
+            payload.linkedContentId ?? null,
+            payload.linkedCollectionId ?? null,
         );
         return res.status(201).json(result);
     } catch (error) {
@@ -64,6 +67,9 @@ export const updateServiceReq = async (req: req, res: res) => {
             payload.type,
             payload.assigneeId,
             existing.ownerId,
+            payload.notes ?? null,
+            payload.linkedContentId ?? null,
+            payload.linkedCollectionId ?? null,
         );
         return res.status(200).json(result);
     } catch (error) {
