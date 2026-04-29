@@ -1,9 +1,8 @@
 import * as p from "../generated/prisma/client";
 import {prisma} from "../lib/prisma";
-import {Helper, employeeSelect} from "./helper";
+import {Helper, employeeSelect, contentSelect} from "./helper";
 import { Notification } from "./notification";
 import { generateEmbedding, embeddingToSql } from '../../../apps/backend/lib/embeddings';
-
 
 // helper to build the text we embed
 function buildEmbeddingInput(
@@ -200,7 +199,11 @@ export class Content {
 
     public static async queryAllContent() {
         return prisma.content.findMany({
-            include: {owner: { select: employeeSelect }, checkedOutBy: { select: employeeSelect },},
+            select: {
+                ...contentSelect,
+                owner: { select: employeeSelect },
+                checkedOutBy: { select: employeeSelect },
+            }
         })
     }
 
@@ -214,14 +217,26 @@ export class Content {
         }
         return prisma.content.findMany({
             where: {targetPersona: _personaTyped},
-            include: {
+            select: {
+                ...contentSelect,
                 owner: { select: employeeSelect },
                 checkedOutBy: { select: employeeSelect },
-            },
+            }
         })
     }
 
-    public static async queryContentById(_id: number): Promise<p.Content | null> {
+    public static async queryContentById(_id: number) {
+        return prisma.content.findUnique({
+            where: {id: _id},
+            select: {
+                ...contentSelect,
+                owner: { select: employeeSelect },
+                checkedOutBy: { select: employeeSelect },
+            }
+        })
+    }
+
+    public static async queryContentByIdWithVectors(_id: number) {
         return prisma.content.findUnique({
             where: {id: _id},
             include: { owner: { select: employeeSelect }, checkedOutBy: { select: employeeSelect } }

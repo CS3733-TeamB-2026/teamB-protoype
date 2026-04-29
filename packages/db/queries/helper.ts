@@ -10,6 +10,24 @@ export const employeeSelect = {
     profilePhotoURI: true,
 } as const;
 
+//exclude file embedding and vectors to save on cached egress
+export const contentSelect = {
+    id: true,
+    linkURL: true,
+    created: true,
+    lastModified: true,
+    expiration: true,
+    status: true,
+    contentType: true,
+    targetPersona: true,
+    displayName: true,
+    fileURI: true,
+    checkedOutAt: true,
+    checkedOutById: true,
+    ownerId: true,
+    tags: true,
+} as const
+
 export class Helper {
     public static personaHelper(_persona: string | null): p.Persona | null {
         if (_persona == "underwriter") {
