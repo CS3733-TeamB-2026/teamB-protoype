@@ -12,6 +12,8 @@ interface Props {
     selectedId: number | null;
     onSelect: (id: number | null, collection: Collection | null) => void;
     disabled?: boolean;
+    /** When true, only public collections are shown and selectable. */
+    publicOnly?: boolean;
 }
 
 /**
@@ -20,8 +22,13 @@ interface Props {
  * Mirrors the ContentPicker / EmployeePicker UX: a trigger button shows the
  * current selection, clicking opens a popover with a search input and a
  * scrollable CollectionCard list. Fetches all collections on mount.
+ *
+ * When `publicOnly` is true, private collections are filtered out client-side
+ * from the full list — the fetch still hits `/api/collections` unfiltered.
+ * Used in the service request form so only publicly shareable collections
+ * can be linked to a request.
  */
-export function CollectionPicker({ selectedId, onSelect, disabled = false }: Props) {
+export function CollectionPicker({ selectedId, onSelect, disabled = false, publicOnly = false }: Props) {
     const [open, setOpen] = useState(false);
     const [collections, setCollections] = useState<Collection[]>([]);
     const [loading, setLoading] = useState(true);
@@ -60,6 +67,7 @@ export function CollectionPicker({ selectedId, onSelect, disabled = false }: Pro
     const selected = selectedId != null ? collections.find((c) => c.id === selectedId) : undefined;
 
     const filtered = collections.filter((c) => {
+        if (publicOnly && !c.public) return false;
         const q = search.toLowerCase().trim();
         return !q || c.displayName.toLowerCase().includes(q);
     });
@@ -107,7 +115,7 @@ export function CollectionPicker({ selectedId, onSelect, disabled = false }: Pro
                             </div>
                         ) : filtered.length === 0 ? (
                             <p className="text-sm text-muted-foreground text-center py-6">
-                                {search ? "No matching collections." : "No collections available."}
+                                {search ? "No matching collections." : publicOnly ? "No public collections available." : "No collections available."}
                             </p>
                         ) : (
                             <div className="p-1 flex flex-col gap-1">

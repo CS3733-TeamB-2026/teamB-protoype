@@ -1,4 +1,4 @@
-import type { ServiceReq } from "@/lib/types.ts";
+import type { ServiceReq, RequestType } from "@/lib/types.ts";
 
 /**
  * Shared form state for both Add and Edit service req dialogs.
@@ -21,7 +21,7 @@ export type ServiceReqFormValues = {
     createdTime: string; // HH:MM:SS string from <input type="time" step="1">
     deadline: Date | undefined;
     assigneeId: number | undefined;
-    type: "reviewClaim" | "requestAdjuster" | "checkClaim" | "none";
+    type: RequestType | "none";
     notes: string;
     linkMode: "none" | "content" | "collection"; // controls which picker is shown; only one ID is sent
     linkedContentId: number | null;
@@ -100,7 +100,7 @@ export function fromServiceReqItem(item: ServiceReq): ServiceReqFormValues {
         id: item.id,
         name: item.name,
         assigneeId: item.assigneeId ?? undefined,
-        type: item.type as "reviewClaim" | "requestAdjuster" | "checkClaim" | "none",
+        type: item.type as RequestType | "none",
         createdDate: createdDate,
         createdTime: createdDate.toTimeString().substring(0, 8),
         deadline: new Date(item.deadline),

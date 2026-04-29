@@ -4,15 +4,29 @@ import {Helper, employeeSelect} from "./helper";
 
 export class ServiceReqs {
 
-    /** Fetches a single service request by ID, used by the backend hook for ownership checks before update/delete. */
+    /**
+     * Shared Prisma include used by every query and mutation so the response always
+     * carries the full shape the frontend expects: owner/assignee employee fields,
+     * the linked content item, and the linked collection with its items.
+     *
+     * `linkedCollection` needs the nested `items → content` include because
+     * `CollectionCard` reads `collection.items.length` — a shallow `true` would
+     * omit that join and crash the card.
+     */
     private static readonly include = {
         owner: { select: employeeSelect },
         assignee: { select: employeeSelect },
         linkedContent: true,
-        linkedCollection: true,
+        linkedCollection: {
+            include: {
+                items: {
+                    include: { content: true },
+                },
+            },
+        },
     } as const;
 
-    /** Fetches a single service request by ID, used by the backend hook for ownership checks before update/delete. */
+    /** Returns a single service request with all relations — used for ownership checks before update/delete. */
     public static async queryServiceReqById(id: number) {
         return prisma.serviceRequest.findUnique({
             where: { id },
@@ -57,7 +71,8 @@ export class ServiceReqs {
                 notes: _notes ?? null,
                 linkedContentId: _linkedContentId ?? null,
                 linkedCollectionId: _linkedCollectionId ?? null,
-            }
+            },
+            include: ServiceReqs.include,
         });
     }
 
@@ -82,7 +97,8 @@ export class ServiceReqs {
                 notes: _notes ?? null,
                 linkedContentId: _linkedContentId ?? null,
                 linkedCollectionId: _linkedCollectionId ?? null,
-            }
+            },
+            include: ServiceReqs.include,
         });
     }
 

@@ -220,6 +220,7 @@ export function ServiceReqFormFields({ values, patch, errors, showLastModified =
                     <CollectionPicker
                         selectedId={values.linkedCollectionId}
                         onSelect={(id) => patch({ linkedCollectionId: id })}
+                        publicOnly
                     />
                 )}
             </Field>
