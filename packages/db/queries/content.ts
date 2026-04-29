@@ -43,7 +43,6 @@ export class Content {
             "ownerId",
             "checkedOutById",
             "checkedOutAt",
-            "hits",
             1 - ("embedding" <=> ${embeddingStr}::vector) AS similarity
         FROM "Content"
         WHERE "embedding" IS NOT NULL
