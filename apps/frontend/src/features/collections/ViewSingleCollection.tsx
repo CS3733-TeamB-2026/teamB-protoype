@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { AlertCircle, ArrowLeft, ArrowUp, ArrowDown, BookMarked, Check, Lock, LockOpen, Loader2, Pencil, Star, Trash2, X, Plus } from "lucide-react";
+import { useParams, Link } from "react-router-dom";
+import { AlertCircle, ArrowLeft, ArrowUp, ArrowDown, BookMarked, Check, Lock, LockOpen, Loader2, Pencil, X, Plus } from "lucide-react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ConfirmDeleteDialog } from "@/components/dialogs/ConfirmDeleteDialog";
 import { Hero } from "@/components/shared/Hero";
 import { EmployeeAvatar } from "@/components/shared/EmployeeAvatar";
 import { EmployeePicker } from "@/components/shared/EmployeePicker";
@@ -43,10 +42,8 @@ export function ViewSingleCollection() {
     const { id } = useParams<{ id: string }>();
     const { getAccessTokenSilently } = useAuth0();
     const { user } = useUser();
-    const navigate = useNavigate();
 
     const [collection, setCollection] = useState<Collection | null>(null);
-    const [isFavorited, setIsFavorited] = useState(false);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -56,8 +53,6 @@ export function ViewSingleCollection() {
 
     const [visibilityConfirmOpen, setVisibilityConfirmOpen] = useState(false);
     const [savingVisibility, setSavingVisibility] = useState(false);
-
-    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
     const [transferDialogOpen, setTransferDialogOpen] = useState(false);
     const [transferTarget, setTransferTarget] = useState<Employee | null>(null);
@@ -76,14 +71,10 @@ export function ViewSingleCollection() {
             try {
                 const token = await getAccessTokenSilently();
                 const headers = { Authorization: `Bearer ${token}` };
-                const [colRes, favRes] = await Promise.all([
-                    fetch(`/api/collections/${id}`, { headers }),
-                    fetch("/api/collections/favorites", { headers }),
-                ]);
-                if (!colRes.ok) throw new Error(`${colRes.status}`);
-                const [data, favData] = await Promise.all([colRes.json(), favRes.json()]) as [Collection, { collectionId: number }[]];
+                const res = await fetch(`/api/collections/${id}`, { headers });
+                if (!res.ok) throw new Error(`${res.status}`);
+                const data: Collection = await res.json();
                 setCollection(data);
-                setIsFavorited(favData.some((f) => f.collectionId === data.id));
             } catch {
                 setError("Collection not found or failed to load.");
             } finally {
@@ -95,23 +86,6 @@ export function ViewSingleCollection() {
 
     const canEdit = user && collection &&
         (user.persona === "admin" || collection.ownerId === user.id);
-
-    const toggleFavorite = async () => {
-        if (!collection) return;
-        setIsFavorited((prev) => !prev);
-        try {
-            const token = await getAccessTokenSilently();
-            const res = await fetch(`/api/collections/${collection.id}/favorite`, {
-                method: isFavorited ? "DELETE" : "POST",
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            if (!res.ok) throw new Error();
-            toast.success(isFavorited ? "Removed from favorites." : "Added to favorites.");
-        } catch {
-            setIsFavorited((prev) => !prev);
-            toast.error("Failed to update favorite.");
-        }
-    };
 
     const transferOwnership = async () => {
         if (!collection || !transferTarget) return;
@@ -138,21 +112,6 @@ export function ViewSingleCollection() {
             toast.error("Failed to transfer ownership.");
         } finally {
             setSavingTransfer(false);
-        }
-    };
-
-    const handleDelete = async () => {
-        if (!collection) return;
-        const token = await getAccessTokenSilently();
-        const res = await fetch(`/api/collections/${collection.id}`, {
-            method: "DELETE",
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-            toast.success(`"${collection.displayName}" deleted.`);
-            navigate("/collections");
-        } else {
-            toast.error("Failed to delete collection.");
         }
     };
 
@@ -376,25 +335,6 @@ export function ViewSingleCollection() {
                                 </CardDescription>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className={isFavorited ? "text-accent hover:text-accent/70" : "text-muted-foreground hover:text-foreground"}
-                                    onClick={() => void toggleFavorite()}
-                                    aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
-                                >
-                                    <Star className="w-4 h-4" fill={isFavorited ? "currentColor" : "none"} />
-                                </Button>
-                                {canEdit && (
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        onClick={() => setDeleteConfirmOpen(true)}
-                                        aria-label="Delete collection"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </Button>
-                                )}
                                 {canEdit ? (
                                     <ToggleGroup
                                         type="single"
@@ -597,13 +537,6 @@ export function ViewSingleCollection() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-
-            <ConfirmDeleteDialog
-                open={deleteConfirmOpen}
-                onOpenChange={setDeleteConfirmOpen}
-                description={<span>This will permanently delete <strong>"{collection.displayName}"</strong> and all its items.</span>}
-                onConfirm={handleDelete}
-            />
 
             {/* Transfer ownership dialog — portal-rendered so the EmployeePicker dropdown is never clipped */}
             <Dialog open={transferDialogOpen} onOpenChange={(open) => { if (!open) setTransferTarget(null); setTransferDialogOpen(open); }}>
