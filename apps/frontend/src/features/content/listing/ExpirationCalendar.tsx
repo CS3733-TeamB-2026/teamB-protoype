@@ -3,11 +3,12 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { useUser } from "@/hooks/use-user.ts";
 import { ContentIcon } from "@/features/content/components/ContentIcon.tsx";
 import { getCategory, getOriginalFilename } from "@/lib/mime.ts";
-import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import {Loader2, ChevronLeft, ChevronRight, Home as HomeIcon} from "lucide-react";
 import { ContentItemCard } from "@/components/shared/ContentItemCard.tsx";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
 import { Button } from "@/components/ui/button.tsx";
 import type { ContentItem } from "@/lib/types.ts";
+import {Hero} from "@/components/shared/Hero.tsx";
 
 const NOW = Date.now();
 
@@ -112,7 +113,11 @@ function ExpirationCalendar() {
 
     return (
         <>
-
+            <Hero
+                icon={HomeIcon}
+                title={"Expiration Calender"}
+                description={"See whats due soon."}
+            />
             <div className="max-w-6xl mx-auto my-6 px-4">
                 {loading && (
                     <div className="flex items-center justify-center py-24 gap-3 text-muted-foreground">
