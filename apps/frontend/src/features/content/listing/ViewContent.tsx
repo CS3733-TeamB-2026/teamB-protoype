@@ -933,14 +933,13 @@ function ViewContent() {
                                                                                         Check In
                                                                                     </DropdownMenuItem>
                                                                                     <DropdownMenuItem
-                                                                                        className="text-destructive focus:text-destructive"
+                                                                                        variant="destructive"
                                                                                         onClick={(e) => {
                                                                                             e.stopPropagation();
                                                                                             setDeleteTarget(item);
                                                                                         }}
                                                                                     >
-                                                                                        <Trash2 className="w-4 h-4"/>
-                                                                                        Delete
+                                                                                        <Trash2 className="w-4 h-4"/>                                                                                        Delete
                                                                                     </DropdownMenuItem>
                                                                                 </DropdownMenuContent>
                                                                             </DropdownMenu>
