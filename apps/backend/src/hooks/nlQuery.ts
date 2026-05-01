@@ -1,5 +1,5 @@
 import type { Request, Response} from "express";
-import { generateSQLFromQuestion } from "../services/nlQuery";
+import {answerQuestion, generateSQLFromQuestion} from "../services/nlQuery";
 import {NLQueryRequestSchema, NLQueryResponseSchema} from "../helpers/nlQuerySchema";
 import { z } from "zod";
 
@@ -18,13 +18,9 @@ export async function generateNLQuery(req: Request, res: Response) {
     }
 
     try {
-        const result = await generateSQLFromQuestion(parseResult.data);
+        const result = await answerQuestion(parseResult.data);
 
-        return res.json({
-            ...result,
-            rows: null,
-            columns: null
-        });
+        return res.json(result);
     } catch (error) {
         console.error("[nl-query] generation failed:", error);
         return res.status(500).json({

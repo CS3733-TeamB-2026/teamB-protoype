@@ -1,4 +1,6 @@
-import { Parser } from "node-sql-parser";
+import sqlParser from "node-sql-parser"
+
+const { Parser } = sqlParser;
 
 const parser = new Parser();
 
@@ -133,7 +135,9 @@ function collectReferences(node: unknown, tables: string[], functions: string[])
     // Table references appear as { table: "Employee", as: ..., db: ..., ... }
     // in FROM clauses, JOINs, etc.
     if (typeof obj.table === "string" && obj.table.length > 0) {
-        tables.push(obj.table);
+        if (obj.type !== "column_ref") {
+            tables.push(obj.table);
+        }
     }
 
     // Function call expressions look like:
