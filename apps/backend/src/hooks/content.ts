@@ -256,7 +256,7 @@ export const updateContent = async (req: req, res: res) => {
         if (!employee)
             return res.status(404).json({ error: "Employee not found" });
 
-        const oldContent = await q.Content.queryContentById(
+        const oldContent = await q.Content.queryContentByIdWithVectors(
             parseInt(payload.id),
         );
         const oldURI: string | null = oldContent?.fileURI ?? null;
