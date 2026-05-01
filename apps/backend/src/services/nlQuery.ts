@@ -50,12 +50,17 @@ export async function answerQuestion(
         //Validate before sending to db
         const validation = validateSQL(llmResponse.sql);
         if (!validation.ok) {
+            console.error("[nl-query] validation rejected SQL:", {
+                reason: validation.reason,
+                sql: llmResponse.sql,
+            });
             return {
                 ...llmResponse,
                 rows: null,
                 columns: null,
-                error: validation.reason
-            }
+                error:
+                    "I couldn't safely run that query. Try rephrasing your question, or ask about something else.",
+            };
         }
 
         //Execute on READ-ONLY client
@@ -88,11 +93,13 @@ export async function answerQuestion(
             }
 
             //Out of retries
+            console.error("[nl-query] query failed after retries:", errMessage);
             return {
                 ...llmResponse,
                 rows: null,
                 columns: null,
-                error: `Query failed after ${MAX_RETRY_ATTEMPTS + 1} attempts: ${err instanceof Error ? err.message : String(err)}`
+                error:
+                    "I tried to answer that but ran into a problem. Try rephrasing your question or simplifying it.",
             };
         }
     }

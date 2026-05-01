@@ -95,11 +95,14 @@ export function validateSQL(sql: string): ValidationResult {
 
     const referencedTables: string[] = [];
     const calledFunctions: string[] = [];
-    collectReferences(statement, referencedTables, calledFunctions);
+    const cteNames: string[] = [];
+    collectReferences(statement, referencedTables, calledFunctions, cteNames);
+
+    const allowedNames = new Set([...ALLOWED_TABLES, ...cteNames]);
 
     //Check table allowlist
     for (const table of referencedTables) {
-        if (!ALLOWED_TABLES.has(table)) {
+        if (!allowedNames.has(table)) {
             return { ok: false, reason: `Query references disallowed table: ${table}. Allowed tables: ${[...ALLOWED_TABLES].join(",")}` };
         }
     }
@@ -121,16 +124,24 @@ export function validateSQL(sql: string): ValidationResult {
  * JOINs, subqueries, function call expressions) and recurse into anything that
  * looks structural.
  */
-function collectReferences(node: unknown, tables: string[], functions: string[]): void {
+function collectReferences(node: unknown, tables: string[], functions: string[], cteNames: string[]): void {
     if (node === null || node === undefined) return;
     if (typeof node !== "object") return;
 
     if (Array.isArray(node)) {
-        for (const item of node) collectReferences(item, tables, functions);
+        for (const item of node) collectReferences(item, tables, functions, cteNames);
         return;
     }
 
     const obj = node as Record<string, unknown>;
+
+    if (Array.isArray(obj.with)) {
+        for (const cte of obj.with) {
+            const cteObj = cte as Record<string, unknown>;
+            const nameVal = (cteObj.name as Record<string, unknown> | undefined)?.value;
+            if (typeof nameVal === "string") cteNames.push(nameVal);
+        }
+    }
 
     // Table references appear as { table: "Employee", as: ..., db: ..., ... }
     // in FROM clauses, JOINs, etc.
@@ -150,7 +161,7 @@ function collectReferences(node: unknown, tables: string[], functions: string[])
 
     // Recurse into child fields
     for (const value of Object.values(obj)) {
-        collectReferences(value, tables, functions);
+        collectReferences(value, tables, functions, cteNames);
     }
 
 }
