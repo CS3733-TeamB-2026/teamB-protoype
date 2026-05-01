@@ -1,6 +1,9 @@
 import "dotenv/config";
 import { generateSQLFromQuestion } from "../src/services/nlQuery";
 
+/**
+ * Testing NL query, but only returning generated SQL. Does not return data/execute SQL. (See ./test-nl-query-exec)
+ */
 async function main() {
     const testQuestions = [
         "How many employees of each persona?",

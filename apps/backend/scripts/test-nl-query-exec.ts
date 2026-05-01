@@ -1,6 +1,9 @@
 import "dotenv/config";
 import { answerQuestion } from "../src/services/nlQuery";
 
+/**
+ * Testing NL query, and executing generated SQL to return columns and rows.
+ */
 async function main() {
     const testQuestions = [
         "How many employees of each persona?",

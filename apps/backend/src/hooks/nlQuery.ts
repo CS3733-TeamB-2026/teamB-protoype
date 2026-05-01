@@ -9,7 +9,7 @@ import { z } from "zod";
  * via the OpenAI API.
  */
 export async function generateNLQuery(req: Request, res: Response) {
-    const parseResult = NLQueryRequestSchema.safeParse(req);
+    const parseResult = NLQueryRequestSchema.safeParse(req.body);
     if (!parseResult.success) {
         return res.status(400).json({
             error: "Invalid request body",
