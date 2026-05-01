@@ -91,4 +91,24 @@ export const FEW_SHOT_EXAMPLES = [
             title: "Open Service Requests by Assignee",
         },
     },
+    {
+        question: "Service requests created each day for the last 30 days",
+        response: {
+            sql: `WITH days AS (
+  SELECT generate_series(
+    date_trunc('day', NOW() - INTERVAL '30 days'),
+    date_trunc('day', NOW()),
+    INTERVAL '1 day'
+  )::date AS day
+)
+SELECT days.day, COUNT(sr.id) AS request_count
+FROM days
+LEFT JOIN "ServiceRequest" sr ON date_trunc('day', sr.created)::date = days.day
+GROUP BY days.day
+ORDER BY days.day ASC`,
+            explanation: "Counts service requests created each day in the last 30 days. Days with no requests are included as zero so the trend is complete.",
+            suggestedChart: "line",
+            title: "Service Requests per Day (Last 30 Days)",
+        },
+    },
 ] as const;

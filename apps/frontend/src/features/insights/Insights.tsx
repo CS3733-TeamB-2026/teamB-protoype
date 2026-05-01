@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Sparkles } from "lucide-react";
 import ChatInput from "@/features/insights/ChatInput";
 import ConversationView from "@/features/insights/ConversationView";
 import EmptyState from "@/features/insights/EmptyState";
@@ -45,30 +44,35 @@ function InsightsPage() {
     }
 
     return (
-        <div className="flex h-full flex-col">
-            <header className="border-b px-6 py-4 bg-card shadow-lg">
-                <div className="flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-[#1B3A5C]" />
-                    <h1 className="text-xl font-semibold">Insights</h1>
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">
-                    Ask anything about your content, employees, or service requests.
-                </p>
-            </header>
+        <div className="mx-auto flex h-[calc(100vh-76px)] w-full flex-col">
 
-            <div className="flex-1 overflow-y-auto px-6 py-4">
-                {conversation.length === 0 ? (
-                    <EmptyState onSelectSuggestion={handleSubmit} />
-                ) : (
-                    <ConversationView turns={conversation} isLoading={isLoading} />
-                )}
+            <div
+                className="pointer-events-none absolute inset-0 opacity-80"
+                style={{
+                    backgroundImage: `radial-gradient(circle, oklch(0.343 0.07 252.435 / 0.15) 1px, transparent 2px)`,
+                    backgroundSize: '24px 24px',
+                }}
+            />
+
+            <div className="relative flex-1 min-h-0">
+                <div className="absolute inset-0 overflow-y-auto px-6 pt-10 pb-45 min-h-0 scroll-pb-100">
+                    {conversation.length === 0 ? (
+                        <EmptyState onSelectSuggestion={handleSubmit} />
+                    ) : (
+                        <ConversationView turns={conversation} isLoading={isLoading} />
+                    )}
+                </div>
+
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-6xl">
+                    <div className="border-t mb-5 px-6 py-4 bg-card shadow-lg rounded-xl w-full max-w-6xl mx-auto">
+                        <div className="mx-1">
+                            <ChatInput onSubmit={handleSubmit} disabled={isLoading} />
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
-            <div className="border-t px-6 py-4 bg-card shadow-lg">
-                <div className="mx-40">
-                    <ChatInput onSubmit={handleSubmit} disabled={isLoading} />
-                </div>
-            </div>
         </div>
     );
 }

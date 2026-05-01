@@ -14,7 +14,7 @@ export function ResultRenderer({result}: Props) {
     //Error case
     if (result.error) {
         return (
-            <div className="rounded-lg border bg-muted/30 p-4">
+            <div className="rounded-lg shadow-lg border bg-muted/30 p-4">
                 <p className="text-sm">{result.error}</p>
             </div>
         );
@@ -23,7 +23,7 @@ export function ResultRenderer({result}: Props) {
     const hasData = result.rows && result.rows.length > 0;
 
     return (
-        <div className="space-y-3 rounded-lg border bg-card p-4">
+        <div className="space-y-3 shadow-lg rounded-lg border bg-card p-4">
             <div>
                 <h3 className="font-semibold">{result.title}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">

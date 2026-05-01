@@ -35,12 +35,12 @@ function ChatInput({ onSubmit, disabled }: Props) {
                 placeholder="Ask anything about your data…"
                 rows={2}
                 disabled={disabled}
-                className="resize-none"
+                className="resize-none rounded-xl"
             />
             <Button
                 type="submit"
                 disabled={disabled || !value.trim()}
-                className="h-auto! w-15 bg-[#1B3A5C] hover:bg-[#1B3A5C]/90"
+                className="h-auto! w-15 bg-linear-to-br from-primary to-primary-light rounded-xl"
             >
                 <Send className="h-4! w-4!" />
             </Button>

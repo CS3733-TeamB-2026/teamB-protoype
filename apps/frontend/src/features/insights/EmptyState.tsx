@@ -17,6 +17,7 @@ type Props = {
 function EmptyState({ onSelectSuggestion }: Props) {
     return (
         <div className="mx-auto max-w-2xl py-12 text-center">
+            <h1 className="mb-2 pb-4 bg-linear-to-r from-primary-dark to-primary-light bg-clip-text text-transparent text-5xl font-semibold">Welcome to Insights.</h1>
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#1B3A5C]/10">
                 <Sparkles className="h-6 w-6 text-[#1B3A5C]" />
             </div>
@@ -32,7 +33,7 @@ function EmptyState({ onSelectSuggestion }: Props) {
                         variant="outline"
                         size="sm"
                         onClick={() => onSelectSuggestion(suggestion)}
-                        className="rounded-full"
+                        className="rounded-full bg-card py-3 bg-linear-to-l from-primary-light/10 via-card to-primary-dark/10 shadow-lg"
                     >
                         {suggestion}
                     </Button>

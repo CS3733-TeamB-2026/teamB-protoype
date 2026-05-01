@@ -50,6 +50,11 @@ CRITICAL RULES:
   or other identifier columns unless the user explicitly asks for them. 
   Identifiers are useful in GROUP BY but not in the SELECT list when they're 
   not part of the answer.
+  - For time-series questions (counts/sums grouped by day, week, month, quarter, year),
+  ALWAYS include zero-value periods within the requested range. Do this by generating
+  a date range with generate_series() and LEFT JOINing the data table to it. Do not
+  rely on the data table alone to provide the dates — it will only include periods
+  that have at least one row, leaving gaps in the output.
 
 DATABASE SCHEMA:
 ${SCHEMA_DESCRIPTION}

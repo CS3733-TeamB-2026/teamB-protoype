@@ -17,7 +17,7 @@ function ConversationView({ turns, isLoading }: Props) {
     }, [ turns.length, isLoading ]);
 
     return (
-        <div className="mx-auto max-w-4xl space-y-6">
+        <div className="mx-auto max-w-5xl space-y-6">
             {turns.map((turn, i) => (
                 <TurnDisplay key={i} turn={turn} />
             ))}
@@ -31,7 +31,7 @@ function TurnDisplay({ turn }: { turn : ChatTurn }) {
     if (turn.role === "user") {
         return (
             <div className="flex justify-end">
-                <div className="max-w-[80%] rounded-2xl bg-[#1B3A5C] px-4 py-2 text-white">
+                <div className="max-w-[80%] rounded-2xl bg-primary-dark shadow-lg px-4 py-2 text-white">
                     {turn.content}
                 </div>
             </div>
@@ -41,7 +41,7 @@ function TurnDisplay({ turn }: { turn : ChatTurn }) {
     //Assistant turn
     if (turn.isError) {
         return (
-            <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4 text-sm text-destructive">
+            <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-4 shadow-lg text-sm text-destructive">
                 {turn.content}
             </div>
         );
