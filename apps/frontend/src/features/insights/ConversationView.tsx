@@ -56,9 +56,11 @@ function TurnDisplay({ turn }: { turn : ChatTurn }) {
 
 function LoadingTurn() {
     return (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Thinking…</span>
+        <div className="w-fit space-y-3 shadow-lg rounded-lg border bg-card p-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Thinking…</span>
+            </div>
         </div>
     );
 }

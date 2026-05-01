@@ -3,10 +3,13 @@ import ChatInput from "@/features/insights/ChatInput";
 import ConversationView from "@/features/insights/ConversationView";
 import EmptyState from "@/features/insights/EmptyState";
 import { useNLQuery, type ChatTurn } from "@/hooks/use-nl-query";
+import { usePageTitle } from "@/hooks/use-page-title.ts";
 
 function InsightsPage() {
     const [conversation, setConversation] = useState<ChatTurn[]>([]);
     const { ask, isLoading } = useNLQuery();
+
+    usePageTitle("Insights");
 
     async function handleSubmit(question: string) {
         const userTurn: ChatTurn = { role: "user", content: question }
