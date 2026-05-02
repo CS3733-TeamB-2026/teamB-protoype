@@ -32,12 +32,16 @@ interface Props {
  *
  * Mirrors the ContentPicker / EmployeePicker UX: a trigger button shows the
  * current selection, clicking opens a popover with a search input and a
- * scrollable CollectionCard list. Fetches all collections on mount.
+ * scrollable CollectionCard list. Fetches all collections on mount and whenever
+ * `refreshKey` changes — increment it from the parent after creating a new
+ * collection to pull the fresh list without remounting.
  *
- * When `publicOnly` is true, private collections are filtered out client-side
- * from the full list — the fetch still hits `/api/collections` unfiltered.
- * Used in the service request form so only publicly shareable collections
- * can be linked to a request.
+ * When `publicOnly` is true, private collections are filtered client-side;
+ * the fetch still hits `/api/collections` unfiltered.
+ *
+ * Pass `inline` when the picker sits at the bottom of a card with
+ * `overflow-hidden` — the dropdown renders in normal flow and pushes the card
+ * down instead of being clipped by the card boundary.
  */
 export function CollectionPicker({ selectedId, onSelect, disabled = false, publicOnly = false, onCreateNew, inline = false, refreshKey = 0 }: Props) {
     const [open, setOpen] = useState(false);
@@ -49,7 +53,7 @@ export function CollectionPicker({ selectedId, onSelect, disabled = false, publi
     const { getAccessTokenSilently } = useAuth0();
 
     useEffect(() => {
-        setLoading(true);
+        setLoading(true); // reset before each fetch so the trigger button shows a spinner on refresh
         const load = async () => {
             try {
                 const token = await getAccessTokenSilently();

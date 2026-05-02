@@ -84,11 +84,13 @@ function formatFileSize(bytes: number): string {
  * shared metadata (persona, owner, tags, type, status), then upload all files
  * sequentially. Each row shows live status as uploads progress.
  *
- * On completion, "Go to Content Library" navigates to /files. ViewContent
- * re-fetches on mount so the new items appear without any data-passing.
+ * Optionally adds all successfully-uploaded items to a collection. The append
+ * runs after all uploads complete — it GETs the current collection to read
+ * existing item IDs, then PUTs the merged list, because the collection update
+ * API replaces the full item list rather than appending.
  *
- * "Upload More" resets only the file list, keeping the shared metadata intact
- * for a second batch.
+ * "Upload More" resets only the file list; shared metadata and the collection
+ * selection persist so a second batch can be added to the same collection.
  */
 export function BulkUploadPage() {
     usePageTitle("Bulk Upload");
@@ -102,7 +104,7 @@ export function BulkUploadPage() {
     const [addToCollection, setAddToCollection] = useState(false);
     const [collectionId, setCollectionId] = useState<number | null>(null);
     const [addCollectionDialogOpen, setAddCollectionDialogOpen] = useState(false);
-    const [collectionRefreshKey, setCollectionRefreshKey] = useState(0);
+    const [collectionRefreshKey, setCollectionRefreshKey] = useState(0); // incremented to trigger a refetch inside CollectionPicker
 
     const [phase, setPhase] = useState<"selection" | "uploading" | "done">("selection");
     const [entries, setEntries] = useState<BulkFileEntry[]>([]);
@@ -187,7 +189,7 @@ export function BulkUploadPage() {
         const token = await getAccessTokenSilently();
         let successCount = 0;
         let failCount = 0;
-        const uploadedContentIds: number[] = [];
+        const uploadedContentIds: number[] = []; // collected for the post-upload collection append
 
         for (let i = 0; i < entries.length; i++) {
             const entry = entries[i];
@@ -229,6 +231,8 @@ export function BulkUploadPage() {
 
         if (addToCollection && collectionId != null && uploadedContentIds.length > 0) {
             try {
+                // The collection PUT replaces the full item list, so we must fetch
+                // the current items first to avoid overwriting them.
                 const collRes = await fetch(`/api/collections/${collectionId}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
