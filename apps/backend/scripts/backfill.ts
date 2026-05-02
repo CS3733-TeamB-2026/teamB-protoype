@@ -21,9 +21,26 @@ function buildEmbeddingInput(
 }
 
 async function backfill() {
-    console.log('Fetching all content records missing text or embeddings...');
+    const force = process.argv.includes('--force');
+    console.log(force
+        ? 'Fetching ALL content records to re-embed (--force)...'
+        : 'Fetching all content records missing text or embeddings...');
 
-    const allContent = await prisma.$queryRaw<any[]>`
+    const allContent = force
+    ? await prisma.$queryRaw<any[]>`
+        SELECT
+            id,
+            "displayName",
+            "fileURI",
+            "linkURL",
+            "contentType",
+            "targetPersona",
+            "tags",
+            "textContent",
+            "searchVector"::text,
+            "embedding"::text
+        FROM "Content"`
+    : await prisma.$queryRaw<any[]>`
         SELECT
             id,
             "displayName",
