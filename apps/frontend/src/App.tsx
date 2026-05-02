@@ -21,7 +21,7 @@ import { ViewSingleFile } from "@/features/content/previews/ViewSingleFile.tsx";
 import SidebarOverlay from "./components/layout/SidebarOverlay.tsx";
 import { Route, Routes } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import {LocaleProvider} from "@/languageSupport/localeContext.tsx";
 import SettingsLayout from "@/features/settings/SettingsLayout.tsx";
@@ -34,6 +34,7 @@ import ViewCollections from "@/features/collections/ViewCollections.tsx";
 import { ViewSingleCollection } from "@/features/collections/ViewSingleCollection.tsx";
 import About from "@/pages/About.tsx"
 import ViewNotifications from "@/features/notifications/ViewNotifications.tsx";
+import Insights from "@/features/insights/Insights.tsx";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const { isAuthenticated } = useAuth0();
@@ -47,12 +48,16 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 function App() {
 
     const { isLoading } = useAuth0();
+    const location = useLocation();
+    const hideFooter = location.pathname === "/insights";
 
     if (isLoading) return (
         <div className="flex items-center justify-center min-h-screen bg-secondary">
             <Loader2 className="w-10 h-10 text-primary animate-spin" />
         </div>
     )
+
+
 
     // Your application must be wrapped with the BrowserRouter component to enable routing
     return (
@@ -87,6 +92,7 @@ function App() {
                             <Route path="/servicereqs" element={<ProtectedRoute><ViewServiceReqs/></ProtectedRoute>}/>
                             <Route path="/notifications" element={<ProtectedRoute><ViewNotifications/></ProtectedRoute>}/>
                             <Route path="/search" element={<ProtectedRoute><SearchContent/></ProtectedRoute>}/>
+                            <Route path="/insights" element={<ProtectedRoute><Insights/></ProtectedRoute>}/>
                             <Route path="/about" element={<About/>}/>
                             <Route path="/settings" element={<ProtectedRoute><SettingsLayout/></ProtectedRoute>}>
 
@@ -96,7 +102,7 @@ function App() {
                             </Route>
                         </Routes>
                     </main>
-                    <Footer />
+                    {!hideFooter && <Footer />}
                 </div>
 
             </SidebarProvider>

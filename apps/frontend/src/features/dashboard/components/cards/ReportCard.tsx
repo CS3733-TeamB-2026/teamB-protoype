@@ -1,10 +1,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover.tsx";
-import { Info, X, TrendingUp, FileText, Clock } from "lucide-react";
+import { TrendingUp, FileText, Clock } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import DashboardCard from "@/features/dashboard/components/cards/DashboardCard.tsx";
+import InfoButton from "@/components/layout/InformationAlert.tsx";
 
 interface TransactionSummary {
     summary: {
@@ -42,7 +42,6 @@ function ReportCard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<'overview' | 'by-owner' | 'currency' | 'expiration'>('overview');
-    const [openInfo, setOpenInfo] = useState(false);
     const { getAccessTokenSilently } = useAuth0();
 
     useEffect(() => {
@@ -352,35 +351,9 @@ function ReportCard() {
                         </CardTitle>
                         <CardDescription>Transaction activity, content currency, and expiration status</CardDescription>
                     </div>
-                    <Popover open={openInfo} onOpenChange={setOpenInfo}>
-                        <PopoverTrigger asChild>
-                            <Info className="w-5 h-5 cursor-pointer text-muted-foreground hover:text-foreground transition-colors" />
-                        </PopoverTrigger>
-                        <PopoverContent className="w-72 relative">
-                            <X
-                                className="absolute right-2 top-2 w-4 h-4 cursor-pointer text-gray-500 hover:text-gray-700"
-                                onClick={() => setOpenInfo(false)}
-                            />
-                            <div className="space-y-3 text-sm">
-                                <div>
-                                    <p className="font-semibold text-foreground mb-1">Overview</p>
-                                    <p className="text-muted-foreground text-xs">Summary statistics and access patterns by department.</p>
-                                </div>
-                                <div>
-                                    <p className="font-semibold text-foreground mb-1">By Owner</p>
-                                    <p className="text-muted-foreground text-xs">Content items and access counts broken down by owner.</p>
-                                </div>
-                                <div>
-                                    <p className="font-semibold text-foreground mb-1">Content Currency</p>
-                                    <p className="text-muted-foreground text-xs">Average age of content and last update dates by owner.</p>
-                                </div>
-                                <div>
-                                    <p className="font-semibold text-foreground mb-1">Expiration</p>
-                                    <p className="text-muted-foreground text-xs">Content expiration status and upcoming deadlines.</p>
-                                </div>
-                            </div>
-                        </PopoverContent>
-                    </Popover>
+                    <div className="absolute right-1 top-1 w-8 h-8 cursor-pointer">
+                        <InfoButton content={"The Overview tab shows the total accesses and content by each department. The By Owner tab shows the accesses and content for each user. The Currency tab shows the age and date of most recently added content. The Expiration tab shows a chart of all expiration status."}/>
+                    </div>
                 </div>
             </CardHeader>
 
