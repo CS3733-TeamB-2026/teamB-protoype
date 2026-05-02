@@ -20,7 +20,7 @@ import {
     Lock,
     RefreshCcw,
     KeyRound,
-    Ban, ChevronsLeft, ChevronsRight, ChevronLeft, UserRoundKey,
+    Ban, ChevronsLeft, ChevronsRight, ChevronLeft, UserRoundKey, Recycle, RotateCcw,
 } from "lucide-react";
 import {Button} from "@/components/ui/button.tsx";
 import {
@@ -106,6 +106,10 @@ import InfoButton from "@/components/layout/InformationAlert";
  *   invalidated so the next inline preview re-fetches the updated file.
  * - Bookmarks are optimistically updated: the UI reflects the change
  *   immediately and rolls back if the API call fails.
+ * - The Recycle Bin tab uses a separate `deletedContent` state fetched from
+ *   `/api/content/deleted` in parallel with the main content fetch. Recycling
+ *   requires a checkout lock; restore and permanent delete require ownership or
+ *   admin. The recycle bin table never shows lock/checkout actions.
  */
 function ViewContent() {
 
@@ -115,6 +119,7 @@ function ViewContent() {
     usePageTitle("Manage Content");
 
     const [content, setContent] = useState<ContentItem[]>([]);
+    const [deletedContent, setDeletedContent] = useState<ContentItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [addOpen, setAddOpen] = useState(false);
     const [editOpen, setEditOpen] = useState(false);
@@ -125,6 +130,8 @@ function ViewContent() {
     const [bookmarks, setBookmarks] = useState<BookmarkRecord[]>([]);
     /** Content item staged for the delete confirmation dialog. */
     const [deleteTarget, setDeleteTarget] = useState<ContentItem | null>(null);
+    /** Content item staged for the permanent-delete confirmation dialog. */
+    const [permanentDeleteTarget, setPermanentDeleteTarget] = useState<ContentItem | null>(null);
     const [sort, toggleSort] = useSortState<"name" | "owner" | "status" | "contentType" | "persona" | "docType">({
         column: "persona",
         direction: "asc"
@@ -230,9 +237,14 @@ function ViewContent() {
     const refreshContent = useCallback(async () => {
         try {
             const token = await getAccessTokenSilently();
-            const res = await fetch(`/api/content`, {headers: {Authorization: `Bearer ${token}`}});
+            const [res, deletedRes] = await Promise.all([
+                fetch(`/api/content`, {headers: {Authorization: `Bearer ${token}`}}),
+                fetch(`/api/content/deleted`, {headers: {Authorization: `Bearer ${token}`}}),
+            ]);
             const data: ContentItem[] = await res.json();
+            const deletedData: ContentItem[] = await deletedRes.json();
             setContent(data);
+            setDeletedContent(deletedData);
             fetchPreviews(data);
             await updateBookmarks();
         } catch {
@@ -251,11 +263,14 @@ function ViewContent() {
         const fetchContent = async () => {
             try {
                 const token = await getAccessTokenSilently();
-                const res = await fetch('/api/content', {
-                    headers: {Authorization: `Bearer ${token}`},
-                });
+                const [res, deletedRes] = await Promise.all([
+                    fetch('/api/content', {headers: {Authorization: `Bearer ${token}`}}),
+                    fetch('/api/content/deleted', {headers: {Authorization: `Bearer ${token}`}}),
+                ]);
                 const data: ContentItem[] = await res.json();
+                const deletedData: ContentItem[] = await deletedRes.json();
                 setContent(data);
+                setDeletedContent(deletedData);
                 setLoading(false);
                 fetchPreviews(data);
                 await updateBookmarks();
@@ -349,8 +364,8 @@ function ViewContent() {
     }
 
     /**
-     * Deletes the content item with the given ID and removes it from local
-     * state. Called by `ConfirmDeleteDialog` after the user confirms.
+     * Soft-deletes the content item with the given ID (moves it to the recycle bin).
+     * Called by the recycle confirm dialog after the user confirms.
      */
     const handleDelete = async (id: number) => {
         const token = await getAccessTokenSilently();
@@ -359,7 +374,10 @@ function ViewContent() {
             headers: {Authorization: `Bearer ${token}`},
         });
         if (res.ok) {
+            const recycled = content.find((item) => item.id === id);
             setContent((prev) => prev.filter((item) => item.id !== id));
+            if (recycled) setDeletedContent((prev) => [...prev, {...recycled, deleted: true}]);
+            toast.success("Moved to recycle bin.");
         } else if (res.status === 409) {
             toast.error("This item has been forcibly checked in.");
             void refreshContent();
@@ -390,7 +408,7 @@ function ViewContent() {
                 return;
             }
             setContent((prev) => prev.map((c) => c.id === item.id ? {...c, ...data} : c));
-            toast.success("Successfully checked out. You can now edit or delete.");
+            toast.success("Successfully checked out. You can now edit or recycle.");
         } catch {
             toast.error("Could not check out.");
         }
@@ -446,6 +464,46 @@ function ViewContent() {
         } catch {
             toast.error("Could not force check in.");
         }
+    };
+
+    /** Restores a recycled item and moves it back into the active content list. */
+    const handleRestore = async (item: ContentItem) => {
+        try {
+            const token = await getAccessTokenSilently();
+            const res = await fetch(`/api/content/${item.id}/restore`, {
+                method: "POST",
+                headers: {Authorization: `Bearer ${token}`},
+            });
+            if (res.ok) {
+                setDeletedContent((prev) => prev.filter((c) => c.id !== item.id));
+                setContent((prev) => [...prev, {...item, deleted: false}]);
+                toast.success(`"${item.displayName}" restored.`);
+            } else {
+                toast.error("Could not restore item.");
+            }
+        } catch {
+            toast.error("Could not restore item.");
+        }
+    };
+
+    /** Permanently deletes a recycled item from the database and Supabase bucket. */
+    const handlePermanentDelete = async (id: number) => {
+        try {
+            const token = await getAccessTokenSilently();
+            const res = await fetch(`/api/content/${id}/permanent`, {
+                method: "DELETE",
+                headers: {Authorization: `Bearer ${token}`},
+            });
+            if (res.ok) {
+                setDeletedContent((prev) => prev.filter((c) => c.id !== id));
+                toast.success("Permanently deleted.");
+            } else {
+                toast.error("Could not permanently delete.");
+            }
+        } catch {
+            toast.error("Could not permanently delete.");
+        }
+        setPermanentDeleteTarget(null);
     };
 
     /**
@@ -506,11 +564,13 @@ function ViewContent() {
                         {user.persona === "admin" ? "" : formatLabel(user.persona)} {ts('content')}
                     </CardTitle>
                     <CardDescription>
-                        {activeTab === "bookmarks"
-                            ? `${filteredContent.length} ${ts('content.favorite')} ${ts('item')}${filteredContent.length !== 1 ? "s" : ""}`
-                            : filteredContent.length === content.length
-                                ? `${content.length} ${ts('item')}${content.length !== 1 ? "s" : ""}`
-                                : `${filteredContent.length} ${ts('of')} ${content.length} ${ts('item')}s`}
+                        {activeTab === "recyclebin"
+                            ? `${deletedContent.length} recycled item${deletedContent.length !== 1 ? "s" : ""}`
+                            : activeTab === "bookmarks"
+                                ? `${filteredContent.length} ${ts('content.favorite')} ${ts('item')}${filteredContent.length !== 1 ? "s" : ""}`
+                                : filteredContent.length === content.length
+                                    ? `${content.length} ${ts('item')}${content.length !== 1 ? "s" : ""}`
+                                    : `${filteredContent.length} ${ts('of')} ${content.length} ${ts('item')}s`}
                     </CardDescription>
                 </CardHeader>
 
@@ -520,7 +580,7 @@ function ViewContent() {
                     <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ContentTab)}>
                         <SlidingTabs
                             activeTab={activeTab}
-                            indicatorColor={activeTab === "bookmarks" ? "bg-accent" : "bg-foreground"}
+                            indicatorColor={activeTab === "bookmarks" ? "bg-accent" : activeTab === "recyclebin" ? "bg-destructive" : "bg-foreground"}
                         >
                             <TabsTrigger
                                 value="forYou"
@@ -551,6 +611,13 @@ function ViewContent() {
                                 {ts('content.favorites')}
                                 <span className="ml-2 text-xs opacity-70">{bookmarks.length}</span>
                             </TabsTrigger>
+                            <TabsTrigger
+                                value="recyclebin"
+                                className="relative z-10 data-active:bg-transparent data-active:text-destructive hover:text-foreground/80 data-active:hover:text-destructive px-0"
+                            >
+                                <Recycle className="w-4 h-4 mr-1 inline-block" />
+                                Recycle Bin
+                            </TabsTrigger>
                             {/*THEN ADD MORE TAB TRIGGERs FOR MORE TABS!!*/}
                         </SlidingTabs>
                     </Tabs>
@@ -567,7 +634,81 @@ function ViewContent() {
                             <AlertDescription>{error}</AlertDescription>
                         </Alert>
                     )}
-                    {!loading && !error && content.length === 0 && (
+                    {/* Recycle bin tab — separate data source, separate table */}
+                    {!loading && !error && activeTab === "recyclebin" && (
+                        deletedContent.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
+                                <Recycle className="w-10 h-10"/>
+                                <p className="text-sm">Recycle bin is empty.</p>
+                            </div>
+                        ) : (
+                            <Table className="text-left mt-2">
+                                <TableHeader>
+                                    <TableRow className="hover:bg-transparent">
+                                        <TableHead className="w-8"/>
+                                        <SortableHead column="name" label={ts('content.name')} sort={sort} onSort={toggleSort}/>
+                                        <SortableHead column="owner" label={ts('content.owner')} sort={sort} onSort={toggleSort} className="hidden sm:table-cell"/>
+                                        <SortableHead column="status" label={ts('status')} sort={sort} onSort={toggleSort} className="hidden sm:table-cell"/>
+                                        <SortableHead column="contentType" label={ts('kind')} sort={sort} onSort={toggleSort} className="hidden sm:table-cell"/>
+                                        <SortableHead column="persona" label={ts('persona')} sort={sort} onSort={toggleSort} className="hidden sm:table-cell"/>
+                                        <SortableHead column="docType" label={ts('file.type')} sort={sort} onSort={toggleSort} className="hidden sm:table-cell"/>
+                                        <TableHead className="uppercase tracking-wider text-muted-foreground select-none text-center">{ts('content.actions')}</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {deletedContent.map((item, index) => {
+                                        const isFile = !!item.fileURI;
+                                        const isLink = !!item.linkURL;
+                                        const originalFilename = isFile ? getOriginalFilename(item.fileURI!) : null;
+                                        const category = getCategory(null, originalFilename);
+                                        const ext = originalFilename ? getExtension(originalFilename) : null;
+                                        return (
+                                            <TableRow
+                                                key={item.id}
+                                                className={`${index % 2 === 0 ? "bg-muted/15" : ""}`}
+                                            >
+                                                <TableCell className="w-8 pr-0">
+                                                    <ContentIcon category={category} isLink={isLink} className="w-5 h-5"/>
+                                                </TableCell>
+                                                <TableCell className="w-full max-w-0">
+                                                    <span className="truncate font-medium text-foreground">{item.displayName}</span>
+                                                </TableCell>
+                                                <TableCell className="hidden sm:table-cell">
+                                                    {item.owner
+                                                        ? <EmployeeAvatar employee={item.owner} size="sm"/>
+                                                        : <span className="text-muted-foreground">—</span>}
+                                                </TableCell>
+                                                <TableCell className="hidden sm:table-cell text-center">
+                                                    <ContentStatusBadge status={item.status}/>
+                                                </TableCell>
+                                                <TableCell className="hidden sm:table-cell text-center">
+                                                    <ContentTypeBadge contentType={item.contentType}/>
+                                                </TableCell>
+                                                <TableCell className="hidden sm:table-cell text-center">
+                                                    <PersonaBadge persona={item.targetPersona}/>
+                                                </TableCell>
+                                                <TableCell className="hidden sm:table-cell text-center">
+                                                    <ContentExtBadge category={category} ext={ext} isLink={isLink}/>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex justify-center gap-2">
+                                                        <Button variant="outline" size="sm" title="Restore" onClick={() => handleRestore(item)}>
+                                                            <RotateCcw className="w-4 h-4"/>
+                                                        </Button>
+                                                        <Button variant="destructive" size="sm" title="Delete permanently" onClick={() => setPermanentDeleteTarget(item)}>
+                                                            <Trash2 className="w-4 h-4"/>
+                                                        </Button>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        );
+                                    })}
+                                </TableBody>
+                            </Table>
+                        )
+                    )}
+
+                    {!loading && !error && activeTab !== "recyclebin" && content.length === 0 && (
                         <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
                             <FolderOpen className="w-10 h-10"/>
                             <p className="text-sm">No content found.</p>
@@ -577,7 +718,7 @@ function ViewContent() {
                         </div>
 
                     )}
-                    {!loading && !error && content.length > 0 && <>
+                    {!loading && !error && activeTab !== "recyclebin" && content.length > 0 && <>
                         <div className="flex flex-row justify-between items-baseline mb-2">
                             <div className="flex flex-row gap-2 items-center">
                                 <Button
@@ -939,7 +1080,8 @@ function ViewContent() {
                                                                                             setDeleteTarget(item);
                                                                                         }}
                                                                                     >
-                                                                                        <Trash2 className="w-4 h-4" style={{ stroke: "var(--destructive)" }}/>                                                                                        Delete
+                                                                                        <Recycle className="w-4 h-4" style={{ stroke: "var(--destructive)" }}/>
+                                                                                        Move to Bin
                                                                                     </DropdownMenuItem>
                                                                                 </DropdownMenuContent>
                                                                             </DropdownMenu>
@@ -976,7 +1118,7 @@ function ViewContent() {
                                                                         return (
                                                                             <button
                                                                                 className="w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground"
-                                                                                title="Check out to edit or delete"
+                                                                                title="Check out to edit or recycle"
                                                                                 onClick={(e) => {
                                                                                     e.stopPropagation();
                                                                                     setCheckoutTarget(item);
@@ -1180,8 +1322,18 @@ function ViewContent() {
                     if (!open) setDeleteTarget(null);
                 }}
                 description={deleteTarget ?
-                    <span>{ts('content.deleteDialogue')}<strong>"{deleteTarget.displayName}"</strong>.</span> : undefined}
+                    <span>Move <strong>"{deleteTarget.displayName}"</strong> to the recycle bin?</span> : undefined}
                 onConfirm={() => handleDelete(deleteTarget!.id)}
+            />
+            <ConfirmDeleteDialog
+                open={!!permanentDeleteTarget}
+                onOpenChange={(open) => {
+                    if (!open) setPermanentDeleteTarget(null);
+                }}
+                description={permanentDeleteTarget
+                    ? <span>Permanently delete <strong>"{permanentDeleteTarget.displayName}"</strong>? This cannot be undone.</span>
+                    : undefined}
+                onConfirm={() => handlePermanentDelete(permanentDeleteTarget!.id)}
             />
             <ConfirmCheckoutDialog
                 open={!!checkoutTarget}
@@ -1205,7 +1357,7 @@ function ViewContent() {
                 }}
                 description={checkinTarget
                     ?
-                    <span>Check in <strong>"{checkinTarget.displayName}"</strong>? Other users will be able to edit and delete it.</span>
+                    <span>Check in <strong>"{checkinTarget.displayName}"</strong>? Other users will be able to edit and recycle it.</span>
                     : undefined}
                 onConfirm={async () => {
                     if (checkinTarget) {

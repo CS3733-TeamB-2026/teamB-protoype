@@ -46,6 +46,7 @@ export type ContentItem = {
     targetPersona: Persona;
     status: ContentStatus;
     tags: string[];
+    deleted: boolean;
     lastPreviewed: string;
 }
 

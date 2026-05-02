@@ -48,6 +48,7 @@ model Content {
   checkedOutById       Int?
   ownerId              Int?
   tags                 String[]
+  deleted              Boolean                     @default(false)
   textContent          String?
   searchVector         Unsupported("tsvector")?    @default(dbgenerated("to_tsvector('english'::regconfig, COALESCE(\"textContent\", ''::text))"))
   embedding            Unsupported("vector(384)")?

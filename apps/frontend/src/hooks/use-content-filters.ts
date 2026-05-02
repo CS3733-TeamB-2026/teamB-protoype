@@ -3,7 +3,8 @@ import type { ContentItem, BookmarkRecord, ContentStatus, ContentType, Persona }
 import { type Category, getOriginalFilename, lookupByFilename } from "@/lib/mime.ts";
 
 {/*CHANGE THIS TO ADD MORE TABS!!*/}
-export type ContentTab = "forYou" | "all" | "owned" | "bookmarks";
+/** All possible tab values in the ViewContent page. `recyclebin` uses a separate data source. */
+export type ContentTab = "forYou" | "all" | "owned" | "bookmarks" | "recyclebin";
 
 /**
  * Single source of truth for all content list filtering in `ViewContent`.
@@ -90,7 +91,8 @@ export function useContentFilters(
             activeTab !== "owned" || item.ownerId === currentUserId;
         const matchesForYou =
             activeTab !== "forYou" || item.targetPersona === currentUserPersona;
-
+        // Recycle bin has its own data source — never show main-list items in it.
+        const notRecycleBin = activeTab !== "recyclebin";
 
         {/*ADD A MATCHES ____  RETURN FOR MORE TABS!!!!*/
         }
@@ -102,7 +104,8 @@ export function useContentFilters(
             matchesBookmark &&
             matchesDocType &&
             matchesOwner &&
-            matchesForYou
+            matchesForYou &&
+            notRecycleBin
         );
     });
 

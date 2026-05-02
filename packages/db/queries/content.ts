@@ -4,7 +4,7 @@ import {Helper, employeeSelect, contentSelect} from "./helper";
 import { Notification } from "./notification";
 import { generateEmbedding, embeddingToSql } from '../../../apps/backend/lib/embeddings';
 
-// helper to build the text we embed
+/** Concatenates the indexable fields into a single string for embedding generation. */
 function buildEmbeddingInput(
     name: string,
     contentType: string,
@@ -21,6 +21,14 @@ function buildEmbeddingInput(
     ].join(' ');
 }
 
+/**
+ * Query class for the `Content` table.
+ *
+ * All read queries filter `deleted = false` by default. Deleted items are only
+ * visible via `queryDeletedContent` / `queryDeletedContentById`. Raw SQL is used
+ * in a few places because Prisma's ORM layer doesn't support the `vector` type
+ * or full-text search ranking (`ts_rank`).
+ */
 export class Content {
     public static async semanticSearch(query: string): Promise<p.Content[]> {
         const embedding = await generateEmbedding(query);
@@ -44,7 +52,7 @@ export class Content {
             "checkedOutAt",
             1 - ("embedding" <=> ${embeddingStr}::vector) AS similarity
         FROM "Content"
-        WHERE "embedding" IS NOT NULL
+        WHERE "embedding" IS NOT NULL AND "deleted" = false
         ORDER BY "embedding" <=> ${embeddingStr}::vector
         LIMIT 20;
     `;
@@ -191,14 +199,39 @@ export class Content {
         }) as Promise<p.Content>;
     }
 
-    public static async deleteContent(id: number): Promise<void> {
-        await prisma.content.delete({
-            where: {id: id},
-        })
+    /**
+     * Hard-deletes a content item from the database.
+     * `Bookmark` and `Preview` lack `onDelete: Cascade` in the schema, so they
+     * are deleted in the same transaction to avoid FK constraint violations.
+     */
+    public static async permanentDeleteContent(id: number): Promise<void> {
+        // Bookmark and Preview have no onDelete cascade, so clear them first.
+        await prisma.$transaction([
+            prisma.bookmark.deleteMany({ where: { bookmarkedContentId: id } }),
+            prisma.preview.deleteMany({ where: { previewedContentId: id } }),
+            prisma.content.delete({ where: { id } }),
+        ]);
+    }
+
+    /** Marks an item as deleted and clears its checkout lock. */
+    public static async softDeleteContent(id: number): Promise<void> {
+        await prisma.content.update({
+            where: { id },
+            data: { deleted: true, checkedOutById: null, checkedOutAt: null },
+        });
+    }
+
+    /** Clears the deleted flag, making the item visible in normal content queries again. */
+    public static async restoreContent(id: number): Promise<void> {
+        await prisma.content.update({
+            where: { id },
+            data: { deleted: false },
+        });
     }
 
     public static async queryAllContent() {
         return prisma.content.findMany({
+            where: { deleted: false },
             select: {
                 ...contentSelect,
                 owner: { select: employeeSelect },
@@ -216,7 +249,7 @@ export class Content {
             throw new Error("No persona type provided")
         }
         return prisma.content.findMany({
-            where: {targetPersona: _personaTyped},
+            where: { targetPersona: _personaTyped, deleted: false },
             select: {
                 ...contentSelect,
                 owner: { select: employeeSelect },
@@ -227,7 +260,7 @@ export class Content {
 
     public static async queryContentById(_id: number) {
         return prisma.content.findUnique({
-            where: {id: _id},
+            where: { id: _id, deleted: false },
             select: {
                 ...contentSelect,
                 owner: { select: employeeSelect },
@@ -238,9 +271,39 @@ export class Content {
 
     public static async queryContentByIdWithVectors(_id: number) {
         return prisma.content.findUnique({
-            where: {id: _id},
+            where: { id: _id, deleted: false },
             include: { owner: { select: employeeSelect }, checkedOutBy: { select: employeeSelect } }
         })
+    }
+
+    /** Looks up a single deleted item by ID. Returns `null` if not found or not deleted. */
+    public static async queryDeletedContentById(id: number) {
+        return prisma.content.findUnique({
+            where: { id, deleted: true },
+            select: {
+                ...contentSelect,
+                owner: { select: employeeSelect },
+                checkedOutBy: { select: employeeSelect },
+            }
+        });
+    }
+
+/**
+     * Returns deleted items visible to the caller.
+     * Admins see everything; non-admins only see items they own.
+     */
+    public static async queryDeletedContent(employeeId: number, adminAccess: boolean) {
+        return prisma.content.findMany({
+            where: {
+                deleted: true,
+                ...(!adminAccess && { ownerId: employeeId }),
+            },
+            select: {
+                ...contentSelect,
+                owner: { select: employeeSelect },
+                checkedOutBy: { select: employeeSelect },
+            }
+        });
     }
 
 
@@ -299,7 +362,7 @@ export class Content {
                 'MaxWords=50, MinWords=20'
             ) AS snippet
         FROM "Content"
-        WHERE "searchVector" @@ plainto_tsquery('english', ${query})
+        WHERE "searchVector" @@ plainto_tsquery('english', ${query}) AND "deleted" = false
         ORDER BY rank DESC
         LIMIT 20;
     `;
