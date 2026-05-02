@@ -6,6 +6,8 @@ import {teamPhotos} from "@/components/ui/team-photos.tsx";
 import { BookOpen, UserCheck, Building2, Briefcase, Heart } from "lucide-react";
 import { useState } from "react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover.tsx";
+import {Quote} from "lucide-react"
+import {Button} from "@/components/ui/button.tsx";
 
 function About() {
 
@@ -24,7 +26,7 @@ function About() {
         { id: 2, name: "Oscar Stomberg", initials: "OS", role: 'Assistant Lead Software Engineer', photo: "oscar", quote: "OSCAR QUOTE" },
         { id: 3, name: "Jake Swanson", initials: "JS", role: 'Assistant Lead Software Engineer', photo: "jake", quote: "JAKE QUOTE" },
         { id: 4, name: "Hayden Schultz", initials: "HS", role: 'Assistant Lead Software Engineer & Scrum Master', photo: "hayden", quote: "HAYDEN QUOTE" },
-        { id: 5, name: "Luke Ciarletta", initials: "LC", role: 'Full-Time Software Engineer', photo: "luke", quote: "This is a quote from Luke and it is longer." },
+        { id: 5, name: "Luke Ciarletta", initials: "LC", role: 'Full-Time Software Engineer', photo: "luke", quote: "This is a quote from Luke and it is longer. This is a quote from Luke and it is longer." },
         { id: 6, name: "Nick Houghton", initials: "NH", role: 'Full-Time Software Engineer', photo: "nicholas", quote: "NICK QUOTE" },
         { id: 7, name: "Cameron Pietraski", initials: "CP", role: 'Full-Time Software Engineer', photo: "cameron", quote: "CAMERON QUOTE" },
         { id: 8, name: "Philip Ostrowski", initials: "PO", role: 'Part-Time Software Engineer & Project Manager', photo: "philip", quote: "PHILIP QUOTE" },
@@ -34,7 +36,7 @@ function About() {
 
     const [currentQuote, setCurrentQuote] = useState(0)
 
-    const handleCardClick = (id: number) => {
+    const toggleQuote = (id: number) => {
         if (id == currentQuote) { setCurrentQuote(0) } //clicked same employee - toggle off
         else { setCurrentQuote(id) } //clicked new employee - set theirs to be on
     }
@@ -102,9 +104,9 @@ function About() {
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 justify-items-center">
                         {members.map((member: TeamMember) => (
                             <Card
-                                className={`w-full max-w-55 shadow-sm border-t-primary border-t-4 text-center hover:shadow-md hover:-translate-y-1 transition-all duration-150`}
+                                className={`w-full max-w-55 shadow-sm border-t-primary border-t-4 text-center hover:shadow-md hover:-translate-y-1 transition-all duration-150 relative`}
                                 key={member.name}
-                                onClick={() => handleCardClick(member.id)}
+                                onMouseLeave={() => toggleQuote(0)}
                             >
                                 <CardContent className="flex flex-col items-center justify-center gap-3 pt-6 pb-6 px-3">
                                     <Avatar className="w-16 h-16 ring-2 ring-primary/20">
@@ -121,10 +123,17 @@ function About() {
                                         <p className="text-muted-foreground text-xs mt-1 leading-snug">{member.role}</p>
                                         <Popover open={member.id == currentQuote}>
                                             <PopoverTrigger /> {/*unused, but controls where the popover appears*/}
-                                            <PopoverContent className="text-sm text-muted-foreground w-40">
+                                            <PopoverContent className="text-sm text-muted-foreground w-3xs">
                                                 {member.quote}
                                             </PopoverContent>
                                         </Popover>
+                                        <Button
+                                            variant="outline"
+                                            className = "absolute bottom-1/32 left-1/32"
+                                            onClick={() => toggleQuote(member.id)}
+                                        >
+                                            <Quote className="text-muted-foreground" />
+                                        </Button>
                                     </div>
                                 </CardContent>
                             </Card>
