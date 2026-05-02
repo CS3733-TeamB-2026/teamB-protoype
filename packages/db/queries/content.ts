@@ -192,9 +192,12 @@ export class Content {
     }
 
     public static async permanentDeleteContent(id: number): Promise<void> {
-        await prisma.content.delete({
-            where: { id },
-        });
+        // Bookmark and Preview have no onDelete cascade, so clear them first.
+        await prisma.$transaction([
+            prisma.bookmark.deleteMany({ where: { bookmarkedContentId: id } }),
+            prisma.preview.deleteMany({ where: { previewedContentId: id } }),
+            prisma.content.delete({ where: { id } }),
+        ]);
     }
 
     public static async softDeleteContent(id: number): Promise<void> {
