@@ -1,4 +1,4 @@
-import { Pie, PieChart } from "recharts";
+import { Pie, PieChart, ResponsiveContainer } from "recharts";
 import {
     CardContent,
     CardDescription,
@@ -80,27 +80,29 @@ function EmployeeChartCard() {
                 <CardTitle className="capitalize text-2xl font-semibold">Department Breakdown</CardTitle>
                 <CardDescription>Current headcount by department.</CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-row items-center justify-center gap-4 pb-0 mr-10">
+            <CardContent className="flex flex-col items-center justify-center gap-4 pb-4">
                 <div className="absolute right-1 top-1 w-8 h-8 cursor-pointer">
                     <InfoButton content={"Shows the current distribution of employees across departments."}/>
                 </div>
                 <ChartContainer
                     config={chartConfig}
-                    className="w-60 h-60 shrink-0"
+                    className="flex-1 w-full min-w-0 aspect-square max-h-[200px]"
                 >
-                    <PieChart>
-                        <ChartTooltip
-                            cursor={false}
-                            content={<ChartTooltipContent hideLabel />}
-                        />
-                        <Pie
-                            data={chartData}
-                            dataKey="count"
-                            nameKey="persona"
-                        />
-                    </PieChart>
+                    <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                            <ChartTooltip
+                                cursor={false}
+                                content={<ChartTooltipContent hideLabel />}
+                            />
+                            <Pie
+                                data={chartData}
+                                dataKey="count"
+                                nameKey="persona"
+                            />
+                        </PieChart>
+                    </ResponsiveContainer>
                 </ChartContainer>
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-0 w-full max-w-[250px]">
                     {chartData.map(({ persona, count, fill }) => (
                         <div key={persona} className="flex items-center gap-2 text-sm">
                             <span className="size-3 rounded-sm shrink-0" style={{ backgroundColor: fill }} />
