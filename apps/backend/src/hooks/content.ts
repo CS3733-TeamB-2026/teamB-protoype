@@ -157,10 +157,22 @@ export const getPublicFileUrl = async (req: req, res: res) => {
     }
 };
 
+/**
+ * Builds the Supabase storage path for a new file upload.
+ * The UUID segment prevents collisions when the same filename is uploaded more
+ * than once by the same owner. Format: `<ownerID>/<uuid>/<originalFilename>`.
+ */
 function buildFileURI(ownerID: string, filename: string): string {
     return `${ownerID}/${crypto.randomUUID()}/${filename}`;
 }
 
+/**
+ * Creates a new content item. Responds with 201 immediately after writing the
+ * metadata row, then kicks off text extraction and embedding generation in
+ * `setImmediate` so the client isn't blocked by potentially slow ML inference.
+ * If the Supabase upload succeeds but the DB write fails, the orphaned file is
+ * cleaned up before returning the error.
+ */
 export const uploadFile = async (req: req, res: res) => {
     const payload = req.body;
     let fileURI: string | null = null;
@@ -247,6 +259,14 @@ export const uploadFile = async (req: req, res: res) => {
     }
 };
 
+/**
+ * Updates an existing content item. Like `uploadFile`, responds immediately
+ * and processes text/embedding in the background via `setImmediate`.
+ * Returns 409 when the caller no longer holds the checkout lock — this can
+ * happen after a force check-in, lock expiry, or check-in from another tab.
+ * If a new file is uploaded but the DB write fails, the new file is deleted;
+ * the old file is deleted only after a successful update that replaced it.
+ */
 export const updateContent = async (req: req, res: res) => {
     const payload = req.body;
     let newFileURI: string | null = null;
@@ -544,6 +564,16 @@ export const searchContent = async (req: req, res: res) => {
     }
 };
 
+/**
+ * Aggregates content analytics for the dashboard insights page.
+ * Admins see all content; non-admins only see content targeting their persona.
+ * Three aggregations are computed in a single pass over visible content:
+ *   - `hitsByOwner`   — total preview hits grouped by content owner
+ *   - `hitsByPersona` — total preview hits grouped by target persona
+ *   - `contentCurrency` — average age (days since lastModified) per owner
+ * Expiration counts are derived from the "Expired" / "Expiring Soon" tags
+ * written by the `autoTag` background job.
+ */
 export const getTransactionSummary = async (req: req, res: res) => {
     try {
         const employee = await getEmployee(req);

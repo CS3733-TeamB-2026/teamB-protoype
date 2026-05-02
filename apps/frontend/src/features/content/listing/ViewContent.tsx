@@ -106,6 +106,10 @@ import InfoButton from "@/components/layout/InformationAlert";
  *   invalidated so the next inline preview re-fetches the updated file.
  * - Bookmarks are optimistically updated: the UI reflects the change
  *   immediately and rolls back if the API call fails.
+ * - The Recycle Bin tab uses a separate `deletedContent` state fetched from
+ *   `/api/content/deleted` in parallel with the main content fetch. Recycling
+ *   requires a checkout lock; restore and permanent delete require ownership or
+ *   admin. The recycle bin table never shows lock/checkout actions.
  */
 function ViewContent() {
 

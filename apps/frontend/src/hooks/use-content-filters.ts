@@ -3,6 +3,7 @@ import type { ContentItem, BookmarkRecord, ContentStatus, ContentType, Persona }
 import { type Category, getOriginalFilename, lookupByFilename } from "@/lib/mime.ts";
 
 {/*CHANGE THIS TO ADD MORE TABS!!*/}
+/** All possible tab values in the ViewContent page. `recyclebin` uses a separate data source. */
 export type ContentTab = "forYou" | "all" | "owned" | "bookmarks" | "recyclebin";
 
 /**

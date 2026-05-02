@@ -4,7 +4,7 @@ import {Helper, employeeSelect, contentSelect} from "./helper";
 import { Notification } from "./notification";
 import { generateEmbedding, embeddingToSql } from '../../../apps/backend/lib/embeddings';
 
-// helper to build the text we embed
+/** Concatenates the indexable fields into a single string for embedding generation. */
 function buildEmbeddingInput(
     name: string,
     contentType: string,
@@ -21,6 +21,14 @@ function buildEmbeddingInput(
     ].join(' ');
 }
 
+/**
+ * Query class for the `Content` table.
+ *
+ * All read queries filter `deleted = false` by default. Deleted items are only
+ * visible via `queryDeletedContent` / `queryDeletedContentById`. Raw SQL is used
+ * in a few places because Prisma's ORM layer doesn't support the `vector` type
+ * or full-text search ranking (`ts_rank`).
+ */
 export class Content {
     public static async semanticSearch(query: string): Promise<p.Content[]> {
         const embedding = await generateEmbedding(query);
@@ -191,6 +199,11 @@ export class Content {
         }) as Promise<p.Content>;
     }
 
+    /**
+     * Hard-deletes a content item from the database.
+     * `Bookmark` and `Preview` lack `onDelete: Cascade` in the schema, so they
+     * are deleted in the same transaction to avoid FK constraint violations.
+     */
     public static async permanentDeleteContent(id: number): Promise<void> {
         // Bookmark and Preview have no onDelete cascade, so clear them first.
         await prisma.$transaction([
@@ -200,6 +213,7 @@ export class Content {
         ]);
     }
 
+    /** Marks an item as deleted and clears its checkout lock. */
     public static async softDeleteContent(id: number): Promise<void> {
         await prisma.content.update({
             where: { id },
@@ -207,6 +221,7 @@ export class Content {
         });
     }
 
+    /** Clears the deleted flag, making the item visible in normal content queries again. */
     public static async restoreContent(id: number): Promise<void> {
         await prisma.content.update({
             where: { id },
@@ -261,6 +276,7 @@ export class Content {
         })
     }
 
+    /** Looks up a single deleted item by ID. Returns `null` if not found or not deleted. */
     public static async queryDeletedContentById(id: number) {
         return prisma.content.findUnique({
             where: { id, deleted: true },
@@ -272,7 +288,10 @@ export class Content {
         });
     }
 
-    /** Returns deleted items: all for admins, only owned items for everyone else. */
+/**
+     * Returns deleted items visible to the caller.
+     * Admins see everything; non-admins only see items they own.
+     */
     public static async queryDeletedContent(employeeId: number, adminAccess: boolean) {
         return prisma.content.findMany({
             where: {
