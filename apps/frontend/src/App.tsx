@@ -49,7 +49,7 @@ function App() {
 
     const { isLoading } = useAuth0();
     const location = useLocation();
-    const hideFooter = location.pathname === "/insights";
+    const hideFooter = location.pathname === "/insights" || location.pathname === "/calendar";
 
     if (isLoading) return (
         <div className="flex items-center justify-center min-h-screen bg-secondary">
