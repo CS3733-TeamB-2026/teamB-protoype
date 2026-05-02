@@ -4,7 +4,7 @@ import * as cheerio from "cheerio";
 import { req, res } from "./types";
 import { getEmployee } from "../helpers/getEmployee";
 import { assertPublicUrl } from "../helpers/validateUrl";
-import { isAdmin, isPersonaOrAdmin } from "../helpers/permissions";
+import { isAdmin, isPersonaOrAdmin, isUserOrAdmin } from "../helpers/permissions";
 import { extractText, SupportedMimeType } from "../../lib/extractors";
 import { generateEmbedding, embeddingToSql } from '../../lib/embeddings';
 import { prisma } from '../../../../packages/db/lib/prisma';
@@ -364,10 +364,10 @@ export const updateContent = async (req: req, res: res) => {
 };
 
 /**
- * Deletes a content item and its Supabase file (if any).
+ * Soft-deletes a content item (moves it to the recycle bin).
  * Requires the caller to hold the checkout lock — same gate as updateContent.
- * Returns 409 both when the item is not checked out and when someone else holds it,
- * so the frontend can display a consistent "lock required" message in both cases.
+ * Clears the checkout lock as part of the operation.
+ * The Supabase file (if any) is NOT deleted here; that happens on permanent delete.
  */
 export const deleteContent = async (req: req, res: res) => {
     try {
@@ -391,11 +391,79 @@ export const deleteContent = async (req: req, res: res) => {
                     message: "This item has been forcibly checked in.",
                 });
         }
+        await q.Content.softDeleteContent(id);
+        return res.status(200).json(content);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+/** Returns all deleted content visible to the caller: all items for admins, owned items only for everyone else. */
+export const getDeletedContent = async (req: req, res: res) => {
+    try {
+        const employee = await getEmployee(req);
+        if (!employee)
+            return res.status(404).json({ error: "Employee not found" });
+
+        const content = await q.Content.queryDeletedContent(employee.id, isAdmin(employee));
+        return res.status(200).json(content);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+/**
+ * Restores a soft-deleted content item.
+ * Requires the caller to be the item owner or an admin.
+ */
+export const restoreContent = async (req: req, res: res) => {
+    try {
+        const employee = await getEmployee(req);
+        if (!employee)
+            return res.status(404).json({ error: "Employee not found" });
+
+        const id = parseInt(req.params.id);
+        const content = await q.Content.queryDeletedContentById(id);
+        if (!content) {
+            return res.status(404).json({ message: "Content not found" });
+        }
+        if (!isUserOrAdmin(content.ownerId ?? -1, employee)) {
+            return res.status(403).json({ error: "Only the owner or an admin can restore this item." });
+        }
+        await q.Content.restoreContent(id);
+        return res.status(200).json({ message: "Restored" });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+/**
+ * Permanently deletes a content item and its Supabase file.
+ * Requires the caller to be the item owner or an admin.
+ * The item must already be in the recycle bin (deleted = true).
+ */
+export const permanentDeleteContent = async (req: req, res: res) => {
+    try {
+        const employee = await getEmployee(req);
+        if (!employee)
+            return res.status(404).json({ error: "Employee not found" });
+
+        const id = parseInt(req.params.id);
+        const content = await q.Content.queryDeletedContentById(id);
+        if (!content) {
+            return res.status(404).json({ message: "Content not found in recycle bin." });
+        }
+        if (!isUserOrAdmin(content.ownerId ?? -1, employee)) {
+            return res.status(403).json({ error: "Only the owner or an admin can permanently delete this item." });
+        }
         if (content.fileURI) {
             await q.Bucket.deleteFile(content.fileURI);
         }
-        await q.Content.deleteContent(id);
-        return res.status(205).json(content);
+        await q.Content.permanentDeleteContent(id);
+        return res.status(200).json(content);
     } catch (error) {
         console.error(error);
         return res.status(500).end();

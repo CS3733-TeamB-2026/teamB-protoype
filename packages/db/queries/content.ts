@@ -44,7 +44,7 @@ export class Content {
             "checkedOutAt",
             1 - ("embedding" <=> ${embeddingStr}::vector) AS similarity
         FROM "Content"
-        WHERE "embedding" IS NOT NULL
+        WHERE "embedding" IS NOT NULL AND "deleted" = false
         ORDER BY "embedding" <=> ${embeddingStr}::vector
         LIMIT 20;
     `;
@@ -191,14 +191,29 @@ export class Content {
         }) as Promise<p.Content>;
     }
 
-    public static async deleteContent(id: number): Promise<void> {
+    public static async permanentDeleteContent(id: number): Promise<void> {
         await prisma.content.delete({
-            where: {id: id},
-        })
+            where: { id },
+        });
+    }
+
+    public static async softDeleteContent(id: number): Promise<void> {
+        await prisma.content.update({
+            where: { id },
+            data: { deleted: true, checkedOutById: null, checkedOutAt: null },
+        });
+    }
+
+    public static async restoreContent(id: number): Promise<void> {
+        await prisma.content.update({
+            where: { id },
+            data: { deleted: false },
+        });
     }
 
     public static async queryAllContent() {
         return prisma.content.findMany({
+            where: { deleted: false },
             select: {
                 ...contentSelect,
                 owner: { select: employeeSelect },
@@ -216,7 +231,7 @@ export class Content {
             throw new Error("No persona type provided")
         }
         return prisma.content.findMany({
-            where: {targetPersona: _personaTyped},
+            where: { targetPersona: _personaTyped, deleted: false },
             select: {
                 ...contentSelect,
                 owner: { select: employeeSelect },
@@ -227,7 +242,7 @@ export class Content {
 
     public static async queryContentById(_id: number) {
         return prisma.content.findUnique({
-            where: {id: _id},
+            where: { id: _id, deleted: false },
             select: {
                 ...contentSelect,
                 owner: { select: employeeSelect },
@@ -238,9 +253,35 @@ export class Content {
 
     public static async queryContentByIdWithVectors(_id: number) {
         return prisma.content.findUnique({
-            where: {id: _id},
+            where: { id: _id, deleted: false },
             include: { owner: { select: employeeSelect }, checkedOutBy: { select: employeeSelect } }
         })
+    }
+
+    public static async queryDeletedContentById(id: number) {
+        return prisma.content.findUnique({
+            where: { id, deleted: true },
+            select: {
+                ...contentSelect,
+                owner: { select: employeeSelect },
+                checkedOutBy: { select: employeeSelect },
+            }
+        });
+    }
+
+    /** Returns deleted items: all for admins, only owned items for everyone else. */
+    public static async queryDeletedContent(employeeId: number, adminAccess: boolean) {
+        return prisma.content.findMany({
+            where: {
+                deleted: true,
+                ...(!adminAccess && { ownerId: employeeId }),
+            },
+            select: {
+                ...contentSelect,
+                owner: { select: employeeSelect },
+                checkedOutBy: { select: employeeSelect },
+            }
+        });
     }
 
 
@@ -299,7 +340,7 @@ export class Content {
                 'MaxWords=50, MinWords=20'
             ) AS snippet
         FROM "Content"
-        WHERE "searchVector" @@ plainto_tsquery('english', ${query})
+        WHERE "searchVector" @@ plainto_tsquery('english', ${query}) AND "deleted" = false
         ORDER BY rank DESC
         LIMIT 20;
     `;
