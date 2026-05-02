@@ -4,9 +4,12 @@ import {Card, CardContent} from "@/components/ui/card.tsx";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
 import {teamPhotos} from "@/components/ui/team-photos.tsx";
 import { BookOpen, UserCheck, Building2, Briefcase, Heart } from "lucide-react";
+import {usePageTitle} from "@/hooks/use-page-title.ts";
 
 
 function About() {
+
+    usePageTitle("About");
 
     type ImageKey = keyof typeof teamPhotos;
     type TeamMember = {

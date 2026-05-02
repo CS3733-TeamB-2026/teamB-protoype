@@ -5,6 +5,7 @@ config({ path: resolve(process.cwd(), '../../apps/backend/.env') });
 import { prisma } from '../lib/prisma';
 import { supabase } from '../lib/supabase';
 import { extractText, SupportedMimeType } from '../../../apps/backend/lib/extractors';
+// @ts-ignore
 import mime from 'mime-types';
 
 async function backfill() {

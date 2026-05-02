@@ -31,7 +31,7 @@ Autoplay({
 
 function Credits() {
 
-    usePageTitle("Home");
+    usePageTitle("Credits");
 
     return (
         <>
