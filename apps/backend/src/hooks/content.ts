@@ -506,8 +506,8 @@ export const checkoutContent = async (req: req, res: res) => {
         const content = await q.Content.queryContentById(contentId);
         if (!content) return res.status(404).json({ error: "Content not found" });
 
-        // Only employees whose persona matches the content's targetPersona (or admins) may check out
-        if (!isPersonaOrAdmin(content.targetPersona, employee)) {
+        // Only employees whose persona matches the content's targetPersona (or admins) may check out, or if you are the content owner
+        if (!isPersonaOrAdmin(content.targetPersona, employee) && content.ownerId !== employee.id) {
             return res.status(403).json({ error: "Your persona does not have access to this content" });
         }
 
