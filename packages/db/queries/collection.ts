@@ -4,6 +4,7 @@ import { employeeSelect } from "./helper";
 // Items have no guaranteed DB order, so position must always be applied here
 const itemsInclude = {
     items: {
+        where: { content: { deleted: false } },
         orderBy: { position: "asc" as const },
         include: { content: true },
     },

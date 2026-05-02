@@ -20,6 +20,7 @@ export class ServiceReqs {
         linkedCollection: {
             include: {
                 items: {
+                    where: { content: { deleted: false } },
                     include: { content: true },
                 },
             },
