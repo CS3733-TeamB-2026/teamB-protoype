@@ -1,4 +1,4 @@
-import { FileText, HelpCircle, Home, User, ChevronDown, Users, X, Library, LayoutDashboard, Upload, NetworkIcon, CalendarClock, Search, BookMarked } from "lucide-react"
+import { Sparkles, FileText, HelpCircle, Home, User, ChevronDown, Users, X, Library, LayoutDashboard, Upload, NetworkIcon, CalendarClock, Search, BookMarked } from "lucide-react"
 import React from "react"
 import {Link} from "react-router-dom";
 import {
@@ -53,6 +53,7 @@ const navItems: NavItem[] = [
             {title: "Business Operations", icon: User, href: "/businessoperations", children: [], access: [], langKey: "sidebar.businessOperations"},
         ], access: [], langKey: "sidebar.personas" },
     { title: "Search", icon: Search, href: "/search", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"] },
+    { title: "Insights", icon: Sparkles, href: "/insights", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"] },
 ]
 
 function AppSidebar() {
@@ -125,6 +126,10 @@ function AppSidebar() {
                                     <Link to={item.href}>
                                         <item.icon />
                                         <span className="">{item.langKey ? ts(item.langKey) : item.title}</span>
+                                        { item.title === "Insights" ?
+                                            <span className="rounded-md bg-linear-to-r from-primary-light to-primary mb-px px-1.5 py-0.5 text-[10px] font-bold text-white">
+                                              AI
+                                            </span> : null}
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>

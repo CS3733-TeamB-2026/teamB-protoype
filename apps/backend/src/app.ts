@@ -13,6 +13,7 @@ import * as bookmark from './hooks/bookmark'
 import * as collection from './hooks/collection'
 import * as notifications from './hooks/notifications'
 import * as previews from './hooks/preview'
+import * as nlQuery from './hooks/nlQuery'
 import { auth } from 'express-oauth2-jwt-bearer'
 
 const app = express();
@@ -84,6 +85,8 @@ app.delete("/api/employee", employee.deleteEmployee)
 app.get("/api/notifications/dismissed", notifications.getDismissedNotifications);
 app.get("/api/notifications", notifications.getNotifications)
 app.post("/api/notifications/dismiss", notifications.dismissNotification);
+// NL Query
+app.post("/api/nl-query", nlQuery.generateNLQuery);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

@@ -23,7 +23,7 @@ import { usePageTitle } from "@/hooks/use-page-title.ts";
 
 function Credits() {
 
-    usePageTitle("Home");
+    usePageTitle("Credits");
 
     return (
         <>
