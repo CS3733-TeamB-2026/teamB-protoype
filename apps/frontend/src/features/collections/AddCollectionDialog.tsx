@@ -22,6 +22,8 @@ import type { Collection } from "@/lib/types";
 interface Props {
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    /** When provided, called with the new collection instead of navigating to its detail page. */
+    onCreated?: (collection: Collection) => void;
 }
 
 /**
@@ -32,7 +34,7 @@ interface Props {
  * both on explicit Reset and whenever the dialog closes, so reopening it is always fresh.
  * On success the user is navigated directly to the new collection's detail page.
  */
-export function AddCollectionDialog({ open, onOpenChange }: Props) {
+export function AddCollectionDialog({ open, onOpenChange, onCreated }: Props) {
     const { getAccessTokenSilently } = useAuth0();
     const navigate = useNavigate();
 
@@ -69,7 +71,11 @@ export function AddCollectionDialog({ open, onOpenChange }: Props) {
             toast.success("Collection created successfully!");
             onOpenChange(false);
             handleReset();
-            navigate(`/collections/${created.id}`);
+            if (onCreated) {
+                onCreated(created);
+            } else {
+                navigate(`/collections/${created.id}`);
+            }
         } catch {
             toast.error("Failed to create collection.");
         } finally {

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { Loader2, ChevronsUpDown } from "lucide-react";
+import { Loader2, ChevronsUpDown, Plus } from "lucide-react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { FolderLibraryIcon } from "@hugeicons/core-free-icons";
 import { CollectionCard } from "@/components/shared/CollectionCard.tsx";
@@ -14,6 +14,17 @@ interface Props {
     disabled?: boolean;
     /** When true, only public collections are shown and selectable. */
     publicOnly?: boolean;
+    /** When provided, a "Create new collection" option appears at the bottom of the dropdown. */
+    onCreateNew?: () => void;
+    /**
+     * When true, the open dropdown renders in normal document flow instead of as an
+     * absolute overlay. Use this when the picker sits at the bottom of a card that has
+     * `overflow-hidden` — the in-flow dropdown pushes the card's bottom edge down
+     * rather than being clipped.
+     */
+    inline?: boolean;
+    /** Increment to trigger a refetch of the collections list. */
+    refreshKey?: number;
 }
 
 /**
@@ -28,7 +39,7 @@ interface Props {
  * Used in the service request form so only publicly shareable collections
  * can be linked to a request.
  */
-export function CollectionPicker({ selectedId, onSelect, disabled = false, publicOnly = false }: Props) {
+export function CollectionPicker({ selectedId, onSelect, disabled = false, publicOnly = false, onCreateNew, inline = false, refreshKey = 0 }: Props) {
     const [open, setOpen] = useState(false);
     const [collections, setCollections] = useState<Collection[]>([]);
     const [loading, setLoading] = useState(true);
@@ -38,6 +49,7 @@ export function CollectionPicker({ selectedId, onSelect, disabled = false, publi
     const { getAccessTokenSilently } = useAuth0();
 
     useEffect(() => {
+        setLoading(true);
         const load = async () => {
             try {
                 const token = await getAccessTokenSilently();
@@ -51,7 +63,7 @@ export function CollectionPicker({ selectedId, onSelect, disabled = false, publi
             }
         };
         void load();
-    }, [getAccessTokenSilently]);
+    }, [getAccessTokenSilently, refreshKey]);
 
     useEffect(() => {
         if (!open) return;
@@ -95,7 +107,7 @@ export function CollectionPicker({ selectedId, onSelect, disabled = false, publi
             </Button>
 
             {open && !disabled && (
-                <div className="absolute top-full left-0 right-0 z-50 mt-1 rounded-lg border bg-popover shadow-md overflow-hidden">
+                <div className={inline ? "mt-1 rounded-lg border bg-popover shadow-md overflow-hidden" : "absolute top-full left-0 right-0 z-50 mt-1 rounded-lg border bg-popover shadow-md overflow-hidden"}>
                     <div className="p-2 border-b">
                         <Input
                             placeholder="Search collections..."
@@ -135,6 +147,22 @@ export function CollectionPicker({ selectedId, onSelect, disabled = false, publi
                             </div>
                         )}
                     </div>
+                    {onCreateNew && (
+                        <div className="border-t p-1">
+                            <button
+                                type="button"
+                                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                                onClick={() => {
+                                    setOpen(false);
+                                    setSearch("");
+                                    onCreateNew();
+                                }}
+                            >
+                                <Plus className="w-4 h-4 shrink-0" />
+                                Create new collection
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
