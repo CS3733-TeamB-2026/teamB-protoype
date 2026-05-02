@@ -5,7 +5,11 @@ import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
 import {teamPhotos} from "@/components/ui/team-photos.tsx";
 import { BookOpen, UserCheck, Building2, Briefcase, Heart } from "lucide-react";
 import {usePageTitle} from "@/hooks/use-page-title.ts";
-
+import { useState } from "react";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover.tsx";
+import {Quote} from "lucide-react"
+import {Button} from "@/components/ui/button.tsx";
+import LinkedInIcon from "@/assets/LinkedIn-logo.png"
 
 function About() {
 
@@ -13,24 +17,54 @@ function About() {
 
     type ImageKey = keyof typeof teamPhotos;
     type TeamMember = {
+        id: number //used for quote clicking
         name: string;
         initials: string;
         role: string;
         photo: ImageKey;
+        linkedin: string | null;
+        quote: string;
     }
 
     const members: TeamMember[] = [
-        { name: "Dylan Zickus", initials: "DZ", role: 'Lead Software Engineer', photo: "dylan" },
-        { name: "Oscar Stomberg", initials: "OS", role: 'Assistant Lead Software Engineer', photo: "oscar" },
-        { name: "Jake Swanson", initials: "JS", role: 'Assistant Lead Software Engineer', photo: "jake" },
-        { name: "Hayden Schultz", initials: "HS", role: 'Assistant Lead Software Engineer & Scrum Master', photo: "hayden" },
-        { name: "Luke Ciarletta", initials: "LC", role: 'Full-Time Software Engineer', photo: "luke" },
-        { name: "Nick Houghton", initials: "NH", role: 'Full-Time Software Engineer', photo: "nicholas" },
-        { name: "Cameron Pietraski", initials: "CP", role: 'Full-Time Software Engineer', photo: "cameron" },
-        { name: "Philip Ostrowski", initials: "PO", role: 'Part-Time Software Engineer & Project Manager', photo: "philip" },
-        { name: "Joseph Hemmerle", initials: "JH", role: 'Part-Time Software Engineer & Product Owner', photo: "joey" },
-        { name: "Ricardo Guzman Volpe", initials: "RG", role: 'Part-Time Software Engineer & Documentation Analyst', photo: "ricardo" }
+        { id: 1, name: "Dylan Zickus", initials: "DZ", role: 'Lead Software Engineer', photo: "dylan",
+            linkedin: "https://www.linkedin.com/in/dylan-zickus-a109892a8/",
+            quote: "DYLAN QUOTE" },
+        { id: 2, name: "Oscar Stomberg", initials: "OS", role: 'Assistant Lead Software Engineer', photo: "oscar",
+            linkedin: "https://www.linkedin.com/in/oscar-w-stomberg/",
+            quote: "OSCAR QUOTE" },
+        { id: 3, name: "Jake Swanson", initials: "JS", role: 'Assistant Lead Software Engineer', photo: "jake",
+            linkedin: "https://www.linkedin.com/in/jake-l-swanson/",
+            quote: "JAKE QUOTE" },
+        { id: 4, name: "Hayden Schultz", initials: "HS", role: 'Assistant Lead Software Engineer & Scrum Master', photo: "hayden",
+            linkedin: "https://www.linkedin.com/in/hayden-schultz-819a7b39b/s",
+            quote: "git add .env; git commit -m \"small changes\"; git push origin main --force" },
+        { id: 5, name: "Luke Ciarletta", initials: "LC", role: 'Full-Time Software Engineer', photo: "luke",
+            linkedin: "https://www.linkedin.com/in/luke-ciarletta-150096357/",
+            quote: "Just one more turn..." },
+        { id: 6, name: "Nick Houghton", initials: "NH", role: 'Full-Time Software Engineer', photo: "nicholas",
+            linkedin: "https://www.linkedin.com/in/nick-houghton1/",
+            quote: "NICK QUOTE" },
+        { id: 7, name: "Cameron Pietraski", initials: "CP", role: 'Full-Time Software Engineer', photo: "cameron",
+            linkedin: "https://www.linkedin.com/in/cameron-pietraski-b43101353/",
+            quote: "CAMERON QUOTE" },
+        { id: 8, name: "Philip Ostrowski", initials: "PO", role: 'Part-Time Software Engineer & Project Manager', photo: "philip",
+            linkedin: "https://www.linkedin.com/in/philip-ostrowski-96911b384/",
+            quote: "PHILIP QUOTE" },
+        { id: 9, name: "Joseph Hemmerle", initials: "JH", role: 'Part-Time Software Engineer & Product Owner', photo: "joey",
+            linkedin: "https://www.linkedin.com/in/joey-hemmerle-67b9b9288/",
+            quote: "JOEY QUOTE" },
+        { id: 10, name: "Ricardo Guzman Volpe", initials: "RG", role: 'Part-Time Software Engineer & Documentation Analyst', photo: "ricardo",
+            linkedin: null,
+            quote: "Jarvis, drop all tables." }
     ]
+
+    const [currentQuote, setCurrentQuote] = useState(0)
+
+    const toggleQuote = (id: number) => {
+        if (id == currentQuote) { setCurrentQuote(0) } //clicked same employee - toggle off
+        else { setCurrentQuote(id) } //clicked new employee - set theirs to be on
+    }
 
     return (
         <>
@@ -95,8 +129,9 @@ function About() {
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 justify-items-center">
                         {members.map((member: TeamMember) => (
                             <Card
-                                className={`w-full max-w-55 shadow-sm border-t-primary border-t-4 text-center hover:shadow-md hover:-translate-y-1 transition-all duration-150`}
+                                className={`w-full max-w-55 shadow-sm border-t-primary border-t-4 text-center hover:shadow-md hover:-translate-y-1 transition-all duration-150 relative`}
                                 key={member.name}
+                                onMouseLeave={() => toggleQuote(0)}
                             >
                                 <CardContent className="flex flex-col items-center justify-center gap-3 pt-6 pb-6 px-3">
                                     <Avatar className="w-16 h-16 ring-2 ring-primary/20">
@@ -111,6 +146,29 @@ function About() {
                                     <div>
                                         <h2 className="font-semibold text-sm leading-tight">{member.name}</h2>
                                         <p className="text-muted-foreground text-xs mt-1 leading-snug">{member.role}</p>
+                                        <Popover open={member.id == currentQuote}>
+                                            <PopoverTrigger /> {/*unused, but controls where the popover appears*/}
+                                            <PopoverContent className="text-sm text-muted-foreground w-3xs">
+                                                {member.quote}
+                                            </PopoverContent>
+                                        </Popover>
+                                        <Button
+                                            variant="outline"
+                                            className ="m-1 absolute bottom-1/32 left-1/32"
+                                            onClick={() => toggleQuote(member.id)}
+                                        >
+                                            <Quote className="text-muted-foreground" />
+                                        </Button>
+                                        {member.linkedin && (
+                                            <a href={member.linkedin} target="_blank">
+                                                <Button
+                                                    variant="outline"
+                                                    className = "w-8 m-1 absolute bottom-1/32 right-1/32"
+                                                >
+                                                    <img src={LinkedInIcon} alt="LinkedIn" />
+                                                </Button>
+                                            </a>
+                                        )}
                                     </div>
                                 </CardContent>
                             </Card>
