@@ -583,7 +583,7 @@ function ViewContent() {
                                 <Button
                                     variant="outline"
                                     onClick={() => setShowAdvancedFilters((prev) => !prev)}
-                                    className="hover:bg-secondary hover:text-secondary-foreground h-11 w-25 text-base"
+                                    className="hover:bg-secondary hover:text-secondary-foreground h-10 w-25 text-base border-input rounded-md text-foreground"
                                 >
                                     {showAdvancedFilters
                                         ? "Hide Filters"
@@ -593,14 +593,14 @@ function ViewContent() {
                                 </Button>
                                 <div className="relative">
                                     <Search
-                                        className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 pointer-events-none"
+                                        className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground pointer-events-none"
                                     />
                                     <Input
                                         type="text"
                                         placeholder={ts('search.genericDialogue')}
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-64 h-10 text-base pl-2! pr-8 border border-gray-700 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                                        className="w-64 h-10 text-base pl-10 pr-4 border border-input rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 bg-background"
                                     />
                                 </div>
                             </div>
@@ -933,14 +933,13 @@ function ViewContent() {
                                                                                         Check In
                                                                                     </DropdownMenuItem>
                                                                                     <DropdownMenuItem
-                                                                                        className="text-destructive focus:text-destructive"
+                                                                                        className="text-destructive focus:text-destructive! focus:bg-destructive/10"
                                                                                         onClick={(e) => {
                                                                                             e.stopPropagation();
                                                                                             setDeleteTarget(item);
                                                                                         }}
                                                                                     >
-                                                                                        <Trash2 className="w-4 h-4"/>
-                                                                                        Delete
+                                                                                        <Trash2 className="w-4 h-4" style={{ stroke: "var(--destructive)" }}/>                                                                                        Delete
                                                                                     </DropdownMenuItem>
                                                                                 </DropdownMenuContent>
                                                                             </DropdownMenu>
