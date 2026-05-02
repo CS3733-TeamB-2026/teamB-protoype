@@ -20,7 +20,7 @@ import {
     Lock,
     RefreshCcw,
     KeyRound,
-    Ban, ChevronsLeft, ChevronsRight, ChevronLeft, UserRoundKey,
+    Ban, ChevronsLeft, ChevronsRight, ChevronLeft, UserRoundKey, Recycle,
 } from "lucide-react";
 import {Button} from "@/components/ui/button.tsx";
 import {
@@ -520,7 +520,7 @@ function ViewContent() {
                     <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ContentTab)}>
                         <SlidingTabs
                             activeTab={activeTab}
-                            indicatorColor={activeTab === "bookmarks" ? "bg-accent" : "bg-foreground"}
+                            indicatorColor={activeTab === "bookmarks" ? "bg-accent" : activeTab === "recyclebin" ? "bg-destructive" : "bg-foreground"}
                         >
                             <TabsTrigger
                                 value="forYou"
@@ -550,6 +550,13 @@ function ViewContent() {
                             >
                                 {ts('content.favorites')}
                                 <span className="ml-2 text-xs opacity-70">{bookmarks.length}</span>
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="recyclebin"
+                                className="relative z-10 data-active:bg-transparent data-active:text-destructive hover:text-foreground/80 data-active:hover:text-destructive px-0"
+                            >
+                                <Recycle className="w-4 h-4 mr-1 inline-block" />
+                                Recycle Bin
                             </TabsTrigger>
                             {/*THEN ADD MORE TAB TRIGGERs FOR MORE TABS!!*/}
                         </SlidingTabs>
