@@ -360,8 +360,8 @@ function ViewContent() {
     }
 
     /**
-     * Deletes the content item with the given ID and removes it from local
-     * state. Called by `ConfirmDeleteDialog` after the user confirms.
+     * Soft-deletes the content item with the given ID (moves it to the recycle bin).
+     * Called by the recycle confirm dialog after the user confirms.
      */
     const handleDelete = async (id: number) => {
         const token = await getAccessTokenSilently();
@@ -370,7 +370,10 @@ function ViewContent() {
             headers: {Authorization: `Bearer ${token}`},
         });
         if (res.ok) {
+            const recycled = content.find((item) => item.id === id);
             setContent((prev) => prev.filter((item) => item.id !== id));
+            if (recycled) setDeletedContent((prev) => [...prev, {...recycled, deleted: true}]);
+            toast.success("Moved to recycle bin.");
         } else if (res.status === 409) {
             toast.error("This item has been forcibly checked in.");
             void refreshContent();
@@ -401,7 +404,7 @@ function ViewContent() {
                 return;
             }
             setContent((prev) => prev.map((c) => c.id === item.id ? {...c, ...data} : c));
-            toast.success("Successfully checked out. You can now edit or delete.");
+            toast.success("Successfully checked out. You can now edit or recycle.");
         } catch {
             toast.error("Could not check out.");
         }
@@ -1067,14 +1070,14 @@ function ViewContent() {
                                                                                         Check In
                                                                                     </DropdownMenuItem>
                                                                                     <DropdownMenuItem
-                                                                                        className="text-destructive focus:text-destructive"
+                                                                                        className="text-destructive hover:text-destructive!"
                                                                                         onClick={(e) => {
                                                                                             e.stopPropagation();
                                                                                             setDeleteTarget(item);
                                                                                         }}
                                                                                     >
-                                                                                        <Trash2 className="w-4 h-4"/>
-                                                                                        Delete
+                                                                                        <Recycle className="w-4 h-4" style={{ stroke: "var(--destructive)" }}/>
+                                                                                        Move to Bin
                                                                                     </DropdownMenuItem>
                                                                                 </DropdownMenuContent>
                                                                             </DropdownMenu>
@@ -1111,7 +1114,7 @@ function ViewContent() {
                                                                         return (
                                                                             <button
                                                                                 className="w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground"
-                                                                                title="Check out to edit or delete"
+                                                                                title="Check out to edit or recycle"
                                                                                 onClick={(e) => {
                                                                                     e.stopPropagation();
                                                                                     setCheckoutTarget(item);
@@ -1315,7 +1318,7 @@ function ViewContent() {
                     if (!open) setDeleteTarget(null);
                 }}
                 description={deleteTarget ?
-                    <span>{ts('content.deleteDialogue')}<strong>"{deleteTarget.displayName}"</strong>.</span> : undefined}
+                    <span>Move <strong>"{deleteTarget.displayName}"</strong> to the recycle bin?</span> : undefined}
                 onConfirm={() => handleDelete(deleteTarget!.id)}
             />
             <ConfirmDeleteDialog
@@ -1350,7 +1353,7 @@ function ViewContent() {
                 }}
                 description={checkinTarget
                     ?
-                    <span>Check in <strong>"{checkinTarget.displayName}"</strong>? Other users will be able to edit and delete it.</span>
+                    <span>Check in <strong>"{checkinTarget.displayName}"</strong>? Other users will be able to edit and recycle it.</span>
                     : undefined}
                 onConfirm={async () => {
                     if (checkinTarget) {
