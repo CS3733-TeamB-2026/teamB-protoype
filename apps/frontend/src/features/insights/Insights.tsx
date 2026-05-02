@@ -67,10 +67,8 @@ function InsightsPage() {
                 </div>
 
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-6xl">
-                    <div className="border-t mb-5 px-6 py-4 bg-card shadow-lg rounded-xl w-full max-w-6xl mx-auto">
-                        <div className="mx-1">
-                            <ChatInput onSubmit={handleSubmit} disabled={isLoading} />
-                        </div>
+                    <div className="border mb-5 p-3 bg-card shadow-lg rounded-xl w-full max-w-6xl mx-auto">
+                        <ChatInput onSubmit={handleSubmit} disabled={isLoading} />
                     </div>
                 </div>
 
