@@ -89,7 +89,7 @@ export class ServiceReqs {
      * `Collection.setServiceRequest` in a separate step after this returns.
      */
     public static async createServiceReq(
-        _name: string, _created: Date, _deadline: Date, _type_string: string,
+        _name: string, _deadline: Date, _type_string: string,
         _assigneeId: number, _ownerId: number,
         _notes?: string | null,
     ): Promise<p.ServiceRequest> {
@@ -97,7 +97,7 @@ export class ServiceReqs {
         return prisma.serviceRequest.create({
             data: {
                 name: _name,
-                created: _created,
+                // created defaults to now() at the DB level; not caller-supplied
                 deadline: _deadline,
                 type: _type,
                 assigneeId: _assigneeId,
@@ -108,7 +108,7 @@ export class ServiceReqs {
     }
 
     public static async updateServiceReq(
-        _id: number, _name: string, _created: Date, _deadline: Date, _type_string: string,
+        _id: number, _name: string, _deadline: Date, _type_string: string,
         _assigneeId: number, _ownerId: number,
         _notes?: string | null,
     ): Promise<p.ServiceRequest> {
@@ -118,7 +118,7 @@ export class ServiceReqs {
             where: { id: _id },
             data: {
                 name: _name,
-                created: _created,
+                // created is intentionally omitted — the original timestamp is never overwritten
                 deadline: _deadline,
                 type: _type,
                 assigneeId: _assigneeId,

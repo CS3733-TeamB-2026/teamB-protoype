@@ -47,7 +47,6 @@ export const createServiceReq = async (req: req, res: res) => {
 
         const sr = await q.ServiceReqs.createServiceReq(
             payload.name,
-            payload.created,
             payload.deadline,
             payload.type,
             payload.assigneeId,
@@ -111,7 +110,6 @@ export const updateServiceReq = async (req: req, res: res) => {
         await q.ServiceReqs.updateServiceReq(
             payload.id,
             payload.name,
-            payload.created,
             payload.deadline,
             payload.type,
             payload.assigneeId,
