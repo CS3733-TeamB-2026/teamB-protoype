@@ -618,7 +618,7 @@ function ViewContent() {
                 description={ts('content.description')}
             />
 
-            <Card className="shadow-lg max-w-6xl mx-auto my-8 text-center px-4">
+            <Card className="shadow-lg max-w-7xl mx-auto my-8 text-center px-4">
                 <CardHeader>
                     <CardTitle className="text-3xl text-primary mt-4">
                         {user.persona === "admin" ? "" : formatLabel(user.persona)} {ts('content')}
