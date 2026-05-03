@@ -1089,16 +1089,10 @@ function ViewContent() {
                                                                 {(() => {
                                                                     const icon = <HugeiconsIcon icon={LinkSquare01Icon} className="w-4 h-4"/>;
                                                                     const btnClass = "w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground";
-                                                                    if (item.fileURI) return (
+                                                                    if (item.fileURI || item.linkURL) return (
                                                                         <Link to={`/file/${item.id}`} onClick={(e) => e.stopPropagation()}>
-                                                                            <button className={btnClass} title="View file">{icon}</button>
+                                                                            <button className={btnClass} title="View item">{icon}</button>
                                                                         </Link>
-                                                                    );
-                                                                    if (item.linkURL) return (
-                                                                        <a href={item.linkURL} target="_blank" rel="noopener noreferrer"
-                                                                           onClick={(e) => e.stopPropagation()}>
-                                                                            <button className={btnClass} title="Open link">{icon}</button>
-                                                                        </a>
                                                                     );
                                                                     return (
                                                                         <button

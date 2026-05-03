@@ -17,7 +17,7 @@ import Dashboard from "@/features/dashboard/Dashboard.tsx";
 import ViewEmployees from "@/features/employees/ViewEmployees.tsx";
 import ViewContent from "@/features/content/listing/ViewContent.tsx";
 import { BulkUploadPage } from "@/features/content/bulk/BulkUploadPage.tsx";
-import { ViewSingleFile } from "@/features/content/previews/ViewSingleFile.tsx";
+import { ViewSingleContentItem } from "@/features/content/previews/ViewSingleContentItem.tsx";
 import SidebarOverlay from "./components/layout/SidebarOverlay.tsx";
 import { Route, Routes } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
@@ -85,7 +85,7 @@ function App() {
                             <Route path="/files/bulk" element={<ProtectedRoute><BulkUploadPage/></ProtectedRoute>}/>
                             <Route path="/employeehome" element={<ProtectedRoute><Dashboard/></ProtectedRoute>}/>
                             <Route path="/calendar" element={<ExperationCalendar/>}/>
-                            <Route path="/file/:id" element={<ProtectedRoute><ViewSingleFile/></ProtectedRoute>}/>
+                            <Route path="/file/:id" element={<ProtectedRoute><ViewSingleContentItem/></ProtectedRoute>}/>
                             <Route path="/collections" element={<ProtectedRoute><ViewCollections/></ProtectedRoute>}/>
                             <Route path="/credits" element={<Credits />}/>
                             <Route path="/collections/:id" element={<ProtectedRoute><ViewSingleCollection/></ProtectedRoute>}/>

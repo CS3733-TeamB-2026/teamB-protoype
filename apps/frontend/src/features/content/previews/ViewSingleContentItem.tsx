@@ -5,11 +5,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Hero } from "@/components/shared/Hero.tsx";
 import { FilePreview } from "@/features/content/previews/FilePreview.tsx";
+import { UrlPreviewLink } from "@/components/shared/UrlPreviewLink.tsx";
+import { getCachedPreview, setCachedPreview } from "@/features/content/previews/preview-cache.ts";
 import { ContentStatusBadge } from "@/features/content/components/ContentStatusBadge.tsx";
 import { ContentTypeBadge } from "@/features/content/components/ContentTypeBadge.tsx";
 import { PersonaBadge } from "@/components/shared/PersonaBadge.tsx";
 import { getOriginalFilename } from "@/lib/mime.ts";
-import type { ContentItem } from "@/lib/types.ts";
+import type { ContentItem, UrlPreview } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
 import { Timeline } from "@/features/content/components/Timeline.tsx"
@@ -18,25 +20,27 @@ import {Button} from "@/components/ui/button";
 import {EmployeeAvatar} from "@/components/shared/EmployeeAvatar.tsx";
 
 /**
- * Full-page file viewer for a single content item.
+ * Full-page viewer for a single content item — handles both file and link types.
  *
- * Reachable at `/file/:id` (linked from the open-external icon in ViewContent).
- * Fetches the content item's metadata from `/api/content/:id`, then delegates
- * rendering to {@link FilePreview} with `mode="full"` so the PDF/DOCX viewer
- * scrolls vertically and images are displayed at larger size.
+ * Reachable at `/file/:id`. Fetches the content item's metadata from
+ * `/api/content/:id`, then renders either:
+ * - {@link FilePreview} with `mode="full"` for file items, or
+ * - a YouTube embed iframe or {@link UrlPreviewLink} for link items.
  *
- * File bytes themselves are fetched and cached by FilePreview — this page only
- * needs the item metadata to resolve the original filename and pass it down.
+ * Link OG previews are fetched from `/api/preview` and stored in
+ * `preview-cache.ts` so back-navigation doesn't re-fetch.
  */
-export function ViewSingleFile() {
+export function ViewSingleContentItem() {
     /** Content item ID from the URL parameter. */
     const { id } = useParams<{ id: string }>();
     const [item, setItem] = useState<ContentItem | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [linkPreviewStatus, setLinkPreviewStatus] = useState<"loading" | "ok" | "unreachable">("loading");
+    const [linkPreview, setLinkPreview] = useState<UrlPreview | null>(null);
     const navigate = useNavigate();
 
-    usePageTitle("View File");
+    usePageTitle("View Content");
 
     const { getAccessTokenSilently } = useAuth0();
 
@@ -64,14 +68,39 @@ export function ViewSingleFile() {
         void fetchItem();
     }, [id, getAccessTokenSilently]);
 
+    // Fetch OG preview for link items once the item is loaded.
+    useEffect(() => {
+        if (!item?.linkURL) return;
+        const cached = getCachedPreview(item.linkURL);
+        if (cached !== undefined) {
+            setLinkPreview(cached);
+            setLinkPreviewStatus(cached === null ? "unreachable" : "ok");
+            return;
+        }
+        fetch(`/api/preview?url=${encodeURIComponent(item.linkURL)}`)
+            .then((res) => (res.ok ? res.json() : Promise.reject()))
+            .then((preview: UrlPreview) => {
+                setCachedPreview(item.linkURL!, preview);
+                setLinkPreview(preview);
+                setLinkPreviewStatus("ok");
+            })
+            .catch(() => {
+                setCachedPreview(item.linkURL!, null);
+                setLinkPreview(null);
+                setLinkPreviewStatus("unreachable");
+            });
+    }, [item]);
+
     const originalFilename = item?.fileURI ? getOriginalFilename(item.fileURI) : null;
+    const isLink = !!item?.linkURL;
+    const youtubeMatch = item?.linkURL?.match(/[?&]v=([a-zA-Z0-9_-]+)/);
 
     return (
         <>
             <Hero
                 icon={FileText}
-                title={item?.displayName ?? "File Viewer"}
-                description="Preview and download this file"
+                title={item?.displayName ?? "Content Viewer"}
+                description={isLink ? "View this linked resource" : "Preview and download this file"}
             />
 
             <div className="max-w-5xl mx-auto my-8 px-4 flex flex-col gap-6">
@@ -147,6 +176,23 @@ export function ViewSingleFile() {
                                         src={`/api/content/download/${item.id}`}
                                         infoSrc={`/api/content/info/${item.id}`}
                                         mode="full"
+                                    />
+                                )}
+                                {isLink && youtubeMatch && (
+                                    <iframe
+                                        src={`https://www.youtube.com/embed/${youtubeMatch[1]}`}
+                                        className="w-full rounded-md border-0"
+                                        style={{ minHeight: "480px" }}
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                        title={item!.displayName}
+                                    />
+                                )}
+                                {isLink && !youtubeMatch && (
+                                    <UrlPreviewLink
+                                        href={item!.linkURL!}
+                                        status={linkPreviewStatus}
+                                        preview={linkPreview}
                                     />
                                 )}
                             </CardContent>
