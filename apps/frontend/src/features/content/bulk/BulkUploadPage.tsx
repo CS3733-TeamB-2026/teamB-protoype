@@ -33,7 +33,6 @@ import {
 import { useUser } from "@/hooks/use-user.ts";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
 import InfoButton from "@/components/layout/InformationAlert.tsx";
-import type { Collection } from "@/lib/types.ts";
 
 // ---------- Types ----------
 
@@ -231,28 +230,13 @@ export function BulkUploadPage() {
 
         if (addToCollection && collectionId != null && uploadedContentIds.length > 0) {
             try {
-                // The collection PUT replaces the full item list, so we must fetch
-                // the current items first to avoid overwriting them.
-                const collRes = await fetch(`/api/collections/${collectionId}`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                if (!collRes.ok) throw new Error(`Failed to fetch collection (${collRes.status})`);
-                const coll = await collRes.json() as Collection;
-                const existingIds = coll.items.map(item => item.content.id);
-                const mergedIds = [...existingIds, ...uploadedContentIds];
-
-                const putRes = await fetch(`/api/collections/${collectionId}`, {
-                    method: "PUT",
+                const appendRes = await fetch(`/api/collections/${collectionId}/items`, {
+                    method: "POST",
                     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        displayName: coll.displayName,
-                        isPublic: coll.public,
-                        ownerId: coll.owner.id,
-                        contentIds: mergedIds,
-                    }),
+                    body: JSON.stringify({ contentIds: uploadedContentIds }),
                 });
-                if (!putRes.ok) throw new Error(`Failed to update collection (${putRes.status})`);
-                toast.success(`Added ${uploadedContentIds.length} item${uploadedContentIds.length !== 1 ? "s" : ""} to "${coll.displayName}".`);
+                if (!appendRes.ok) throw new Error(`Failed to update collection (${appendRes.status})`);
+                toast.success(`Added ${uploadedContentIds.length} item${uploadedContentIds.length !== 1 ? "s" : ""} to collection.`);
             } catch (err) {
                 const msg = err instanceof Error ? err.message : "Unknown error";
                 toast.error(`Uploads succeeded but collection update failed: ${msg}`);

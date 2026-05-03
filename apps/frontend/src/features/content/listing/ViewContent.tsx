@@ -12,7 +12,6 @@ import {
     FolderOpen,
     Loader2,
     Pencil,
-    Trash2,
     LucideFolders,
     Search,
     Plus,
@@ -20,7 +19,7 @@ import {
     Lock,
     RefreshCcw,
     KeyRound,
-    Ban, ChevronsLeft, ChevronsRight, ChevronLeft, UserRoundKey, Recycle, RotateCcw,
+    Ban, UserRoundKey, Recycle, FolderPlus,
 } from "lucide-react";
 import {Button} from "@/components/ui/button.tsx";
 import {
@@ -44,14 +43,11 @@ import {
     Table,
     TableBody,
     TableCell,
-    TableHead,
-    TableHeader,
     TableRow,
 } from "@/components/ui/table.tsx";
 import {Hero} from "@/components/shared/Hero.tsx";
 import {ContentIcon} from "@/features/content/components/ContentIcon.tsx";
 import {ConfirmDeleteDialog} from "@/components/dialogs/ConfirmDeleteDialog.tsx";
-import {SortableHead} from "@/components/shared/SortableHead.tsx";
 import {useSortState, applySortState} from "@/hooks/use-sort-state.ts";
 import {useUser} from "@/hooks/use-user.ts";
 import {
@@ -79,6 +75,7 @@ import { ALL_CATEGORIES } from "@/lib/mime.ts";
 import {usePageTitle} from "@/hooks/use-page-title.ts";
 import {ConfirmCheckoutDialog} from "@/features/content/forms/ConfirmCheckoutDialog.tsx";
 import {ConfirmCheckinDialog} from "@/features/content/forms/ConfirmCheckinDialog.tsx";
+import {AddToCollectionDialog} from "@/features/collections/AddToCollectionDialog.tsx";
 import {TagInput} from "@/features/content/tags/TagInput.tsx";
 import {Tabs, TabsTrigger} from "@/components/ui/tabs"
 import { SlidingTabs } from "@/components/shared/SlidingTabs.tsx";
@@ -88,6 +85,10 @@ import {useTranslation} from "@/languageSupport/useTranslation.ts";
 import type {TranslationKey} from "@/languageSupport/keys.ts";
 import {ForceCheckinDialog} from "@/features/content/forms/ForceCheckinDialog.tsx";
 import InfoButton from "@/components/layout/InformationAlert";
+import {RecycleBinTable} from "@/features/content/listing/RecycleBinTable.tsx";
+import {ContentTableHeader} from "@/features/content/listing/ContentTableHeader.tsx";
+import {TablePagination} from "@/components/shared/TablePagination.tsx";
+import type {ContentSortCol} from "@/features/content/listing/ContentTableHeader.tsx";
 /**
  * Main content list page — the primary view for browsing, searching, filtering,
  * and managing content items.
@@ -131,8 +132,7 @@ function ViewContent() {
     /** Content item staged for the delete confirmation dialog. */
     const [deleteTarget, setDeleteTarget] = useState<ContentItem | null>(null);
     /** Content item staged for the permanent-delete confirmation dialog. */
-    const [permanentDeleteTarget, setPermanentDeleteTarget] = useState<ContentItem | null>(null);
-    const [sort, toggleSort] = useSortState<"name" | "owner" | "status" | "contentType" | "persona" | "docType">({
+    const [sort, toggleSort] = useSortState<ContentSortCol>({
         column: "persona",
         direction: "asc"
     });
@@ -142,6 +142,8 @@ function ViewContent() {
      */
     const [linkPreviews, setLinkPreviews] = useState<Record<number, UrlPreview | null>>({});
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+    const [addToCollectionOpen, setAddToCollectionOpen] = useState(false);
 
     const {user} = useUser();
     const navigate = useNavigate();
@@ -503,7 +505,56 @@ function ViewContent() {
         } catch {
             toast.error("Could not permanently delete.");
         }
-        setPermanentDeleteTarget(null);
+    };
+
+    /** Restores the given recycled items, reporting a toast for any failures. */
+    const handleBulkRestore = async (ids: number[]) => {
+        const token = await getAccessTokenSilently();
+        let failed = 0;
+        for (const id of ids) {
+            try {
+                const res = await fetch(`/api/content/${id}/restore`, {
+                    method: "POST",
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (res.ok) {
+                    const item = deletedContent.find((c) => c.id === id);
+                    setDeletedContent((prev) => prev.filter((c) => c.id !== id));
+                    if (item) setContent((prev) => [...prev, {...item, deleted: false}]);
+                } else {
+                    failed++;
+                }
+            } catch {
+                failed++;
+            }
+        }
+        setSelectedIds(new Set());
+        if (failed > 0) toast.error(`Failed to restore ${failed} item${failed !== 1 ? "s" : ""}.`);
+        else toast.success(`${ids.length} item${ids.length !== 1 ? "s" : ""} restored.`);
+    };
+
+    /** Permanently deletes the given recycled items, reporting a toast for any failures. */
+    const handleBulkPermanentDelete = async (ids: number[]) => {
+        const token = await getAccessTokenSilently();
+        let failed = 0;
+        for (const id of ids) {
+            try {
+                const res = await fetch(`/api/content/${id}/permanent`, {
+                    method: "DELETE",
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (res.ok) {
+                    setDeletedContent((prev) => prev.filter((c) => c.id !== id));
+                } else {
+                    failed++;
+                }
+            } catch {
+                failed++;
+            }
+        }
+        setSelectedIds(new Set());
+        if (failed > 0) toast.error(`Failed to permanently delete ${failed} item${failed !== 1 ? "s" : ""}.`);
+        else toast.success(`${ids.length} item${ids.length !== 1 ? "s" : ""} permanently deleted.`);
     };
 
     /**
@@ -521,7 +572,7 @@ function ViewContent() {
 
 
     // Total column count used for colSpan on the expanded detail rows.
-    const NUM_COLS = 8;
+    const NUM_COLS = 9;
 
     // UserProvider hasn't resolved yet — show a full-screen spinner rather than
     // rendering the page without a user (which would break permission checks).
@@ -550,6 +601,12 @@ function ViewContent() {
         currentPage * pageSize
     );
 
+    // Effective selection = selectedIds intersected with what's currently visible.
+    // Handles filter/page changes without clearing state explicitly.
+    const pageSelectedIds = paginatedContent.filter((i) => selectedIds.has(i.id)).map((i) => i.id);
+    const allPageSelected = paginatedContent.length > 0 && pageSelectedIds.length === paginatedContent.length;
+    const somePageSelected = pageSelectedIds.length > 0;
+
     return (
         <>
             <Hero
@@ -577,7 +634,7 @@ function ViewContent() {
                 <CardContent>
                     {/* Top-level Tabs for filtering Content Items */}
                     {/* activeTab controls whether "All Content" or "Bookmarks" view is shown */}
-                    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ContentTab)}>
+                    <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v as ContentTab); setSelectedIds(new Set()); }}>
                         <SlidingTabs
                             activeTab={activeTab}
                             indicatorColor={activeTab === "bookmarks" ? "bg-accent" : activeTab === "recyclebin" ? "bg-destructive" : "bg-foreground"}
@@ -636,76 +693,28 @@ function ViewContent() {
                     )}
                     {/* Recycle bin tab — separate data source, separate table */}
                     {!loading && !error && activeTab === "recyclebin" && (
-                        deletedContent.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
-                                <Recycle className="w-10 h-10"/>
-                                <p className="text-sm">Recycle bin is empty.</p>
-                            </div>
-                        ) : (
-                            <Table className="text-left mt-2">
-                                <TableHeader>
-                                    <TableRow className="hover:bg-transparent">
-                                        <TableHead className="w-8"/>
-                                        <SortableHead column="name" label={ts('content.name')} sort={sort} onSort={toggleSort}/>
-                                        <SortableHead column="owner" label={ts('content.owner')} sort={sort} onSort={toggleSort} className="hidden sm:table-cell"/>
-                                        <SortableHead column="status" label={ts('status')} sort={sort} onSort={toggleSort} className="hidden sm:table-cell"/>
-                                        <SortableHead column="contentType" label={ts('kind')} sort={sort} onSort={toggleSort} className="hidden sm:table-cell"/>
-                                        <SortableHead column="persona" label={ts('persona')} sort={sort} onSort={toggleSort} className="hidden sm:table-cell"/>
-                                        <SortableHead column="docType" label={ts('file.type')} sort={sort} onSort={toggleSort} className="hidden sm:table-cell"/>
-                                        <TableHead className="uppercase tracking-wider text-muted-foreground select-none text-center">{ts('content.actions')}</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {deletedContent.map((item, index) => {
-                                        const isFile = !!item.fileURI;
-                                        const isLink = !!item.linkURL;
-                                        const originalFilename = isFile ? getOriginalFilename(item.fileURI!) : null;
-                                        const category = getCategory(null, originalFilename);
-                                        const ext = originalFilename ? getExtension(originalFilename) : null;
-                                        return (
-                                            <TableRow
-                                                key={item.id}
-                                                className={`${index % 2 === 0 ? "bg-muted/15" : ""}`}
-                                            >
-                                                <TableCell className="w-8 pr-0">
-                                                    <ContentIcon category={category} isLink={isLink} className="w-5 h-5"/>
-                                                </TableCell>
-                                                <TableCell className="w-full max-w-0">
-                                                    <span className="truncate font-medium text-foreground">{item.displayName}</span>
-                                                </TableCell>
-                                                <TableCell className="hidden sm:table-cell">
-                                                    {item.owner
-                                                        ? <EmployeeAvatar employee={item.owner} size="sm"/>
-                                                        : <span className="text-muted-foreground">—</span>}
-                                                </TableCell>
-                                                <TableCell className="hidden sm:table-cell text-center">
-                                                    <ContentStatusBadge status={item.status}/>
-                                                </TableCell>
-                                                <TableCell className="hidden sm:table-cell text-center">
-                                                    <ContentTypeBadge contentType={item.contentType}/>
-                                                </TableCell>
-                                                <TableCell className="hidden sm:table-cell text-center">
-                                                    <PersonaBadge persona={item.targetPersona}/>
-                                                </TableCell>
-                                                <TableCell className="hidden sm:table-cell text-center">
-                                                    <ContentExtBadge category={category} ext={ext} isLink={isLink}/>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="flex justify-center gap-2">
-                                                        <Button variant="outline" size="sm" title="Restore" onClick={() => handleRestore(item)}>
-                                                            <RotateCcw className="w-4 h-4"/>
-                                                        </Button>
-                                                        <Button variant="destructive" size="sm" title="Delete permanently" onClick={() => setPermanentDeleteTarget(item)}>
-                                                            <Trash2 className="w-4 h-4"/>
-                                                        </Button>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })}
-                                </TableBody>
-                            </Table>
-                        )
+                        <RecycleBinTable
+                            deletedContent={deletedContent}
+                            selectedIds={selectedIds}
+                            onToggleId={(id) => setSelectedIds((prev) => {
+                                const next = new Set(prev);
+                                if (next.has(id)) next.delete(id);
+                                else next.add(id);
+                                return next;
+                            })}
+                            onSelectIds={(ids) => setSelectedIds((prev) => new Set([...prev, ...ids]))}
+                            onDeselectIds={(ids) => setSelectedIds((prev) => {
+                                const next = new Set(prev);
+                                ids.forEach((id) => next.delete(id));
+                                return next;
+                            })}
+                            sort={sort}
+                            onSort={toggleSort}
+                            onRestore={handleRestore}
+                            onPermanentDelete={handlePermanentDelete}
+                            onBulkRestore={handleBulkRestore}
+                            onBulkPermanentDelete={handleBulkPermanentDelete}
+                        />
                     )}
 
                     {!loading && !error && activeTab !== "recyclebin" && content.length === 0 && (
@@ -732,6 +741,19 @@ function ViewContent() {
                                             ? `Filters (${activeFilterCount})`
                                             : "Filters"}
                                 </Button>
+                                {pageSelectedIds.length > 0 && (
+                                    <>
+                                        <span className="text-sm text-muted-foreground whitespace-nowrap">{pageSelectedIds.length} selected</span>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => setAddToCollectionOpen(true)}
+                                            className="hover:bg-secondary hover:text-secondary-foreground h-10 text-base border-input rounded-md text-foreground whitespace-nowrap"
+                                        >
+                                            <FolderPlus className="w-4 h-4 mr-1" />
+                                            Add to Collection
+                                        </Button>
+                                    </>
+                                )}
                                 <div className="relative">
                                     <Search
                                         className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground pointer-events-none"
@@ -912,26 +934,23 @@ function ViewContent() {
                             {/* Table takes all remaining space */}
                             <div className="flex-1 min-w-0">
                                 <Table className="text-left md:col-span-2">
-                                    <TableHeader>
-                                        <TableRow className="hover:bg-transparent">
-                                            <TableHead className="w-8"/>
-                                            <SortableHead column="name" label={ts('content.name')} sort={sort} onSort={toggleSort}/>
-                                            <SortableHead column="owner" label={ts('content.owner')} sort={sort} onSort={toggleSort}
-                                                          className="hidden sm:table-cell"/>
-                                            <SortableHead column="status" label={ts('status')} sort={sort} onSort={toggleSort}
-                                                          className="hidden sm:table-cell"/>
-                                            <SortableHead column="contentType" label={ts('kind')} sort={sort}
-                                                          onSort={toggleSort} className="hidden sm:table-cell"/>
-                                            <SortableHead column="persona" label={ts('persona')} sort={sort}
-                                                          onSort={toggleSort}
-                                                          className="hidden sm:table-cell"/>
-                                            <SortableHead column="docType" label={ts('file.type')} sort={sort} onSort={toggleSort}
-                                                          className="hidden sm:table-cell"/>
-
-                                            <TableHead
-                                                className="uppercase tracking-wider text-muted-foreground select-none text-center">{ts('content.actions')}</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
+                                    <ContentTableHeader
+                                        sort={sort}
+                                        onSort={toggleSort}
+                                        allSelected={allPageSelected}
+                                        someSelected={somePageSelected}
+                                        onToggleAll={() => {
+                                            if (allPageSelected) {
+                                                setSelectedIds((prev) => {
+                                                    const next = new Set(prev);
+                                                    paginatedContent.forEach((i) => next.delete(i.id));
+                                                    return next;
+                                                });
+                                            } else {
+                                                setSelectedIds((prev) => new Set([...prev, ...paginatedContent.map((i) => i.id)]));
+                                            }
+                                        }}
+                                    />
                                     <TableBody>
                                         {/* pre sorts the content */}
                                         {paginatedContent.map((item, index) => {
@@ -960,6 +979,19 @@ function ViewContent() {
                                                             }
                                                         }}
                                                     >
+                                                        <TableCell className="w-8 pr-0" onClick={(e) => e.stopPropagation()}>
+                                                            <input
+                                                                type="checkbox"
+                                                                className="w-4 h-4 cursor-pointer accent-primary"
+                                                                checked={selectedIds.has(item.id)}
+                                                                onChange={() => setSelectedIds((prev) => {
+                                                                    const next = new Set(prev);
+                                                                    if (next.has(item.id)) next.delete(item.id);
+                                                                    else next.add(item.id);
+                                                                    return next;
+                                                                })}
+                                                            />
+                                                        </TableCell>
                                                         <TableCell className="w-8 pr-0">
                                                             {isLink && linkPreviews[item.id]?.favicon ? (
                                                                 <div className="w-5 h-5 flex items-center justify-center">
@@ -1248,65 +1280,14 @@ function ViewContent() {
                                     </TableBody>
                                 </Table>
                                 {sortedContent.length > 0 && (
-                                    <div className="flex items-center justify-between mt-4 px-1 text-sm text-muted-foreground">
-                                        <div className="flex items-center gap-2">
-                                            <span>{ts('pages.rowsPerPage')}</span>
-                                            <select
-                                                value={pageSize}
-                                                onChange={(e) => {
-                                                    setPageSize(Number(e.target.value));
-                                                    setCurrentPage(1);
-                                                }}
-                                                className="border border-border rounded px-2 py-1 bg-background text-foreground text-sm">
-                                                {[10, 25, 50, 100].map((size) => (
-                                                    <option key={size} value={size}>{size}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        <div className="flex items-center gap-3">
-                                            <span>
-                                                {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filteredContent.length)} of {filteredContent.length}
-                                            </span>
-                                            <div className="flex items-center gap-1">
-                                                <button
-                                                    onClick={() => setCurrentPage(1)}
-                                                    disabled={currentPage === 1}
-                                                    className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
-                                                    title="First page"
-                                                >
-                                                    <ChevronsLeft className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                                                    disabled={currentPage === 1}
-                                                    className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
-                                                    title="Previous page"
-                                                >
-                                                    <ChevronLeft className="w-4 h-4" />
-                                                </button>
-                                                <span className="px-2">
-                    {ts('page')} {currentPage} {ts('of')} {totalPages}
-                </span>
-                                                <button
-                                                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                                                    disabled={currentPage === totalPages}
-                                                    className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
-                                                    title="Next page"
-                                                >
-                                                    <ChevronRight className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => setCurrentPage(totalPages)}
-                                                    disabled={currentPage === totalPages}
-                                                    className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
-                                                    title="Last page"
-                                                >
-                                                    <ChevronsRight className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <TablePagination
+                                        currentPage={currentPage}
+                                        totalPages={totalPages}
+                                        pageSize={pageSize}
+                                        totalItems={filteredContent.length}
+                                        onPageChange={setCurrentPage}
+                                        onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
+                                    />
                                 )}
                             </div>
 
@@ -1316,6 +1297,7 @@ function ViewContent() {
                 </CardContent>
             </Card>
 
+            {/* Soft delete confirmation dialog, moves to recycle bin */}
             <ConfirmDeleteDialog
                 open={!!deleteTarget}
                 onOpenChange={(open) => {
@@ -1325,16 +1307,7 @@ function ViewContent() {
                     <span>Move <strong>"{deleteTarget.displayName}"</strong> to the recycle bin?</span> : undefined}
                 onConfirm={() => handleDelete(deleteTarget!.id)}
             />
-            <ConfirmDeleteDialog
-                open={!!permanentDeleteTarget}
-                onOpenChange={(open) => {
-                    if (!open) setPermanentDeleteTarget(null);
-                }}
-                description={permanentDeleteTarget
-                    ? <span>Permanently delete <strong>"{permanentDeleteTarget.displayName}"</strong>? This cannot be undone.</span>
-                    : undefined}
-                onConfirm={() => handlePermanentDelete(permanentDeleteTarget!.id)}
-            />
+
             <ConfirmCheckoutDialog
                 open={!!checkoutTarget}
                 onOpenChange={(open: boolean) => {
@@ -1350,6 +1323,7 @@ function ViewContent() {
                     }
                 }}
             />
+
             <ConfirmCheckinDialog
                 open={!!checkinTarget}
                 onOpenChange={(open: boolean) => {
@@ -1433,7 +1407,15 @@ function ViewContent() {
                 />
             )}
 
-        </>
+            <AddToCollectionDialog
+                open={addToCollectionOpen}
+                onOpenChange={setAddToCollectionOpen}
+                contentIds={pageSelectedIds}
+                onDone={() => setSelectedIds(new Set())}
+            />
+
+
+</>
     );
 }
 

@@ -147,6 +147,7 @@ All routes are JSON unless noted. File-upload routes use `multipart/form-data` w
 - `GET    /api/collections/:id` — single collection; 403 if private and caller is not owner/admin
 - `PUT    /api/collections/:id` — update name, visibility, owner, and full ordered item list (owner or admin only)
 - `DELETE /api/collections/:id` — cascades to CollectionItem and CollectionFavorite (owner or admin only)
+- `POST   /api/collections/:id/items` — append content items to a collection; deduplicates against existing items and assigns sequential positions after the last existing one (owner or admin only)
 - `POST   /api/collections/:id/favorite` — add favorite; guards against favoriting inaccessible private collections
 - `DELETE /api/collections/:id/favorite` — remove favorite
 
@@ -240,6 +241,7 @@ Extend by adding a key to `keys.ts` and entries to `dictionaries.ts`.
 - **`CollectionPicker`** — searchable collection dropdown, same UX as `EmployeePicker`. Accepts `publicOnly` to restrict the list to public collections (filtering is client-side). Used in the service request form.
 - **`PersonaBadge`** — badge for a persona value.
 - **`SortableHead<T>`** — generic `<TableHead>` with sort-direction arrow. Pairs with `useSortState`.
+- **`TablePagination`** — rows-per-page selector + first/prev/next/last navigation bar. Stateless; parent owns `currentPage`/`pageSize`. Resets to page 1 automatically when page size changes.
 - **`SlidingTabs`** — animated underline tab strip.
 - **`UrlPreviewCard`** — OG metadata card (title, description, image, favicon). Used by `UrlSourceField`; also available standalone.
 - **`UrlPreviewLink`** — link that shows a `UrlPreviewCard` on hover.
@@ -263,9 +265,12 @@ features/content/
     UrlSourceField.tsx       URL input with live OG-preview card
     ConfirmCheckoutDialog.tsx
     ConfirmCheckinDialog.tsx
+    ConfirmRestoreDialog.tsx  Accent-colored confirm dialog for restore actions
     ForceCheckinDialog.tsx   Admin-only — release another user's lock
   listing/
     ViewContent.tsx          Main content list page
+    ContentTableHeader.tsx   Shared <TableHeader> (checkbox, icon, 6 sortable cols, Actions) used by both ViewContent and RecycleBinTable
+    RecycleBinTable.tsx      Recycle bin table — owns its own restore/permanent-delete dialog state
     BookmarkedFiles.tsx      Current user's bookmarks (top 5)
     MyFiles.tsx              Items owned by current user (top 5)
     RecentFiles.tsx          Most recently modified items (top 8)
@@ -278,7 +283,7 @@ features/content/
   tags/
     TagInput.tsx             Chip-style tag input with suggestions + create-new
   bulk/
-    BulkUploadPage.tsx       Multi-file upload at /bulk-upload
+    BulkUploadPage.tsx       Multi-file upload at /bulk-upload; uses POST /api/collections/:id/items to append without replacing
   components/
     ContentIcon.tsx          Lucide icon keyed by file category (uses CATEGORY_COLORS from lib/mime.ts)
     ContentExtBadge.tsx      Badge showing file extension (or "Link")
@@ -371,6 +376,13 @@ Full CRUD under `features/employees/`. Both dialogs import helpers from `employe
 **Validation** — Add requires firstName, lastName (unique), id (positive int, not taken), persona, userName, email, password, confirmPassword (matching). Edit requires firstName and lastName (unique, self excluded).
 
 Search matches firstName, lastName, full name, persona, id. Name matches highlighted via `highlightRange`. Rows extracted to `EmployeeRow` so `useAvatarUrl` can be called per row (hooks can't be called inside `.map()`).
+
+### Collections feature
+
+`features/collections/` contains dialogs for creating and managing collections. Key components:
+
+- **`AddToCollectionDialog`** — composes `CollectionPicker` + `AddCollectionDialog` to let a user pick an existing collection or create a new one, then calls `POST /api/collections/:id/items` to append selected content. A `refreshKey` counter triggers `CollectionPicker` to refetch after a new collection is created in the same dialog session.
+- **`AddCollectionDialog`** — creates a new collection via `POST /api/collections`.
 
 ### Service Requests feature
 
