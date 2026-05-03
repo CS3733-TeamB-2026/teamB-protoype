@@ -27,6 +27,31 @@ export const contentSelect = {
     ownerId: true,
     tags: true,
     deleted: true,
+    serviceRequestId: true,
+} as const
+
+/**
+ * Shared include for ServiceRequest relations — used by content/collection queryById
+ * so that detail views receive the linked SR in one fetch. Defined here (not in
+ * servicereqs.ts) to avoid circular imports across query classes.
+ *
+ * Does not nest linkedContent/linkedCollection inside the SR to avoid circular joins;
+ * callers that already have the content/collection context don't need those fields.
+ */
+export const srInclude = {
+    owner: { select: employeeSelect },
+    assignee: { select: employeeSelect },
+    linkedContent: { select: contentSelect },
+    linkedCollection: {
+        include: {
+            owner: { select: employeeSelect },
+            items: {
+                where: { content: { deleted: false } },
+                orderBy: { position: "asc" as const },
+                include: { content: { select: contentSelect } },
+            },
+        },
+    },
 } as const
 
 export class Helper {

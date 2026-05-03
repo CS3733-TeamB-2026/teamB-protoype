@@ -12,7 +12,7 @@ import { ContentTypeBadge } from "@/features/content/components/ContentTypeBadge
 import { ExpirationBadge } from "@/features/content/components/ExpirationBadge.tsx";
 import { PersonaBadge } from "@/components/shared/PersonaBadge.tsx";
 import { getOriginalFilename } from "@/lib/mime.ts";
-import type { Collection, ContentItem, ServiceReq, UrlPreview } from "@/lib/types.ts";
+import type { Collection, ContentItem, UrlPreview } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
 import { Timeline } from "@/features/content/components/Timeline.tsx"
@@ -26,7 +26,7 @@ import { ServiceRequestLinkDialog } from "@/components/shared/ServiceRequestLink
  * Full-page viewer for a single content item — handles both file and link types.
  *
  * Reachable at `/file/:id`. Fetches the content item's metadata from
- * `/api/content/:id`, then renders either:
+ * `/api/content/:id` (which now includes `serviceRequest` in one fetch), then renders either:
  * - {@link FilePreview} with `mode="full"` for file items, or
  * - a YouTube embed iframe or {@link UrlPreviewLink} for link items.
  *
@@ -43,7 +43,6 @@ export function ViewSingleContentItem() {
     const [linkPreview, setLinkPreview] = useState<UrlPreview | null>(null);
     const [collections, setCollections] = useState<Collection[]>([]);
     const [collectionsDialogOpen, setCollectionsDialogOpen] = useState(false);
-    const [serviceReqs, setServiceReqs] = useState<ServiceReq[]>([]);
     const [srDialogOpen, setSrDialogOpen] = useState(false);
     const navigate = useNavigate();
 
@@ -52,7 +51,7 @@ export function ViewSingleContentItem() {
     const { getAccessTokenSilently } = useAuth0();
 
     // Fetch the content item's metadata on mount (or when the URL id changes).
-    // The file bytes are not fetched here — FilePreview handles that separately.
+    // The response includes serviceRequest directly — no separate SR fetch needed.
     useEffect(() => {
         const fetchItem = async () => {
             try {
@@ -73,23 +72,6 @@ export function ViewSingleContentItem() {
 
         };
         void fetchItem();
-    }, [id, getAccessTokenSilently]);
-
-    // Fetch service requests linked to this item for the initial link text.
-    useEffect(() => {
-        if (!id) return;
-        const load = async () => {
-            try {
-                const token = await getAccessTokenSilently();
-                const res = await fetch(`/api/content/${id}/service-requests`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                if (res.ok) setServiceReqs(await res.json());
-            } catch {
-                // non-critical
-            }
-        };
-        void load();
     }, [id, getAccessTokenSilently]);
 
     // Fetch collections containing this item so the link text shows the correct count.
@@ -135,6 +117,7 @@ export function ViewSingleContentItem() {
     const originalFilename = item?.fileURI ? getOriginalFilename(item.fileURI) : null;
     const isLink = !!item?.linkURL;
     const youtubeMatch = item?.linkURL?.match(/[?&]v=([a-zA-Z0-9_-]+)/);
+    const linkedSR = item?.serviceRequest ?? null;
 
     return (
         <>
@@ -209,7 +192,7 @@ export function ViewSingleContentItem() {
                                         className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors shrink-0"
                                     >
                                         <ClipboardList className="w-3.5 h-3.5" />
-                                        {serviceReqs.length === 0 ? "+ Add to Service Request" : "In service request"}
+                                        {linkedSR == null ? "+ Add to Service Request" : "In service request"}
                                     </button>
                                 </div>
                                 <div className="flex items-center justify-between gap-2 text-sm">
@@ -281,7 +264,7 @@ export function ViewSingleContentItem() {
                     contentId={item.id}
                     open={srDialogOpen}
                     onOpenChange={setSrDialogOpen}
-                    onServiceReqsChange={setServiceReqs}
+                    onServiceReqsChange={(srs) => setItem((prev) => prev ? { ...prev, serviceRequest: srs[0] ?? null } : prev)}
                 />
             )}
         </>

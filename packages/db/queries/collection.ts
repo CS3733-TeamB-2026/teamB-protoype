@@ -1,5 +1,5 @@
 import { prisma } from "../lib/prisma";
-import { employeeSelect } from "./helper";
+import { employeeSelect, srInclude } from "./helper";
 
 // Items have no guaranteed DB order, so position must always be applied here
 const itemsInclude = {
@@ -23,14 +23,13 @@ const itemsInclude = {
  */
 export class Collection {
     /** Returns all public collections plus all collections owned by the given employee.
-     *  Pass isAdmin=true to return every collection regardless of visibility. */
-    public static async queryAll(employeeId: number, isAdmin: boolean) {
+     *  Pass isAdmin=true to return every collection regardless of visibility.
+     *  Pass unlinkedSR=true to restrict to collections not linked to any service request. */
+    public static async queryAll(employeeId: number, isAdmin: boolean, unlinkedSR = false) {
         return prisma.collection.findMany({
-            where: isAdmin ? undefined : {
-                OR: [
-                    { public: true },
-                    { ownerId: employeeId },
-                ],
+            where: {
+                ...(isAdmin ? {} : { OR: [{ public: true }, { ownerId: employeeId }] }),
+                ...(unlinkedSR ? { serviceRequestId: null } : {}),
             },
             include: {
                 owner: { select: employeeSelect },
@@ -40,13 +39,14 @@ export class Collection {
         });
     }
 
-    /** Returns a single collection with all joined content items. */
+    /** Returns a single collection with all joined content items and its linked service request. */
     public static async queryById(collectionId: number) {
         return prisma.collection.findUniqueOrThrow({
             where: { id: collectionId },
             include: {
                 owner: { select: employeeSelect },
                 ...itemsInclude,
+                serviceRequest: { include: srInclude },
             },
         });
     }
@@ -142,6 +142,14 @@ export class Collection {
     public static async removeFavorite(collectionId: number, employeeId: number) {
         await prisma.collectionFavorite.delete({
             where: { employeeId_collectionId: { employeeId, collectionId } },
+        });
+    }
+
+    /** Links a collection to a service request, or clears the link when serviceRequestId is null. */
+    public static async setServiceRequest(collectionId: number, serviceRequestId: number | null) {
+        return prisma.collection.update({
+            where: { id: collectionId },
+            data: { serviceRequestId },
         });
     }
 

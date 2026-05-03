@@ -79,13 +79,13 @@ export function ServiceRequestLinkDialog({ open, onOpenChange, onServiceReqsChan
         setLinking(true);
         try {
             const token = await getAccessTokenSilently();
-            const res = await fetch(`/api/servicereqs/${selectedId}/link`, {
+            const linkEndpoint = contentId != null
+                ? `/api/content/${contentId}/service-request`
+                : `/api/collections/${collectionId}/service-request`;
+            const res = await fetch(linkEndpoint, {
                 method: "PATCH",
                 headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    linkedContentId: contentId ?? null,
-                    linkedCollectionId: collectionId ?? null,
-                }),
+                body: JSON.stringify({ serviceRequestId: selectedId }),
             });
             if (!res.ok) { toast.error("Failed to link service request."); return; }
             toast.success("Service request linked.");

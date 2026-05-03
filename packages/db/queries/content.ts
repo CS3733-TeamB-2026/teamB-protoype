@@ -1,6 +1,6 @@
 import * as p from "../generated/prisma/client";
 import {prisma} from "../lib/prisma";
-import {Helper, employeeSelect, contentSelect} from "./helper";
+import {Helper, employeeSelect, contentSelect, srInclude} from "./helper";
 import { Notification } from "./notification";
 import { generateEmbedding, embeddingToSql } from '../../../apps/backend/lib/embeddings';
 
@@ -229,9 +229,12 @@ export class Content {
         });
     }
 
-    public static async queryAllContent() {
+    public static async queryAllContent(unlinkedSR = false) {
         return prisma.content.findMany({
-            where: { deleted: false },
+            where: {
+                deleted: false,
+                ...(unlinkedSR ? { serviceRequestId: null } : {}),
+            },
             select: {
                 ...contentSelect,
                 owner: { select: employeeSelect },
@@ -265,8 +268,17 @@ export class Content {
                 ...contentSelect,
                 owner: { select: employeeSelect },
                 checkedOutBy: { select: employeeSelect },
+                serviceRequest: { include: srInclude },
             }
         })
+    }
+
+    /** Links a content item to a service request, or clears the link when serviceRequestId is null. */
+    public static async setServiceRequest(contentId: number, serviceRequestId: number | null) {
+        return prisma.content.update({
+            where: { id: contentId },
+            data: { serviceRequestId },
+        });
     }
 
     public static async queryContentByIdWithVectors(_id: number) {

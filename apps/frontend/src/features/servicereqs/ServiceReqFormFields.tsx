@@ -214,6 +214,7 @@ export function ServiceReqFormFields({ values, patch, errors, showLastModified =
                     <ContentPicker
                         selectedId={values.linkedContentId}
                         onSelect={(id) => patch({ linkedContentId: id })}
+                        unlinkedSR
                     />
                 )}
                 {values.linkMode === "collection" && (
@@ -221,6 +222,7 @@ export function ServiceReqFormFields({ values, patch, errors, showLastModified =
                         selectedId={values.linkedCollectionId}
                         onSelect={(id) => patch({ linkedCollectionId: id })}
                         publicOnly
+                        unlinkedSR
                     />
                 )}
             </Field>

@@ -29,9 +29,10 @@ export const createServiceReq = async (req: req, res: res) => {
         const employee = await getEmployee(req);
         if (!employee) return res.status(404).json({ error: "Employee not found" });
 
-        const linkedContentId = payload.linkedContentId ?? null;
-        const linkedCollectionId = linkedContentId ? null : (payload.linkedCollectionId ?? null);
-        const result = await q.ServiceReqs.createServiceReq(
+        const linkedContentId: number | null = payload.linkedContentId ?? null;
+        const linkedCollectionId: number | null = linkedContentId ? null : (payload.linkedCollectionId ?? null);
+
+        const sr = await q.ServiceReqs.createServiceReq(
             payload.name,
             payload.created,
             payload.deadline,
@@ -39,9 +40,14 @@ export const createServiceReq = async (req: req, res: res) => {
             payload.assigneeId,
             employee.id,
             payload.notes ?? null,
-            linkedContentId,
-            linkedCollectionId,
         );
+
+        // Set the link on the content/collection side after creating the SR
+        if (linkedContentId) await q.Content.setServiceRequest(linkedContentId, sr.id);
+        else if (linkedCollectionId) await q.Collection.setServiceRequest(linkedCollectionId, sr.id);
+
+        // Re-fetch with full relations so the response includes linkedContent/linkedCollection
+        const result = await q.ServiceReqs.queryServiceReqById(sr.id);
         return res.status(201).json(result);
     } catch (error) {
         console.error(error);
@@ -60,11 +66,23 @@ export const updateServiceReq = async (req: req, res: res) => {
         if (!isUserOrAdmin(existing.ownerId, employee))
             return res.status(403).json({ error: "Access denied" });
 
-        const linkedContentId = payload.linkedContentId ?? null;
-        const linkedCollectionId = linkedContentId ? null : (payload.linkedCollectionId ?? null);
+        const linkedContentId: number | null = payload.linkedContentId ?? null;
+        const linkedCollectionId: number | null = linkedContentId ? null : (payload.linkedCollectionId ?? null);
+
+        // Clear the old link if the target is changing
+        const oldContentId = existing.linkedContent?.id ?? null;
+        const oldCollectionId = existing.linkedCollection?.id ?? null;
+        if (oldContentId && oldContentId !== linkedContentId)
+            await q.Content.setServiceRequest(oldContentId, null);
+        if (oldCollectionId && oldCollectionId !== linkedCollectionId)
+            await q.Collection.setServiceRequest(oldCollectionId, null);
+
+        // Set the new link
+        if (linkedContentId) await q.Content.setServiceRequest(linkedContentId, existing.id);
+        else if (linkedCollectionId) await q.Collection.setServiceRequest(linkedCollectionId, existing.id);
 
         // ownerId is taken from the existing record — ownership cannot be transferred via this endpoint
-        const result = await q.ServiceReqs.updateServiceReq(
+        await q.ServiceReqs.updateServiceReq(
             payload.id,
             payload.name,
             payload.created,
@@ -73,9 +91,9 @@ export const updateServiceReq = async (req: req, res: res) => {
             payload.assigneeId,
             existing.ownerId,
             payload.notes ?? null,
-            linkedContentId,
-            linkedCollectionId,
         );
+
+        const result = await q.ServiceReqs.queryServiceReqById(existing.id);
         return res.status(200).json(result);
     } catch (error) {
         console.error(error);
@@ -83,6 +101,7 @@ export const updateServiceReq = async (req: req, res: res) => {
     }
 }
 
+/** Returns the service request linked to the given content item (empty array if none). */
 export const getServiceReqsByContentId = async (req: req, res: res) => {
     try {
         const contentId = parseInt(req.params.id);
@@ -94,6 +113,7 @@ export const getServiceReqsByContentId = async (req: req, res: res) => {
     }
 };
 
+/** Returns the service request linked to the given collection (empty array if none). */
 export const getServiceReqsByCollectionId = async (req: req, res: res) => {
     try {
         const collectionId = parseInt(req.params.id);
@@ -115,13 +135,18 @@ export const getUnlinkedServiceReqs = async (req: req, res: res) => {
     }
 };
 
+/**
+ * Links a content item or collection to a service request by setting serviceRequestId
+ * on the content/collection row. Validates that the target isn't already linked to a
+ * different SR, and that private collections cannot be linked.
+ */
 export const linkServiceReq = async (req: req, res: res) => {
     try {
         const employee = await getEmployee(req);
         if (!employee) return res.status(404).json({ error: "Employee not found" });
 
-        const id = parseInt(req.params.id);
-        const existing = await q.ServiceReqs.queryServiceReqById(id);
+        const srId = parseInt(req.params.id);
+        const existing = await q.ServiceReqs.queryServiceReqById(srId);
         if (!existing) return res.status(404).json({ error: "Service request not found" });
         if (!isUserOrAdmin(existing.ownerId, employee))
             return res.status(403).json({ error: "Access denied" });
@@ -130,7 +155,20 @@ export const linkServiceReq = async (req: req, res: res) => {
         if (linkedContentId && linkedCollectionId)
             return res.status(400).json({ error: "Cannot link both a content item and a collection" });
 
-        const result = await q.ServiceReqs.linkServiceReq(id, linkedContentId, linkedCollectionId);
+        if (linkedCollectionId) {
+            const col = await q.Collection.queryById(linkedCollectionId);
+            if (!col.public)
+                return res.status(400).json({ error: "Private collections cannot be linked to a service request" });
+        }
+
+        // Clear any previous link this SR had
+        if (existing.linkedContent?.id) await q.Content.setServiceRequest(existing.linkedContent.id, null);
+        if (existing.linkedCollection?.id) await q.Collection.setServiceRequest(existing.linkedCollection.id, null);
+
+        if (linkedContentId) await q.Content.setServiceRequest(linkedContentId, srId);
+        else if (linkedCollectionId) await q.Collection.setServiceRequest(linkedCollectionId, srId);
+
+        const result = await q.ServiceReqs.queryServiceReqById(srId);
         return res.status(200).json(result);
     } catch (error) {
         console.error(error);
@@ -148,6 +186,10 @@ export const deleteServiceReq = async (req: req, res: res) => {
         if (!existing) return res.status(404).json({ error: "Service request not found" });
         if (!isUserOrAdmin(existing.ownerId, employee))
             return res.status(403).json({ error: "Access denied" });
+
+        // Clear links before deleting so content/collection rows are cleaned up
+        if (existing.linkedContent?.id) await q.Content.setServiceRequest(existing.linkedContent.id, null);
+        if (existing.linkedCollection?.id) await q.Collection.setServiceRequest(existing.linkedCollection.id, null);
 
         await q.ServiceReqs.deleteServiceReq(payload.id);
         return res.status(204).end();

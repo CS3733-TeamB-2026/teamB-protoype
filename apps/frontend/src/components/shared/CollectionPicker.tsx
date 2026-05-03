@@ -27,6 +27,8 @@ interface Props {
     inline?: boolean;
     /** Increment to trigger a refetch of the collections list. */
     refreshKey?: number;
+    /** When true, only collections not yet linked to any service request are shown. */
+    unlinkedSR?: boolean;
 }
 
 /**
@@ -45,7 +47,7 @@ interface Props {
  * `overflow-hidden` — the dropdown renders in normal flow and pushes the card
  * down instead of being clipped by the card boundary.
  */
-export function CollectionPicker({ selectedId, onSelect, disabled = false, publicOnly = false, excludeIds = [], onCreateNew, inline = false, refreshKey = 0 }: Props) {
+export function CollectionPicker({ selectedId, onSelect, disabled = false, publicOnly = false, excludeIds = [], onCreateNew, inline = false, refreshKey = 0, unlinkedSR = false }: Props) {
     const [open, setOpen] = useState(false);
     const [collections, setCollections] = useState<Collection[]>([]);
     const [loading, setLoading] = useState(true);
@@ -59,7 +61,8 @@ export function CollectionPicker({ selectedId, onSelect, disabled = false, publi
         const load = async () => {
             try {
                 const token = await getAccessTokenSilently();
-                const res = await fetch("/api/collections", {
+                const params = unlinkedSR ? "?unlinkedSR=true" : "";
+                const res = await fetch(`/api/collections${params}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 const data: Collection[] = await res.json();
@@ -69,7 +72,7 @@ export function CollectionPicker({ selectedId, onSelect, disabled = false, publi
             }
         };
         void load();
-    }, [getAccessTokenSilently, refreshKey]);
+    }, [getAccessTokenSilently, refreshKey, unlinkedSR]);
 
     useEffect(() => {
         if (!open) return;

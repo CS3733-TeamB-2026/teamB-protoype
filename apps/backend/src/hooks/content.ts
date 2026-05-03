@@ -72,10 +72,11 @@ export const previewContent = async (req: req, res: res) => {
 
 export const getAllContent = async (req: req, res: res) => {
     const persona = req.query.persona as string | null;
+    const unlinkedSR = req.query.unlinkedSR === "true";
     try {
         const content = persona
             ? await q.Content.queryContentByPersona(persona)
-            : await q.Content.queryAllContent();
+            : await q.Content.queryAllContent(unlinkedSR);
         return res.status(200).json(content);
     } catch (error) {
         console.error(error);
@@ -103,6 +104,27 @@ export const getContentById = async (req: req, res: res) => {
             return res.status(404).json({ message: "Content not found" });
         }
         return res.status(200).json(content);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+/** Sets the service request linked to a content item. Owner/admin only. */
+export const setContentServiceRequest = async (req: req, res: res) => {
+    try {
+        const employee = await getEmployee(req);
+        if (!employee) return res.status(404).json({ error: "Employee not found" });
+
+        const contentId = parseInt(req.params.id);
+        const content = await q.Content.queryContentById(contentId);
+        if (!content) return res.status(404).json({ error: "Content not found" });
+        if (!isUserOrAdmin(content.ownerId ?? 0, employee))
+            return res.status(403).json({ error: "Access denied" });
+
+        const { serviceRequestId } = req.body;
+        await q.Content.setServiceRequest(contentId, serviceRequestId ?? null);
+        return res.status(204).end();
     } catch (error) {
         console.error(error);
         return res.status(500).end();

@@ -59,6 +59,8 @@ export type ContentItem = {
     tags: string[];
     deleted: boolean;
     lastPreviewed: string;
+    serviceRequestId: number | null;
+    serviceRequest: ServiceReq | null;
 }
 
 export type BookmarkRecord = {
@@ -85,9 +87,7 @@ export type ServiceReq = {
     assigneeId: number | null;
     assignee: Employee | null;
     notes: string | null;
-    linkedContentId: number | null;
     linkedContent: ContentItem | null;
-    linkedCollectionId: number | null;
     linkedCollection: Collection | null;
 }
 export type NotificationItem = {
@@ -128,6 +128,8 @@ export type Collection = {
     owner: Employee;
     public: boolean;
     items: CollectionItem[];
+    serviceRequestId: number | null;
+    serviceRequest: ServiceReq | null;
 };
 
 export type CollectionFavorite = {

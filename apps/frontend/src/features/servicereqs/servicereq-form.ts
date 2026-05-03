@@ -93,8 +93,8 @@ export function buildServiceReqJSON(values: ServiceReqFormValues): string {
 /** Populate form values from an existing ServiceReqItem for the Edit form. */
 export function fromServiceReqItem(item: ServiceReq): ServiceReqFormValues {
     const createdDate = new Date(item.created);
-    const linkMode = item.linkedContentId != null ? "content"
-        : item.linkedCollectionId != null ? "collection"
+    const linkMode = item.linkedContent != null ? "content"
+        : item.linkedCollection != null ? "collection"
         : "none";
     return {
         id: item.id,
@@ -106,7 +106,7 @@ export function fromServiceReqItem(item: ServiceReq): ServiceReqFormValues {
         deadline: new Date(item.deadline),
         notes: item.notes ?? "",
         linkMode,
-        linkedContentId: item.linkedContentId,
-        linkedCollectionId: item.linkedCollectionId,
+        linkedContentId: item.linkedContent?.id ?? null,
+        linkedCollectionId: item.linkedCollection?.id ?? null,
     };
 }

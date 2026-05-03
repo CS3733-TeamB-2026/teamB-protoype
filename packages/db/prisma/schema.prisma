@@ -52,7 +52,7 @@ model Content {
   textContent          String?
   searchVector         Unsupported("tsvector")?    @default(dbgenerated("to_tsvector('english'::regconfig, COALESCE(\"textContent\", ''::text))"))
   embedding            Unsupported("vector(384)")?
-  serviceRequestId     Int?
+  serviceRequestId     Int?                        @unique
   bookmarks            Bookmark[]
   previews             Preview[]
   checkedOutBy         Employee?                   @relation("CheckedOut", fields: [checkedOutById], references: [id])
@@ -88,7 +88,7 @@ model Collection {
   owner            Employee @relation(fields: [ownerId], references: [id])
   ownerId          Int
   public           Boolean
-  serviceRequestId Int?
+  serviceRequestId Int?                @unique
 
   items           CollectionItem[]
   favorites       CollectionFavorite[]
