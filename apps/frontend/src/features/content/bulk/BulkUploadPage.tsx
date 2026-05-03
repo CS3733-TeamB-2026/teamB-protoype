@@ -274,7 +274,7 @@ export function BulkUploadPage() {
         <>
             <Hero icon={Upload} title="Bulk Upload" description="Upload multiple files at once with shared metadata." />
 
-            <Card className="relative shadow-lg max-w-6xl mx-auto my-8 text-center px-4">
+            <Card className="relative shadow-lg max-w-5xl mx-auto my-8 text-center px-4">
                 <Link to="/files" className="absolute top-6 left-6 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground w-fit">
                     <ArrowLeft className="w-4 h-4" /> Back to files
                 </Link>
