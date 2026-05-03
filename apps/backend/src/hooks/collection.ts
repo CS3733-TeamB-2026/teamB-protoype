@@ -100,6 +100,21 @@ export const deleteCollection = async (req: req, res: res) => {
     }
 };
 
+/** Returns all collections containing the given content item, filtered by the caller's visibility. */
+export const getCollectionsByContentId = async (req: req, res: res) => {
+    try {
+        const employee = await getEmployee(req);
+        if (!employee) return res.status(404).json({ error: "Employee not found" });
+
+        const contentId = parseInt(req.params.id);
+        const collections = await q.Collection.queryByContentId(contentId, employee.id, isAdmin(employee));
+        return res.status(200).json(collections);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
 /** Returns the caller's favorited collections with full item data. */
 export const getFavorites = async (req: req, res: res) => {
     try {
