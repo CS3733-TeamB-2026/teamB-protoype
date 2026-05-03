@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Badge } from "@/components/ui/badge.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover.tsx";
 import { X, Plus } from "lucide-react";
 
 interface Props {
@@ -23,6 +22,34 @@ function toTitleCase(str: string): string {
         .join(" ");
 }
 
+function TagChip({ tag, onRemove, onSelect, disabled }: {
+    tag: string;
+    onRemove?: () => void;
+    /** When provided, the whole chip is clickable (suggestion mode — no X button). */
+    onSelect?: (e: React.MouseEvent) => void;
+    disabled?: boolean;
+}) {
+    return (
+        <Badge
+            variant="outline"
+            className={`flex items-center gap-1 pr-1 shrink-0 ${onSelect ? "cursor-pointer hover:bg-accent/20" : ""}`}
+            onMouseDown={onSelect}
+        >
+            {tag}
+            {onRemove && !disabled && (
+                <button
+                    type="button"
+                    onClick={onRemove}
+                    className="ml-0.5 rounded-full hover:bg-muted p-0.5"
+                    aria-label={`Remove ${tag}`}
+                >
+                    <X className="w-3 h-3" />
+                </button>
+            )}
+        </Badge>
+    );
+}
+
 /**
  * Chip-style tag input that combines selection from existing tags and free-form creation.
  *
@@ -33,14 +60,14 @@ function toTitleCase(str: string): string {
  * Input is restricted to letters and spaces; title-casing is applied at the moment a tag
  * is committed (Enter, comma, or clicking a suggestion) — not while typing.
  *
- * Uses `PopoverAnchor` instead of `PopoverTrigger` so the dropdown is positioned relative
- * to the chip container without inheriting toggle-on-click behaviour. `onFocusOutside` is
- * suppressed to keep the native input focused while the suggestion list is open.
+ * Uses a plain absolute-positioned dropdown (same pattern as EmployeePicker) rather than
+ * a Radix Popover so it renders in the same DOM tree and scrolls correctly inside dialogs.
  */
 export function TagInput({ value, onChange, creatable = true, disabled = false }: Props) {
     const [input, setInput] = useState("");
     const [availableTags, setAvailableTags] = useState<string[]>([]);
     const [open, setOpen] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
     const { getAccessTokenSilently } = useAuth0();
 
     useEffect(() => {
@@ -57,6 +84,18 @@ export function TagInput({ value, onChange, creatable = true, disabled = false }
         };
         void fetchTags();
     }, [getAccessTokenSilently]);
+
+    // Close on click outside
+    useEffect(() => {
+        if (!open) return;
+        function handleClick(e: MouseEvent) {
+            if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+                setOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClick);
+        return () => document.removeEventListener("mousedown", handleClick);
+    }, [open]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const cleaned = e.target.value.replace(/[^a-zA-Z ]/g, "");
@@ -103,48 +142,31 @@ export function TagInput({ value, onChange, creatable = true, disabled = false }
         !value.some((t) => t.toLowerCase() === titleCasedInput.toLowerCase()) &&
         !availableTags.some((t) => t.toLowerCase() === titleCasedInput.toLowerCase());
 
-    return (
-        <Popover open={open && !disabled} onOpenChange={setOpen}>
-            <PopoverAnchor asChild>
-                {/* Chips and input share one wrapping box styled to look like an input field */}
-                <div
-                    className={`flex flex-wrap items-center gap-1.5 min-h-9 w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm focus-within:ring-2 focus-within:ring-ring/30 focus-within:border-ring ${disabled ? "opacity-50 pointer-events-none cursor-not-allowed" : "cursor-text"}`}
-                    onClick={(e) => !disabled && (e.currentTarget.querySelector("input") as HTMLInputElement | null)?.focus()}
-                >
-                    {value.map((tag) => (
-                        <Badge key={tag} variant="outline" className="flex items-center gap-1 pr-1 shrink-0">
-                            {tag}
-                            {!disabled && (
-                                <button
-                                    type="button"
-                                    onClick={() => removeTag(tag)}
-                                    className="ml-0.5 rounded-full hover:bg-muted p-0.5"
-                                    aria-label={`Remove ${tag}`}
-                                >
-                                    <X className="w-3 h-3" />
-                                </button>
-                            )}
-                        </Badge>
-                    ))}
-                    <input
-                        value={input}
-                        onChange={handleInputChange}
-                        onKeyDown={handleKeyDown}
-                        onFocus={() => setOpen(true)}
-                        disabled={disabled}
-                        placeholder={value.length === 0 ? "Add a tag..." : ""}
-                        className="flex-1 min-w-24 bg-transparent outline-none placeholder:text-muted-foreground text-sm disabled:cursor-not-allowed"
-                    />
-                </div>
-            </PopoverAnchor>
+    const showDropdown = !disabled && open && (showCreate || suggestions.length > 0);
 
-            {(showCreate || suggestions.length > 0) && (
-                <PopoverContent
-                    align="start"
-                    className="p-0 gap-0 w-(--radix-popover-anchor-width) overflow-hidden"
-                    onOpenAutoFocus={(e) => e.preventDefault()}
-                    onFocusOutside={(e) => e.preventDefault()}
-                >
+    return (
+        <div ref={containerRef} className="relative">
+            {/* Chips and input share one wrapping box styled to look like an input field */}
+            <div
+                className={`flex flex-wrap items-center gap-1.5 min-h-9 w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm focus-within:ring-2 focus-within:ring-ring/30 focus-within:border-ring ${disabled ? "opacity-50 pointer-events-none cursor-not-allowed" : "cursor-text"}`}
+                onClick={(e) => !disabled && (e.currentTarget.querySelector("input") as HTMLInputElement | null)?.focus()}
+            >
+                {value.map((tag) => (
+                    <TagChip key={tag} tag={tag} onRemove={() => removeTag(tag)} disabled={disabled} />
+                ))}
+                <input
+                    value={input}
+                    onChange={handleInputChange}
+                    onKeyDown={handleKeyDown}
+                    onFocus={() => setOpen(true)}
+                    disabled={disabled}
+                    placeholder={value.length === 0 ? "Add a tag..." : ""}
+                    className="flex-1 min-w-24 bg-transparent outline-none placeholder:text-muted-foreground text-sm disabled:cursor-not-allowed"
+                />
+            </div>
+
+            {showDropdown && (
+                <div className="absolute top-full left-0 z-50 mt-1 w-48 rounded-md border bg-popover shadow-md overflow-hidden">
                     <div className="overflow-y-auto max-h-48 overscroll-contain">
                         {showCreate && (
                             <Button
@@ -152,26 +174,26 @@ export function TagInput({ value, onChange, creatable = true, disabled = false }
                                 variant="ghost"
                                 className="w-full justify-start rounded-none border-b border-border font-medium h-9 px-3 text-sm"
                                 // preventDefault keeps focus in the input so typing can continue after selection
-                    onMouseDown={(e) => { e.preventDefault(); addTag(input); }}
+                                onMouseDown={(e) => { e.preventDefault(); addTag(input); }}
                             >
                                 <Plus className="w-3.5 h-3.5 shrink-0" />
                                 Create &ldquo;{titleCasedInput}&rdquo;
                             </Button>
                         )}
-                        {suggestions.map((tag) => (
-                            <Button
-                                key={tag}
-                                type="button"
-                                variant="ghost"
-                                className="w-full justify-start rounded-none h-9 px-3 text-sm font-normal"
-                                onMouseDown={(e) => { e.preventDefault(); addTag(tag); }}
-                            >
-                                {tag}
-                            </Button>
-                        ))}
+                        {suggestions.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 p-2">
+                                {suggestions.map((tag) => (
+                                    <TagChip
+                                        key={tag}
+                                        tag={tag}
+                                        onSelect={(e) => { e.preventDefault(); addTag(tag); }}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </div>
-                </PopoverContent>
+                </div>
             )}
-        </Popover>
+        </div>
     );
 }
