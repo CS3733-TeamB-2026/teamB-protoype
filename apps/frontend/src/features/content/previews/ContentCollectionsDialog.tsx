@@ -87,8 +87,6 @@ export function ContentCollectionsDialog({ contentId, open, onOpenChange, onColl
         }
     };
 
-    const alreadyInIds = new Set(collections.map((c) => c.id));
-
     return (
         <>
             <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -124,13 +122,14 @@ export function ContentCollectionsDialog({ contentId, open, onOpenChange, onColl
                                 selectedId={selectedId}
                                 onSelect={(id) => setSelectedId(id)}
                                 onCreateNew={() => setCreateDialogOpen(true)}
+                                excludeIds={collections.map((c) => c.id)}
                                 refreshKey={refreshKey}
                                 inline
                             />
                             <div className="flex justify-end">
                                 <Button
                                     className="bg-primary text-primary-foreground hover:bg-primary/90"
-                                    disabled={selectedId == null || alreadyInIds.has(selectedId ?? -1) || adding}
+                                    disabled={selectedId == null || adding}
                                     onClick={() => void handleAdd()}
                                 >
                                     {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : "Add"}

@@ -14,6 +14,8 @@ interface Props {
     disabled?: boolean;
     /** When true, only public collections are shown and selectable. */
     publicOnly?: boolean;
+    /** Collection IDs to hide from the list — used to exclude collections already containing the current item. */
+    excludeIds?: number[];
     /** When provided, a "Create new collection" option appears at the bottom of the dropdown. */
     onCreateNew?: () => void;
     /**
@@ -43,7 +45,7 @@ interface Props {
  * `overflow-hidden` — the dropdown renders in normal flow and pushes the card
  * down instead of being clipped by the card boundary.
  */
-export function CollectionPicker({ selectedId, onSelect, disabled = false, publicOnly = false, onCreateNew, inline = false, refreshKey = 0 }: Props) {
+export function CollectionPicker({ selectedId, onSelect, disabled = false, publicOnly = false, excludeIds = [], onCreateNew, inline = false, refreshKey = 0 }: Props) {
     const [open, setOpen] = useState(false);
     const [collections, setCollections] = useState<Collection[]>([]);
     const [loading, setLoading] = useState(true);
@@ -82,7 +84,9 @@ export function CollectionPicker({ selectedId, onSelect, disabled = false, publi
 
     const selected = selectedId != null ? collections.find((c) => c.id === selectedId) : undefined;
 
+    const excludeSet = new Set(excludeIds);
     const filtered = collections.filter((c) => {
+        if (excludeSet.has(c.id)) return false;
         if (publicOnly && !c.public) return false;
         const q = search.toLowerCase().trim();
         return !q || c.displayName.toLowerCase().includes(q);
