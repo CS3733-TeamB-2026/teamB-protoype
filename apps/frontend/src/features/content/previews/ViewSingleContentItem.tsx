@@ -9,6 +9,7 @@ import { UrlPreviewLink } from "@/components/shared/UrlPreviewLink.tsx";
 import { getCachedPreview, setCachedPreview } from "@/features/content/previews/preview-cache.ts";
 import { ContentStatusBadge } from "@/features/content/components/ContentStatusBadge.tsx";
 import { ContentTypeBadge } from "@/features/content/components/ContentTypeBadge.tsx";
+import { ExpirationBadge } from "@/features/content/components/ExpirationBadge.tsx";
 import { PersonaBadge } from "@/components/shared/PersonaBadge.tsx";
 import { getOriginalFilename } from "@/lib/mime.ts";
 import type { ContentItem, UrlPreview } from "@/lib/types.ts";
@@ -143,6 +144,7 @@ export function ViewSingleContentItem() {
                                 </div>
                                 {item && (
                                     <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+                                        <ExpirationBadge expiration={item.expiration} />
                                         <ContentStatusBadge status={item.status} />
                                         <ContentTypeBadge contentType={item.contentType} />
                                         <PersonaBadge persona={item.targetPersona} />
