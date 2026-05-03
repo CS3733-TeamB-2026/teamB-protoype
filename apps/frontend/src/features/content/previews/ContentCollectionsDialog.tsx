@@ -14,6 +14,7 @@ import { CollectionCard } from "@/components/shared/CollectionCard";
 import { CollectionPicker } from "@/components/shared/CollectionPicker";
 import { AddCollectionDialog } from "@/features/collections/AddCollectionDialog";
 import type { Collection } from "@/lib/types";
+import {Link} from "react-router-dom";
 
 interface Props {
     contentId: number;
@@ -106,7 +107,7 @@ export function ContentCollectionsDialog({ contentId, open, onOpenChange, onColl
                                 </div>
                             ) : collections.length === 0 ? (
                                 <p className="text-sm text-muted-foreground text-center py-6">
-                                    This item is not in any collections yet.
+                                    This item is not in any <Link to="/collections" className="hover:text-foreground underline underline-offset-2 transition-colors">collections</Link> yet.
                                 </p>
                             ) : (
                                 collections.map((c) => <CollectionCard key={c.id} collection={c} />)

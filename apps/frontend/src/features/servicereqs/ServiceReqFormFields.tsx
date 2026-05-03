@@ -60,7 +60,9 @@ export function ServiceReqFormFields({ values, patch, errors }: Props) {
 
                 {/* Assignee */}
                 <Field className="bg-background">
-                    <FieldLabel className="text-primary text-lg mb-1">Assignee Employee</FieldLabel>
+                    <FieldLabel className="text-primary text-lg mb-1">
+                        Assignee Employee <span className="text-destructive">*</span>
+                    </FieldLabel>
                     <EmployeePicker
                         selectedId={values.assigneeId ?? null}
                         onSelect={(id) => patch({ assigneeId: id ?? undefined })}
@@ -101,7 +103,9 @@ export function ServiceReqFormFields({ values, patch, errors }: Props) {
             <div className="flex flex-row gap-2">
                 {/* Service Request Type */}
                 <Field className="bg-background">
-                    <FieldLabel className="text-primary text-lg">Type of Document</FieldLabel>
+                    <FieldLabel className="text-primary text-lg">
+                        Type of Document <span className="text-destructive">*</span>
+                    </FieldLabel>
                     <Select value={values.type} onValueChange={(v) => patch({ type: v as ServiceReqFormValues["type"] })}>
                         <SelectTrigger className="bg-background h-10! text-sm">
                             <SelectValue placeholder="Select service request type" />
