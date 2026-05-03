@@ -16,25 +16,34 @@ type Props = {
 
 function EmptyState({ onSelectSuggestion }: Props) {
     return (
-        <div className="mx-auto max-w-2xl py-12 text-center">
-            <h1 className="mb-2 pb-4 bg-linear-to-r from-primary-dark to-primary-light bg-clip-text text-transparent text-5xl font-semibold">Welcome to Insights.</h1>
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#1B3A5C]/10">
-                <Sparkles className="h-6 w-6 text-[#1B3A5C]" />
+        <div className="mx-auto max-w-3xl py-24 text-center">
+            {/* Sparkle mark */}
+            <div className="mx-auto mb-8 h-20 w-20 rounded-full p-[2px] bg-conic from-primary-light via-primary to-primary-light shadow-lg shadow-primary-light/40">
+                <div className="flex h-full w-full items-center justify-center rounded-full bg-primary">
+                    <Sparkles className="h-8 w-8 text-primary-foreground" />
+                </div>
             </div>
-            <h2 className="text-lg font-semibold">Ask anything about your data</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-                Use plain English to query your content, employees, and service requests.
+
+            {/* Title with gradient text */}
+            <h1 className="pb-2 text-6xl font-semibold bg-linear-to-r from-primary to-primary-light bg-clip-text text-transparent">
+                Welcome to Insights.
+            </h1>
+
+            <p className="mx-auto mt-4 max-w-md text-base text-muted-foreground">
+                Ask anything about your content, employees, and service requests in plain English.
             </p>
 
-            <div className="mt-8 flex flex-wrap justify-center gap-2">
+            {/* Pills */}
+            <div className="mt-10 flex flex-wrap justify-center gap-2">
                 {SUGGESTIONS.map((suggestion) => (
                     <Button
                         key={suggestion}
                         variant="outline"
                         size="sm"
                         onClick={() => onSelectSuggestion(suggestion)}
-                        className="rounded-full bg-card py-3 bg-linear-to-l from-primary-light/10 via-card to-primary-dark/10 shadow-lg"
+                        className="gap-2 rounded-full bg-card shadow-sm border-primary/50 hover:bg-primary/10 hover:text-foreground dark:hover:bg-primary/30"
                     >
+                        <span className="text-primary">•</span>
                         {suggestion}
                     </Button>
                 ))}

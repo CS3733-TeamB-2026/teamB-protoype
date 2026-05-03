@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmployeeAvatar } from "@/components/shared/EmployeeAvatar";
 import { ServiceReqDetail } from "@/components/shared/ServiceReqDetail";
@@ -48,6 +49,16 @@ export function ServiceRequestCard({ servicereq }: Props) {
                     )}
                     <EmployeeAvatar employee={servicereq.owner} size="sm" />
                 </div>
+
+                {/* stopPropagation prevents the Link click from also toggling expand */}
+                <Link
+                    to="/servicereqs"
+                    onClick={(e) => e.stopPropagation()}
+                    className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+                    title="View in service requests table"
+                >
+                    <ExternalLink className="w-4 h-4" />
+                </Link>
 
                 {expanded ? (
                     <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" />
