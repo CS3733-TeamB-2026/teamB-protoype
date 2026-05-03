@@ -15,10 +15,10 @@ ENV SENTENCE_TRANSFORMERS_HOME=/app/.cache
 RUN mkdir -p /app/.cache
 
 # 4. Copy files from the 'python' folder (relative to root)
-COPY python/pyproject.toml python/uv.lock ./
+COPY apps/python/pyproject.toml apps/python/uv.lock ./
 RUN uv sync --no-dev --frozen --no-cache
 
-COPY python/main.py .
+COPY apps/python/main.py .
 
 # 5. Pre-download the model
 RUN uv run python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('ibm-granite/granite-embedding-97m-multilingual-r2', device='cpu')"

@@ -25,7 +25,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: python/Dockerfile # Changed from apps/ml-server/Dockerfile
+          file: apps/python/Dockerfile # Changed from apps/ml-server/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/teamb-ml-server:latest
 
