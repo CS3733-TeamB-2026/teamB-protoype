@@ -888,39 +888,7 @@ function ViewContent() {
                                         </div>
 
                                         <div>
-                                            <p className="font-medium mb-2">{ts('file.type')}</p>
-                                            <div className="flex flex-col gap-1.5">
-                                                {ALL_CATEGORIES.map((dt) => {
-
-                                                    return (
-                                                        <label key={dt} className="flex items-center gap-2">
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={advancedFilters.docType.includes(dt)}
-                                                                onChange={(e) => {
-                                                                    setAdvancedFilters((prev) => ({
-                                                                        ...prev,
-                                                                        docType: e.target.checked
-                                                                            ? [...prev.docType, dt]
-                                                                            : prev.docType.filter((t) => t !== dt),
-                                                                    }))
-                                                                }}
-                                                            />
-                                                            <span>{ts(`file.${dt}`)}</span>
-                                                        </label>
-                                                    )
-                                                })}
-                                            </div>
-                                            <p className="font-medium mb-2">Tags</p>
-                                            <TagInput
-                                                value={advancedFilters.tags}
-                                                onChange={(tags) => setAdvancedFilters((prev) => ({ ...prev, tags }))}
-                                                creatable={false}
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <p className="font-medium mb-2">Expiration</p>
+                                            <p className="font-medium mb-2">ExpiratAion</p>
                                             <div className="flex flex-col gap-1.5">
                                                 {([
                                                     { value: "expired",      label: "Expired" },
@@ -947,6 +915,37 @@ function ViewContent() {
                                             </div>
                                         </div>
 
+                                        <div>
+                                            <p className="font-medium mb-2">{ts('file.type')}</p>
+                                        <div className="flex flex-col gap-1.5">
+                                            {ALL_CATEGORIES.map((dt) => {
+
+                                                return (
+                                                    <label key={dt} className="flex items-center gap-2">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={advancedFilters.docType.includes(dt)}
+                                                            onChange={(e) => {
+                                                                setAdvancedFilters((prev) => ({
+                                                                    ...prev,
+                                                                    docType: e.target.checked
+                                                                        ? [...prev.docType, dt]
+                                                                        : prev.docType.filter((t) => t !== dt),
+                                                                }))
+                                                            }}
+                                                        />
+                                                        <span>{ts(`file.${dt}`)}</span>
+                                                    </label>
+                                                )
+                                            })}
+                                        </div>
+                                        <p className="font-medium mb-2">Tags</p>
+                                        <TagInput
+                                            value={advancedFilters.tags}
+                                            onChange={(tags) => setAdvancedFilters((prev) => ({ ...prev, tags }))}
+                                            creatable={false}
+                                        />
+                                    </div>
                                     </div>
 
                                     <div className="mt-4">
