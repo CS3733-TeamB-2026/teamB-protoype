@@ -71,7 +71,7 @@ import {highlight} from "@/lib/highlight.tsx";
 import {formatLabel, formatName} from "@/lib/utils.ts";
 import { EmployeeAvatar } from "@/components/shared/EmployeeAvatar.tsx";
 import {toast} from "sonner";
-import type { ContentItem, BookmarkRecord, ContentStatus, ContentType, Persona, UrlPreview } from "@/lib/types.ts";
+import type { ContentItem, BookmarkRecord, ContentStatus, ContentType, ExpirationStatus, Persona, UrlPreview } from "@/lib/types.ts";
 import { ALL_CATEGORIES } from "@/lib/mime.ts";
 import {usePageTitle} from "@/hooks/use-page-title.ts";
 import {ConfirmCheckoutDialog} from "@/features/content/forms/ConfirmCheckoutDialog.tsx";
@@ -917,6 +917,34 @@ function ViewContent() {
                                                 onChange={(tags) => setAdvancedFilters((prev) => ({ ...prev, tags }))}
                                                 creatable={false}
                                             />
+                                        </div>
+
+                                        <div>
+                                            <p className="font-medium mb-2">Expiration</p>
+                                            <div className="flex flex-col gap-1.5">
+                                                {([
+                                                    { value: "expired",      label: "Expired" },
+                                                    { value: "expiringSoon", label: "Expiring soon" },
+                                                    { value: "future",       label: "Future expiry" },
+                                                    { value: "none",         label: "No expiry" },
+                                                ] as { value: ExpirationStatus; label: string }[]).map(({ value, label }) => (
+                                                    <label key={value} className="flex items-center gap-2">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={advancedFilters.expirationStatus.includes(value)}
+                                                            onChange={(e) => {
+                                                                setAdvancedFilters((prev) => ({
+                                                                    ...prev,
+                                                                    expirationStatus: e.target.checked
+                                                                        ? [...prev.expirationStatus, value]
+                                                                        : prev.expirationStatus.filter((s) => s !== value),
+                                                                }));
+                                                            }}
+                                                        />
+                                                        <span>{label}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
                                         </div>
 
                                     </div>

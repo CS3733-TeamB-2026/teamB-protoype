@@ -15,6 +15,12 @@ export type ContentStatus =
     | "inProgress"
     | "complete";
 
+export type ExpirationStatus =
+    | "expired"
+    | "expiringSoon"
+    | "future"
+    | "none";
+
 export type RequestType =
     | "reviewClaim"
     | "requestAdjuster"
