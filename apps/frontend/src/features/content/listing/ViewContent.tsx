@@ -589,6 +589,7 @@ function ViewContent() {
         else if (col === "name") primarySort = item.displayName;
         else if (col === "owner") primarySort = formatName(item.owner);
         else if (col === "status") primarySort = item.status ?? "";
+        // Sentinel puts null expirations last on ascending sort; ISO strings compare lexicographically.
         else if (col === "expiration") primarySort = item.expiration ?? "9999-99-99";
         else if (col === "contentType") primarySort = item.contentType;
         else if (col === "docType") primarySort = item.fileURI
@@ -888,7 +889,7 @@ function ViewContent() {
                                         </div>
 
                                         <div>
-                                            <p className="font-medium mb-2">ExpiratAion</p>
+                                            <p className="font-medium mb-2">Expiration</p>
                                             <div className="flex flex-col gap-1.5">
                                                 {([
                                                     { value: "expired",      label: "Expired" },
@@ -939,13 +940,16 @@ function ViewContent() {
                                                 )
                                             })}
                                         </div>
-                                        <p className="font-medium mb-2">Tags</p>
-                                        <TagInput
-                                            value={advancedFilters.tags}
-                                            onChange={(tags) => setAdvancedFilters((prev) => ({ ...prev, tags }))}
-                                            creatable={false}
-                                        />
                                     </div>
+
+                                        <div>
+                                            <p className="font-medium mb-2">Tags</p>
+                                            <TagInput
+                                                value={advancedFilters.tags}
+                                                onChange={(tags) => setAdvancedFilters((prev) => ({ ...prev, tags }))}
+                                                creatable={false}
+                                            />
+                                        </div>
                                     </div>
 
                                     <div className="mt-4">
@@ -1230,6 +1234,7 @@ function ViewContent() {
                                                                         <span className="font-medium text-foreground">Modified:{" "}</span>
                                                                         {new Date(item.lastModified).toLocaleString()}
                                                                     </span>
+                                                                    {/* IIFE computes days once so both the label ("Expired:" vs "Days left:") and value share the same calculation. */}
                                                                     {item.expiration && (() => {
                                                                         const days = Math.ceil((new Date(item.expiration).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
                                                                         return (<>

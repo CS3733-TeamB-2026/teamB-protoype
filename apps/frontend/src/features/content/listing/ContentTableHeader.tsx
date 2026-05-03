@@ -8,6 +8,8 @@ import type { SortState } from "@/hooks/use-sort-state.ts";
 import { useLocale } from "@/languageSupport/localeContext.tsx";
 import { useTranslation } from "@/languageSupport/useTranslation.ts";
 
+/** Sortable column keys for the content table. Adding a value here automatically works in
+ *  both ViewContent and RecycleBinTable since both share this header. */
 export type ContentSortCol = "name" | "owner" | "expiration" | "status" | "contentType" | "persona" | "docType";
 
 interface Props {
