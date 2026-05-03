@@ -13,7 +13,12 @@ interface Props {
 
 const PAGE_SIZES = [10, 25, 50, 100];
 
-/** Rows-per-page selector + first/prev/next/last navigation bar for paginated tables. */
+/**
+ * Rows-per-page selector and first/prev/next/last navigation bar for paginated tables.
+ *
+ * Changing the page size calls both `onPageSizeChange` and `onPageChange(1)` so the
+ * parent doesn't need to reset the page itself inside `onPageSizeChange`.
+ */
 export function TablePagination({ currentPage, totalPages, pageSize, totalItems, onPageChange, onPageSizeChange }: Props) {
     const { locale } = useLocale();
     const { ts } = useTranslation(locale);
