@@ -2,17 +2,11 @@ import {
     Card,
     CardContent
 } from "@/components/ui/card.tsx"
-import {
-    Avatar,
-    AvatarFallback,
-    AvatarImage,
-} from "@/components/ui/avatar.tsx"
-import { teamPhotos } from "@/components/ui/team-photos.tsx";
 import { Hero } from "@/components/shared/Hero.tsx";
-import { Home as HomeIcon, LucideFolder, User, GraduationCap, ShieldCheck, BookOpen, Users } from "lucide-react";
+import MeetTheTeam from "@/components/shared/MeetTheTeam.tsx"
+import { Home as HomeIcon, LucideFolder, User, GraduationCap, ShieldCheck, BookOpen } from "lucide-react";
 import { useLocale } from "@/languageSupport/localeContext";
 import { useTranslation } from "@/languageSupport/useTranslation";
-import type { TranslationKey } from "@/languageSupport/keys.ts";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 
@@ -23,27 +17,6 @@ function Home() {
     const { locale } = useLocale();
     const { ts } = useTranslation(locale);
     const { loginWithRedirect } = useAuth0();
-
-    type ImageKey = keyof typeof teamPhotos;
-    type TeamMember = {
-        name: string;
-        initials: string;
-        role: TranslationKey;
-        photo: ImageKey;
-    }
-
-    const members: TeamMember[] = [
-        { name: "Dylan Zickus", initials: "DZ", role: 'role.lead', photo: "dylan" },
-        { name: "Oscar Stomberg", initials: "OS", role: 'role.assistantLead', photo: "oscar" },
-        { name: "Jake Swanson", initials: "JS", role: 'role.assistantLead', photo: "jake" },
-        { name: "Hayden Schultz", initials: "HS", role: 'role.assistantLeadAndScrumMaster', photo: "hayden" },
-        { name: "Luke Ciarletta", initials: "LC", role: 'role.fullTime', photo: "luke" },
-        { name: "Nick Houghton", initials: "NH", role: 'role.fullTime', photo: "nicholas" },
-        { name: "Cameron Pietraski", initials: "CP", role: 'role.fullTime', photo: "cameron" },
-        { name: "Philip Ostrowski", initials: "PO", role: 'role.ptManager', photo: "philip" },
-        { name: "Joseph Hemmerle", initials: "JH", role: 'role.ptOwner', photo: "joey" },
-        { name: "Ricardo Guzman Volpe", initials: "RG", role: 'role.ptAnalyst', photo: "ricardo" }
-    ]
 
     return (
         <>
@@ -146,48 +119,7 @@ function Home() {
                 </div>
             </div>
 
-            {/* Team section divider */}
-            <div className="relative max-w-6xl mx-auto px-6 mb-8">
-                <div className="absolute inset-0 flex items-center px-6">
-                    <div className="w-full border-t border-border" />
-                </div>
-                <div className="relative flex justify-center">
-                    <div className="flex items-center gap-2 bg-card px-4 py-1.5 rounded-full border border-border shadow-sm">
-                        <Users className="w-4 h-4 text-primary" />
-                        <span className="text-sm font-semibold text-primary">{ts('home.meetTheTeam')}</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Team grid */}
-            <section className="max-w-6xl mx-auto px-6 mb-16">
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                    {members.map((member: TeamMember) => (
-                        <Card
-                            className="shadow-sm text-center hover:shadow-md hover:-translate-y-1 transition-all duration-150"
-                            key={member.name}
-                        >
-                            <CardContent className="flex flex-col items-center justify-center gap-3 pt-6 pb-6 px-3">
-                                <Avatar className="w-16 h-16 ring-2 ring-primary/20">
-                                    <AvatarImage
-                                        src={teamPhotos[member.photo]}
-                                        alt={member.name}
-                                    />
-                                    <AvatarFallback className="text-base bg-primary text-primary-foreground">
-                                        {member.initials}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <h2 className="font-semibold text-sm leading-tight">{member.name}</h2>
-                                    <p className="text-muted-foreground text-xs mt-1 leading-snug">{ts(member.role)}</p>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-            </section>
-
-
+            <MeetTheTeam />
 
         </>
 
