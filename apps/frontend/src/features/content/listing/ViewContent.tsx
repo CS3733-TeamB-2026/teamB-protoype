@@ -69,18 +69,26 @@ import {invalidateFileCacheById} from "@/features/content/previews/file-cache.ts
 import {useAuth0} from "@auth0/auth0-react"
 import {highlight} from "@/lib/highlight.tsx";
 import {formatLabel, formatName} from "@/lib/utils.ts";
-import { EmployeeAvatar } from "@/components/shared/EmployeeAvatar.tsx";
+import {EmployeeAvatar} from "@/components/shared/EmployeeAvatar.tsx";
 import {toast} from "sonner";
-import type { ContentItem, BookmarkRecord, ContentStatus, ContentType, ExpirationStatus, Persona, UrlPreview } from "@/lib/types.ts";
-import { ALL_CATEGORIES } from "@/lib/mime.ts";
+import type {
+    ContentItem,
+    BookmarkRecord,
+    ContentStatus,
+    ContentType,
+    ExpirationStatus,
+    Persona,
+    UrlPreview
+} from "@/lib/types.ts";
+import {ALL_CATEGORIES} from "@/lib/mime.ts";
 import {usePageTitle} from "@/hooks/use-page-title.ts";
 import {ConfirmCheckoutDialog} from "@/features/content/forms/ConfirmCheckoutDialog.tsx";
 import {ConfirmCheckinDialog} from "@/features/content/forms/ConfirmCheckinDialog.tsx";
 import {AddToCollectionDialog} from "@/features/collections/AddToCollectionDialog.tsx";
 import {TagInput} from "@/features/content/tags/TagInput.tsx";
 import {Tabs, TabsTrigger} from "@/components/ui/tabs"
-import { SlidingTabs } from "@/components/shared/SlidingTabs.tsx";
-import { useContentFilters, type ContentTab } from "@/hooks/use-content-filters.ts";
+import {SlidingTabs} from "@/components/shared/SlidingTabs.tsx";
+import {useContentFilters, type ContentTab} from "@/hooks/use-content-filters.ts";
 import {useLocale} from "@/languageSupport/localeContext.tsx";
 import {useTranslation} from "@/languageSupport/useTranslation.ts";
 import type {TranslationKey} from "@/languageSupport/keys.ts";
@@ -90,6 +98,7 @@ import {RecycleBinTable} from "@/features/content/listing/RecycleBinTable.tsx";
 import {ContentTableHeader} from "@/features/content/listing/ContentTableHeader.tsx";
 import {TablePagination} from "@/components/shared/TablePagination.tsx";
 import type {ContentSortCol} from "@/features/content/listing/ContentTableHeader.tsx";
+
 /**
  * Main content list page — the primary view for browsing, searching, filtering,
  * and managing content items.
@@ -115,8 +124,8 @@ import type {ContentSortCol} from "@/features/content/listing/ContentTableHeader
  */
 function ViewContent() {
 
-    const { locale } = useLocale();
-    const { ts } = useTranslation(locale);
+    const {locale} = useLocale();
+    const {ts} = useTranslation(locale);
 
     usePageTitle("Manage Content");
 
@@ -403,7 +412,7 @@ function ViewContent() {
             const token = await getAccessTokenSilently();
             const res = await fetch(`/api/content/${item.id}/checkout`, {
                 method: "POST",
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {Authorization: `Bearer ${token}`},
             });
             const data = await res.json();
             if (!res.ok) {
@@ -429,7 +438,7 @@ function ViewContent() {
             const token = await getAccessTokenSilently();
             const res = await fetch(`/api/content/${item.id}/checkin`, {
                 method: "POST",
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {Authorization: `Bearer ${token}`},
             });
             if (res.ok) {
                 setContent((prev) => prev.map((c) => c.id === item.id
@@ -452,11 +461,11 @@ function ViewContent() {
             const token = await getAccessTokenSilently();
             const res = await fetch(`/api/content/${item.id}/checkin`, {
                 method: "POST",
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {Authorization: `Bearer ${token}`},
             });
             if (res.ok) {
                 setContent((prev) => prev.map((c) => c.id === item.id
-                    ? { ...c, checkedOutById: null, checkedOutAt: null, checkedOutBy: null }
+                    ? {...c, checkedOutById: null, checkedOutAt: null, checkedOutBy: null}
                     : c
                 ));
                 toast.success("Force check-in successful.");
@@ -516,7 +525,7 @@ function ViewContent() {
             try {
                 const res = await fetch(`/api/content/${id}/restore`, {
                     method: "POST",
-                    headers: { Authorization: `Bearer ${token}` },
+                    headers: {Authorization: `Bearer ${token}`},
                 });
                 if (res.ok) {
                     const item = deletedContent.find((c) => c.id === id);
@@ -542,7 +551,7 @@ function ViewContent() {
             try {
                 const res = await fetch(`/api/content/${id}/permanent`, {
                     method: "DELETE",
-                    headers: { Authorization: `Bearer ${token}` },
+                    headers: {Authorization: `Bearer ${token}`},
                 });
                 if (res.ok) {
                     setDeletedContent((prev) => prev.filter((c) => c.id !== id));
@@ -637,7 +646,10 @@ function ViewContent() {
                 <CardContent>
                     {/* Top-level Tabs for filtering Content Items */}
                     {/* activeTab controls whether "All Content" or "Bookmarks" view is shown */}
-                    <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v as ContentTab); setSelectedIds(new Set()); }}>
+                    <Tabs value={activeTab} onValueChange={(v) => {
+                        setActiveTab(v as ContentTab);
+                        setSelectedIds(new Set());
+                    }}>
                         <SlidingTabs
                             activeTab={activeTab}
                             indicatorColor={activeTab === "bookmarks" ? "bg-accent" : activeTab === "recyclebin" ? "bg-destructive" : "bg-foreground"}
@@ -647,7 +659,8 @@ function ViewContent() {
                                 className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0"
                             >
                                 {ts('content.forYou')}
-                                <span className="ml-2 text-xs opacity-70"> {content.filter(c => c.targetPersona === user.persona
+                                <span
+                                    className="ml-2 text-xs opacity-70"> {content.filter(c => c.targetPersona === user.persona
                                 ).length}</span>
                             </TabsTrigger>
                             <TabsTrigger
@@ -662,7 +675,8 @@ function ViewContent() {
                                 className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0"
                             >
                                 {ts('content.ownedByMe')}
-                                <span className="ml-2 text-xs opacity-70">{content.filter(c => c.ownerId === user.id).length}</span>
+                                <span
+                                    className="ml-2 text-xs opacity-70">{content.filter(c => c.ownerId === user.id).length}</span>
                             </TabsTrigger>
                             <TabsTrigger
                                 value="bookmarks"
@@ -672,12 +686,23 @@ function ViewContent() {
                                 <span className="ml-2 text-xs opacity-70">{bookmarks.length}</span>
                             </TabsTrigger>
                             <TabsTrigger
+                                value="checkedOut"
+                                className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0"
+                            >
+                                <KeyRound className="w-4 h-4 mr-1 inline-block" />
+                                Checked Out
+                                <span className="ml-2 text-xs opacity-70">
+        {content.filter(c => c.checkedOutById === user.id).length}
+    </span>
+                            </TabsTrigger>
+                            <TabsTrigger
                                 value="recyclebin"
                                 className="relative z-10 data-active:bg-transparent data-active:text-destructive hover:text-foreground/80 data-active:hover:text-destructive px-0"
                             >
-                                <Recycle className="w-4 h-4 mr-1 inline-block" />
+                                <Recycle className="w-4 h-4 mr-1 inline-block"/>
                                 Recycle Bin
                             </TabsTrigger>
+
                             {/*THEN ADD MORE TAB TRIGGERs FOR MORE TABS!!*/}
                         </SlidingTabs>
                     </Tabs>
@@ -746,13 +771,14 @@ function ViewContent() {
                                 </Button>
                                 {pageSelectedIds.length > 0 && (
                                     <>
-                                        <span className="text-sm text-muted-foreground whitespace-nowrap">{pageSelectedIds.length} selected</span>
+                                        <span
+                                            className="text-sm text-muted-foreground whitespace-nowrap">{pageSelectedIds.length} selected</span>
                                         <Button
                                             variant="outline"
                                             onClick={() => setAddToCollectionOpen(true)}
                                             className="hover:bg-secondary hover:text-secondary-foreground h-10 text-base border-input rounded-md text-foreground whitespace-nowrap"
                                         >
-                                            <FolderPlus className="w-4 h-4 mr-1" />
+                                            <FolderPlus className="w-4 h-4 mr-1"/>
                                             Add to Collection
                                         </Button>
                                     </>
@@ -818,7 +844,9 @@ function ViewContent() {
                                         <div>
                                             <span className="flex items-center justify-between mb-2">
                                                 <p className="font-medium">{(ts('status'))}</p>
-                                                <InfoButton content={"Here you can add advanced filters, add as many as you'd like!"} size="w-5 h-5"/>
+                                                <InfoButton
+                                                    content={"Here you can add advanced filters, add as many as you'd like!"}
+                                                    size="w-5 h-5"/>
                                             </span>
                                             <div className="flex flex-col gap-1.5">
                                                 {["new", "inProgress", "complete"].map((status) => (
@@ -859,7 +887,7 @@ function ViewContent() {
                                                                 }));
                                                             }}
                                                         />
-                                                        <span>{ts(`kind.${type}`  as TranslationKey)}</span>
+                                                        <span>{ts(`kind.${type}` as TranslationKey)}</span>
                                                     </label>
                                                 ))}
                                             </div>
@@ -882,7 +910,7 @@ function ViewContent() {
                                                                 }));
                                                             }}
                                                         />
-                                                        <span>{ts(`persona.${persona}`  as TranslationKey)}</span>
+                                                        <span>{ts(`persona.${persona}` as TranslationKey)}</span>
                                                     </label>
                                                 ))}
                                             </div>
@@ -892,11 +920,14 @@ function ViewContent() {
                                             <p className="font-medium mb-2">Expiration</p>
                                             <div className="flex flex-col gap-1.5">
                                                 {([
-                                                    { value: "expired",      label: "Expired" },
-                                                    { value: "expiringSoon", label: "Expiring soon" },
-                                                    { value: "future",       label: "Future expiry" },
-                                                    { value: "none",         label: "No expiry" },
-                                                ] as { value: ExpirationStatus; label: string }[]).map(({ value, label }) => (
+                                                    {value: "expired", label: "Expired"},
+                                                    {value: "expiringSoon", label: "Expiring soon"},
+                                                    {value: "future", label: "Future expiry"},
+                                                    {value: "none", label: "No expiry"},
+                                                ] as { value: ExpirationStatus; label: string }[]).map(({
+                                                                                                            value,
+                                                                                                            label
+                                                                                                        }) => (
                                                     <label key={value} className="flex items-center gap-2">
                                                         <input
                                                             type="checkbox"
@@ -918,35 +949,35 @@ function ViewContent() {
 
                                         <div>
                                             <p className="font-medium mb-2">{ts('file.type')}</p>
-                                        <div className="flex flex-col gap-1.5">
-                                            {ALL_CATEGORIES.map((dt) => {
+                                            <div className="flex flex-col gap-1.5">
+                                                {ALL_CATEGORIES.map((dt) => {
 
-                                                return (
-                                                    <label key={dt} className="flex items-center gap-2">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={advancedFilters.docType.includes(dt)}
-                                                            onChange={(e) => {
-                                                                setAdvancedFilters((prev) => ({
-                                                                    ...prev,
-                                                                    docType: e.target.checked
-                                                                        ? [...prev.docType, dt]
-                                                                        : prev.docType.filter((t) => t !== dt),
-                                                                }))
-                                                            }}
-                                                        />
-                                                        <span>{ts(`file.${dt}`)}</span>
-                                                    </label>
-                                                )
-                                            })}
+                                                    return (
+                                                        <label key={dt} className="flex items-center gap-2">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={advancedFilters.docType.includes(dt)}
+                                                                onChange={(e) => {
+                                                                    setAdvancedFilters((prev) => ({
+                                                                        ...prev,
+                                                                        docType: e.target.checked
+                                                                            ? [...prev.docType, dt]
+                                                                            : prev.docType.filter((t) => t !== dt),
+                                                                    }))
+                                                                }}
+                                                            />
+                                                            <span>{ts(`file.${dt}`)}</span>
+                                                        </label>
+                                                    )
+                                                })}
+                                            </div>
                                         </div>
-                                    </div>
 
                                         <div>
                                             <p className="font-medium mb-2">Tags</p>
                                             <TagInput
                                                 value={advancedFilters.tags}
-                                                onChange={(tags) => setAdvancedFilters((prev) => ({ ...prev, tags }))}
+                                                onChange={(tags) => setAdvancedFilters((prev) => ({...prev, tags}))}
                                                 creatable={false}
                                             />
                                         </div>
@@ -1002,7 +1033,7 @@ function ViewContent() {
                                             return (
                                                 <React.Fragment key={item.id}>
                                                     <TableRow
-                                                        className={`cursor-pointer ${item.checkedOutById === user!.id ? "bg-accent/10 border-l-4 border-l-accent" : ""} ${index % 2 === 0 ? "bg-muted/15" : ""} ${isExpanded ? "bg-muted/80 hover:bg-muted/90" : ""} ${isCheckedOut(item) ? "opacity-50" : ""}`}
+                                                        className={`cursor-pointer ${index % 2 === 0 ? "bg-muted/15" : ""} ${isExpanded ? "bg-muted/80 hover:bg-muted/90" : ""} ${isCheckedOut(item) ? "opacity-50" : ""} ${item.checkedOutById === user!.id ? "!bg-accent/10 border-l-4 border-l-accent" : ""}`}
                                                         onClick={() => toggleExpand(item.id)}
                                                         tabIndex={0}
                                                         onKeyDown={(e) => {
@@ -1012,7 +1043,8 @@ function ViewContent() {
                                                             }
                                                         }}
                                                     >
-                                                        <TableCell className="w-8 pr-0" onClick={(e) => e.stopPropagation()}>
+                                                        <TableCell className="w-8 pr-0"
+                                                                   onClick={(e) => e.stopPropagation()}>
                                                             <input
                                                                 type="checkbox"
                                                                 className="w-4 h-4 cursor-pointer accent-primary"
@@ -1027,14 +1059,15 @@ function ViewContent() {
                                                         </TableCell>
                                                         <TableCell className="w-8 pr-0">
                                                             {isLink && linkPreviews[item.id]?.favicon ? (
-                                                                <div className="w-5 h-5 flex items-center justify-center">
+                                                                <div
+                                                                    className="w-5 h-5 flex items-center justify-center">
                                                                     <img
                                                                         src={linkPreviews[item.id]!.favicon!}
                                                                         alt=""
                                                                         className="size-full object-contain"
                                                                     />
                                                                 </div>
-                                                                ) : (<ContentIcon
+                                                            ) : (<ContentIcon
                                                                     category={category}
                                                                     isLink={isLink}
                                                                     className="w-5 h-5"
@@ -1058,12 +1091,12 @@ function ViewContent() {
                                                         {/* owner */}
                                                         <TableCell className="hidden sm:table-cell">
                                                             {item.owner
-                                                                ? <EmployeeAvatar employee={item.owner} size="sm" />
+                                                                ? <EmployeeAvatar employee={item.owner} size="sm"/>
                                                                 : <span className="text-muted-foreground">—</span>}
                                                         </TableCell>
                                                         {/* expiration */}
                                                         <TableCell className="hidden sm:table-cell text-center">
-                                                            <ExpirationBadge expiration={item.expiration} />
+                                                            <ExpirationBadge expiration={item.expiration}/>
                                                         </TableCell>
                                                         {/* status */}
                                                         <TableCell className="hidden sm:table-cell text-center">
@@ -1087,11 +1120,14 @@ function ViewContent() {
                                                         <TableCell>
                                                             <div className="flex justify-end gap-1">
                                                                 {(() => {
-                                                                    const icon = <HugeiconsIcon icon={LinkSquare01Icon} className="w-4 h-4"/>;
+                                                                    const icon = <HugeiconsIcon icon={LinkSquare01Icon}
+                                                                                                className="w-4 h-4"/>;
                                                                     const btnClass = "w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground";
                                                                     if (item.fileURI || item.linkURL) return (
-                                                                        <Link to={`/file/${item.id}`} onClick={(e) => e.stopPropagation()}>
-                                                                            <button className={btnClass} title="View item">{icon}</button>
+                                                                        <Link to={`/file/${item.id}`}
+                                                                              onClick={(e) => e.stopPropagation()}>
+                                                                            <button className={btnClass}
+                                                                                    title="View item">{icon}</button>
                                                                         </Link>
                                                                     );
                                                                     return (
@@ -1107,21 +1143,25 @@ function ViewContent() {
                                                                     onClick={(e) => toggleBookmark(item.id, e)}
                                                                     aria-label={isBookmarked ? "Remove bookmark" : "Bookmark"}
                                                                 >
-                                                                    <Star className="w-4 h-4" fill={isBookmarked ? "currentColor" : "none"}/>
+                                                                    <Star className="w-4 h-4"
+                                                                          fill={isBookmarked ? "currentColor" : "none"}/>
                                                                 </button>
                                                                 {(() => {
                                                                     if (item.checkedOutById === user!.id) {
                                                                         return (
                                                                             <DropdownMenu>
-                                                                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                                                                <DropdownMenuTrigger asChild
+                                                                                                     onClick={(e) => e.stopPropagation()}>
                                                                                     <button
                                                                                         className="w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground"
                                                                                         title="More actions"
                                                                                     >
-                                                                                        <EllipsisVertical className="w-4 h-4"/>
+                                                                                        <EllipsisVertical
+                                                                                            className="w-4 h-4"/>
                                                                                     </button>
                                                                                 </DropdownMenuTrigger>
-                                                                                <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                                                                                <DropdownMenuContent align="end"
+                                                                                                     onClick={(e) => e.stopPropagation()}>
                                                                                     <DropdownMenuItem
                                                                                         title="Edit content"
                                                                                         onClick={(e) => handleStartEdit(item, e)}
@@ -1143,7 +1183,8 @@ function ViewContent() {
                                                                                             setDeleteTarget(item);
                                                                                         }}
                                                                                     >
-                                                                                        <Recycle className="w-4 h-4" style={{ stroke: "var(--destructive)" }}/>
+                                                                                        <Recycle className="w-4 h-4"
+                                                                                                 style={{stroke: "var(--destructive)"}}/>
                                                                                         Move to Bin
                                                                                     </DropdownMenuItem>
                                                                                 </DropdownMenuContent>
@@ -1211,21 +1252,25 @@ function ViewContent() {
                                                             <TableCell
                                                                 colSpan={NUM_COLS}
                                                                 className="px-6 py-2 bg-muted/10 border-t border-border">
-                                                                <div className="flex gap-6 text-xs text-muted-foreground">
+                                                                <div
+                                                                    className="flex gap-6 text-xs text-muted-foreground">
                                                                     {item.checkedOutBy && (
                                                                         <span>
-                                                                            <span className="font-medium text-foreground">Editing </span>
+                                                                            <span
+                                                                                className="font-medium text-foreground">Editing </span>
                                                                             {item.checkedOutBy.firstName} {item.checkedOutBy.lastName}
                                                                         </span>
                                                                     )}
                                                                     {item.created && (
                                                                         <span>
-                                                                            <span className="font-medium text-foreground">Created:{" "}</span>
+                                                                            <span
+                                                                                className="font-medium text-foreground">Created:{" "}</span>
                                                                             {new Date(item.created).toLocaleString()}
                                                                         </span>
                                                                     )}
                                                                     <span>
-                                                                        <span className="font-medium text-foreground">Modified:{" "}</span>
+                                                                        <span
+                                                                            className="font-medium text-foreground">Modified:{" "}</span>
                                                                         {new Date(item.lastModified).toLocaleString()}
                                                                     </span>
                                                                     {/* IIFE computes days once so both the label ("Expired:" vs "Days left:") and value share the same calculation. */}
@@ -1233,11 +1278,13 @@ function ViewContent() {
                                                                         const days = Math.ceil((new Date(item.expiration).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
                                                                         return (<>
                                                                             <span>
-                                                                                <span className="font-medium text-foreground">Expires:{" "}</span>
+                                                                                <span
+                                                                                    className="font-medium text-foreground">Expires:{" "}</span>
                                                                                 {new Date(item.expiration).toLocaleString()}
                                                                             </span>
                                                                             <span>
-                                                                                <span className="font-medium text-foreground">
+                                                                                <span
+                                                                                    className="font-medium text-foreground">
                                                                                     {days < 0 ? "Expired:" : "Days left:"}
                                                                                     {" "}
                                                                                 </span>
@@ -1245,15 +1292,16 @@ function ViewContent() {
                                                                             </span>
                                                                         </>);
                                                                     })()}
-                                                                                {item.tags.length > 0 && (
-                                                                            <span>
-                                                                                <span className="font-medium text-foreground">Tags:{" "}</span>
-                                                                                    {item.tags.join(", ")}
+                                                                    {item.tags.length > 0 && (
+                                                                        <span>
+                                                                                <span
+                                                                                    className="font-medium text-foreground">Tags:{" "}</span>
+                                                                            {item.tags.join(", ")}
                                                                             </span>)}
-                                                                        </div>
-                                                                    </TableCell>
-                                                                </TableRow>
-                                                            )}
+                                                                </div>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    )}
                                                     {/* link preview */}
                                                     {isExpanded && isLink && (() => {
                                                         const url = item.linkURL!;
@@ -1269,7 +1317,7 @@ function ViewContent() {
                                                                             //youtube embed data
                                                                             src={`https://www.youtube.com/embed/${youtubeMatch[1]}`}
                                                                             className="w-full border-0"
-                                                                            style={{ minHeight: "400px" }}
+                                                                            style={{minHeight: "400px"}}
                                                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                                                             allowFullScreen
                                                                             title={url}
@@ -1301,7 +1349,8 @@ function ViewContent() {
                                                     {/* file preview */}
                                                     {isExpanded && isFile && (
                                                         <TableRow className="hover:bg-transparent">
-                                                            <TableCell colSpan={NUM_COLS} className="p-0 max-w-0 overflow-hidden">
+                                                            <TableCell colSpan={NUM_COLS}
+                                                                       className="p-0 max-w-0 overflow-hidden">
                                                                 <FilePreview
                                                                     filename={originalFilename!}
                                                                     src={`/api/content/download/${item.id}`}
@@ -1322,7 +1371,10 @@ function ViewContent() {
                                         pageSize={pageSize}
                                         totalItems={filteredContent.length}
                                         onPageChange={setCurrentPage}
-                                        onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
+                                        onPageSizeChange={(size) => {
+                                            setPageSize(size);
+                                            setCurrentPage(1);
+                                        }}
                                     />
                                 )}
                             </div>
@@ -1350,7 +1402,8 @@ function ViewContent() {
                     if (!open) setCheckoutTarget(null);
                 }}
                 description={checkoutTarget
-                    ? <span>{ts('content.checkoutDesc1')}<strong>"{checkoutTarget.displayName}"</strong>{ts('content.checkoutDesc2')}</span>
+                    ?
+                    <span>{ts('content.checkoutDesc1')}<strong>"{checkoutTarget.displayName}"</strong>{ts('content.checkoutDesc2')}</span>
                     : undefined}
                 onConfirm={async () => {
                     if (checkoutTarget) {
@@ -1413,7 +1466,9 @@ function ViewContent() {
                     ? <span>
             Force check in <strong>"{forceCheckinTarget.displayName}"</strong>?
                         {forceCheckinTarget.checkedOutBy && (
-                            <> This will release the lock currently held by <strong>{forceCheckinTarget.checkedOutBy.firstName} {forceCheckinTarget.checkedOutBy.lastName}</strong>, and they may lose unsaved changes.</>
+                            <> This will release the lock currently held
+                                by <strong>{forceCheckinTarget.checkedOutBy.firstName} {forceCheckinTarget.checkedOutBy.lastName}</strong>,
+                                and they may lose unsaved changes.</>
                         )}
         </span>
                     : undefined}
@@ -1451,7 +1506,7 @@ function ViewContent() {
             />
 
 
-</>
+        </>
     );
 }
 
