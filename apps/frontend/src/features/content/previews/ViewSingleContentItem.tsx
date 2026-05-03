@@ -262,6 +262,7 @@ export function ViewSingleContentItem() {
             {item && (
                 <ServiceRequestLinkDialog
                     contentId={item.id}
+                    deadline={item.expiration ? new Date(item.expiration) : undefined}
                     open={srDialogOpen}
                     onOpenChange={setSrDialogOpen}
                     onServiceReqsChange={(srs) => setItem((prev) => prev ? { ...prev, serviceRequest: srs[0] ?? null } : prev)}
