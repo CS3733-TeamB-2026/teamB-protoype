@@ -11,9 +11,12 @@ import { Separator } from "@/components/ui/separator.tsx";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select.tsx";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover.tsx";
 import { Calendar } from "@/components/ui/calendar.tsx";
+import { Switch } from "@/components/ui/switch.tsx";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table.tsx";
 import { Field, FieldLabel, FieldDescription } from "@/components/ui/field.tsx";
 import { EmployeePicker } from "@/components/shared/EmployeePicker.tsx";
+import { CollectionPicker } from "@/components/shared/CollectionPicker.tsx";
+import { AddCollectionDialog } from "@/features/collections/AddCollectionDialog.tsx";
 import { TagInput } from "@/features/content/tags/TagInput.tsx";
 import { ContentIcon } from "@/features/content/components/ContentIcon.tsx";
 import {
@@ -30,6 +33,7 @@ import {
 import { useUser } from "@/hooks/use-user.ts";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
 import InfoButton from "@/components/layout/InformationAlert.tsx";
+import type { Collection } from "@/lib/types.ts";
 
 // ---------- Types ----------
 
@@ -80,11 +84,13 @@ function formatFileSize(bytes: number): string {
  * shared metadata (persona, owner, tags, type, status), then upload all files
  * sequentially. Each row shows live status as uploads progress.
  *
- * On completion, "Go to Content Library" navigates to /files. ViewContent
- * re-fetches on mount so the new items appear without any data-passing.
+ * Optionally adds all successfully-uploaded items to a collection. The append
+ * runs after all uploads complete — it GETs the current collection to read
+ * existing item IDs, then PUTs the merged list, because the collection update
+ * API replaces the full item list rather than appending.
  *
- * "Upload More" resets only the file list, keeping the shared metadata intact
- * for a second batch.
+ * "Upload More" resets only the file list; shared metadata and the collection
+ * selection persist so a second batch can be added to the same collection.
  */
 export function BulkUploadPage() {
     usePageTitle("Bulk Upload");
@@ -95,6 +101,10 @@ export function BulkUploadPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [opening, setOpening] = useState(false);
     const [openExpiration, setOpenExpiration] = useState(false);
+    const [addToCollection, setAddToCollection] = useState(false);
+    const [collectionId, setCollectionId] = useState<number | null>(null);
+    const [addCollectionDialogOpen, setAddCollectionDialogOpen] = useState(false);
+    const [collectionRefreshKey, setCollectionRefreshKey] = useState(0); // incremented to trigger a refetch inside CollectionPicker
 
     const [phase, setPhase] = useState<"selection" | "uploading" | "done">("selection");
     const [entries, setEntries] = useState<BulkFileEntry[]>([]);
@@ -179,6 +189,7 @@ export function BulkUploadPage() {
         const token = await getAccessTokenSilently();
         let successCount = 0;
         let failCount = 0;
+        const uploadedContentIds: number[] = []; // collected for the post-upload collection append
 
         for (let i = 0; i < entries.length; i++) {
             const entry = entries[i];
@@ -207,12 +218,44 @@ export function BulkUploadPage() {
                     body: formData,
                 });
                 if (!res.ok) throw new Error(`Server responded with ${res.status}`);
+                const created = await res.json() as { id: number };
+                uploadedContentIds.push(created.id);
                 setEntries(prev => prev.map(e => e.id === entry.id ? { ...e, status: "success" } : e));
                 successCount++;
             } catch (err) {
                 const msg = err instanceof Error ? err.message : "Upload failed";
                 setEntries(prev => prev.map(e => e.id === entry.id ? { ...e, status: "error", errorMessage: msg } : e));
                 failCount++;
+            }
+        }
+
+        if (addToCollection && collectionId != null && uploadedContentIds.length > 0) {
+            try {
+                // The collection PUT replaces the full item list, so we must fetch
+                // the current items first to avoid overwriting them.
+                const collRes = await fetch(`/api/collections/${collectionId}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (!collRes.ok) throw new Error(`Failed to fetch collection (${collRes.status})`);
+                const coll = await collRes.json() as Collection;
+                const existingIds = coll.items.map(item => item.content.id);
+                const mergedIds = [...existingIds, ...uploadedContentIds];
+
+                const putRes = await fetch(`/api/collections/${collectionId}`, {
+                    method: "PUT",
+                    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        displayName: coll.displayName,
+                        isPublic: coll.public,
+                        ownerId: coll.owner.id,
+                        contentIds: mergedIds,
+                    }),
+                });
+                if (!putRes.ok) throw new Error(`Failed to update collection (${putRes.status})`);
+                toast.success(`Added ${uploadedContentIds.length} item${uploadedContentIds.length !== 1 ? "s" : ""} to "${coll.displayName}".`);
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : "Unknown error";
+                toast.error(`Uploads succeeded but collection update failed: ${msg}`);
             }
         }
 
@@ -539,6 +582,34 @@ export function BulkUploadPage() {
                                     )}
                                 </Field>
                             </div>
+
+                            <div className="py-6"><Separator className="bg-primary" /></div>
+
+                            {/* Add to Collection */}
+                            <div className="flex flex-col gap-3">
+                                <div className="flex items-center gap-3">
+                                    <Switch
+                                        id="add-to-collection"
+                                        checked={addToCollection}
+                                        onCheckedChange={setAddToCollection}
+                                        disabled={uploading}
+                                    />
+                                    <FieldLabel className="text-primary text-lg cursor-pointer" htmlFor="add-to-collection">
+                                        Add to Collection
+                                    </FieldLabel>
+                                </div>
+
+                                {addToCollection && (
+                                    <CollectionPicker
+                                        selectedId={collectionId}
+                                        onSelect={(id) => setCollectionId(id)}
+                                        disabled={uploading}
+                                        onCreateNew={() => setAddCollectionDialogOpen(true)}
+                                        refreshKey={collectionRefreshKey}
+                                        inline
+                                    />
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -581,6 +652,15 @@ export function BulkUploadPage() {
 
                 </CardContent>
             </Card>
+
+            <AddCollectionDialog
+                open={addCollectionDialogOpen}
+                onOpenChange={setAddCollectionDialogOpen}
+                onCreated={(collection) => {
+                    setCollectionId(collection.id);
+                    setCollectionRefreshKey(k => k + 1);
+                }}
+            />
         </>
     );
 }
