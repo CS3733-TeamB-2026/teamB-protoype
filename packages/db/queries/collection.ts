@@ -95,6 +95,37 @@ export class Collection {
         });
     }
 
+    /** Appends items to a collection, skipping IDs already present. New items are positioned after the last existing item. */
+    public static async appendItems(collectionId: number, contentIds: number[]) {
+        return prisma.$transaction(async (tx) => {
+            const existing = await tx.collectionItem.findMany({
+                where: { collectionId },
+                select: { contentId: true, position: true },
+            });
+            const existingIds = new Set(existing.map((i) => i.contentId));
+            const toAdd = contentIds.filter((id) => !existingIds.has(id));
+            const maxPosition = existing.length > 0 ? Math.max(...existing.map((i) => i.position)) : -1;
+
+            if (toAdd.length > 0) {
+                await tx.collectionItem.createMany({
+                    data: toAdd.map((contentId, index) => ({
+                        collectionId,
+                        contentId,
+                        position: maxPosition + 1 + index,
+                    })),
+                });
+            }
+
+            return tx.collection.findUnique({
+                where: { id: collectionId },
+                include: {
+                    owner: { select: employeeSelect },
+                    ...itemsInclude,
+                },
+            });
+        });
+    }
+
     /** Cascades to CollectionItem and CollectionFavorite via schema onDelete. */
     public static async delete(collectionId: number) {
         await prisma.collection.delete({ where: { id: collectionId } });

@@ -136,6 +136,32 @@ export const addFavorite = async (req: req, res: res) => {
     }
 };
 
+/** Appends items to a collection without replacing the full list; silently deduplicates. Owner/admin only. */
+export const appendItemsToCollection = async (req: req, res: res) => {
+    try {
+        const employee = await getEmployee(req);
+        if (!employee) return res.status(404).json({ error: "Employee not found" });
+
+        const collectionId = parseInt(req.params.id);
+        const existing = await q.Collection.queryById(collectionId);
+
+        if (!isUserOrAdmin(existing.ownerId, employee)) {
+            return res.status(403).json({ error: "Access denied" });
+        }
+
+        const { contentIds } = req.body;
+        if (!Array.isArray(contentIds)) {
+            return res.status(400).json({ error: "contentIds must be an array" });
+        }
+
+        const updated = await q.Collection.appendItems(collectionId, contentIds);
+        return res.status(200).json(updated);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
 /** Removes a favorite; no visibility check — employees can always un-favorite even if a collection was made private. */
 export const removeFavorite = async (req: req, res: res) => {
     try {
