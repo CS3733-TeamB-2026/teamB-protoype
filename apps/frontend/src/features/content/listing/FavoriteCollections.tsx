@@ -9,7 +9,7 @@ type FavoriteWithCollection = CollectionFavorite & {
     collection: Collection;
 };
 
-function Collections() {
+function FavoriteCollections() {
     const [collections, setCollections] = useState<FavoriteWithCollection[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -74,4 +74,4 @@ function Collections() {
     );
 }
 
-export default Collections;
+export default FavoriteCollections;
