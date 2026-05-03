@@ -3,12 +3,11 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { useUser } from "@/hooks/use-user.ts";
 import { ContentIcon } from "@/features/content/components/ContentIcon.tsx";
 import { getCategory, getOriginalFilename } from "@/lib/mime.ts";
-import {Loader2, ChevronLeft, ChevronRight, Home as HomeIcon} from "lucide-react";
+import {Loader2, ChevronLeft, ChevronRight} from "lucide-react";
 import { ContentItemCard } from "@/components/shared/ContentItemCard.tsx";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
 import { Button } from "@/components/ui/button.tsx";
 import type { ContentItem } from "@/lib/types.ts";
-import {Hero} from "@/components/shared/Hero.tsx";
 
 const NOW = Date.now();
 
@@ -81,11 +80,9 @@ function ExpirationCalendar() {
     }
 
     function urgencyColor(days: number): string {
-        if (days <= 0) return "bg-destructive/75 text-white";
-        if (days <= 7) return "bg-amber-600/75 text-white";
-        if (days <= 14) return "bg-yellow-500/75 text-white";
-        if (days <= 30) return "bg-slate-100/75 text-black";
-        return "bg-slate-100/70 text-black";
+        if (days <= 0) return "bg-destructive/30 text-destructive";
+        if (days <= 7) return "bg-amber-500/25 text-amber-700 dark:text-amber-400";
+        return "bg-green-500/20 text-green-700 dark:text-green-400";
     }
 
     function prevMonth() {
@@ -113,12 +110,15 @@ function ExpirationCalendar() {
 
     return (
         <>
-            <Hero
-                icon={HomeIcon}
-                title={"Expiration Calender"}
-                description={"See whats due soon."}
+            <div
+                className="pointer-events-none fixed inset-0 opacity-80"
+                style={{
+                    backgroundImage: `radial-gradient(circle, oklch(0.343 0.07 252.435 / 0.15) 1px, transparent 2px)`,
+                    backgroundSize: '24px 24px',
+                }}
             />
-            <div className="max-w-6xl mx-auto my-6 px-4">
+
+            <div className="max-w-6xl mx-auto my-6 px-4 relative" >
                 {loading && (
                     <div className="flex items-center justify-center py-24 gap-3 text-muted-foreground">
                         <Loader2 className="w-6 h-6 animate-spin" />
