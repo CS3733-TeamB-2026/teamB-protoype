@@ -4,10 +4,14 @@ import {Button} from "@/components/ui/button.tsx";
 import {CalendarClock, FolderOpen, Plus, UserPlus, Users} from "lucide-react";
 import { useUser } from "@/hooks/use-user.ts"
 import DashboardCard from "@/features/dashboard/components/cards/DashboardCard.tsx";
+import {useLocale} from "@/languageSupport/localeContext.tsx";
+import {useTranslation} from "@/languageSupport/useTranslation.ts";
 
 function QuickLinksCard() {
 
     const {user} = useUser();
+    const { locale } = useLocale();
+    const { ts } = useTranslation(locale);
 
     return (
         <DashboardCard
@@ -18,7 +22,7 @@ function QuickLinksCard() {
                 <CardTitle className="capitalize text-2xl font-semibold text-center">
                     User Access: {user?.persona}
                 </CardTitle>
-                <p className="text-center text-sm text-muted-foreground">Quick Links</p>
+                <p className="text-center text-sm text-muted-foreground">{ts('dashCard.QuickLinks')}</p>
             </CardHeader>
             <CardContent>
                 <div className="flex flex-col gap-3 px-2">
@@ -26,7 +30,7 @@ function QuickLinksCard() {
                         <Link to="/usermanagement" className="w-full">
                             <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-accent hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
                                 <Users className="w-4 h-4 shrink-0" />
-                                View Users
+                                {ts('sidebar.viewEmployees')}
                             </Button>
                         </Link>
                         :
@@ -36,7 +40,7 @@ function QuickLinksCard() {
                         <Link to="/employeeform" className="w-full">
                             <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-accent hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
                                 <UserPlus className="w-4 h-4 shrink-0" />
-                                Add Employee
+                                {ts('sidebar.addEmployees')}
                             </Button>
                         </Link>
                         :
@@ -45,19 +49,19 @@ function QuickLinksCard() {
                     <Link to="/files" className="w-full">
                         <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-accent hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
                             <FolderOpen className="w-4 h-4 shrink-0" />
-                            View Files
+                            {ts('dashCard.ViewFiles')}
                         </Button>
                     </Link>
                     <Link to="/calendar" className="w-full">
                         <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-accent hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
                             <CalendarClock className="w-4 h-4 shrink-0" />
-                            View Calendar
+                            {ts('dashCard.ViewCalendar')}
                         </Button>
                     </Link>
                     <Link to="/files/bulk" className="w-full">
                         <Button className="w-full justify-start gap-3 px-4 py-5 rounded-xl bg-primary/5 border border-primary/20 text-primary hover:bg-accent hover:text-primary-foreground transition-all active:brightness-90 shadow-none" variant="outline">
                             <Plus className="w-4 h-4 shrink-0" />
-                            Add Content
+                            {ts('sidebar.addContent')}
                         </Button>
                     </Link>
                 </div>

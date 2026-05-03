@@ -2,6 +2,8 @@ import {CardContent, CardTitle} from "@/components/ui/card.tsx";
 import { Link } from "react-router-dom";
 import { useUser } from "@/hooks/use-user.ts";
 import DashboardCard from "@/features/dashboard/components/cards/DashboardCard.tsx";
+import {useLocale} from "@/languageSupport/localeContext.tsx";
+import {useTranslation} from "@/languageSupport/useTranslation.ts";
 
 type LinkItem = {
     title: string;
@@ -35,14 +37,15 @@ const links: LinkItem[] = [
 
 function HelloCard() {
     const {user} = useUser();
-
+    const { locale } = useLocale();
+    const { ts } = useTranslation(locale);
     return (
         <DashboardCard
             size="small"
             borderColor="secondary"
         >
             <CardTitle className="capitalize text-2xl font-semibold text-center">
-                <h1>Additional Links:</h1>
+                <h1>{ts('dashCard.AdditionalLinks')}</h1>
             </CardTitle>
             <CardContent>
                 <div className="grid grid-cols-1">

@@ -142,7 +142,7 @@ function Dashboard() {
     if (isLoading) {
         return (
             <>
-                <Hero icon={LayoutDashboard} description="Find all your tools here." title="Dashboard" />
+                <Hero icon={LayoutDashboard} description={ts('dashboard.subtitle')} title={ts('sidebar.dashboard')} />
                 <div className="flex items-center justify-center py-32">
                     <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                 </div>
@@ -155,7 +155,7 @@ function Dashboard() {
             {/* Hero */}
             <Hero
                 icon={LayoutDashboard}
-                description="Find all your tools here."
+                description={ts('dashboard.subtitle')}
                 title={ts('sidebar.dashboard')}
             />
 

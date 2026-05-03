@@ -16,6 +16,8 @@ import { useAuth0 } from "@auth0/auth0-react";
 import type { Employee } from "@/lib/types.ts";
 import DashboardCard from "@/features/dashboard/components/cards/DashboardCard.tsx";
 import InfoButton from "@/components/layout/InformationAlert.tsx";
+import {useLocale} from "@/languageSupport/localeContext.tsx";
+import {useTranslation} from "@/languageSupport/useTranslation.ts";
 
 // Maps each persona key to a human-readable label for the chart legend and tooltip.
 const chartConfig = {
@@ -35,7 +37,8 @@ const chartConfig = {
  * variables to each slice.
  */
 function EmployeeChartCard() {
-
+    const { locale } = useLocale();
+    const { ts } = useTranslation(locale);
     const [employees, setEmployees] = useState([]);
     const { getAccessTokenSilently } = useAuth0();
 
@@ -77,8 +80,8 @@ function EmployeeChartCard() {
             borderColor="secondary"
         >
             <CardHeader className="items-center pb-0">
-                <CardTitle className="capitalize text-2xl font-semibold">Department Breakdown</CardTitle>
-                <CardDescription>Current headcount by department.</CardDescription>
+                <CardTitle className="capitalize text-2xl font-semibold">{ts('dashCard.DepartmentBreakdown')}</CardTitle>
+                <CardDescription>{ts('dashCard.DepartmentHeadcount')}</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col items-center justify-center gap-4 pb-4">
                 <div className="absolute right-1 top-1 w-8 h-8 cursor-pointer">
