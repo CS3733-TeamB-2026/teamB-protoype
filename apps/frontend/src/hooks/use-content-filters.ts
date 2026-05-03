@@ -4,8 +4,7 @@ import { type Category, getOriginalFilename, lookupByFilename } from "@/lib/mime
 
 {/*CHANGE THIS TO ADD MORE TABS!!*/}
 /** All possible tab values in the ViewContent page. `recyclebin` uses a separate data source. */
-export type ContentTab = "forYou" | "all" | "owned" | "bookmarks" | "recyclebin";
-
+export type ContentTab = "forYou" | "all" | "owned" | "bookmarks" | "recyclebin" | "checkedOut";
 /**
  * Single source of truth for all content list filtering in `ViewContent`.
  *
@@ -107,6 +106,8 @@ export function useContentFilters(
             activeTab !== "forYou" || item.targetPersona === currentUserPersona;
         // Recycle bin has its own data source — never show main-list items in it.
         const notRecycleBin = activeTab !== "recyclebin";
+        const matchesCheckedOut =
+            activeTab !== "checkedOut" || item.checkedOutById === currentUserId;
 
         {/*ADD A MATCHES ____  RETURN FOR MORE TABS!!!!*/
         }
@@ -120,6 +121,7 @@ export function useContentFilters(
             matchesExpirationStatus &&
             matchesOwner &&
             matchesForYou &&
+            matchesCheckedOut &&
             notRecycleBin
         );
     });
