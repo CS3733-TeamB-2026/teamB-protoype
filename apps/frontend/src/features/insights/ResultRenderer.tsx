@@ -23,8 +23,8 @@ export function ResultRenderer({result}: Props) {
     const hasData = result.rows && result.rows.length > 0;
 
     return (
-        <div className="p-[1.5px] rounded-[13px] shadow-sm bg-linear-to-r from-primary/55 via-primary/65 to-primary-light">
-            <div className="space-y-3 shadow-lg bg-card p-4 rounded-xl">
+        <div className="p-[1.5px] rounded-[14px] shadow-sm bg-linear-to-r from-primary/55 via-primary/65 to-primary-light">
+            <div className="space-y-3 shadow-lg bg-card p-4 rounded-[12px]">
                 <div>
                     <h3 className="font-semibold">{result.title}</h3>
                     <p className="mt-1 text-sm text-muted-foreground">

@@ -18,32 +18,16 @@ function EmptyState({ onSelectSuggestion }: Props) {
     return (
         <div className="mx-auto max-w-3xl py-24 text-center">
             {/* Sparkle mark */}
-            <div
-                className="mx-auto mb-8 h-20 w-20 rounded-full p-[2px] shadow-[0_6px_20px_-8px] shadow-primary-light/55"
-                style={{
-                    background:
-                        "conic-gradient(from 220deg, var(--primary-light), color-mix(in oklch, var(--primary-light) 60%, transparent), color-mix(in oklch, var(--primary-light) 25%, transparent), var(--primary-light))",
-                }}
-            >
+            <div className="mx-auto mb-8 h-20 w-20 rounded-full p-[2px] bg-conic from-primary-light via-primary to-primary-light shadow-lg shadow-primary-light/40">
                 <div className="flex h-full w-full items-center justify-center rounded-full bg-primary">
                     <Sparkles className="h-8 w-8 text-primary-foreground" />
                 </div>
             </div>
 
-            {/* Title with subtle blue underglow + gradient text */}
-            <div className="relative inline-block">
-                <div
-                    aria-hidden
-                    className="pointer-events-none absolute left-1/2 top-[60%] -translate-x-1/2 -translate-y-1/2 h-[120%] w-[90%] blur-[32px]"
-                    style={{
-                        background:
-                            "radial-gradient(ellipse at center, color-mix(in oklch, var(--primary-light) 35%, transparent) 0%, color-mix(in oklch, var(--primary-light) 12%, transparent) 45%, transparent 75%)",
-                    }}
-                />
-                <h1 className="relative z-[1] pb-2 text-6xl font-semibold bg-linear-to-r from-primary to-primary-light bg-clip-text text-transparent">
-                    Welcome to Insights.
-                </h1>
-            </div>
+            {/* Title with gradient text */}
+            <h1 className="pb-2 text-6xl font-semibold bg-linear-to-r from-primary to-primary-light bg-clip-text text-transparent">
+                Welcome to Insights.
+            </h1>
 
             <p className="mx-auto mt-4 max-w-md text-base text-muted-foreground">
                 Ask anything about your content, employees, and service requests in plain English.
@@ -57,11 +41,7 @@ function EmptyState({ onSelectSuggestion }: Props) {
                         variant="outline"
                         size="sm"
                         onClick={() => onSelectSuggestion(suggestion)}
-                        className="gap-2 rounded-full bg-card shadow-sm"
-                        style={{
-                            borderColor:
-                                "color-mix(in oklch, var(--primary) 50%, transparent)",
-                        }}
+                        className="gap-2 rounded-full bg-card shadow-sm border-primary/50 hover:bg-primary/10 hover:text-foreground dark:hover:bg-primary/30"
                     >
                         <span className="text-primary">•</span>
                         {suggestion}

@@ -52,7 +52,7 @@ function InsightsPage() {
             <div
                 className="pointer-events-none absolute inset-0 opacity-80"
                 style={{
-                    backgroundImage: `radial-gradient(circle, oklch(0.343 0.07 252.435 / 0.15) 1px, transparent 2px)`,
+                    backgroundImage: `radial-gradient(circle, color-mix(in oklch, var(--primary) 15%, transparent) 1px, transparent 2px)`,
                     backgroundSize: '24px 24px',
                 }}
             />
@@ -66,21 +66,10 @@ function InsightsPage() {
                     )}
                 </div>
 
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-6xl">
-                    <div className="relative mx-auto w-full max-w-6xl mb-5">
-                        {/* Underglow behind the input */}
-                        <div
-                            aria-hidden
-                            className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[180%] w-[70%] blur-[32px]"
-                            style={{
-                                background:
-                                    "radial-gradient(ellipse at center, color-mix(in oklch, var(--primary-light) 30%, transparent) 0%, color-mix(in oklch, var(--primary-light) 10%, transparent) 45%, transparent 75%)",
-                            }}
-                        />
-                        <div className="relative w-full p-[1.5px] rounded-[13px] shadow-sm bg-linear-to-r from-primary/55 via-primary/65 to-primary-light">
-                            <div className="p-3 bg-card shadow-lg w-full focus-within:outline-none rounded-xl">
-                                <ChatInput onSubmit={handleSubmit} disabled={isLoading} />
-                            </div>
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-6xl mb-5">
+                    <div className="relative w-full p-[1.5px] rounded-[14px] shadow-sm bg-linear-to-r from-primary/55 via-primary/65 to-primary-light">
+                        <div className="p-3 bg-card shadow-lg w-full focus-within:outline-none rounded-[12px]">
+                            <ChatInput onSubmit={handleSubmit} disabled={isLoading} />
                         </div>
                     </div>
                 </div>
