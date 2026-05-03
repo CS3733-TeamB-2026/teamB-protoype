@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator.tsx";
 import { toast } from "sonner";
 import { ServiceReqFormFields } from "@/features/servicereqs/ServiceReqFormFields.tsx";
 import { initialValues, buildServiceReqJSON } from "@/features/servicereqs/servicereq-form.ts";
+import type { ServiceReqFormValues } from "@/features/servicereqs/servicereq-form.ts";
 import type { ServiceReq } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useServiceReqForm } from "@/features/servicereqs/use-servicereq-form.tsx";
@@ -19,6 +20,8 @@ interface Props {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSave: (created: ServiceReq) => void;
+    /** Pre-populate form fields — useful for pre-setting a linked content item or collection. */
+    startingValues?: Partial<ServiceReqFormValues>;
 }
 
 /**
@@ -31,14 +34,15 @@ interface Props {
  * the user opens it again. `formKey` forces `ServiceReqFormFields` to remount
  * on reset, clearing any local state inside that component.
  */
-export function AddServiceReqDialog({ open, onOpenChange, onSave }: Props) {
+export function AddServiceReqDialog({ open, onOpenChange, onSave, startingValues }: Props) {
     const user = useUser();
     const { getAccessTokenSilently } = useAuth0();
 
+    const base = startingValues ? { ...initialValues(), ...startingValues } : initialValues();
     const { values, patch, setSubmitted, errors, hasErrors, formKey, reset } =
-        useServiceReqForm(initialValues());
+        useServiceReqForm(base);
 
-    const handleReset = () => reset(initialValues());
+    const handleReset = () => reset(base);
 
     const handleSubmit = async () => {
         if (!user) return;

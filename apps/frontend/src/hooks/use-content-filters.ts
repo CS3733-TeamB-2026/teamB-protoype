@@ -1,9 +1,10 @@
 import {useState} from "react";
-import type { ContentItem, BookmarkRecord, ContentStatus, ContentType, Persona } from "@/lib/types.ts";
+import type { ContentItem, BookmarkRecord, ContentStatus, ContentType, ExpirationStatus, Persona } from "@/lib/types.ts";
 import { type Category, getOriginalFilename, lookupByFilename } from "@/lib/mime.ts";
 
 {/*CHANGE THIS TO ADD MORE TABS!!*/}
-export type ContentTab = "forYou" | "all" | "owned" | "bookmarks";
+/** All possible tab values in the ViewContent page. `recyclebin` uses a separate data source. */
+export type ContentTab = "forYou" | "all" | "owned" | "bookmarks" | "recyclebin";
 
 /**
  * Single source of truth for all content list filtering in `ViewContent`.
@@ -38,7 +39,8 @@ export function useContentFilters(
         contentType: [] as ContentType[],
         persona: [] as Persona[],
         tags: [] as string[],
-        docType: [] as Category[]
+        docType: [] as Category[],
+        expirationStatus: [] as ExpirationStatus[],
     });
 
     /**
@@ -50,7 +52,16 @@ export function useContentFilters(
         persona: [],
         tags: [],
         docType: [],
+        expirationStatus: [],
     });
+
+    function getExpirationStatus(item: ContentItem): ExpirationStatus {
+        if (!item.expiration) return "none";
+        const days = Math.ceil((new Date(item.expiration).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+        if (days <= 0) return "expired";
+        if (days <= 7) return "expiringSoon";
+        return "future";
+    }
 
     // Second pass: apply the sidebar checkboxes on top of the search results.
     // Each condition is skipped (passes everything) when no options are selected.
@@ -86,11 +97,16 @@ export function useContentFilters(
             advancedFilters.docType.length === 0 ||
             (docType !== null && advancedFilters.docType.includes(docType))
 
+        const matchesExpirationStatus =
+            advancedFilters.expirationStatus.length === 0 ||
+            advancedFilters.expirationStatus.includes(getExpirationStatus(item));
+
         const matchesOwner =
             activeTab !== "owned" || item.ownerId === currentUserId;
         const matchesForYou =
             activeTab !== "forYou" || item.targetPersona === currentUserPersona;
-
+        // Recycle bin has its own data source — never show main-list items in it.
+        const notRecycleBin = activeTab !== "recyclebin";
 
         {/*ADD A MATCHES ____  RETURN FOR MORE TABS!!!!*/
         }
@@ -101,8 +117,10 @@ export function useContentFilters(
             matchesTags &&
             matchesBookmark &&
             matchesDocType &&
+            matchesExpirationStatus &&
             matchesOwner &&
-            matchesForYou
+            matchesForYou &&
+            notRecycleBin
         );
     });
 
@@ -112,7 +130,8 @@ export function useContentFilters(
         advancedFilters.contentType.length +
         advancedFilters.persona.length +
         advancedFilters.docType.length +
-        advancedFilters.tags.length;
+        advancedFilters.tags.length +
+        advancedFilters.expirationStatus.length;
 
     return {
         activeTab,

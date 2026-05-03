@@ -1,6 +1,6 @@
 # teamB-prototype
 
-A content management system for an insurance company. Employees with role-based personas can view, add, edit, and delete content items (uploaded files or external URLs), manage other employees, and track service requests. A checkout/check-in locking mechanism prevents simultaneous edits on the same content item.
+A content management system for an insurance company. Employees with role-based personas can view, add, edit, recycle, and permanently delete content items (uploaded files or external URLs), manage other employees, and track service requests. A checkout/check-in locking mechanism prevents simultaneous edits on the same content item. Deleted items go to a per-user recycle bin; only the owner or an admin can restore or permanently delete them.
 
 ---
 
@@ -112,9 +112,14 @@ All routes are JSON unless noted. File-upload routes use `multipart/form-data` w
 - `GET    /api/content/publicUrl/:id` — short-lived (120 s) signed URL
 - `POST   /api/content` — create (multipart; `linkURL` *xor* `fileURI`, never both)
 - `PUT    /api/content` — update; employee identity from JWT, else `409 { lockReleased: true }` if lock mismatch
-- `DELETE /api/content/:id` — same lock check; also deletes the Supabase file if present
+- `DELETE /api/content/:id` — soft-delete (recycle); same checkout lock check as `PUT`; clears the lock, does **not** delete the Supabase file
+- `GET    /api/content/deleted` — items in the recycle bin (all for admins, owned items only for non-admins)
+- `POST   /api/content/:id/restore` — moves item out of recycle bin; owner or admin only
+- `DELETE /api/content/:id/permanent` — hard-delete from DB and Supabase; item must already be in the recycle bin; owner or admin only
 - `POST   /api/content/:id/checkout` — employee from JWT; 403 if persona doesn't match `targetPersona` (admins bypass); 409 if already locked by someone else
 - `POST   /api/content/:id/checkin` — admin can force-checkin any item; non-admins can only checkin their own lock
+
+> **Route order matters**: `/deleted` must be registered before `/:id`, and `/restore` and `/permanent` are sub-routes of `/:id` and are safe in any order relative to each other.
 
 **Bookmarks** (`/api/bookmark`) — user derived from the JWT, not the URL
 - `GET    /api/bookmark`
@@ -142,6 +147,7 @@ All routes are JSON unless noted. File-upload routes use `multipart/form-data` w
 - `GET    /api/collections/:id` — single collection; 403 if private and caller is not owner/admin
 - `PUT    /api/collections/:id` — update name, visibility, owner, and full ordered item list (owner or admin only)
 - `DELETE /api/collections/:id` — cascades to CollectionItem and CollectionFavorite (owner or admin only)
+- `POST   /api/collections/:id/items` — append content items to a collection; deduplicates against existing items and assigns sequential positions after the last existing one (owner or admin only)
 - `POST   /api/collections/:id/favorite` — add favorite; guards against favoriting inaccessible private collections
 - `DELETE /api/collections/:id/favorite` — remove favorite
 
@@ -153,7 +159,7 @@ All routes are JSON unless noted. File-upload routes use `multipart/form-data` w
 
 ### Checkout / check-in (server side)
 
-A content item is "checked out" by writing `checkedOutById` and `checkedOutAt` on the row. Only the holder can `PUT /api/content` or `DELETE /api/content/:id` — the check lives in `Content.updateContent` (`packages/db/queries/content.ts`) and in the `deleteContent` hook. If the lock has been released or taken by someone else, the write returns `409 { lockReleased: true, message: "This item has been forcibly checked in." }` and the frontend handles the forced check-in.
+A content item is "checked out" by writing `checkedOutById` and `checkedOutAt` on the row. Only the holder can `PUT /api/content` (edit) or `DELETE /api/content/:id` (recycle/soft-delete) — the check lives in `Content.updateContent` (`packages/db/queries/content.ts`) and in the `deleteContent` hook. Recycling also clears the checkout lock as part of the same write (`softDeleteContent`). If the lock has been released or taken by someone else, the write returns `409 { lockReleased: true, message: "This item has been forcibly checked in." }` and the frontend handles the forced check-in.
 
 Expired locks (`LOCK_TIMEOUT_MS = 2 * 60 * 1000`) are cleared by a `setInterval` running `clearExpiredLocks` every 30 s, registered in `app.ts`.
 
@@ -173,7 +179,7 @@ All storage operations go through `packages/db/queries/bucket.ts` (`Bucket.uploa
 Schema at `packages/db/prisma/schema.prisma`.
 
 - **Employee** — `id`, `firstName`, `lastName`, `persona`, `auth0Id`, `profilePhotoURI`
-- **Content** — `displayName`, `linkURL` *xor* `fileURI`, `ownerId`, `contentType` (`reference` | `workflow`), `status` (`new` | `inProgress` | `complete`), `targetPersona`, `tags: string[]`, `lastModified`, `expiration`, `checkedOutById`, `checkedOutAt`
+- **Content** — `displayName`, `linkURL` *xor* `fileURI`, `ownerId`, `contentType` (`reference` | `workflow`), `status` (`new` | `inProgress` | `complete`), `targetPersona`, `tags: string[]`, `lastModified`, `expiration`, `checkedOutById`, `checkedOutAt`, `deleted` (default `false` — soft-delete flag; all normal queries filter this out)
 - **Bookmark** — join table (`bookmarkerId`, `bookmarkedContentId`) with a composite unique key
 - **Collection** — `displayName`, `ownerId`, `public`; items stored in **CollectionItem** (`collectionId`, `contentId`, `position`) — explicit join table so item order is preserved. Favorites stored in **CollectionFavorite** (`employeeId`, `collectionId`).
 - **ServiceRequest** — `name`, `created`, `deadline`, `type`, `assigneeId`, `ownerId`
@@ -209,7 +215,7 @@ Five feature modules live under `apps/frontend/src/features/`: **content**, **da
 - **`usePageTitle(title)`** — sets the browser `<title>`.
 - **`useSortState<T>` / `applySortState`** — generic column sort state used by every sortable table.
 - **`useAvatarUrl(id, uri)`** — fetches `GET /api/employee/photo/:id` and caches the blob in `lib/avatar-cache.ts`. Used by `EmployeeAvatar` and any component that needs a per-row signed URL.
-- **`useContentFilters(content, bookmarks, userId, persona)`** — owns all content filtering: search term, active tab (`forYou | all | owned | bookmarks`), and sidebar checkbox filters (status, contentType, persona, tags, docType). Returns `filteredContent`, `activeFilterCount`, and setters. Add new filters here, not in `ViewContent`.
+- **`useContentFilters(content, bookmarks, userId, persona)`** — owns all content filtering: search term, active tab (`forYou | all | owned | bookmarks | recyclebin`), and sidebar checkbox filters (status, contentType, persona, tags, docType, expirationStatus). Returns `filteredContent`, `activeFilterCount`, and setters. The `recyclebin` tab always yields an empty `filteredContent` — `ViewContent` renders it from a separate `deletedContent` state. Add new filters here, not in `ViewContent`.
 - **`useIsMobile()`** — `true` below 768 px via `matchMedia`. Used by the sidebar shell.
 
 **`toast`** from `sonner` — async success/error notifications, used throughout.
@@ -235,6 +241,7 @@ Extend by adding a key to `keys.ts` and entries to `dictionaries.ts`.
 - **`CollectionPicker`** — searchable collection dropdown, same UX as `EmployeePicker`. Accepts `publicOnly` to restrict the list to public collections (filtering is client-side). Used in the service request form.
 - **`PersonaBadge`** — badge for a persona value.
 - **`SortableHead<T>`** — generic `<TableHead>` with sort-direction arrow. Pairs with `useSortState`.
+- **`TablePagination`** — rows-per-page selector + first/prev/next/last navigation bar. Stateless; parent owns `currentPage`/`pageSize`. Resets to page 1 automatically when page size changes.
 - **`SlidingTabs`** — animated underline tab strip.
 - **`UrlPreviewCard`** — OG metadata card (title, description, image, favicon). Used by `UrlSourceField`; also available standalone.
 - **`UrlPreviewLink`** — link that shows a `UrlPreviewCard` on hover.
@@ -258,9 +265,12 @@ features/content/
     UrlSourceField.tsx       URL input with live OG-preview card
     ConfirmCheckoutDialog.tsx
     ConfirmCheckinDialog.tsx
+    ConfirmRestoreDialog.tsx  Accent-colored confirm dialog for restore actions
     ForceCheckinDialog.tsx   Admin-only — release another user's lock
   listing/
     ViewContent.tsx          Main content list page
+    ContentTableHeader.tsx   Shared <TableHeader> (checkbox, icon, 7 sortable cols, Actions) used by both ViewContent and RecycleBinTable
+    RecycleBinTable.tsx      Recycle bin table — owns its own restore/permanent-delete dialog state
     BookmarkedFiles.tsx      Current user's bookmarks (top 5)
     MyFiles.tsx              Items owned by current user (top 5)
     RecentFiles.tsx          Most recently modified items (top 8)
@@ -273,12 +283,13 @@ features/content/
   tags/
     TagInput.tsx             Chip-style tag input with suggestions + create-new
   bulk/
-    BulkUploadPage.tsx       Multi-file upload at /bulk-upload
+    BulkUploadPage.tsx       Multi-file upload at /bulk-upload; uses POST /api/collections/:id/items to append without replacing
   components/
     ContentIcon.tsx          Lucide icon keyed by file category (uses CATEGORY_COLORS from lib/mime.ts)
     ContentExtBadge.tsx      Badge showing file extension (or "Link")
     ContentStatusBadge.tsx   Null-safe status badge; labels via useTranslation
     ContentTypeBadge.tsx     Same pattern for contentType
+    ExpirationBadge.tsx      Urgency badge (red = expired, amber ≤7d, green = future, muted = no expiry); shared by ViewContent, RecycleBinTable, and ExpirationCalendar
 ```
 
 `ContentItem` is defined in `lib/types.ts` — hand-written to mirror the Prisma `Content` shape with joined `owner` and `checkedOutBy` relations as `Employee` objects. Key fields: `ownerId`, `checkedOutById` (the raw ID), `checkedOutBy` (the joined employee object).
@@ -366,6 +377,13 @@ Full CRUD under `features/employees/`. Both dialogs import helpers from `employe
 **Validation** — Add requires firstName, lastName (unique), id (positive int, not taken), persona, userName, email, password, confirmPassword (matching). Edit requires firstName and lastName (unique, self excluded).
 
 Search matches firstName, lastName, full name, persona, id. Name matches highlighted via `highlightRange`. Rows extracted to `EmployeeRow` so `useAvatarUrl` can be called per row (hooks can't be called inside `.map()`).
+
+### Collections feature
+
+`features/collections/` contains dialogs for creating and managing collections. Key components:
+
+- **`AddToCollectionDialog`** — composes `CollectionPicker` + `AddCollectionDialog` to let a user pick an existing collection or create a new one, then calls `POST /api/collections/:id/items` to append selected content. A `refreshKey` counter triggers `CollectionPicker` to refetch after a new collection is created in the same dialog session.
+- **`AddCollectionDialog`** — creates a new collection via `POST /api/collections`.
 
 ### Service Requests feature
 

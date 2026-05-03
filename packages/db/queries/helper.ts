@@ -26,6 +26,7 @@ export const contentSelect = {
     checkedOutById: true,
     ownerId: true,
     tags: true,
+    deleted: true,
 } as const
 
 export class Helper {

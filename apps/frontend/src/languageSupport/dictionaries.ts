@@ -124,6 +124,8 @@ export const en_us: Record<TranslationKey, string> = {
     'content.checkoutTitle': 'Are you sure you want to checkout this content?',
     'content.checkoutDesc1': 'Check out ',
     'content.checkoutDesc2': "? You'll be able to edit and delete it until you check it back in.",
+
+    'dashboard.subtitle': "Find all your tools here.",
 };
 
 export const sp_sp: Partial<Record<TranslationKey, string>> = {

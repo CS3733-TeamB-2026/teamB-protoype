@@ -4,6 +4,7 @@ import { employeeSelect } from "./helper";
 // Items have no guaranteed DB order, so position must always be applied here
 const itemsInclude = {
     items: {
+        where: { content: { deleted: false } },
         orderBy: { position: "asc" as const },
         include: { content: true },
     },
@@ -94,6 +95,37 @@ export class Collection {
         });
     }
 
+    /** Appends items to a collection, skipping IDs already present. New items are positioned after the last existing item. */
+    public static async appendItems(collectionId: number, contentIds: number[]) {
+        return prisma.$transaction(async (tx) => {
+            const existing = await tx.collectionItem.findMany({
+                where: { collectionId },
+                select: { contentId: true, position: true },
+            });
+            const existingIds = new Set(existing.map((i) => i.contentId));
+            const toAdd = contentIds.filter((id) => !existingIds.has(id));
+            const maxPosition = existing.length > 0 ? Math.max(...existing.map((i) => i.position)) : -1;
+
+            if (toAdd.length > 0) {
+                await tx.collectionItem.createMany({
+                    data: toAdd.map((contentId, index) => ({
+                        collectionId,
+                        contentId,
+                        position: maxPosition + 1 + index,
+                    })),
+                });
+            }
+
+            return tx.collection.findUnique({
+                where: { id: collectionId },
+                include: {
+                    owner: { select: employeeSelect },
+                    ...itemsInclude,
+                },
+            });
+        });
+    }
+
     /** Cascades to CollectionItem and CollectionFavorite via schema onDelete. */
     public static async delete(collectionId: number) {
         await prisma.collection.delete({ where: { id: collectionId } });
@@ -110,6 +142,23 @@ export class Collection {
     public static async removeFavorite(collectionId: number, employeeId: number) {
         await prisma.collectionFavorite.delete({
             where: { employeeId_collectionId: { employeeId, collectionId } },
+        });
+    }
+
+    /** Returns all collections that contain the given content item, filtered by visibility. */
+    public static async queryByContentId(contentId: number, employeeId: number, isAdmin: boolean) {
+        return prisma.collection.findMany({
+            where: {
+                items: { some: { contentId } },
+                ...(isAdmin ? {} : {
+                    OR: [{ public: true }, { ownerId: employeeId }],
+                }),
+            },
+            include: {
+                owner: { select: employeeSelect },
+                ...itemsInclude,
+            },
+            orderBy: { id: "asc" },
         });
     }
 

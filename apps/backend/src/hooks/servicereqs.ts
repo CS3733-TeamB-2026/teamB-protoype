@@ -83,6 +83,61 @@ export const updateServiceReq = async (req: req, res: res) => {
     }
 }
 
+export const getServiceReqsByContentId = async (req: req, res: res) => {
+    try {
+        const contentId = parseInt(req.params.id);
+        const servicereqs = await q.ServiceReqs.queryByContentId(contentId);
+        return res.status(200).json(servicereqs);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+export const getServiceReqsByCollectionId = async (req: req, res: res) => {
+    try {
+        const collectionId = parseInt(req.params.id);
+        const servicereqs = await q.ServiceReqs.queryByCollectionId(collectionId);
+        return res.status(200).json(servicereqs);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+export const getUnlinkedServiceReqs = async (req: req, res: res) => {
+    try {
+        const servicereqs = await q.ServiceReqs.queryUnlinked();
+        return res.status(200).json(servicereqs);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+export const linkServiceReq = async (req: req, res: res) => {
+    try {
+        const employee = await getEmployee(req);
+        if (!employee) return res.status(404).json({ error: "Employee not found" });
+
+        const id = parseInt(req.params.id);
+        const existing = await q.ServiceReqs.queryServiceReqById(id);
+        if (!existing) return res.status(404).json({ error: "Service request not found" });
+        if (!isUserOrAdmin(existing.ownerId, employee))
+            return res.status(403).json({ error: "Access denied" });
+
+        const { linkedContentId = null, linkedCollectionId = null } = req.body;
+        if (linkedContentId && linkedCollectionId)
+            return res.status(400).json({ error: "Cannot link both a content item and a collection" });
+
+        const result = await q.ServiceReqs.linkServiceReq(id, linkedContentId, linkedCollectionId);
+        return res.status(200).json(result);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
 export const deleteServiceReq = async (req: req, res: res) => {
     const payload = req.body;
     try {

@@ -4,7 +4,7 @@ import * as cheerio from "cheerio";
 import { req, res } from "./types";
 import { getEmployee } from "../helpers/getEmployee";
 import { assertPublicUrl } from "../helpers/validateUrl";
-import { isAdmin, isPersonaOrAdmin } from "../helpers/permissions";
+import { isAdmin, isPersonaOrAdmin, isUserOrAdmin } from "../helpers/permissions";
 import { extractText, SupportedMimeType } from "../../lib/extractors";
 import { generateEmbedding, embeddingToSql } from '../../lib/embeddings';
 import { prisma } from '../../../../packages/db/lib/prisma';
@@ -157,10 +157,22 @@ export const getPublicFileUrl = async (req: req, res: res) => {
     }
 };
 
+/**
+ * Builds the Supabase storage path for a new file upload.
+ * The UUID segment prevents collisions when the same filename is uploaded more
+ * than once by the same owner. Format: `<ownerID>/<uuid>/<originalFilename>`.
+ */
 function buildFileURI(ownerID: string, filename: string): string {
     return `${ownerID}/${crypto.randomUUID()}/${filename}`;
 }
 
+/**
+ * Creates a new content item. Responds with 201 immediately after writing the
+ * metadata row, then kicks off text extraction and embedding generation in
+ * `setImmediate` so the client isn't blocked by potentially slow ML inference.
+ * If the Supabase upload succeeds but the DB write fails, the orphaned file is
+ * cleaned up before returning the error.
+ */
 export const uploadFile = async (req: req, res: res) => {
     const payload = req.body;
     let fileURI: string | null = null;
@@ -247,6 +259,14 @@ export const uploadFile = async (req: req, res: res) => {
     }
 };
 
+/**
+ * Updates an existing content item. Like `uploadFile`, responds immediately
+ * and processes text/embedding in the background via `setImmediate`.
+ * Returns 409 when the caller no longer holds the checkout lock — this can
+ * happen after a force check-in, lock expiry, or check-in from another tab.
+ * If a new file is uploaded but the DB write fails, the new file is deleted;
+ * the old file is deleted only after a successful update that replaced it.
+ */
 export const updateContent = async (req: req, res: res) => {
     const payload = req.body;
     let newFileURI: string | null = null;
@@ -364,10 +384,10 @@ export const updateContent = async (req: req, res: res) => {
 };
 
 /**
- * Deletes a content item and its Supabase file (if any).
+ * Soft-deletes a content item (moves it to the recycle bin).
  * Requires the caller to hold the checkout lock — same gate as updateContent.
- * Returns 409 both when the item is not checked out and when someone else holds it,
- * so the frontend can display a consistent "lock required" message in both cases.
+ * Clears the checkout lock as part of the operation.
+ * The Supabase file (if any) is NOT deleted here; that happens on permanent delete.
  */
 export const deleteContent = async (req: req, res: res) => {
     try {
@@ -391,11 +411,79 @@ export const deleteContent = async (req: req, res: res) => {
                     message: "This item has been forcibly checked in.",
                 });
         }
+        await q.Content.softDeleteContent(id);
+        return res.status(200).json(content);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+/** Returns all deleted content visible to the caller: all items for admins, owned items only for everyone else. */
+export const getDeletedContent = async (req: req, res: res) => {
+    try {
+        const employee = await getEmployee(req);
+        if (!employee)
+            return res.status(404).json({ error: "Employee not found" });
+
+        const content = await q.Content.queryDeletedContent(employee.id, isAdmin(employee));
+        return res.status(200).json(content);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+/**
+ * Restores a soft-deleted content item.
+ * Requires the caller to be the item owner or an admin.
+ */
+export const restoreContent = async (req: req, res: res) => {
+    try {
+        const employee = await getEmployee(req);
+        if (!employee)
+            return res.status(404).json({ error: "Employee not found" });
+
+        const id = parseInt(req.params.id);
+        const content = await q.Content.queryDeletedContentById(id);
+        if (!content) {
+            return res.status(404).json({ message: "Content not found" });
+        }
+        if (!isUserOrAdmin(content.ownerId ?? -1, employee)) {
+            return res.status(403).json({ error: "Only the owner or an admin can restore this item." });
+        }
+        await q.Content.restoreContent(id);
+        return res.status(200).json({ message: "Restored" });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+/**
+ * Permanently deletes a content item and its Supabase file.
+ * Requires the caller to be the item owner or an admin.
+ * The item must already be in the recycle bin (deleted = true).
+ */
+export const permanentDeleteContent = async (req: req, res: res) => {
+    try {
+        const employee = await getEmployee(req);
+        if (!employee)
+            return res.status(404).json({ error: "Employee not found" });
+
+        const id = parseInt(req.params.id);
+        const content = await q.Content.queryDeletedContentById(id);
+        if (!content) {
+            return res.status(404).json({ message: "Content not found in recycle bin." });
+        }
+        if (!isUserOrAdmin(content.ownerId ?? -1, employee)) {
+            return res.status(403).json({ error: "Only the owner or an admin can permanently delete this item." });
+        }
         if (content.fileURI) {
             await q.Bucket.deleteFile(content.fileURI);
         }
-        await q.Content.deleteContent(id);
-        return res.status(205).json(content);
+        await q.Content.permanentDeleteContent(id);
+        return res.status(200).json(content);
     } catch (error) {
         console.error(error);
         return res.status(500).end();
@@ -418,8 +506,8 @@ export const checkoutContent = async (req: req, res: res) => {
         const content = await q.Content.queryContentById(contentId);
         if (!content) return res.status(404).json({ error: "Content not found" });
 
-        // Only employees whose persona matches the content's targetPersona (or admins) may check out
-        if (!isPersonaOrAdmin(content.targetPersona, employee)) {
+        // Only employees whose persona matches the content's targetPersona (or admins) may check out, or if you are the content owner
+        if (!isPersonaOrAdmin(content.targetPersona, employee) && content.ownerId !== employee.id) {
             return res.status(403).json({ error: "Your persona does not have access to this content" });
         }
 
@@ -476,6 +564,16 @@ export const searchContent = async (req: req, res: res) => {
     }
 };
 
+/**
+ * Aggregates content analytics for the dashboard insights page.
+ * Admins see all content; non-admins only see content targeting their persona.
+ * Three aggregations are computed in a single pass over visible content:
+ *   - `hitsByOwner`   — total preview hits grouped by content owner
+ *   - `hitsByPersona` — total preview hits grouped by target persona
+ *   - `contentCurrency` — average age (days since lastModified) per owner
+ * Expiration counts are derived from the "Expired" / "Expiring Soon" tags
+ * written by the `autoTag` background job.
+ */
 export const getTransactionSummary = async (req: req, res: res) => {
     try {
         const employee = await getEmployee(req);
