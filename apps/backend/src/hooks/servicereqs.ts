@@ -3,6 +3,7 @@ import {req, res} from "./types"
 import { getEmployee } from "../helpers/getEmployee";
 import { isUserOrAdmin } from "../helpers/permissions";
 
+/** Returns every service request with full relations (owner, assignee, linked content/collection). */
 export const allServiceReqs = async (req: req, res: res) => {
     try {
         const servicereqs = await q.ServiceReqs.queryAllServiceReqs();
@@ -13,6 +14,7 @@ export const allServiceReqs = async (req: req, res: res) => {
     }
 };
 
+/** Returns service requests that have a non-null assignee. */
 export const allAssignedReqs = async (req: req, res: res) => {
     try {
         const assigned = await q.ServiceReqs.queryAssignedServiceReqs();
@@ -23,6 +25,13 @@ export const allAssignedReqs = async (req: req, res: res) => {
     }
 };
 
+/**
+ * Creates a new service request. The owner is derived from the caller's JWT — the
+ * request body must not include an `ownerId` field.
+ *
+ * Mutual-exclusivity guardrail: if the payload links a content item, any collection
+ * link is silently cleared so the DB constraint is never violated.
+ */
 export const createServiceReq = async (req: req, res: res) => {
     const payload = req.body;
     try {
@@ -30,6 +39,7 @@ export const createServiceReq = async (req: req, res: res) => {
         if (!employee) return res.status(404).json({ error: "Employee not found" });
 
         const linkedContentId = payload.linkedContentId ?? null;
+        // If a content item is linked, a collection link cannot coexist — enforce here before the DB check.
         const linkedCollectionId = linkedContentId ? null : (payload.linkedCollectionId ?? null);
         const result = await q.ServiceReqs.createServiceReq(
             payload.name,
@@ -49,6 +59,11 @@ export const createServiceReq = async (req: req, res: res) => {
     }
 }
 
+/**
+ * Updates an existing service request. Only the owner or an admin may edit.
+ * `ownerId` is carried forward from the existing record — ownership cannot be
+ * transferred via this endpoint.
+ */
 export const updateServiceReq = async (req: req, res: res) => {
     const payload = req.body;
     try {
@@ -61,6 +76,7 @@ export const updateServiceReq = async (req: req, res: res) => {
             return res.status(403).json({ error: "Access denied" });
 
         const linkedContentId = payload.linkedContentId ?? null;
+        // Same mutual-exclusivity guardrail as createServiceReq.
         const linkedCollectionId = linkedContentId ? null : (payload.linkedCollectionId ?? null);
 
         // ownerId is taken from the existing record — ownership cannot be transferred via this endpoint

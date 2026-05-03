@@ -26,6 +26,10 @@ type ServiceReqTab = "all" | "mine" | "assigned";
 /**
  * Full-page table for browsing, adding, editing, and deleting service requests.
  *
+ * Three tabs — All / Mine (created by me) / Assigned (assigned to me) — filter
+ * client-side from a single `/api/servicereqs` fetch, so switching tabs is instant
+ * with no additional network calls.
+ *
  * Clicking a row toggles an inline detail panel showing notes and any linked
  * content item or collection. Edit/Delete buttons call `e.stopPropagation()` so
  * they don't also toggle the expansion.
@@ -72,6 +76,7 @@ function ViewServiceReqs() {
 
     const currentUserId = user.user?.id;
 
+    // Tab filters first, then search narrows further — two independent passes over the same data.
     const tabServiceReqs = (() => {
         if (activeTab === "mine") return servicereqs.filter((s) => s.ownerId === currentUserId);
         if (activeTab === "assigned") return servicereqs.filter((s) => s.assigneeId === currentUserId);
