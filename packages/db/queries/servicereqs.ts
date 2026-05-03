@@ -1,6 +1,7 @@
 import * as p from "../generated/prisma/client";
 import {prisma} from "../lib/prisma";
 import {Helper, employeeSelect, srInclude} from "./helper";
+import { generateEmbedding, embeddingToSql } from '../../../apps/backend/lib/embeddings';
 
 export class ServiceReqs {
 
@@ -62,6 +63,32 @@ export class ServiceReqs {
         });
     }
 
+    /** Semantic vector search over all service requests. Returns up to 20 results with `similarity` score (0–1). */
+    public static async semanticSearch(query: string) {
+        const embedding = await generateEmbedding(query);
+        const embeddingStr = embeddingToSql(embedding);
+
+        const rows = await prisma.$queryRaw<{ id: number; similarity: number }[]>`
+            SELECT id, 1 - (embedding <=> ${embeddingStr}::vector) AS similarity
+            FROM "ServiceRequest"
+            WHERE embedding IS NOT NULL
+            ORDER BY embedding <=> ${embeddingStr}::vector
+            LIMIT 20
+        `;
+
+        const ids = rows.map(r => r.id);
+        const similarityMap = new Map(rows.map(r => [r.id, Number(r.similarity)]));
+
+        const requests = await prisma.serviceRequest.findMany({
+            where: { id: { in: ids } },
+            include: ServiceReqs.include,
+        });
+
+        return requests
+            .map(sr => ({ ...sr, similarity: similarityMap.get(sr.id) ?? 0 }))
+            .sort((a, b) => b.similarity - a.similarity);
+    }
+
     /**
      * Returns service requests not linked to any content item or collection.
      *
@@ -94,7 +121,7 @@ export class ServiceReqs {
         _notes?: string | null,
     ): Promise<p.ServiceRequest> {
         const _type: p.RequestType = Helper.requestHelper(_type_string);
-        return prisma.serviceRequest.create({
+        const result = await prisma.serviceRequest.create({
             data: {
                 name: _name,
                 // created defaults to now() at the DB level; not caller-supplied
@@ -105,6 +132,20 @@ export class ServiceReqs {
                 notes: _notes ?? null,
             },
         });
+
+        setImmediate(async () => {
+            try {
+                const embeddingInput = [_name, _type, _notes ?? ''].join(' ');
+                const embedding = await generateEmbedding(embeddingInput);
+                await prisma.$executeRaw`
+                    UPDATE "ServiceRequest" SET embedding = ${embeddingToSql(embedding)}::vector WHERE id = ${result.id}
+                `;
+            } catch (err) {
+                console.error(`[background] Failed to embed service request id=${result.id}:`, err);
+            }
+        });
+
+        return result;
     }
 
     public static async updateServiceReq(
@@ -114,7 +155,7 @@ export class ServiceReqs {
     ): Promise<p.ServiceRequest> {
         const _type: p.RequestType | null = Helper.requestHelper(_type_string);
         if (_type == null) throw new Error("Service Request type not specified");
-        return prisma.serviceRequest.update({
+        const result = await prisma.serviceRequest.update({
             where: { id: _id },
             data: {
                 name: _name,
@@ -126,6 +167,20 @@ export class ServiceReqs {
                 notes: _notes ?? null,
             },
         });
+
+        setImmediate(async () => {
+            try {
+                const embeddingInput = [_name, _type, _notes ?? ''].join(' ');
+                const embedding = await generateEmbedding(embeddingInput);
+                await prisma.$executeRaw`
+                    UPDATE "ServiceRequest" SET embedding = ${embeddingToSql(embedding)}::vector WHERE id = ${_id}
+                `;
+            } catch (err) {
+                console.error(`[background] Failed to embed service request id=${_id}:`, err);
+            }
+        });
+
+        return result;
     }
 
     public static async deleteServiceReq(_id: number): Promise<void> {

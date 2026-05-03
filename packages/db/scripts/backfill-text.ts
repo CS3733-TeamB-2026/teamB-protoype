@@ -79,4 +79,4 @@ async function backfill() {
     await prisma.$disconnect();
 }
 
-backfill();
+void backfill();

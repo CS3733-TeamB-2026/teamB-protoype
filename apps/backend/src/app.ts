@@ -14,6 +14,7 @@ import * as collection from './hooks/collection'
 import * as notifications from './hooks/notifications'
 import * as previews from './hooks/preview'
 import * as nlQuery from './hooks/nlQuery'
+import * as search from './hooks/search'
 import { auth } from 'express-oauth2-jwt-bearer'
 
 const app = express();
@@ -40,6 +41,8 @@ app.post("/api/servicereqs",servicereqs.createServiceReq)
 app.put("/api/servicereqs", servicereqs.updateServiceReq)
 app.patch("/api/servicereqs/:id/link", servicereqs.linkServiceReq)
 app.delete("/api/servicereqs/:id", servicereqs.deleteServiceReq)
+// Unified search
+app.get("/api/search", search.unifiedSearch)
 // Content
 app.get("/api/content/info/:id", content.getContentInfo)
 app.get("/api/content/download/:id", content.downloadContent)
