@@ -23,6 +23,18 @@ export const allAssignedReqs = async (req: req, res: res) => {
     }
 };
 
+/**
+ * Creates a service request, then optionally links a content item or collection.
+ *
+ * Three-step process because back-relation fields (`linkedContent`, `linkedCollection`)
+ * cannot be written during SR creation — the FK lives on the other side:
+ * 1. Create the SR row.
+ * 2. Set `serviceRequestId` on the content or collection row.
+ * 3. Re-fetch the SR with full includes so the response contains the populated relations.
+ *
+ * `linkedCollectionId` is nulled when `linkedContentId` is present — an SR can link to
+ * at most one resource, and the form already prevents both being set at once.
+ */
 export const createServiceReq = async (req: req, res: res) => {
     const payload = req.body;
     try {
@@ -30,6 +42,7 @@ export const createServiceReq = async (req: req, res: res) => {
         if (!employee) return res.status(404).json({ error: "Employee not found" });
 
         const linkedContentId: number | null = payload.linkedContentId ?? null;
+        // If content is linked, ignore any collection ID — only one resource can be linked
         const linkedCollectionId: number | null = linkedContentId ? null : (payload.linkedCollectionId ?? null);
 
         const sr = await q.ServiceReqs.createServiceReq(
@@ -55,6 +68,19 @@ export const createServiceReq = async (req: req, res: res) => {
     }
 }
 
+/**
+ * Updates a service request's fields and re-points its linked resource.
+ *
+ * Link management requires careful ordering to avoid unique-constraint violations:
+ * 1. Clear the old link on the previous content/collection row (if the target changed).
+ * 2. Set the new link on the incoming content/collection row.
+ * 3. Update the SR's own fields.
+ * 4. Re-fetch with full includes for the response.
+ *
+ * Old and new IDs are compared before clearing — skipping the clear when the target
+ * is unchanged prevents a momentary null that could race with concurrent reads.
+ * Ownership cannot be transferred here; `ownerId` is always taken from the existing row.
+ */
 export const updateServiceReq = async (req: req, res: res) => {
     const payload = req.body;
     try {
@@ -69,7 +95,7 @@ export const updateServiceReq = async (req: req, res: res) => {
         const linkedContentId: number | null = payload.linkedContentId ?? null;
         const linkedCollectionId: number | null = linkedContentId ? null : (payload.linkedCollectionId ?? null);
 
-        // Clear the old link if the target is changing
+        // Clear the old link only when the target is actually changing
         const oldContentId = existing.linkedContent?.id ?? null;
         const oldCollectionId = existing.linkedCollection?.id ?? null;
         if (oldContentId && oldContentId !== linkedContentId)
@@ -125,6 +151,7 @@ export const getServiceReqsByCollectionId = async (req: req, res: res) => {
     }
 };
 
+/** Returns service requests with no linked content item or collection — used by ServiceRequestPicker in the link dialog. */
 export const getUnlinkedServiceReqs = async (req: req, res: res) => {
     try {
         const servicereqs = await q.ServiceReqs.queryUnlinked();
@@ -176,6 +203,13 @@ export const linkServiceReq = async (req: req, res: res) => {
     }
 };
 
+/**
+ * Deletes a service request. Owner or admin only.
+ *
+ * Links must be severed before deletion: because Content and Collection own the FK,
+ * deleting the SR row would leave orphaned `serviceRequestId` values pointing at a
+ * non-existent row. Clearing them first keeps the referential integrity intact.
+ */
 export const deleteServiceReq = async (req: req, res: res) => {
     const payload = req.body;
     try {
@@ -187,7 +221,7 @@ export const deleteServiceReq = async (req: req, res: res) => {
         if (!isUserOrAdmin(existing.ownerId, employee))
             return res.status(403).json({ error: "Access denied" });
 
-        // Clear links before deleting so content/collection rows are cleaned up
+        // Null out FK on linked rows before deleting — the schema has no onDelete cascade here
         if (existing.linkedContent?.id) await q.Content.setServiceRequest(existing.linkedContent.id, null);
         if (existing.linkedCollection?.id) await q.Collection.setServiceRequest(existing.linkedCollection.id, null);
 

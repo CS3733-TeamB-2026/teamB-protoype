@@ -28,6 +28,10 @@ interface Props {
  *
  * Pass `excludeIds` to hide items that are already members of a collection so
  * the user can't add duplicates.
+ *
+ * Pass `unlinkedSR` when the picker is inside the SR creation/edit form — it
+ * appends `?unlinkedSR=true` to the fetch so the backend returns only items
+ * whose `serviceRequestId` is null, preventing accidental double-linking.
  */
 export function ContentPicker({ selectedId, onSelect, excludeIds = [], disabled = false, unlinkedSR = false }: Props) {
     const [open, setOpen] = useState(false);

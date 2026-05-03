@@ -90,7 +90,13 @@ export function buildServiceReqJSON(values: ServiceReqFormValues): string {
     })
 }
 
-/** Populate form values from an existing ServiceReqItem for the Edit form. */
+/**
+ * Populates form values from an existing `ServiceReq` for the Edit form.
+ *
+ * `linkMode` is derived from the populated back-relation fields (`linkedContent`,
+ * `linkedCollection`) rather than any scalar ID on the SR row — because the FK
+ * lives on the other side, the SR model has no `linkedContentId` scalar field.
+ */
 export function fromServiceReqItem(item: ServiceReq): ServiceReqFormValues {
     const createdDate = new Date(item.created);
     const linkMode = item.linkedContent != null ? "content"

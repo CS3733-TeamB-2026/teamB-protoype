@@ -6,11 +6,12 @@ export class ServiceReqs {
 
     /**
      * Shared Prisma include for all SR queries. `linkedContent` and `linkedCollection`
-     * are now back-relations (FK lives on Content/Collection), but the include syntax
-     * and returned shape are identical to before.
+     * are back-relations (the FK lives on Content and Collection respectively), so
+     * Prisma resolves them by scanning those tables for rows whose `serviceRequestId`
+     * matches — the include syntax is unchanged from a forward-relation include.
      *
-     * `linkedCollection` needs the nested items include because CollectionCard reads
-     * `collection.items.length`.
+     * `linkedCollection` carries nested items so that CollectionCard can read
+     * `collection.items.length` without a second fetch.
      */
     private static readonly include = {
         owner: { select: employeeSelect },
@@ -61,7 +62,14 @@ export class ServiceReqs {
         });
     }
 
-    /** Returns service requests not linked to any content item or collection. */
+    /**
+     * Returns service requests not linked to any content item or collection.
+     *
+     * `{ is: null }` is Prisma's back-relation null-check syntax — it matches rows
+     * where no Content or Collection row points at this SR via `serviceRequestId`.
+     * A plain `{ serviceRequestId: null }` would fail because the FK doesn't live
+     * on the ServiceRequest table.
+     */
     public static async queryUnlinked() {
         return prisma.serviceRequest.findMany({
             where: {
@@ -72,6 +80,14 @@ export class ServiceReqs {
         });
     }
 
+    /**
+     * Creates a new service request without linking it to any content or collection.
+     *
+     * Because `linkedContent` and `linkedCollection` are back-relations (FK lives on
+     * those tables), they cannot be set during SR creation. The caller — typically the
+     * `createServiceReq` backend hook — must call `Content.setServiceRequest` or
+     * `Collection.setServiceRequest` in a separate step after this returns.
+     */
     public static async createServiceReq(
         _name: string, _created: Date, _deadline: Date, _type_string: string,
         _assigneeId: number, _ownerId: number,

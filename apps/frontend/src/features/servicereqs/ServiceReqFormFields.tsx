@@ -184,6 +184,8 @@ export function ServiceReqFormFields({ values, patch, errors, showLastModified =
             {/* Linked Resource */}
             <Field className="bg-background">
                 <FieldLabel className="text-primary text-lg mb-4">Linked Resource</FieldLabel>
+                {/* Switching linkMode resets both IDs so the stale selection from the
+                    previous picker isn't silently serialised into the payload. */}
                 <RadioGroup
                     value={values.linkMode}
                     onValueChange={(v) => {
@@ -211,6 +213,7 @@ export function ServiceReqFormFields({ values, patch, errors, showLastModified =
                 </RadioGroup>
 
                 {values.linkMode === "content" && (
+                    // unlinkedSR filters to content not yet linked to any SR
                     <ContentPicker
                         selectedId={values.linkedContentId}
                         onSelect={(id) => patch({ linkedContentId: id })}
@@ -218,6 +221,8 @@ export function ServiceReqFormFields({ values, patch, errors, showLastModified =
                     />
                 )}
                 {values.linkMode === "collection" && (
+                    // publicOnly and unlinkedSR are both required: private collections
+                    // can't be linked to SRs, and already-linked ones must be excluded
                     <CollectionPicker
                         selectedId={values.linkedCollectionId}
                         onSelect={(id) => patch({ linkedCollectionId: id })}

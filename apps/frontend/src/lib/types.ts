@@ -39,7 +39,15 @@ export type Employee = {
     profilePhotoURI: string;
 }
 
-// Matches the Content model from Prisma (with joined owner/checkedOutBy)
+/**
+ * Mirrors the Prisma `Content` model with joined `owner` and `checkedOutBy` relations.
+ *
+ * `serviceRequestId` is the raw FK scalar; `serviceRequest` is the populated relation
+ * and is only present on the detail response (`GET /api/content/:id`). List responses
+ * from `GET /api/content` include `serviceRequestId` but leave `serviceRequest` null.
+ *
+ * An item is either a file (`fileURI`) or a link (`linkURL`), never both.
+ */
 export type ContentItem = {
     id: number;
     displayName: string;
@@ -76,6 +84,13 @@ export type UrlPreview = {
     favicon: string | null;
 }
 
+/**
+ * Mirrors the Prisma `ServiceRequest` model with joined relations.
+ *
+ * `linkedContent` and `linkedCollection` are back-relations resolved server-side —
+ * the FK lives on those tables, not on ServiceRequest. Exactly one of them can be
+ * non-null at a time (enforced by the `@unique` constraint on each FK column).
+ */
 export type ServiceReq = {
     id: number;
     name: string;
@@ -121,6 +136,14 @@ export type CollectionItem = {
     content: ContentItem;
 };
 
+/**
+ * Mirrors the Prisma `Collection` model.
+ *
+ * `serviceRequestId` is the FK scalar; `serviceRequest` is populated only on the
+ * detail response (`GET /api/collections/:id`). Private collections cannot have
+ * a linked SR — the backend enforces this invariant in `updateCollection` and
+ * `setCollectionServiceRequest`.
+ */
 export type Collection = {
     id: number;
     displayName: string;

@@ -46,6 +46,11 @@ interface Props {
  * Pass `inline` when the picker sits at the bottom of a card with
  * `overflow-hidden` — the dropdown renders in normal flow and pushes the card
  * down instead of being clipped by the card boundary.
+ *
+ * Pass `unlinkedSR` when used inside the SR creation/edit form — appends
+ * `?unlinkedSR=true` so the backend filters to collections with no existing
+ * SR link, preventing double-linking. Note that `publicOnly` is also required
+ * in that context because private collections cannot be linked to SRs.
  */
 export function CollectionPicker({ selectedId, onSelect, disabled = false, publicOnly = false, excludeIds = [], onCreateNew, inline = false, refreshKey = 0, unlinkedSR = false }: Props) {
     const [open, setOpen] = useState(false);

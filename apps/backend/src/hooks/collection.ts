@@ -69,7 +69,8 @@ export const updateCollection = async (req: req, res: res) => {
         }
         const { displayName, isPublic, ownerId, contentIds } = req.body;
 
-        // If going from public → private, sever any SR link
+        // Private collections cannot be linked to SRs; sever the link before the update
+        // so the DB constraint (private collections must have serviceRequestId = null) is not violated.
         if (existing.public && !isPublic && existing.serviceRequestId != null) {
             await q.Collection.setServiceRequest(collectionId, null);
         }

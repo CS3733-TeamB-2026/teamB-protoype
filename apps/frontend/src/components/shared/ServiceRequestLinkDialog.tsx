@@ -79,6 +79,8 @@ export function ServiceRequestLinkDialog({ open, onOpenChange, onServiceReqsChan
         setLinking(true);
         try {
             const token = await getAccessTokenSilently();
+            // PATCH the content/collection endpoint (not /api/servicereqs/:id/link) because
+            // the FK lives on the content/collection row — that's where the write must go.
             const linkEndpoint = contentId != null
                 ? `/api/content/${contentId}/service-request`
                 : `/api/collections/${collectionId}/service-request`;

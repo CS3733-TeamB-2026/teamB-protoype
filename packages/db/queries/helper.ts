@@ -38,6 +38,19 @@ export const contentSelect = {
  * Does not nest linkedContent/linkedCollection inside the SR to avoid circular joins;
  * callers that already have the content/collection context don't need those fields.
  */
+/**
+ * Shared include for ServiceRequest relations — used by content/collection queryById
+ * so that detail views receive the linked SR in one fetch. Defined here (not in
+ * servicereqs.ts) to avoid circular imports: servicereqs.ts imports helper.ts, and
+ * content.ts / collection.ts both import this constant without importing servicereqs.ts.
+ *
+ * `linkedContent` and `linkedCollection` are back-relations (the FK lives on those
+ * tables), but the include syntax is identical to forward-relation includes.
+ *
+ * The nested collection items include is required because CollectionCard reads
+ * `collection.items.length`. The SR's own linkedContent/linkedCollection are not
+ * nested inside the returned collection to avoid circular join depth.
+ */
 export const srInclude = {
     owner: { select: employeeSelect },
     assignee: { select: employeeSelect },
