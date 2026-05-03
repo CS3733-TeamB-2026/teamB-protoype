@@ -67,8 +67,21 @@ function InsightsPage() {
                 </div>
 
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-6xl">
-                    <div className="border mb-5 p-3 bg-card shadow-lg rounded-xl w-full max-w-6xl mx-auto">
-                        <ChatInput onSubmit={handleSubmit} disabled={isLoading} />
+                    <div className="relative mx-auto w-full max-w-6xl mb-5">
+                        {/* Underglow behind the input */}
+                        <div
+                            aria-hidden
+                            className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[180%] w-[70%] blur-[32px]"
+                            style={{
+                                background:
+                                    "radial-gradient(ellipse at center, color-mix(in oklch, var(--primary-light) 30%, transparent) 0%, color-mix(in oklch, var(--primary-light) 10%, transparent) 45%, transparent 75%)",
+                            }}
+                        />
+                        <div className="relative w-full p-[1.5px] rounded-[13px] shadow-sm bg-linear-to-r from-primary/55 via-primary/65 to-primary-light">
+                            <div className="p-3 bg-card shadow-lg w-full focus-within:outline-none rounded-xl">
+                                <ChatInput onSubmit={handleSubmit} disabled={isLoading} />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
