@@ -2,8 +2,8 @@ import { config } from 'dotenv';
 import { resolve } from 'path';
 config({ path: resolve(process.cwd(), '../../apps/backend/.env') });
 
-import { prisma } from '../../../packages/db/lib/prisma';
-import { supabase } from '../../../packages/db/lib/supabase';
+import { prisma } from '@softeng-app/db';
+import { supabase } from '@softeng-app/db';
 import { extractText, SupportedMimeType } from '../lib/extractors';
 import { generateEmbedding, embeddingToSql } from '../lib/embeddings';
 import mime from 'mime-types';

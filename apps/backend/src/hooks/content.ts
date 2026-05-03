@@ -7,7 +7,6 @@ import { assertPublicUrl } from "../helpers/validateUrl";
 import { isAdmin, isPersonaOrAdmin, isUserOrAdmin } from "../helpers/permissions";
 import { extractText, SupportedMimeType } from "../../lib/extractors";
 import { generateEmbedding, embeddingToSql } from '../../lib/embeddings';
-import { prisma } from '../../../../packages/db/lib/prisma';
 import dns from "node:dns/promises";
 import {applyExpirationTagsToOne} from "../jobs/autoTag"
 
@@ -237,7 +236,7 @@ export const uploadFile = async (req: req, res: res) => {
 
                 const embedding = await generateEmbedding(embeddingInput);
 
-                await prisma.$executeRaw`
+                await q.prisma.$executeRaw`
                     UPDATE "Content"
                     SET
                         "textContent" = ${textContent},
@@ -347,7 +346,7 @@ export const updateContent = async (req: req, res: res) => {
 
                 const embedding = await generateEmbedding(embeddingInput);
 
-                await prisma.$executeRaw`
+                await q.prisma.$executeRaw`
                     UPDATE "Content"
                     SET
                         "textContent" = ${textContent},
