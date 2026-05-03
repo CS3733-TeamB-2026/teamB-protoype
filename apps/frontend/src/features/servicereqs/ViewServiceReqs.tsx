@@ -18,9 +18,17 @@ import {findMatches, highlightRange} from "@/lib/highlight.tsx";
 import { EmployeeAvatar } from "@/components/shared/EmployeeAvatar.tsx";
 import {formatLabel} from "@/lib/utils.ts";
 import { ServiceReqDetail } from "@/components/shared/ServiceReqDetail";
+import { Tabs, TabsTrigger } from "@/components/ui/tabs";
+import { SlidingTabs } from "@/components/shared/SlidingTabs";
+
+type ServiceReqTab = "all" | "mine" | "assigned";
 
 /**
  * Full-page table for browsing, adding, editing, and deleting service requests.
+ *
+ * Three tabs — All / Mine (created by me) / Assigned (assigned to me) — filter
+ * client-side from a single `/api/servicereqs` fetch, so switching tabs is instant
+ * with no additional network calls.
  *
  * Clicking a row toggles an inline detail panel showing notes and any linked
  * content item or collection. Edit/Delete buttons call `e.stopPropagation()` so
@@ -45,6 +53,7 @@ function ViewServiceReqs() {
     const [expandedId, setExpandedId] = useState<number | null>(null); // id of the currently expanded detail row, null = collapsed
     const user = useUser();
     const [sort, toggleSort] = useSortState<"name" | "created" | "deadline" | "type" | "assignee" | "owner">({column: "name", direction: "asc"});
+    const [activeTab, setActiveTab] = useState<ServiceReqTab>("all");
     const [searchTerm, setSearchTerm] = useState("");
     const { getAccessTokenSilently } = useAuth0();
 
@@ -65,7 +74,16 @@ function ViewServiceReqs() {
 
     useEffect(() => { void fetchServiceReqs(); }, [fetchServiceReqs]);
 
-    const filteredServiceReqs = servicereqs.filter((s) => {
+    const currentUserId = user.user?.id;
+
+    // Tab filters first, then search narrows further — two independent passes over the same data.
+    const tabServiceReqs = (() => {
+        if (activeTab === "mine") return servicereqs.filter((s) => s.ownerId === currentUserId);
+        if (activeTab === "assigned") return servicereqs.filter((s) => s.assigneeId === currentUserId);
+        return servicereqs;
+    })();
+
+    const filteredServiceReqs = tabServiceReqs.filter((s) => {
         const query = searchTerm.toLowerCase().trim().replace(/\s/g, "");
         if (!query) return true;
 
@@ -111,11 +129,32 @@ function ViewServiceReqs() {
 
             <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center px-4">
                 <CardHeader>
-                    <CardTitle className="text-3xl text-primary mt-4">All Service Requests</CardTitle>
-                    <CardDescription>Total Service Requests: {servicereqs.length}</CardDescription>
+                    <CardTitle className="text-3xl text-primary mt-4">Service Requests</CardTitle>
+                    <CardDescription>
+                        {filteredServiceReqs.length === servicereqs.length
+                            ? `${servicereqs.length} service request${servicereqs.length !== 1 ? "s" : ""}`
+                            : `${filteredServiceReqs.length} of ${servicereqs.length} service requests`}
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex items-center justify-between mb-4">
+                    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ServiceReqTab)}>
+                        <SlidingTabs activeTab={activeTab} indicatorColor="bg-foreground">
+                            <TabsTrigger value="all" className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0">
+                                All
+                                <span className="ml-2 text-xs opacity-70">{servicereqs.length}</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="mine" className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0">
+                                Mine
+                                <span className="ml-2 text-xs opacity-70">{servicereqs.filter((s) => s.ownerId === currentUserId).length}</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="assigned" className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0">
+                                Assigned
+                                <span className="ml-2 text-xs opacity-70">{servicereqs.filter((s) => s.assigneeId === currentUserId).length}</span>
+                            </TabsTrigger>
+                        </SlidingTabs>
+                    </Tabs>
+
+                    <div className="flex items-center justify-between mb-4 mt-4">
                         <div className="relative">
                             <Search
                                 className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 pointer-events-none"

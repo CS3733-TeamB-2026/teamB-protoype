@@ -44,7 +44,7 @@ export function ServiceRequestLinkDialog({ open, onOpenChange, onServiceReqsChan
     const [loading, setLoading] = useState(false);
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const [linking, setLinking] = useState(false);
-    const [pickerRefreshKey, setPickerRefreshKey] = useState(0);
+    const [pickerRefreshKey, setPickerRefreshKey] = useState(0); // bumped to force ServiceRequestPicker to re-fetch unlinked SRs after a link/create
     const [createOpen, setCreateOpen] = useState(false);
 
     const endpoint = contentId != null
