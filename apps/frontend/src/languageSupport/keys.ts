@@ -6,6 +6,7 @@ export type TranslationKey =
     | "all"
     | 'other'
     | 'bookmarked'
+    | 'notFullySupported'
 
     | 'settings.language'
 
@@ -119,6 +120,16 @@ export type TranslationKey =
     | 'dashCard.RecentFiles'
     | 'dashCard.QuickLinks'
     | 'dashCard.ViewCalendar'
+    | 'dashCard.LoadingReport'
+    | 'dashCard.Reports'
+    | 'dashCard.loadFail'
+    | 'dashCard.ReportsAndAnalytics'
+    | 'dashCard.reports.Subtitle'
+    | 'dashCard.reports.infoButton'
+
+    | 'customize'
+    | 'customize.title'
+    | 'customize.subtitle'
 
     | 'content'
     | 'content.filters'
