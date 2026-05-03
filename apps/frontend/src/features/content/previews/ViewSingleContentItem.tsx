@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { AlertCircle, ArrowLeft, FileText, Loader2 } from "lucide-react";
+import { AlertCircle, ArrowLeft, FileText, FolderOpen, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Hero } from "@/components/shared/Hero.tsx";
@@ -12,13 +12,14 @@ import { ContentTypeBadge } from "@/features/content/components/ContentTypeBadge
 import { ExpirationBadge } from "@/features/content/components/ExpirationBadge.tsx";
 import { PersonaBadge } from "@/components/shared/PersonaBadge.tsx";
 import { getOriginalFilename } from "@/lib/mime.ts";
-import type { ContentItem, UrlPreview } from "@/lib/types.ts";
+import type { Collection, ContentItem, UrlPreview } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
 import { Timeline } from "@/features/content/components/Timeline.tsx"
 import { useNavigate } from "react-router-dom";
 import {Button} from "@/components/ui/button";
 import {EmployeeAvatar} from "@/components/shared/EmployeeAvatar.tsx";
+import { ContentCollectionsDialog } from "@/features/content/previews/ContentCollectionsDialog";
 
 /**
  * Full-page viewer for a single content item — handles both file and link types.
@@ -39,6 +40,8 @@ export function ViewSingleContentItem() {
     const [error, setError] = useState<string | null>(null);
     const [linkPreviewStatus, setLinkPreviewStatus] = useState<"loading" | "ok" | "unreachable">("loading");
     const [linkPreview, setLinkPreview] = useState<UrlPreview | null>(null);
+    const [collections, setCollections] = useState<Collection[]>([]);
+    const [collectionsDialogOpen, setCollectionsDialogOpen] = useState(false);
     const navigate = useNavigate();
 
     usePageTitle("View Content");
@@ -67,6 +70,23 @@ export function ViewSingleContentItem() {
 
         };
         void fetchItem();
+    }, [id, getAccessTokenSilently]);
+
+    // Fetch collections containing this item so the link text shows the correct count.
+    useEffect(() => {
+        if (!id) return;
+        const load = async () => {
+            try {
+                const token = await getAccessTokenSilently();
+                const res = await fetch(`/api/content/${id}/collections`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (res.ok) setCollections(await res.json());
+            } catch {
+                // non-critical — link will just show "Add to collection"
+            }
+        };
+        void load();
     }, [id, getAccessTokenSilently]);
 
     // Fetch OG preview for link items once the item is loaded.
@@ -161,12 +181,25 @@ export function ViewSingleContentItem() {
                                         <EmployeeAvatar employee={item.owner} size="sm" />
                                     </div>
                                 )}
-                                {item.tags.length > 0 && (
-                                    <div className="flex items-center gap-2 text-sm">
-                                        <span className="text-muted-foreground">Tags</span>
-                                        <span>{item.tags.join(", ")}</span>
-                                    </div>
-                                )}
+                                <div className="flex items-center justify-between gap-2 text-sm">
+                                    {item.tags.length > 0 ? (
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-muted-foreground">Tags</span>
+                                            <span>{item.tags.join(", ")}</span>
+                                        </div>
+                                    ) : (
+                                        <span />
+                                    )}
+                                    <button
+                                        onClick={() => setCollectionsDialogOpen(true)}
+                                        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors shrink-0"
+                                    >
+                                        <FolderOpen className="w-3.5 h-3.5" />
+                                        {collections.length === 0
+                                            ? "Add to collection"
+                                            : `In ${collections.length} collection${collections.length === 1 ? "" : "s"}`}
+                                    </button>
+                                </div>
                                 <Timeline
                                     created={item.created}
                                     expiration={item.expiration ?? null}
@@ -203,6 +236,15 @@ export function ViewSingleContentItem() {
                 )}
 
             </div>
+
+            {item && (
+                <ContentCollectionsDialog
+                    contentId={item.id}
+                    open={collectionsDialogOpen}
+                    onOpenChange={setCollectionsDialogOpen}
+                    onCollectionsChange={setCollections}
+                />
+            )}
         </>
     );
 }
