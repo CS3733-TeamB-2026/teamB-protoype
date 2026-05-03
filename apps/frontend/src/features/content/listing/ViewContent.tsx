@@ -58,6 +58,7 @@ import {
 import {ContentExtBadge} from "@/features/content/components/ContentExtBadge.tsx";
 import {ContentStatusBadge} from "@/features/content/components/ContentStatusBadge.tsx";
 import {ContentTypeBadge} from "@/features/content/components/ContentTypeBadge.tsx";
+import {ExpirationBadge} from "@/features/content/components/ExpirationBadge.tsx";
 import {PersonaBadge} from "@/components/shared/PersonaBadge.tsx";
 import {EditContentDialog} from "@/features/content/forms/EditContentDialog.tsx";
 import {AddContentDialog} from "@/features/content/forms/AddContentDialog.tsx";
@@ -572,7 +573,7 @@ function ViewContent() {
 
 
     // Total column count used for colSpan on the expanded detail rows.
-    const NUM_COLS = 9;
+    const NUM_COLS = 10;
 
     // UserProvider hasn't resolved yet — show a full-screen spinner rather than
     // rendering the page without a user (which would break permission checks).
@@ -588,6 +589,7 @@ function ViewContent() {
         else if (col === "name") primarySort = item.displayName;
         else if (col === "owner") primarySort = formatName(item.owner);
         else if (col === "status") primarySort = item.status ?? "";
+        else if (col === "expiration") primarySort = item.expiration ?? "9999-99-99";
         else if (col === "contentType") primarySort = item.contentType;
         else if (col === "docType") primarySort = item.fileURI
             ? (getExtension(getOriginalFilename(item.fileURI!)) ?? getCategory(null, getOriginalFilename(item.fileURI!)))
@@ -1028,6 +1030,10 @@ function ViewContent() {
                                                                 ? <EmployeeAvatar employee={item.owner} size="sm" />
                                                                 : <span className="text-muted-foreground">—</span>}
                                                         </TableCell>
+                                                        {/* expiration */}
+                                                        <TableCell className="hidden sm:table-cell text-center">
+                                                            <ExpirationBadge expiration={item.expiration} />
+                                                        </TableCell>
                                                         {/* status */}
                                                         <TableCell className="hidden sm:table-cell text-center">
                                                             <ContentStatusBadge status={item.status}/>
@@ -1197,18 +1203,22 @@ function ViewContent() {
                                                                         <span className="font-medium text-foreground">Modified:{" "}</span>
                                                                         {new Date(item.lastModified).toLocaleString()}
                                                                     </span>
-                                                                    {item.expiration && (
-                                                                        <span>
-                                                                            <span className="font-medium text-foreground">Expires:{" "}</span>
+                                                                    {item.expiration && (() => {
+                                                                        const days = Math.ceil((new Date(item.expiration).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                                                                        return (<>
+                                                                            <span>
+                                                                                <span className="font-medium text-foreground">Expires:{" "}</span>
                                                                                 {new Date(item.expiration).toLocaleString()}
                                                                             </span>
-                                                                            )}
-                                                                            {item.expiration && (
                                                                             <span>
-                                                                                <span className="font-medium text-foreground">Days left:{" "}</span>
-                                                                                    {Math.ceil((new Date(item.expiration).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)).toLocaleString()}
+                                                                                <span className="font-medium text-foreground">
+                                                                                    {days < 0 ? "Expired:" : "Days left:"}
+                                                                                    {" "}
                                                                                 </span>
-                                                                                )}
+                                                                                {days < 0 ? `${Math.abs(days)}d ago` : days === 0 ? "Today" : `${days}`}
+                                                                            </span>
+                                                                        </>);
+                                                                    })()}
                                                                                 {item.tags.length > 0 && (
                                                                             <span>
                                                                                 <span className="font-medium text-foreground">Tags:{" "}</span>

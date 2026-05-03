@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table.tsx";
 import { ContentIcon } from "@/features/content/components/ContentIcon.tsx";
 import { ContentStatusBadge } from "@/features/content/components/ContentStatusBadge.tsx";
+import { ExpirationBadge } from "@/features/content/components/ExpirationBadge.tsx";
 import { ContentTypeBadge } from "@/features/content/components/ContentTypeBadge.tsx";
 import { ContentExtBadge } from "@/features/content/components/ContentExtBadge.tsx";
 import { PersonaBadge } from "@/components/shared/PersonaBadge.tsx";
@@ -138,6 +139,9 @@ export function RecycleBinTable({
                                     {item.owner
                                         ? <EmployeeAvatar employee={item.owner} size="sm" />
                                         : <span className="text-muted-foreground">—</span>}
+                                </TableCell>
+                                <TableCell className="hidden sm:table-cell text-center">
+                                    <ExpirationBadge expiration={item.expiration} />
                                 </TableCell>
                                 <TableCell className="hidden sm:table-cell text-center">
                                     <ContentStatusBadge status={item.status} />

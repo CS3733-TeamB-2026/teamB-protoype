@@ -8,7 +8,7 @@ import type { SortState } from "@/hooks/use-sort-state.ts";
 import { useLocale } from "@/languageSupport/localeContext.tsx";
 import { useTranslation } from "@/languageSupport/useTranslation.ts";
 
-export type ContentSortCol = "name" | "owner" | "status" | "contentType" | "persona" | "docType";
+export type ContentSortCol = "name" | "owner" | "expiration" | "status" | "contentType" | "persona" | "docType";
 
 interface Props {
     sort: SortState<ContentSortCol>;
@@ -38,6 +38,7 @@ export function ContentTableHeader({ sort, onSort, allSelected, someSelected, on
                 <TableHead className="w-8" />
                 <SortableHead column="name" label={ts('content.name')} sort={sort} onSort={onSort} />
                 <SortableHead column="owner" label={ts('content.owner')} sort={sort} onSort={onSort} className="hidden sm:table-cell" />
+                <SortableHead column="expiration" label="Expiration" sort={sort} onSort={onSort} className="hidden sm:table-cell" />
                 <SortableHead column="status" label={ts('status')} sort={sort} onSort={onSort} className="hidden sm:table-cell" />
                 <SortableHead column="contentType" label={ts('kind')} sort={sort} onSort={onSort} className="hidden sm:table-cell" />
                 <SortableHead column="persona" label={ts('persona')} sort={sort} onSort={onSort} className="hidden sm:table-cell" />
