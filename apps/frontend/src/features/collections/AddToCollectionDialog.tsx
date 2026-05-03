@@ -89,19 +89,21 @@ export function AddToCollectionDialog({ open, onOpenChange, contentIds, onDone }
                         />
                     </div>
 
-                    <DialogFooter className="flex-col gap-2">
-                        <Separator />
-                        <div className="flex justify-end gap-2 pt-1">
-                            <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={submitting}>
-                                Cancel
-                            </Button>
-                            <Button
-                                className="bg-primary text-primary-foreground hover:bg-primary/90"
-                                onClick={() => void handleSubmit()}
-                                disabled={selectedId == null || submitting}
-                            >
-                                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Add"}
-                            </Button>
+                    <DialogFooter>
+                        <div className="flex-col gap-2 w-full">
+                            <Separator />
+                            <div className="flex justify-end gap-2 pt-1 mt-2">
+                                <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={submitting}>
+                                    Cancel
+                                </Button>
+                                <Button
+                                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                                    onClick={() => void handleSubmit()}
+                                    disabled={selectedId == null || submitting}
+                                >
+                                    {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Add"}
+                                </Button>
+                            </div>
                         </div>
                     </DialogFooter>
                 </DialogContent>

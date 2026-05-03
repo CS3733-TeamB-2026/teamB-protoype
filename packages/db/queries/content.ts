@@ -1,6 +1,6 @@
 import * as p from "../generated/prisma/client";
 import {prisma} from "../lib/prisma";
-import {Helper, employeeSelect, contentSelect} from "./helper";
+import {Helper, employeeSelect, contentSelect, srInclude} from "./helper";
 import { Notification } from "./notification";
 import { generateEmbedding, embeddingToSql } from '../../../apps/backend/lib/embeddings';
 
@@ -229,9 +229,20 @@ export class Content {
         });
     }
 
-    public static async queryAllContent() {
+    /**
+     * Returns all non-deleted content items.
+     *
+     * `unlinkedSR=true` restricts to items whose `serviceRequestId` is null — used by
+     * ContentPicker in the SR form so users can only select content that isn't already
+     * linked to another SR. Content owns the FK, so a plain scalar `null` check works
+     * (no back-relation syntax needed here).
+     */
+    public static async queryAllContent(unlinkedSR = false) {
         return prisma.content.findMany({
-            where: { deleted: false },
+            where: {
+                deleted: false,
+                ...(unlinkedSR ? { serviceRequestId: null } : {}),
+            },
             select: {
                 ...contentSelect,
                 owner: { select: employeeSelect },
@@ -258,6 +269,14 @@ export class Content {
         })
     }
 
+    /**
+     * Returns a single non-deleted content item with its linked service request.
+     *
+     * `serviceRequest` here is a forward relation (Content has `serviceRequestId` FK),
+     * so `include: srInclude` works directly. `srInclude` is defined in helper.ts
+     * rather than servicereqs.ts to avoid a circular import (servicereqs.ts → helper.ts,
+     * content.ts → helper.ts is safe; content.ts → servicereqs.ts would be circular).
+     */
     public static async queryContentById(_id: number) {
         return prisma.content.findUnique({
             where: { id: _id, deleted: false },
@@ -265,8 +284,23 @@ export class Content {
                 ...contentSelect,
                 owner: { select: employeeSelect },
                 checkedOutBy: { select: employeeSelect },
+                serviceRequest: { include: srInclude },
             }
         })
+    }
+
+    /**
+     * Links a content item to a service request, or clears the link when `serviceRequestId` is null.
+     *
+     * Content owns the FK, so the link is always set here — never on the ServiceRequest row.
+     * The DB enforces `@unique` on `serviceRequestId`; callers must ensure any previous link
+     * is cleared before setting a new one to avoid a unique-constraint violation.
+     */
+    public static async setServiceRequest(contentId: number, serviceRequestId: number | null) {
+        return prisma.content.update({
+            where: { id: contentId },
+            data: { serviceRequestId },
+        });
     }
 
     public static async queryContentByIdWithVectors(_id: number) {

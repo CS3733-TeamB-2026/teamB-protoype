@@ -4,11 +4,17 @@ import { useUser } from "@/hooks/use-user.ts";
 import { ContentIcon } from "@/features/content/components/ContentIcon.tsx";
 import { ExpirationBadge } from "@/features/content/components/ExpirationBadge.tsx";
 import { getCategory, getOriginalFilename } from "@/lib/mime.ts";
-import {Loader2, ChevronLeft, ChevronRight} from "lucide-react";
+import {
+    Loader2,
+    ChevronLeft,
+    ChevronRight,
+    CalendarClock,
+} from "lucide-react";
 import { ContentItemCard } from "@/components/shared/ContentItemCard.tsx";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
 import { Button } from "@/components/ui/button.tsx";
 import type { ContentItem } from "@/lib/types.ts";
+import {Hero} from "@/components/shared/Hero.tsx";
 
 const NOW = Date.now();
 
@@ -111,15 +117,13 @@ function ExpirationCalendar() {
 
     return (
         <>
-            <div
-                className="pointer-events-none fixed inset-0 opacity-80"
-                style={{
-                    backgroundImage: `radial-gradient(circle, oklch(0.343 0.07 252.435 / 0.15) 1px, transparent 2px)`,
-                    backgroundSize: '24px 24px',
-                }}
+            <Hero
+                icon={CalendarClock}
+                title="Expiration Calendar"
+                description="See what content items are expiring soon."
             />
 
-            <div className="max-w-6xl mx-auto my-6 px-4 relative" >
+            <div className="max-w-7xl mx-auto my-6 px-4 relative" >
                 {loading && (
                     <div className="flex items-center justify-center py-24 gap-3 text-muted-foreground">
                         <Loader2 className="w-6 h-6 animate-spin" />

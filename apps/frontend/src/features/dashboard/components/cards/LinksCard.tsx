@@ -4,6 +4,7 @@ import { useUser } from "@/hooks/use-user.ts";
 import DashboardCard from "@/features/dashboard/components/cards/DashboardCard.tsx";
 import {useLocale} from "@/languageSupport/localeContext.tsx";
 import {useTranslation} from "@/languageSupport/useTranslation.ts";
+import InfoButton from "@/components/layout/InformationAlert.tsx";
 
 type LinkItem = {
     title: string;
@@ -48,6 +49,9 @@ function HelloCard() {
                 <h1>{ts('dashCard.AdditionalLinks')}</h1>
             </CardTitle>
             <CardContent>
+                <div className="absolute right-1 top-1 w-8 h-8 cursor-pointer">
+                    <InfoButton content={"Shows additional links that may be relevant"}/>
+                </div>
                 <div className="grid grid-cols-1">
                     {links
                         .filter(item => item.access.length === 0 || (user && item.access.includes(user.persona)))

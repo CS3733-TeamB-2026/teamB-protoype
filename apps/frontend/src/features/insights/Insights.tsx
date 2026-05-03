@@ -4,6 +4,7 @@ import ConversationView from "@/features/insights/ConversationView";
 import EmptyState from "@/features/insights/EmptyState";
 import { useNLQuery, type ChatTurn } from "@/hooks/use-nl-query";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
+import {DottedBackground} from "@/components/shared/DottedBackground.tsx";
 
 function InsightsPage() {
     const [conversation, setConversation] = useState<ChatTurn[]>([]);
@@ -48,14 +49,7 @@ function InsightsPage() {
 
     return (
         <div className="mx-auto flex h-[calc(100vh-76px)] w-full flex-col">
-
-            <div
-                className="pointer-events-none absolute inset-0 opacity-80"
-                style={{
-                    backgroundImage: `radial-gradient(circle, oklch(0.343 0.07 252.435 / 0.15) 1px, transparent 2px)`,
-                    backgroundSize: '24px 24px',
-                }}
-            />
+            <DottedBackground/>
 
             <div className="relative flex-1 min-h-0">
                 <div className="absolute inset-0 overflow-y-auto px-6 pt-10 pb-45 min-h-0 scroll-pb-100">
@@ -66,9 +60,11 @@ function InsightsPage() {
                     )}
                 </div>
 
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-6xl">
-                    <div className="border mb-5 p-3 bg-card shadow-lg rounded-xl w-full max-w-6xl mx-auto">
-                        <ChatInput onSubmit={handleSubmit} disabled={isLoading} />
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[90%] max-w-6xl mb-5">
+                    <div className="relative w-full p-[1.5px] rounded-[14px] shadow-sm bg-linear-to-r from-primary/55 via-primary/65 to-primary-light">
+                        <div className="p-3 bg-card shadow-lg w-full focus-within:outline-none rounded-[12px]">
+                            <ChatInput onSubmit={handleSubmit} disabled={isLoading} />
+                        </div>
                     </div>
                 </div>
 

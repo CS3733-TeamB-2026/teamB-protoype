@@ -5,7 +5,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import type { ContentItem, BookmarkRecord } from "@/lib/types.ts";
 import { ContentItemCard } from "@/components/shared/ContentItemCard.tsx";
 
-function RecentFiles() {
+function BookmarkedFiles() {
     const [bookmarkedItems, setBookmarkedItems] = useState<ContentItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -76,4 +76,4 @@ function RecentFiles() {
     );
 }
 
-export default RecentFiles;
+export default BookmarkedFiles;

@@ -1,30 +1,23 @@
 import * as p from "../generated/prisma/client";
 import {prisma} from "../lib/prisma";
-import {Helper, employeeSelect} from "./helper";
+import {Helper, employeeSelect, srInclude} from "./helper";
 
 export class ServiceReqs {
 
     /**
-     * Shared Prisma include used by every query and mutation so the response always
-     * carries the full shape the frontend expects: owner/assignee employee fields,
-     * the linked content item, and the linked collection with its items.
+     * Shared Prisma include for all SR queries. `linkedContent` and `linkedCollection`
+     * are back-relations (the FK lives on Content and Collection respectively), so
+     * Prisma resolves them by scanning those tables for rows whose `serviceRequestId`
+     * matches — the include syntax is unchanged from a forward-relation include.
      *
-     * `linkedCollection` needs the nested `items → content` include because
-     * `CollectionCard` reads `collection.items.length` — a shallow `true` would
-     * omit that join and crash the card.
+     * `linkedCollection` carries nested items so that CollectionCard can read
+     * `collection.items.length` without a second fetch.
      */
     private static readonly include = {
         owner: { select: employeeSelect },
         assignee: { select: employeeSelect },
-        linkedContent: true,
-        linkedCollection: {
-            include: {
-                items: {
-                    where: { content: { deleted: false } },
-                    include: { content: true },
-                },
-            },
-        },
+        linkedContent: { select: { ...srInclude.linkedContent.select } },
+        linkedCollection: srInclude.linkedCollection,
     } as const;
 
     /** Returns a single service request with all relations — used for ownership checks before update/delete. */
@@ -53,88 +46,85 @@ export class ServiceReqs {
         });
     }
 
-    /** Returns all service requests linked to the given content item. */
+    /** Returns the service request linked to the given content item, if any. */
     public static async queryByContentId(contentId: number) {
         return prisma.serviceRequest.findMany({
-            where: { linkedContentId: contentId },
+            where: { linkedContent: { is: { id: contentId } } },
             include: ServiceReqs.include,
         });
     }
 
-    /** Returns all service requests linked to the given collection. */
+    /** Returns the service request linked to the given collection, if any. */
     public static async queryByCollectionId(collectionId: number) {
         return prisma.serviceRequest.findMany({
-            where: { linkedCollectionId: collectionId },
+            where: { linkedCollection: { is: { id: collectionId } } },
             include: ServiceReqs.include,
         });
     }
 
-    /** Returns service requests not linked to any content item or collection. */
+    /**
+     * Returns service requests not linked to any content item or collection.
+     *
+     * `{ is: null }` is Prisma's back-relation null-check syntax — it matches rows
+     * where no Content or Collection row points at this SR via `serviceRequestId`.
+     * A plain `{ serviceRequestId: null }` would fail because the FK doesn't live
+     * on the ServiceRequest table.
+     */
     public static async queryUnlinked() {
         return prisma.serviceRequest.findMany({
-            where: { linkedContentId: null, linkedCollectionId: null },
-            include: ServiceReqs.include,
-        });
-    }
-
-    /** Links a service request to a content item or collection. Mutually exclusive — pass null for the other. */
-    public static async linkServiceReq(id: number, linkedContentId: number | null, linkedCollectionId: number | null) {
-        if (linkedContentId && linkedCollectionId)
-            throw new Error("A service request cannot link both a content item and a collection.");
-        return prisma.serviceRequest.update({
-            where: { id },
-            data: { linkedContentId, linkedCollectionId },
-            include: ServiceReqs.include,
-        });
-    }
-
-    public static async createServiceReq(
-        _name: string, _created: Date, _deadline: Date, _type_string: string,
-        _assigneeId: number, _ownerId: number,
-        _notes?: string | null, _linkedContentId?: number | null, _linkedCollectionId?: number | null,
-    ): Promise<p.ServiceRequest> {
-        if (_linkedContentId && _linkedCollectionId)
-            throw new Error("A service request cannot link both a content item and a collection.");
-        const _type: p.RequestType = Helper.requestHelper(_type_string);
-        return prisma.serviceRequest.create({
-            data: {
-                name: _name,
-                created: _created,
-                deadline: _deadline,
-                type: _type,
-                assigneeId: _assigneeId,
-                ownerId: _ownerId,
-                notes: _notes ?? null,
-                linkedContentId: _linkedContentId ?? null,
-                linkedCollectionId: _linkedCollectionId ?? null,
+            where: {
+                linkedContent: { is: null },
+                linkedCollection: { is: null },
             },
             include: ServiceReqs.include,
         });
     }
 
-    public static async updateServiceReq(
-        _id: number, _name: string, _created: Date, _deadline: Date, _type_string: string,
+    /**
+     * Creates a new service request without linking it to any content or collection.
+     *
+     * Because `linkedContent` and `linkedCollection` are back-relations (FK lives on
+     * those tables), they cannot be set during SR creation. The caller — typically the
+     * `createServiceReq` backend hook — must call `Content.setServiceRequest` or
+     * `Collection.setServiceRequest` in a separate step after this returns.
+     */
+    public static async createServiceReq(
+        _name: string, _deadline: Date, _type_string: string,
         _assigneeId: number, _ownerId: number,
-        _notes?: string | null, _linkedContentId?: number | null, _linkedCollectionId?: number | null,
+        _notes?: string | null,
     ): Promise<p.ServiceRequest> {
-        if (_linkedContentId && _linkedCollectionId)
-            throw new Error("A service request cannot link both a content item and a collection.");
+        const _type: p.RequestType = Helper.requestHelper(_type_string);
+        return prisma.serviceRequest.create({
+            data: {
+                name: _name,
+                // created defaults to now() at the DB level; not caller-supplied
+                deadline: _deadline,
+                type: _type,
+                assigneeId: _assigneeId,
+                ownerId: _ownerId,
+                notes: _notes ?? null,
+            },
+        });
+    }
+
+    public static async updateServiceReq(
+        _id: number, _name: string, _deadline: Date, _type_string: string,
+        _assigneeId: number, _ownerId: number,
+        _notes?: string | null,
+    ): Promise<p.ServiceRequest> {
         const _type: p.RequestType | null = Helper.requestHelper(_type_string);
         if (_type == null) throw new Error("Service Request type not specified");
         return prisma.serviceRequest.update({
             where: { id: _id },
             data: {
                 name: _name,
-                created: _created,
+                // created is intentionally omitted — the original timestamp is never overwritten
                 deadline: _deadline,
                 type: _type,
                 assigneeId: _assigneeId,
                 ownerId: _ownerId,
                 notes: _notes ?? null,
-                linkedContentId: _linkedContentId ?? null,
-                linkedCollectionId: _linkedCollectionId ?? null,
             },
-            include: ServiceReqs.include,
         });
     }
 
