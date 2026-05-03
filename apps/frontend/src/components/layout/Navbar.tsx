@@ -188,7 +188,7 @@ function Navbar() {
                             >
                                 <span className="flex items-center gap-1">
                                     {ts('settings.language')}
-                                    <InfoButton content={"Currently not every language has full support."} size={"w-5 h-5"}/>
+                                    <InfoButton content={ts('notFullySupported')} size={"w-5 h-5"}/>
                                 </span>
                                 <ChevronDown
                                     size={14}

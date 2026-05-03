@@ -6,6 +6,7 @@ export type TranslationKey =
     | "all"
     | 'other'
     | 'bookmarked'
+    | 'notFullySupported'
 
     | 'settings.language'
 
@@ -104,6 +105,31 @@ export type TranslationKey =
     | 'disclaimer.end'
 
     | 'dashboard.subtitle'
+    | 'dashCard.myFiles'
+    | 'dashCard.timeItIs'
+    | 'dashCard.timeOn'
+    | 'dashCard.ContentBreakdown'
+    | 'dashCard.ContentDistribution'
+    | 'dashCard.DepartmentBreakdown'
+    | 'dashCard.DepartmentHeadcount'
+    | 'dashCard.WelcomeBack'
+    | 'dashCard.LetsPickUp'
+    | 'dashCard.AdditionalLinks'
+    | 'dashCard.RecentlyViewed'
+    | 'dashCard.ViewFiles'
+    | 'dashCard.RecentFiles'
+    | 'dashCard.QuickLinks'
+    | 'dashCard.ViewCalendar'
+    | 'dashCard.LoadingReport'
+    | 'dashCard.Reports'
+    | 'dashCard.loadFail'
+    | 'dashCard.ReportsAndAnalytics'
+    | 'dashCard.reports.Subtitle'
+    | 'dashCard.reports.infoButton'
+
+    | 'customize'
+    | 'customize.title'
+    | 'customize.subtitle'
 
     | 'content'
     | 'content.filters'
