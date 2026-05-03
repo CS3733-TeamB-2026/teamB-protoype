@@ -58,6 +58,7 @@ import {
 import {ContentExtBadge} from "@/features/content/components/ContentExtBadge.tsx";
 import {ContentStatusBadge} from "@/features/content/components/ContentStatusBadge.tsx";
 import {ContentTypeBadge} from "@/features/content/components/ContentTypeBadge.tsx";
+import {ExpirationBadge} from "@/features/content/components/ExpirationBadge.tsx";
 import {PersonaBadge} from "@/components/shared/PersonaBadge.tsx";
 import {EditContentDialog} from "@/features/content/forms/EditContentDialog.tsx";
 import {AddContentDialog} from "@/features/content/forms/AddContentDialog.tsx";
@@ -70,7 +71,7 @@ import {highlight} from "@/lib/highlight.tsx";
 import {formatLabel, formatName} from "@/lib/utils.ts";
 import { EmployeeAvatar } from "@/components/shared/EmployeeAvatar.tsx";
 import {toast} from "sonner";
-import type { ContentItem, BookmarkRecord, ContentStatus, ContentType, Persona, UrlPreview } from "@/lib/types.ts";
+import type { ContentItem, BookmarkRecord, ContentStatus, ContentType, ExpirationStatus, Persona, UrlPreview } from "@/lib/types.ts";
 import { ALL_CATEGORIES } from "@/lib/mime.ts";
 import {usePageTitle} from "@/hooks/use-page-title.ts";
 import {ConfirmCheckoutDialog} from "@/features/content/forms/ConfirmCheckoutDialog.tsx";
@@ -572,7 +573,7 @@ function ViewContent() {
 
 
     // Total column count used for colSpan on the expanded detail rows.
-    const NUM_COLS = 9;
+    const NUM_COLS = 10;
 
     // UserProvider hasn't resolved yet — show a full-screen spinner rather than
     // rendering the page without a user (which would break permission checks).
@@ -588,6 +589,8 @@ function ViewContent() {
         else if (col === "name") primarySort = item.displayName;
         else if (col === "owner") primarySort = formatName(item.owner);
         else if (col === "status") primarySort = item.status ?? "";
+        // Sentinel puts null expirations last on ascending sort; ISO strings compare lexicographically.
+        else if (col === "expiration") primarySort = item.expiration ?? "9999-99-99";
         else if (col === "contentType") primarySort = item.contentType;
         else if (col === "docType") primarySort = item.fileURI
             ? (getExtension(getOriginalFilename(item.fileURI!)) ?? getCategory(null, getOriginalFilename(item.fileURI!)))
@@ -886,29 +889,60 @@ function ViewContent() {
                                         </div>
 
                                         <div>
-                                            <p className="font-medium mb-2">{ts('file.type')}</p>
+                                            <p className="font-medium mb-2">Expiration</p>
                                             <div className="flex flex-col gap-1.5">
-                                                {ALL_CATEGORIES.map((dt) => {
-
-                                                    return (
-                                                        <label key={dt} className="flex items-center gap-2">
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={advancedFilters.docType.includes(dt)}
-                                                                onChange={(e) => {
-                                                                    setAdvancedFilters((prev) => ({
-                                                                        ...prev,
-                                                                        docType: e.target.checked
-                                                                            ? [...prev.docType, dt]
-                                                                            : prev.docType.filter((t) => t !== dt),
-                                                                    }))
-                                                                }}
-                                                            />
-                                                            <span>{ts(`file.${dt}`)}</span>
-                                                        </label>
-                                                    )
-                                                })}
+                                                {([
+                                                    { value: "expired",      label: "Expired" },
+                                                    { value: "expiringSoon", label: "Expiring soon" },
+                                                    { value: "future",       label: "Future expiry" },
+                                                    { value: "none",         label: "No expiry" },
+                                                ] as { value: ExpirationStatus; label: string }[]).map(({ value, label }) => (
+                                                    <label key={value} className="flex items-center gap-2">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={advancedFilters.expirationStatus.includes(value)}
+                                                            onChange={(e) => {
+                                                                setAdvancedFilters((prev) => ({
+                                                                    ...prev,
+                                                                    expirationStatus: e.target.checked
+                                                                        ? [...prev.expirationStatus, value]
+                                                                        : prev.expirationStatus.filter((s) => s !== value),
+                                                                }));
+                                                            }}
+                                                        />
+                                                        <span>{label}</span>
+                                                    </label>
+                                                ))}
                                             </div>
+                                        </div>
+
+                                        <div>
+                                            <p className="font-medium mb-2">{ts('file.type')}</p>
+                                        <div className="flex flex-col gap-1.5">
+                                            {ALL_CATEGORIES.map((dt) => {
+
+                                                return (
+                                                    <label key={dt} className="flex items-center gap-2">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={advancedFilters.docType.includes(dt)}
+                                                            onChange={(e) => {
+                                                                setAdvancedFilters((prev) => ({
+                                                                    ...prev,
+                                                                    docType: e.target.checked
+                                                                        ? [...prev.docType, dt]
+                                                                        : prev.docType.filter((t) => t !== dt),
+                                                                }))
+                                                            }}
+                                                        />
+                                                        <span>{ts(`file.${dt}`)}</span>
+                                                    </label>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+
+                                        <div>
                                             <p className="font-medium mb-2">Tags</p>
                                             <TagInput
                                                 value={advancedFilters.tags}
@@ -916,7 +950,6 @@ function ViewContent() {
                                                 creatable={false}
                                             />
                                         </div>
-
                                     </div>
 
                                     <div className="mt-4">
@@ -1027,6 +1060,10 @@ function ViewContent() {
                                                             {item.owner
                                                                 ? <EmployeeAvatar employee={item.owner} size="sm" />
                                                                 : <span className="text-muted-foreground">—</span>}
+                                                        </TableCell>
+                                                        {/* expiration */}
+                                                        <TableCell className="hidden sm:table-cell text-center">
+                                                            <ExpirationBadge expiration={item.expiration} />
                                                         </TableCell>
                                                         {/* status */}
                                                         <TableCell className="hidden sm:table-cell text-center">
@@ -1197,18 +1234,23 @@ function ViewContent() {
                                                                         <span className="font-medium text-foreground">Modified:{" "}</span>
                                                                         {new Date(item.lastModified).toLocaleString()}
                                                                     </span>
-                                                                    {item.expiration && (
-                                                                        <span>
-                                                                            <span className="font-medium text-foreground">Expires:{" "}</span>
+                                                                    {/* IIFE computes days once so both the label ("Expired:" vs "Days left:") and value share the same calculation. */}
+                                                                    {item.expiration && (() => {
+                                                                        const days = Math.ceil((new Date(item.expiration).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                                                                        return (<>
+                                                                            <span>
+                                                                                <span className="font-medium text-foreground">Expires:{" "}</span>
                                                                                 {new Date(item.expiration).toLocaleString()}
                                                                             </span>
-                                                                            )}
-                                                                            {item.expiration && (
                                                                             <span>
-                                                                                <span className="font-medium text-foreground">Days left:{" "}</span>
-                                                                                    {Math.ceil((new Date(item.expiration).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)).toLocaleString()}
+                                                                                <span className="font-medium text-foreground">
+                                                                                    {days < 0 ? "Expired:" : "Days left:"}
+                                                                                    {" "}
                                                                                 </span>
-                                                                                )}
+                                                                                {days < 0 ? `${Math.abs(days)}d ago` : days === 0 ? "Today" : `${days}`}
+                                                                            </span>
+                                                                        </>);
+                                                                    })()}
                                                                                 {item.tags.length > 0 && (
                                                                             <span>
                                                                                 <span className="font-medium text-foreground">Tags:{" "}</span>

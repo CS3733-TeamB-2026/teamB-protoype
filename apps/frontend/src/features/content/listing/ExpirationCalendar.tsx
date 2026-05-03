@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useUser } from "@/hooks/use-user.ts";
 import { ContentIcon } from "@/features/content/components/ContentIcon.tsx";
+import { ExpirationBadge } from "@/features/content/components/ExpirationBadge.tsx";
 import { getCategory, getOriginalFilename } from "@/lib/mime.ts";
 import {Loader2, ChevronLeft, ChevronRight} from "lucide-react";
 import { ContentItemCard } from "@/components/shared/ContentItemCard.tsx";
@@ -239,21 +240,14 @@ function ExpirationCalendar() {
                                     <p className="text-sm text-muted-foreground">No items expiring on this day.</p>
                                 ) : (
                                     <div className="flex flex-col gap-2">
-                                        {selectedItems.map(item => {
-                                            const days = daysUntil(item.expiration!);
-                                            return (
-                                                <ContentItemCard
-                                                    key={item.id}
-                                                    item={item}
-                                                    subtitle={new Date(item.expiration!).toLocaleString()}
-                                                    actions={
-                                                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${urgencyColor(days)}`}>
-                                                            {days < 0 ? `Expired ${Math.abs(days)}d ago` : days === 0 ? "Today" : `${days}d left`}
-                                                        </span>
-                                                    }
-                                                />
-                                            );
-                                        })}
+                                        {selectedItems.map(item => (
+                                            <ContentItemCard
+                                                key={item.id}
+                                                item={item}
+                                                subtitle={new Date(item.expiration!).toLocaleString()}
+                                                actions={<ExpirationBadge expiration={item.expiration} />}
+                                            />
+                                        ))}
                                     </div>
                                 )}
                             </div>

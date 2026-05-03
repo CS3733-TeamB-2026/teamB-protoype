@@ -15,6 +15,17 @@ export type ContentStatus =
     | "inProgress"
     | "complete";
 
+/**
+ * Bucketed expiration state used by the filter sidebar and `getExpirationStatus` in
+ * `use-content-filters.ts`. Thresholds match `ExpirationBadge`: ≤0 days = expired,
+ * 1–7 days = expiringSoon, >7 days = future, no expiration field = none.
+ */
+export type ExpirationStatus =
+    | "expired"
+    | "expiringSoon"
+    | "future"
+    | "none";
+
 export type RequestType =
     | "reviewClaim"
     | "requestAdjuster"

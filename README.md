@@ -215,7 +215,7 @@ Five feature modules live under `apps/frontend/src/features/`: **content**, **da
 - **`usePageTitle(title)`** — sets the browser `<title>`.
 - **`useSortState<T>` / `applySortState`** — generic column sort state used by every sortable table.
 - **`useAvatarUrl(id, uri)`** — fetches `GET /api/employee/photo/:id` and caches the blob in `lib/avatar-cache.ts`. Used by `EmployeeAvatar` and any component that needs a per-row signed URL.
-- **`useContentFilters(content, bookmarks, userId, persona)`** — owns all content filtering: search term, active tab (`forYou | all | owned | bookmarks | recyclebin`), and sidebar checkbox filters (status, contentType, persona, tags, docType). Returns `filteredContent`, `activeFilterCount`, and setters. The `recyclebin` tab always yields an empty `filteredContent` — `ViewContent` renders it from a separate `deletedContent` state. Add new filters here, not in `ViewContent`.
+- **`useContentFilters(content, bookmarks, userId, persona)`** — owns all content filtering: search term, active tab (`forYou | all | owned | bookmarks | recyclebin`), and sidebar checkbox filters (status, contentType, persona, tags, docType, expirationStatus). Returns `filteredContent`, `activeFilterCount`, and setters. The `recyclebin` tab always yields an empty `filteredContent` — `ViewContent` renders it from a separate `deletedContent` state. Add new filters here, not in `ViewContent`.
 - **`useIsMobile()`** — `true` below 768 px via `matchMedia`. Used by the sidebar shell.
 
 **`toast`** from `sonner` — async success/error notifications, used throughout.
@@ -269,7 +269,7 @@ features/content/
     ForceCheckinDialog.tsx   Admin-only — release another user's lock
   listing/
     ViewContent.tsx          Main content list page
-    ContentTableHeader.tsx   Shared <TableHeader> (checkbox, icon, 6 sortable cols, Actions) used by both ViewContent and RecycleBinTable
+    ContentTableHeader.tsx   Shared <TableHeader> (checkbox, icon, 7 sortable cols, Actions) used by both ViewContent and RecycleBinTable
     RecycleBinTable.tsx      Recycle bin table — owns its own restore/permanent-delete dialog state
     BookmarkedFiles.tsx      Current user's bookmarks (top 5)
     MyFiles.tsx              Items owned by current user (top 5)
@@ -289,6 +289,7 @@ features/content/
     ContentExtBadge.tsx      Badge showing file extension (or "Link")
     ContentStatusBadge.tsx   Null-safe status badge; labels via useTranslation
     ContentTypeBadge.tsx     Same pattern for contentType
+    ExpirationBadge.tsx      Urgency badge (red = expired, amber ≤7d, green = future, muted = no expiry); shared by ViewContent, RecycleBinTable, and ExpirationCalendar
 ```
 
 `ContentItem` is defined in `lib/types.ts` — hand-written to mirror the Prisma `Content` shape with joined `owner` and `checkedOutBy` relations as `Employee` objects. Key fields: `ownerId`, `checkedOutById` (the raw ID), `checkedOutBy` (the joined employee object).
