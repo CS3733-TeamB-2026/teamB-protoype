@@ -17,6 +17,7 @@ import { Tabs, TabsTrigger } from "@/components/ui/tabs";
 import { SlidingTabs } from "@/components/shared/SlidingTabs.tsx";
 import type { NotificationItem, NotificationTab } from "@/lib/types.ts";
 import { ClearAllDialog } from "@/features/notifications/ClearAllDialog.tsx";
+import InfoButton from "@/components/layout/InformationAlert.tsx";
 
 export default function ViewNotifications() {
     usePageTitle("Notifications");
@@ -157,8 +158,10 @@ export default function ViewNotifications() {
     return (
         <div className="container max-w-5xl py-8 mx-auto">
             <div className="mb-4">
-                <h1 className="text-2xl font-bold text-primary">Notifications</h1>
-                <p className="text-muted-foreground">
+                <div className="flex items-center gap-2">
+                    <h1 className="text-2xl font-bold text-primary">Notifications</h1>
+                    <InfoButton content={"Active notifications include content changes, ownership transfers, and upcoming expirations. Dismiss individual notifications or use Clear All to remove them. Dismissed notifications are stored in the Dismissed tab. Note that you cannot view expiry notifications after they have been dismissed."} />
+                </div>                <p className="text-muted-foreground">
                     Updates on content changes, ownership transfers, and upcoming expirations relevant to your role.
                 </p>
                 <Separator className="bg-primary mt-4" />
