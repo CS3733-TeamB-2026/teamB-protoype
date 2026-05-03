@@ -11,7 +11,7 @@ function urgencyClass(days: number): string {
 }
 
 function urgencyLabel(days: number): string {
-    if (days < 0) return `Expired ${Math.abs(days)}d ago`;
+    if (days < 0) return `${Math.abs(days)}d ago`;
     if (days === 0) return "Today";
     return `${days}d left`;
 }
@@ -21,7 +21,7 @@ export function ExpirationBadge({ expiration }: { expiration: string | null }) {
     if (!expiration) {
         return (
             <Badge className="rounded-full text-xs bg-muted text-muted-foreground hover:bg-muted border border-border">
-                No expiration
+                No exp.
             </Badge>
         );
     }
