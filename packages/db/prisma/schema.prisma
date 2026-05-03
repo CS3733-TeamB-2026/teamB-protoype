@@ -52,6 +52,7 @@ model Content {
   textContent          String?
   searchVector         Unsupported("tsvector")?    @default(dbgenerated("to_tsvector('english'::regconfig, COALESCE(\"textContent\", ''::text))"))
   embedding            Unsupported("vector(384)")?
+  serviceRequestId     Int?
   bookmarks            Bookmark[]
   previews             Preview[]
   checkedOutBy         Employee?                   @relation("CheckedOut", fields: [checkedOutById], references: [id])
@@ -59,40 +60,39 @@ model Content {
   notifications        Notification[]              @relation("Notified")
   expirationDismissals ExpirationDismissal[]
   collectionItems      CollectionItem[]
-  serviceRequests      ServiceRequest[]
+  serviceRequest       ServiceRequest?             @relation(fields: [serviceRequestId], references: [id], onDelete: SetNull)
 
   @@schema("public")
 }
 
 model ServiceRequest {
-  created            DateTime    @default(now())
-  deadline           DateTime?
-  type               RequestType
-  assigneeId         Int?
-  ownerId            Int
-  id                 Int         @id @default(autoincrement())
-  name               String?
-  notes              String?
-  linkedContentId    Int?
-  linkedCollectionId Int?
-  assignee           Employee?   @relation("AssignedTo", fields: [assigneeId], references: [id])
-  owner              Employee    @relation("OwnedBy", fields: [ownerId], references: [id])
-  linkedContent      Content?    @relation(fields: [linkedContentId], references: [id], onDelete: SetNull)
-  linkedCollection   Collection? @relation(fields: [linkedCollectionId], references: [id], onDelete: SetNull)
+  created          DateTime    @default(now())
+  deadline         DateTime?
+  type             RequestType
+  assigneeId       Int?
+  ownerId          Int
+  id               Int         @id @default(autoincrement())
+  name             String?
+  notes            String?
+  assignee         Employee?   @relation("AssignedTo", fields: [assigneeId], references: [id])
+  owner            Employee    @relation("OwnedBy", fields: [ownerId], references: [id])
+  linkedContent    Content?
+  linkedCollection Collection?
 
   @@schema("public")
 }
 
 model Collection {
-  id          Int      @id @default(autoincrement())
-  displayName String
-  owner       Employee @relation(fields: [ownerId], references: [id])
-  ownerId     Int
-  public      Boolean
+  id               Int      @id @default(autoincrement())
+  displayName      String
+  owner            Employee @relation(fields: [ownerId], references: [id])
+  ownerId          Int
+  public           Boolean
+  serviceRequestId Int?
 
   items           CollectionItem[]
   favorites       CollectionFavorite[]
-  serviceRequests ServiceRequest[]
+  serviceRequest  ServiceRequest?     @relation(fields: [serviceRequestId], references: [id], onDelete: SetNull)
 
   @@schema("public")
 }
