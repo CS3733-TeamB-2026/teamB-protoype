@@ -17,6 +17,7 @@ import { Tabs, TabsTrigger } from "@/components/ui/tabs";
 import { SlidingTabs } from "@/components/shared/SlidingTabs.tsx";
 import type { NotificationItem, NotificationTab } from "@/lib/types.ts";
 import { ClearAllDialog } from "@/features/notifications/ClearAllDialog.tsx";
+import {DottedBackground} from "@/components/shared/DottedBackground.tsx";
 
 export default function ViewNotifications() {
     usePageTitle("Notifications");
@@ -155,172 +156,176 @@ export default function ViewNotifications() {
     const paginated = filteredItems.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
     return (
-        <div className="container max-w-5xl py-8 mx-auto">
-            <div className="mb-4">
-                <h1 className="text-2xl font-bold text-primary">Notifications</h1>
-                <p className="text-muted-foreground">
-                    Updates on content changes, ownership transfers, and upcoming expirations relevant to your role.
-                </p>
-                <Separator className="bg-primary mt-4" />
-            </div>
+        <>
+            <DottedBackground/>
 
-            <Tabs
-                value={activeTab}
-                onValueChange={(v) => {
-                    setActiveTab(v as NotificationTab);
-                    setCurrentPage(1);
-                    if (v === "dismissed") {
-                        setTypeFilters((prev) => prev.filter((t) => t !== "expiration"));
-                    }
-                }}
-            >
-                <SlidingTabs activeTab={activeTab} indicatorColor="bg-foreground">
-                    <TabsTrigger
-                        value="active"
-                        className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0"
-                    >
-                        Active
-                        <span className="ml-2 text-xs opacity-70">{activeItems.length}</span>
-                    </TabsTrigger>
-                    <TabsTrigger
-                        value="dismissed"
-                        className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0"
-                    >
-                        Dismissed
-                        <span className="ml-2 text-xs opacity-70">{dismissedItems.length}</span>
-                    </TabsTrigger>
-                </SlidingTabs>
-            </Tabs>
-
-            {loading && (
-                <div className="flex items-center justify-center py-16 gap-3 text-muted-foreground">
-                    <Loader2 className="w-6 h-6 animate-spin" />
-                    <p className="text-sm">Loading...</p>
-                </div>
-            )}
-
-            {error && (
-                <Alert variant="destructive" className="my-4">
-                    <AlertCircle />
-                    <AlertDescription>{error}</AlertDescription>
-                </Alert>
-            )}
-
-            {!loading && !error && items.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
-                    <Bell className="w-10 h-10" />
-                    <p className="text-sm">
-                        {activeTab === "active"
-                            ? "You have no notifications."
-                            : "You haven't dismissed any notifications."}
+            <div className="container max-w-5xl py-8 mx-auto">
+                <div className="mb-4">
+                    <h1 className="text-2xl font-bold text-primary">Notifications</h1>
+                    <p className="text-muted-foreground">
+                        Updates on content changes, ownership transfers, and upcoming expirations relevant to your role.
                     </p>
+                    <Separator className="bg-primary mt-4" />
                 </div>
-            )}
 
-            {!loading && !error && items.length > 0 && (
-                <>
-                    <div className="flex flex-row justify-between items-baseline mb-4 mt-4">
-                        <div className="flex flex-row gap-2 items-center">
-                            <Button
-                                variant="outline"
-                                onClick={() => setShowAdvancedFilters((prev) => !prev)}
-                                className="bg-card shadow-sm hover:bg-secondary hover:text-secondary-foreground h-11 w-25 text-base"
-                            >
-                                {showAdvancedFilters
-                                    ? "Hide Filters"
-                                    : activeFilterCount > 0
-                                        ? `Filters (${activeFilterCount})`
-                                        : "Filters"}
-                            </Button>
-                            {activeTab === "active" && activeItems.length > 0 && (
+                <Tabs
+                    value={activeTab}
+                    onValueChange={(v) => {
+                        setActiveTab(v as NotificationTab);
+                        setCurrentPage(1);
+                        if (v === "dismissed") {
+                            setTypeFilters((prev) => prev.filter((t) => t !== "expiration"));
+                        }
+                    }}
+                >
+                    <SlidingTabs activeTab={activeTab} indicatorColor="bg-foreground">
+                        <TabsTrigger
+                            value="active"
+                            className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0"
+                        >
+                            Active
+                            <span className="ml-2 text-xs opacity-70">{activeItems.length}</span>
+                        </TabsTrigger>
+                        <TabsTrigger
+                            value="dismissed"
+                            className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0"
+                        >
+                            Dismissed
+                            <span className="ml-2 text-xs opacity-70">{dismissedItems.length}</span>
+                        </TabsTrigger>
+                    </SlidingTabs>
+                </Tabs>
+
+                {loading && (
+                    <div className="flex items-center justify-center py-16 gap-3 text-muted-foreground">
+                        <Loader2 className="w-6 h-6 animate-spin" />
+                        <p className="text-sm">Loading...</p>
+                    </div>
+                )}
+
+                {error && (
+                    <Alert variant="destructive" className="my-4">
+                        <AlertCircle />
+                        <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                )}
+
+                {!loading && !error && items.length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
+                        <Bell className="w-10 h-10" />
+                        <p className="text-sm">
+                            {activeTab === "active"
+                                ? "You have no notifications."
+                                : "You haven't dismissed any notifications."}
+                        </p>
+                    </div>
+                )}
+
+                {!loading && !error && items.length > 0 && (
+                    <>
+                        <div className="flex flex-row justify-between items-baseline mb-4 mt-4">
+                            <div className="flex flex-row gap-2 items-center">
                                 <Button
                                     variant="outline"
-                                    onClick={() => setClearAllOpen(true)}
-                                    className="bg-card shadow-sm hover:bg-destructive hover:text-white h-11 text-base"
+                                    onClick={() => setShowAdvancedFilters((prev) => !prev)}
+                                    className="bg-card shadow-sm hover:bg-secondary hover:text-secondary-foreground h-11 w-25 text-base"
                                 >
-                                    Clear all
+                                    {showAdvancedFilters
+                                        ? "Hide Filters"
+                                        : activeFilterCount > 0
+                                            ? `Filters (${activeFilterCount})`
+                                            : "Filters"}
                                 </Button>
-                            )}
+                                {activeTab === "active" && activeItems.length > 0 && (
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setClearAllOpen(true)}
+                                        className="bg-card shadow-sm hover:bg-destructive hover:text-white h-11 text-base"
+                                    >
+                                        Clear all
+                                    </Button>
+                                )}
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="flex gap-4 items-start">
-                        {showAdvancedFilters && (
-                            <div className="shrink-0 w-48 rounded-lg border border-border p-3 bg-card text-left text-sm">
-                                <div className="flex flex-col gap-4">
-                                    <div>
-                                        <p className="font-medium mb-2 text-foreground">Type</p>
-                                        <div className="flex flex-col gap-1.5">
-                                            {(activeTab === "active"
-                                                    ? ["change", "ownership", "expiration"] as const
-                                                    : ["change", "ownership"] as const
-                                            ).map((type) => (
-                                                <label key={type} className="flex items-center gap-2">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={typeFilters.includes(type)}
-                                                        onChange={(e) => {
-                                                            setTypeFilters((prev) =>
-                                                                e.target.checked
-                                                                    ? [...prev, type]
-                                                                    : prev.filter((t) => t !== type),
-                                                            );
-                                                            setCurrentPage(1);
-                                                        }}
-                                                    />
-                                                    <span className="capitalize">{type}</span>
-                                                </label>
-                                            ))}
+                        <div className="flex gap-4 items-start">
+                            {showAdvancedFilters && (
+                                <div className="shrink-0 w-48 rounded-lg border border-border p-3 bg-card text-left text-sm">
+                                    <div className="flex flex-col gap-4">
+                                        <div>
+                                            <p className="font-medium mb-2 text-foreground">Type</p>
+                                            <div className="flex flex-col gap-1.5">
+                                                {(activeTab === "active"
+                                                        ? ["change", "ownership", "expiration"] as const
+                                                        : ["change", "ownership"] as const
+                                                ).map((type) => (
+                                                    <label key={type} className="flex items-center gap-2">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={typeFilters.includes(type)}
+                                                            onChange={(e) => {
+                                                                setTypeFilters((prev) =>
+                                                                    e.target.checked
+                                                                        ? [...prev, type]
+                                                                        : prev.filter((t) => t !== type),
+                                                                );
+                                                                setCurrentPage(1);
+                                                            }}
+                                                        />
+                                                        <span className="capitalize">{type}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
+                                    <div className="mt-4">
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            className="w-full"
+                                            onClick={() => {
+                                                setTypeFilters([]);
+                                                setCurrentPage(1);
+                                            }}
+                                        >
+                                            Clear Filters
+                                        </Button>
+                                    </div>
                                 </div>
-                                <div className="mt-4">
-                                    <Button
-                                        variant="secondary"
-                                        size="sm"
-                                        className="w-full"
-                                        onClick={() => {
-                                            setTypeFilters([]);
-                                            setCurrentPage(1);
-                                        }}
-                                    >
-                                        Clear Filters
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
+                            )}
 
-                        <div className="flex-1 min-w-0">
-                            <div className="flex flex-col gap-3">
-                                {paginated.map((n) => (
-                                    <NotificationCard
-                                        key={n.id}
-                                        notification={n}
-                                        onDismiss={activeTab === "active" ? handleDismiss : undefined}
-                                    />
-                                ))}
+                            <div className="flex-1 min-w-0">
+                                <div className="flex flex-col gap-3">
+                                    {paginated.map((n) => (
+                                        <NotificationCard
+                                            key={n.id}
+                                            notification={n}
+                                            onDismiss={activeTab === "active" ? handleDismiss : undefined}
+                                        />
+                                    ))}
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <TablePagination
-                        currentPage={currentPage}
-                        totalPages={totalPages}
-                        pageSize={pageSize}
-                        totalItems={filteredItems.length}
-                        onPageChange={setCurrentPage}
-                        onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
-                    />
-                </>
-            )}
-            <ClearAllDialog
-                open={clearAllOpen}
-                onOpenChange={setClearAllOpen}
-                onConfirm={async () => {
-                    await handleClearAll();
-                    setClearAllOpen(false);
-                }}
-            />
-        </div>
+                        <TablePagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            pageSize={pageSize}
+                            totalItems={filteredItems.length}
+                            onPageChange={setCurrentPage}
+                            onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
+                        />
+                    </>
+                )}
+                <ClearAllDialog
+                    open={clearAllOpen}
+                    onOpenChange={setClearAllOpen}
+                    onConfirm={async () => {
+                        await handleClearAll();
+                        setClearAllOpen(false);
+                    }}
+                />
+            </div>
+        </>
     );
 }
