@@ -17,8 +17,7 @@ import { usePageTitle } from "@/hooks/use-page-title.ts";
 import {findMatches, highlightRange} from "@/lib/highlight.tsx";
 import { EmployeeAvatar } from "@/components/shared/EmployeeAvatar.tsx";
 import {formatLabel} from "@/lib/utils.ts";
-import { ContentItemCard } from "@/components/shared/ContentItemCard.tsx";
-import { CollectionCard } from "@/components/shared/CollectionCard.tsx";
+import { ServiceReqDetail } from "@/components/shared/ServiceReqDetail";
 
 /**
  * Full-page table for browsing, adding, editing, and deleting service requests.
@@ -284,39 +283,6 @@ function ViewServiceReqs() {
                 onSave={() => void fetchServiceReqs()}
             />
         </>
-    );
-}
-
-/** Expanded detail panel rendered below a service request row. */
-function ServiceReqDetail({ servicereq }: { servicereq: ServiceReq }) {
-    const hasNotes = !!servicereq.notes?.trim();
-    const hasLinked = !!(servicereq.linkedContent || servicereq.linkedCollection);
-
-    if (!hasNotes && !hasLinked) {
-        return <p className="text-sm text-muted-foreground italic">No additional details.</p>;
-    }
-
-    return (
-        <div className="flex flex-col gap-3">
-            {hasNotes && (
-                <div>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Notes</p>
-                    <p className="text-sm whitespace-pre-wrap">{servicereq.notes}</p>
-                </div>
-            )}
-            {servicereq.linkedContent && (
-                <div>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Linked Content</p>
-                    <ContentItemCard item={servicereq.linkedContent} />
-                </div>
-            )}
-            {servicereq.linkedCollection && (
-                <div>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Linked Collection</p>
-                    <CollectionCard collection={servicereq.linkedCollection} />
-                </div>
-            )}
-        </div>
     );
 }
 

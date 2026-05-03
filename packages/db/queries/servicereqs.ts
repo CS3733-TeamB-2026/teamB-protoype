@@ -53,6 +53,41 @@ export class ServiceReqs {
         });
     }
 
+    /** Returns all service requests linked to the given content item. */
+    public static async queryByContentId(contentId: number) {
+        return prisma.serviceRequest.findMany({
+            where: { linkedContentId: contentId },
+            include: ServiceReqs.include,
+        });
+    }
+
+    /** Returns all service requests linked to the given collection. */
+    public static async queryByCollectionId(collectionId: number) {
+        return prisma.serviceRequest.findMany({
+            where: { linkedCollectionId: collectionId },
+            include: ServiceReqs.include,
+        });
+    }
+
+    /** Returns service requests not linked to any content item or collection. */
+    public static async queryUnlinked() {
+        return prisma.serviceRequest.findMany({
+            where: { linkedContentId: null, linkedCollectionId: null },
+            include: ServiceReqs.include,
+        });
+    }
+
+    /** Links a service request to a content item or collection. Mutually exclusive — pass null for the other. */
+    public static async linkServiceReq(id: number, linkedContentId: number | null, linkedCollectionId: number | null) {
+        if (linkedContentId && linkedCollectionId)
+            throw new Error("A service request cannot link both a content item and a collection.");
+        return prisma.serviceRequest.update({
+            where: { id },
+            data: { linkedContentId, linkedCollectionId },
+            include: ServiceReqs.include,
+        });
+    }
+
     public static async createServiceReq(
         _name: string, _created: Date, _deadline: Date, _type_string: string,
         _assigneeId: number, _ownerId: number,

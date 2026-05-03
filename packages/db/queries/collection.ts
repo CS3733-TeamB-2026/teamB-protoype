@@ -145,6 +145,23 @@ export class Collection {
         });
     }
 
+    /** Returns all collections that contain the given content item, filtered by visibility. */
+    public static async queryByContentId(contentId: number, employeeId: number, isAdmin: boolean) {
+        return prisma.collection.findMany({
+            where: {
+                items: { some: { contentId } },
+                ...(isAdmin ? {} : {
+                    OR: [{ public: true }, { ownerId: employeeId }],
+                }),
+            },
+            include: {
+                owner: { select: employeeSelect },
+                ...itemsInclude,
+            },
+            orderBy: { id: "asc" },
+        });
+    }
+
     /** Returns all collections the employee has favorited, with full item data. */
     public static async queryFavorites(employeeId: number) {
         return prisma.collectionFavorite.findMany({

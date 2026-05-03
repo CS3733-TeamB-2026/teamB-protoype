@@ -33,7 +33,9 @@ import { ContentPicker } from "@/components/shared/ContentPicker";
 import { getCategory, getOriginalFilename, lookupByFilename } from "@/lib/mime";
 import { useUser } from "@/hooks/use-user";
 import { usePageTitle } from "@/hooks/use-page-title";
-import type { Collection, CollectionItem, ContentItem, Employee } from "@/lib/types";
+import type { Collection, CollectionItem, ContentItem, Employee, ServiceReq } from "@/lib/types";
+import { ClipboardList } from "lucide-react";
+import { ServiceRequestLinkDialog } from "@/components/shared/ServiceRequestLinkDialog";
 
 /**
  * Detail page for a single collection, identified by `:id` in the URL.
@@ -78,6 +80,8 @@ export function ViewSingleCollection() {
     const [pickerItem, setPickerItem] = useState<ContentItem | null>(null);
     const [addDialogOpen, setAddDialogOpen] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [serviceReqs, setServiceReqs] = useState<ServiceReq[]>([]);
+    const [srDialogOpen, setSrDialogOpen] = useState(false);
 
     usePageTitle(collection?.displayName ?? "Collection");
 
@@ -94,6 +98,22 @@ export function ViewSingleCollection() {
                 setError("Collection not found or failed to load.");
             } finally {
                 setLoading(false);
+            }
+        };
+        void load();
+    }, [id, getAccessTokenSilently]);
+
+    useEffect(() => {
+        if (!id) return;
+        const load = async () => {
+            try {
+                const token = await getAccessTokenSilently();
+                const res = await fetch(`/api/collections/${id}/service-requests`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (res.ok) setServiceReqs(await res.json());
+            } catch {
+                // non-critical
             }
         };
         void load();
@@ -386,21 +406,30 @@ export function ViewSingleCollection() {
                         </div>
                     </CardHeader>
                     <CardContent className="pt-0">
-                        <div className="group flex items-center gap-2 text-sm text-muted-foreground w-fit">
-                            <span className="text-muted-foreground">
-                                Owner: <span className="text-foreground">{collection.owner.firstName} {collection.owner.lastName}</span>
-                            </span>
-                            <EmployeeAvatar employee={collection.owner} size="sm" />
-                            {canEdit && (
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
-                                    onClick={() => { setTransferTarget(null); setTransferDialogOpen(true); }}
-                                >
-                                    <Pencil className="w-3 h-3" />
-                                </Button>
-                            )}
+                        <div className="flex items-center justify-between gap-2 text-sm">
+                            <div className="group flex items-center gap-2 text-muted-foreground">
+                                <span>
+                                    Owner: <span className="text-foreground">{collection.owner.firstName} {collection.owner.lastName}</span>
+                                </span>
+                                <EmployeeAvatar employee={collection.owner} size="sm" />
+                                {canEdit && (
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+                                        onClick={() => { setTransferTarget(null); setTransferDialogOpen(true); }}
+                                    >
+                                        <Pencil className="w-3 h-3" />
+                                    </Button>
+                                )}
+                            </div>
+                            <button
+                                onClick={() => setSrDialogOpen(true)}
+                                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors shrink-0"
+                            >
+                                <ClipboardList className="w-3.5 h-3.5" />
+                                {serviceReqs.length === 0 ? "+ Add to Service Request" : "In service request"}
+                            </button>
                         </div>
                     </CardContent>
                 </Card>
@@ -614,6 +643,15 @@ export function ViewSingleCollection() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {collection && (
+                <ServiceRequestLinkDialog
+                    collectionId={collection.id}
+                    open={srDialogOpen}
+                    onOpenChange={setSrDialogOpen}
+                    onServiceReqsChange={setServiceReqs}
+                />
+            )}
         </>
     );
 }
