@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { AlertCircle, ArrowLeft, FileText, FolderOpen, Loader2 } from "lucide-react";
+import { AlertCircle, ArrowLeft, ClipboardList, FileText, FolderOpen, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card.tsx";
 import { Hero } from "@/components/shared/Hero.tsx";
@@ -12,7 +12,7 @@ import { ContentTypeBadge } from "@/features/content/components/ContentTypeBadge
 import { ExpirationBadge } from "@/features/content/components/ExpirationBadge.tsx";
 import { PersonaBadge } from "@/components/shared/PersonaBadge.tsx";
 import { getOriginalFilename } from "@/lib/mime.ts";
-import type { Collection, ContentItem, UrlPreview } from "@/lib/types.ts";
+import type { Collection, ContentItem, ServiceReq, UrlPreview } from "@/lib/types.ts";
 import { useAuth0 } from "@auth0/auth0-react";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
 import { Timeline } from "@/features/content/components/Timeline.tsx"
@@ -20,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 import {Button} from "@/components/ui/button";
 import {EmployeeAvatar} from "@/components/shared/EmployeeAvatar.tsx";
 import { ContentCollectionsDialog } from "@/features/content/previews/ContentCollectionsDialog";
+import { ServiceRequestLinkDialog } from "@/components/shared/ServiceRequestLinkDialog";
 
 /**
  * Full-page viewer for a single content item — handles both file and link types.
@@ -42,6 +43,8 @@ export function ViewSingleContentItem() {
     const [linkPreview, setLinkPreview] = useState<UrlPreview | null>(null);
     const [collections, setCollections] = useState<Collection[]>([]);
     const [collectionsDialogOpen, setCollectionsDialogOpen] = useState(false);
+    const [serviceReqs, setServiceReqs] = useState<ServiceReq[]>([]);
+    const [srDialogOpen, setSrDialogOpen] = useState(false);
     const navigate = useNavigate();
 
     usePageTitle("View Content");
@@ -70,6 +73,23 @@ export function ViewSingleContentItem() {
 
         };
         void fetchItem();
+    }, [id, getAccessTokenSilently]);
+
+    // Fetch service requests linked to this item for the initial link text.
+    useEffect(() => {
+        if (!id) return;
+        const load = async () => {
+            try {
+                const token = await getAccessTokenSilently();
+                const res = await fetch(`/api/content/${id}/service-requests`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (res.ok) setServiceReqs(await res.json());
+            } catch {
+                // non-critical
+            }
+        };
+        void load();
     }, [id, getAccessTokenSilently]);
 
     // Fetch collections containing this item so the link text shows the correct count.
@@ -174,13 +194,24 @@ export function ViewSingleContentItem() {
                         </CardHeader>
                         {item && (
                             <CardContent className="pt-0 flex flex-col gap-3">
-                                {item.owner && (
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground w-fit">
-                                        <span>Owner:</span>
-                                        <span className="text-foreground">{item.owner.firstName} {item.owner.lastName}</span>
-                                        <EmployeeAvatar employee={item.owner} size="sm" />
-                                    </div>
-                                )}
+                                <div className="flex items-center justify-between gap-2 text-sm">
+                                    {item.owner ? (
+                                        <div className="flex items-center gap-2 text-muted-foreground">
+                                            <span>Owner:</span>
+                                            <span className="text-foreground">{item.owner.firstName} {item.owner.lastName}</span>
+                                            <EmployeeAvatar employee={item.owner} size="sm" />
+                                        </div>
+                                    ) : (
+                                        <span />
+                                    )}
+                                    <button
+                                        onClick={() => setSrDialogOpen(true)}
+                                        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors shrink-0"
+                                    >
+                                        <ClipboardList className="w-3.5 h-3.5" />
+                                        {serviceReqs.length === 0 ? "+ Add to Service Request" : "In service request"}
+                                    </button>
+                                </div>
                                 <div className="flex items-center justify-between gap-2 text-sm">
                                     {item.tags.length > 0 ? (
                                         <div className="flex items-center gap-2">
@@ -243,6 +274,14 @@ export function ViewSingleContentItem() {
                     open={collectionsDialogOpen}
                     onOpenChange={setCollectionsDialogOpen}
                     onCollectionsChange={setCollections}
+                />
+            )}
+            {item && (
+                <ServiceRequestLinkDialog
+                    contentId={item.id}
+                    open={srDialogOpen}
+                    onOpenChange={setSrDialogOpen}
+                    onServiceReqsChange={setServiceReqs}
                 />
             )}
         </>

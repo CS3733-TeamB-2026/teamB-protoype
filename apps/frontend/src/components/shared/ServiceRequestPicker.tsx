@@ -10,6 +10,12 @@ interface Props {
     selectedId: number | null;
     onSelect: (id: number | null, servicereq: ServiceReq | null) => void;
     disabled?: boolean;
+    /**
+     * When true, the open dropdown renders in normal document flow instead of as an
+     * absolute overlay. Use this when the picker sits inside a Dialog with overflow-hidden —
+     * the in-flow dropdown pushes the dialog's bottom edge down rather than being clipped.
+     */
+    inline?: boolean;
     /** Increment to trigger a refetch of the unlinked service requests list. */
     refreshKey?: number;
 }
@@ -20,7 +26,7 @@ interface Props {
  * Fetches /api/servicereqs/unlinked — requests with no linked content or collection.
  * Mirrors the CollectionPicker UX: trigger button, popover with search, scrollable list.
  */
-export function ServiceRequestPicker({ selectedId, onSelect, disabled = false, refreshKey = 0 }: Props) {
+export function ServiceRequestPicker({ selectedId, onSelect, disabled = false, inline = false, refreshKey = 0 }: Props) {
     const [open, setOpen] = useState(false);
     const [servicereqs, setServicereqs] = useState<ServiceReq[]>([]);
     const [loading, setLoading] = useState(true);
@@ -87,7 +93,7 @@ export function ServiceRequestPicker({ selectedId, onSelect, disabled = false, r
             </Button>
 
             {open && !disabled && (
-                <div className="absolute top-full left-0 right-0 z-50 mt-1 rounded-lg border bg-popover shadow-md overflow-hidden">
+                <div className={inline ? "mt-1 rounded-lg border bg-popover shadow-md overflow-hidden" : "absolute top-full left-0 right-0 z-50 mt-1 rounded-lg border bg-popover shadow-md overflow-hidden"}>
                     <div className="p-2 border-b">
                         <Input
                             placeholder="Search service requests..."
