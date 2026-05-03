@@ -1,19 +1,19 @@
 import { CardContent, CardHeader } from "@/components/ui/card.tsx";
-import BookmarkedFiles from "@/features/content/listing/BookmarkedFiles.tsx";
+import Collections from "@/features/content/listing/Collections.tsx";
 import DashboardCard from "@/features/dashboard/components/cards/DashboardCard.tsx";
 
-function BookmarkedCard() {
+function FavoritedCollectionsCard() {
     return (
         <DashboardCard
             size="small"
             borderColor="secondary"
         >
-            <CardHeader className="text-left text-2xl! font-semibold">Bookmarked Content: </CardHeader>
+            <CardHeader className="text-left text-2xl! font-semibold">Favorited Collections: </CardHeader>
             <CardContent>
-                <BookmarkedFiles />
+                <Collections />
             </CardContent>
         </DashboardCard>
     );
 }
 
-export default BookmarkedCard;
+export default FavoritedCollectionsCard;
