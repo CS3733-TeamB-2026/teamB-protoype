@@ -1,5 +1,5 @@
 import { prisma } from "../lib/prisma";
-import { employeeSelect } from "./helper";
+import { employeeSelect, srInclude } from "./helper";
 
 // Items have no guaranteed DB order, so position must always be applied here
 const itemsInclude = {
@@ -22,15 +22,20 @@ const itemsInclude = {
  * addFavorite, and removeFavorite rather than inlining them into queryAll/queryById.
  */
 export class Collection {
-    /** Returns all public collections plus all collections owned by the given employee.
-     *  Pass isAdmin=true to return every collection regardless of visibility. */
-    public static async queryAll(employeeId: number, isAdmin: boolean) {
+    /**
+     * Returns all public collections plus all collections owned by the given employee.
+     * Pass `isAdmin=true` to return every collection regardless of visibility.
+     *
+     * `unlinkedSR=true` restricts to collections whose `serviceRequestId` is null —
+     * used by the SR creation form so that already-linked collections don't appear
+     * as candidates. Unlike the SR back-relation null-check (`{ linkedCollection: { is: null } }`),
+     * this uses a plain `serviceRequestId: null` because Collection owns the FK directly.
+     */
+    public static async queryAll(employeeId: number, isAdmin: boolean, unlinkedSR = false) {
         return prisma.collection.findMany({
-            where: isAdmin ? undefined : {
-                OR: [
-                    { public: true },
-                    { ownerId: employeeId },
-                ],
+            where: {
+                ...(isAdmin ? {} : { OR: [{ public: true }, { ownerId: employeeId }] }),
+                ...(unlinkedSR ? { serviceRequestId: null } : {}),
             },
             include: {
                 owner: { select: employeeSelect },
@@ -40,13 +45,14 @@ export class Collection {
         });
     }
 
-    /** Returns a single collection with all joined content items. */
+    /** Returns a single collection with all joined content items and its linked service request. */
     public static async queryById(collectionId: number) {
         return prisma.collection.findUniqueOrThrow({
             where: { id: collectionId },
             include: {
                 owner: { select: employeeSelect },
                 ...itemsInclude,
+                serviceRequest: { include: srInclude },
             },
         });
     }
@@ -142,6 +148,21 @@ export class Collection {
     public static async removeFavorite(collectionId: number, employeeId: number) {
         await prisma.collectionFavorite.delete({
             where: { employeeId_collectionId: { employeeId, collectionId } },
+        });
+    }
+
+    /**
+     * Links a collection to a service request, or clears the link when `serviceRequestId` is null.
+     *
+     * Collection owns the FK (`serviceRequestId`), so the link is set here rather than on
+     * the ServiceRequest row. The DB enforces `@unique` on this column — attempting to link
+     * a collection that already points at a different SR will throw a Prisma unique-constraint
+     * error; callers must clear the old link first.
+     */
+    public static async setServiceRequest(collectionId: number, serviceRequestId: number | null) {
+        return prisma.collection.update({
+            where: { id: collectionId },
+            data: { serviceRequestId },
         });
     }
 

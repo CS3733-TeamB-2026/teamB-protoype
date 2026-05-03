@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Loader2 } from "lucide-react";
+import {Link} from "react-router-dom";
 import { toast } from "sonner";
 import {
     Dialog,
@@ -23,6 +24,8 @@ interface Props {
     /** Provide one of these to determine what gets linked. */
     contentId?: number;
     collectionId?: number;
+    /** Pre-fills the SR deadline when creating a new SR from this dialog (e.g. the content item's expiration date). */
+    deadline?: Date;
 }
 
 /**
@@ -35,7 +38,7 @@ interface Props {
  * Linking uses PATCH /api/servicereqs/:id/link (slim endpoint, no full SR payload needed).
  * Creating uses POST /api/servicereqs with the link pre-set via startingValues.
  */
-export function ServiceRequestLinkDialog({ open, onOpenChange, onServiceReqsChange, contentId, collectionId }: Props) {
+export function ServiceRequestLinkDialog({ open, onOpenChange, onServiceReqsChange, contentId, collectionId, deadline }: Props) {
     const { getAccessTokenSilently } = useAuth0();
     const [linkedSRs, setLinkedSRs] = useState<ServiceReq[]>([]);
     const [loading, setLoading] = useState(false);
@@ -79,13 +82,15 @@ export function ServiceRequestLinkDialog({ open, onOpenChange, onServiceReqsChan
         setLinking(true);
         try {
             const token = await getAccessTokenSilently();
-            const res = await fetch(`/api/servicereqs/${selectedId}/link`, {
+            // PATCH the content/collection endpoint (not /api/servicereqs/:id/link) because
+            // the FK lives on the content/collection row — that's where the write must go.
+            const linkEndpoint = contentId != null
+                ? `/api/content/${contentId}/service-request`
+                : `/api/collections/${collectionId}/service-request`;
+            const res = await fetch(linkEndpoint, {
                 method: "PATCH",
                 headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    linkedContentId: contentId ?? null,
-                    linkedCollectionId: collectionId ?? null,
-                }),
+                body: JSON.stringify({ serviceRequestId: selectedId }),
             });
             if (!res.ok) { toast.error("Failed to link service request."); return; }
             toast.success("Service request linked.");
@@ -99,10 +104,10 @@ export function ServiceRequestLinkDialog({ open, onOpenChange, onServiceReqsChan
         }
     };
 
-    // startingValues pre-sets the link fields in AddServiceReqDialog so the SR is
-    // created already linked — no second PATCH needed.
+    // startingValues pre-sets the link fields (and optionally deadline) in AddServiceReqDialog
+    // so the SR is created already linked — no second PATCH needed.
     const startingValues = contentId != null
-        ? { linkMode: "content" as const, linkedContentId: contentId }
+        ? { linkMode: "content" as const, linkedContentId: contentId, ...(deadline ? { deadline } : {}) }
         : { linkMode: "collection" as const, linkedCollectionId: collectionId };
 
     const showPicker = linkedSRs.length === 0;
@@ -126,7 +131,7 @@ export function ServiceRequestLinkDialog({ open, onOpenChange, onServiceReqsChan
                                 </div>
                             ) : linkedSRs.length === 0 ? (
                                 <p className="text-sm text-muted-foreground text-center py-6">
-                                    Not linked to any service requests.
+                                    Not linked to any <Link to="/servicereqs" className="hover:text-foreground underline underline-offset-2 transition-colors">service requests</Link>.
                                 </p>
                             ) : (
                                 linkedSRs.map((sr) => <ServiceRequestCard key={sr.id} servicereq={sr} />)

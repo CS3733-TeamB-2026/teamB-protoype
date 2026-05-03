@@ -154,6 +154,13 @@ All routes are JSON unless noted. File-upload routes use `multipart/form-data` w
 > **Route order matters**: `GET /api/collections/favorites` must be registered **before** `GET /api/collections/:id` to avoid Express matching `"favorites"` as an ID.
 
 **Service Requests** — `GET/POST/PUT /api/servicereqs`, `DELETE /api/servicereqs/:id`, plus `/api/assigned`.
+- `GET    /api/servicereqs/unlinked` — SRs not linked to any content or collection; used by `ServiceRequestPicker` in the link dialog
+- `PATCH  /api/content/:id/service-request` — sets `serviceRequestId` on a content item (FK lives here, not on the SR row)
+- `PATCH  /api/collections/:id/service-request` — sets `serviceRequestId` on a collection
+- `GET    /api/content/:id/service-requests` — SR(s) linked to a content item (back-relation lookup)
+- `GET    /api/collections/:id/service-requests` — SR(s) linked to a collection
+- `GET    /api/collections[?unlinkedSR=true]` — pass `unlinkedSR=true` to restrict to collections not yet linked to any SR
+- `GET    /api/content[?unlinkedSR=true]` — same filter for content items
 
 > **Route order matters in `apps/backend/src/app.ts`**: `info`, `download`, `publicUrl`, `tags`, and `search` must be registered **before** `/:id`, otherwise Express 5 will match them to the parameterized route first. `checkout` and `checkin` are sub-routes under `/:id` and are unaffected.
 
@@ -179,10 +186,10 @@ All storage operations go through `packages/db/queries/bucket.ts` (`Bucket.uploa
 Schema at `packages/db/prisma/schema.prisma`.
 
 - **Employee** — `id`, `firstName`, `lastName`, `persona`, `auth0Id`, `profilePhotoURI`
-- **Content** — `displayName`, `linkURL` *xor* `fileURI`, `ownerId`, `contentType` (`reference` | `workflow`), `status` (`new` | `inProgress` | `complete`), `targetPersona`, `tags: string[]`, `lastModified`, `expiration`, `checkedOutById`, `checkedOutAt`, `deleted` (default `false` — soft-delete flag; all normal queries filter this out)
+- **Content** — `displayName`, `linkURL` *xor* `fileURI`, `ownerId`, `contentType` (`reference` | `workflow`), `status` (`new` | `inProgress` | `complete`), `targetPersona`, `tags: string[]`, `lastModified`, `expiration`, `checkedOutById`, `checkedOutAt`, `deleted` (default `false` — soft-delete flag; all normal queries filter this out), `serviceRequestId` (FK → ServiceRequest; `@unique` — one SR per item max)
 - **Bookmark** — join table (`bookmarkerId`, `bookmarkedContentId`) with a composite unique key
-- **Collection** — `displayName`, `ownerId`, `public`; items stored in **CollectionItem** (`collectionId`, `contentId`, `position`) — explicit join table so item order is preserved. Favorites stored in **CollectionFavorite** (`employeeId`, `collectionId`).
-- **ServiceRequest** — `name`, `created`, `deadline`, `type`, `assigneeId`, `ownerId`
+- **Collection** — `displayName`, `ownerId`, `public`, `serviceRequestId` (FK → ServiceRequest; `@unique`); items stored in **CollectionItem** (`collectionId`, `contentId`, `position`) — explicit join table so item order is preserved. Favorites stored in **CollectionFavorite** (`employeeId`, `collectionId`). Private collections cannot be linked to SRs — enforced in the backend hooks.
+- **ServiceRequest** — `name`, `created`, `deadline`, `type`, `assigneeId`, `ownerId`. **No FK to Content or Collection** — the FK lives on those tables and Prisma resolves `linkedContent` / `linkedCollection` as back-relations.
 
 Enums (`Persona`, `Status`, `ContentType`, `RequestType`) are mapped from strings via the `Helper` class (`packages/db/queries/helper.ts`), so the API accepts plain strings from the frontend.
 
@@ -395,7 +402,19 @@ Access control: Edit and Delete disabled unless the user is `ownerId`, `assignee
 
 Search matches name, type, owner full name, assignee full name. `highlightRange` on the name column. All columns sortable; default: type asc.
 
-**API endpoints** — `GET/POST/PUT /api/servicereqs`, `DELETE /api/servicereqs/:id`.
+**API endpoints** — see the full list under Service Requests in the Backend section above.
+
+**SR ↔ Content/Collection link architecture** — the FK (`serviceRequestId`) lives on the `Content` and `Collection` tables, not on `ServiceRequest`. This means:
+- Writing a link always goes through `Content.setServiceRequest` or `Collection.setServiceRequest`, never a direct SR update.
+- `ServiceRequest.linkedContent` / `linkedCollection` are Prisma back-relations; they can be queried with `include` but cannot be set during SR create/update.
+- The `@unique` constraint on each FK column ensures at most one SR per content item and one per collection.
+- Creating an SR and then linking it requires three steps: create SR → set FK on content/collection → re-fetch SR (see `createServiceReq` hook).
+- Deleting an SR requires nulling out the FK on linked rows first (no cascade in schema).
+- `srInclude` is defined in `packages/db/queries/helper.ts` (not `servicereqs.ts`) to allow `content.ts` and `collection.ts` to import it without creating circular imports.
+
+**`ServiceRequestLinkDialog`** — manages SR links from the content/collection detail view. When linking an existing SR it PATCHes the content/collection endpoint (not the SR). When creating a new SR it passes `startingValues` to `AddServiceReqDialog` so the link is embedded in the create payload — no second PATCH needed.
+
+**`ContentPicker` / `CollectionPicker`** — both accept `unlinkedSR` prop. When true, `?unlinkedSR=true` is appended to the fetch URL so only items with no existing SR link are shown. The collection picker additionally requires `publicOnly` in the SR form context because private collections cannot be linked.
 
 ---
 

@@ -15,6 +15,8 @@ interface Props {
     /** Content IDs to hide from the list (e.g. already in the collection). */
     excludeIds?: number[];
     disabled?: boolean;
+    /** When true, only content items not yet linked to any service request are shown. */
+    unlinkedSR?: boolean;
 }
 
 /**
@@ -26,8 +28,12 @@ interface Props {
  *
  * Pass `excludeIds` to hide items that are already members of a collection so
  * the user can't add duplicates.
+ *
+ * Pass `unlinkedSR` when the picker is inside the SR creation/edit form — it
+ * appends `?unlinkedSR=true` to the fetch so the backend returns only items
+ * whose `serviceRequestId` is null, preventing accidental double-linking.
  */
-export function ContentPicker({ selectedId, onSelect, excludeIds = [], disabled = false }: Props) {
+export function ContentPicker({ selectedId, onSelect, excludeIds = [], disabled = false, unlinkedSR = false }: Props) {
     const [open, setOpen] = useState(false);
     const [items, setItems] = useState<ContentItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -42,7 +48,8 @@ export function ContentPicker({ selectedId, onSelect, excludeIds = [], disabled 
         const load = async () => {
             try {
                 const token = await getAccessTokenSilently();
-                const res = await fetch(`/api/content`, {
+                const params = unlinkedSR ? "?unlinkedSR=true" : "";
+                const res = await fetch(`/api/content${params}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 const data: ContentItem[] = await res.json();
@@ -52,7 +59,7 @@ export function ContentPicker({ selectedId, onSelect, excludeIds = [], disabled 
             }
         };
         void load();
-    }, [user, getAccessTokenSilently]);
+    }, [user, getAccessTokenSilently, unlinkedSR]);
 
     useEffect(() => {
         if (!open) return;
