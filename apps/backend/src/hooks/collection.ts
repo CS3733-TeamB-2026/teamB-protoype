@@ -3,13 +3,15 @@ import { req, res } from "./types";
 import { getEmployee } from "../helpers/getEmployee";
 import { isAdmin, isUserOrAdmin } from "../helpers/permissions";
 
-/** Returns collections visible to the caller — all for admins, public+own for regular employees. */
+/** Returns collections visible to the caller — all for admins, public+own for regular employees.
+ *  Pass ?unlinkedSR=true to restrict to collections not yet linked to a service request. */
 export const getAllCollections = async (req: req, res: res) => {
     try {
         const employee = await getEmployee(req);
         if (!employee) return res.status(404).json({ error: "Employee not found" });
 
-        const collections = await q.Collection.queryAll(employee.id, isAdmin(employee));
+        const unlinkedSR = req.query.unlinkedSR === "true";
+        const collections = await q.Collection.queryAll(employee.id, isAdmin(employee), unlinkedSR);
         return res.status(200).json(collections);
     } catch (error) {
         console.error(error);
@@ -52,7 +54,8 @@ export const createCollection = async (req: req, res: res) => {
     }
 };
 
-/** Updates a collection; replaces the full ordered item list — send all contentIds, not a diff. Owner/admin only. */
+/** Updates a collection; replaces the full ordered item list — send all contentIds, not a diff. Owner/admin only.
+ *  If the collection is made private, any linked service request is automatically unlinked. */
 export const updateCollection = async (req: req, res: res) => {
     try {
         const employee = await getEmployee(req);
@@ -65,6 +68,13 @@ export const updateCollection = async (req: req, res: res) => {
             return res.status(403).json({ error: "Access denied" });
         }
         const { displayName, isPublic, ownerId, contentIds } = req.body;
+
+        // Private collections cannot be linked to SRs; sever the link before the update
+        // so the DB constraint (private collections must have serviceRequestId = null) is not violated.
+        if (existing.public && !isPublic && existing.serviceRequestId != null) {
+            await q.Collection.setServiceRequest(collectionId, null);
+        }
+
         const updated = await q.Collection.update(
             collectionId,
             displayName,
@@ -73,6 +83,30 @@ export const updateCollection = async (req: req, res: res) => {
             contentIds ?? [],
         );
         return res.status(200).json(updated);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+/** Sets the service request linked to a collection. Validates the collection is public. Owner/admin only. */
+export const setCollectionServiceRequest = async (req: req, res: res) => {
+    try {
+        const employee = await getEmployee(req);
+        if (!employee) return res.status(404).json({ error: "Employee not found" });
+
+        const collectionId = parseInt(req.params.id);
+        const existing = await q.Collection.queryById(collectionId);
+        if (!isUserOrAdmin(existing.ownerId, employee))
+            return res.status(403).json({ error: "Access denied" });
+
+        const { serviceRequestId } = req.body;
+
+        if (serviceRequestId != null && !existing.public)
+            return res.status(400).json({ error: "Private collections cannot be linked to a service request" });
+
+        await q.Collection.setServiceRequest(collectionId, serviceRequestId ?? null);
+        return res.status(204).end();
     } catch (error) {
         console.error(error);
         return res.status(500).end();
@@ -94,6 +128,21 @@ export const deleteCollection = async (req: req, res: res) => {
 
         await q.Collection.delete(collectionId);
         return res.status(204).end();
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+/** Returns all collections containing the given content item, filtered by the caller's visibility. */
+export const getCollectionsByContentId = async (req: req, res: res) => {
+    try {
+        const employee = await getEmployee(req);
+        if (!employee) return res.status(404).json({ error: "Employee not found" });
+
+        const contentId = parseInt(req.params.id);
+        const collections = await q.Collection.queryByContentId(contentId, employee.id, isAdmin(employee));
+        return res.status(200).json(collections);
     } catch (error) {
         console.error(error);
         return res.status(500).end();
@@ -130,6 +179,32 @@ export const addFavorite = async (req: req, res: res) => {
 
         const favorite = await q.Collection.addFavorite(collectionId, employee.id);
         return res.status(201).json(favorite);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+/** Appends items to a collection without replacing the full list; silently deduplicates. Owner/admin only. */
+export const appendItemsToCollection = async (req: req, res: res) => {
+    try {
+        const employee = await getEmployee(req);
+        if (!employee) return res.status(404).json({ error: "Employee not found" });
+
+        const collectionId = parseInt(req.params.id);
+        const existing = await q.Collection.queryById(collectionId);
+
+        if (!isUserOrAdmin(existing.ownerId, employee)) {
+            return res.status(403).json({ error: "Access denied" });
+        }
+
+        const { contentIds } = req.body;
+        if (!Array.isArray(contentIds)) {
+            return res.status(400).json({ error: "contentIds must be an array" });
+        }
+
+        const updated = await q.Collection.appendItems(collectionId, contentIds);
+        return res.status(200).json(updated);
     } catch (error) {
         console.error(error);
         return res.status(500).end();

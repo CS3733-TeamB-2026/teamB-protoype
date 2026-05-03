@@ -103,6 +103,8 @@ export type TranslationKey =
     | 'disclaimer.middle'
     | 'disclaimer.end'
 
+    | 'dashboard.subtitle'
+
     | 'content'
     | 'content.filters'
     | 'content.hide'

@@ -4,7 +4,7 @@ import {
     CardHeader
 } from "@/components/ui/card.tsx";
 import { Hero } from "@/components/shared/Hero.tsx";
-import Autoplay from "embla-carousel-autoplay"
+import Autoplay from "embla-carousel-autoplay";
 import {
     Carousel,
     CarouselContent,

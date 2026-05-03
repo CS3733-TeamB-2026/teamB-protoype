@@ -4,6 +4,7 @@ import ConversationView from "@/features/insights/ConversationView";
 import EmptyState from "@/features/insights/EmptyState";
 import { useNLQuery, type ChatTurn } from "@/hooks/use-nl-query";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
+import {DottedBackground} from "@/components/shared/DottedBackground.tsx";
 
 function InsightsPage() {
     const [conversation, setConversation] = useState<ChatTurn[]>([]);
@@ -48,14 +49,7 @@ function InsightsPage() {
 
     return (
         <div className="mx-auto flex h-[calc(100vh-76px)] w-full flex-col">
-
-            <div
-                className="pointer-events-none absolute inset-0 opacity-80"
-                style={{
-                    backgroundImage: `radial-gradient(circle, color-mix(in oklch, var(--primary) 15%, transparent) 1px, transparent 2px)`,
-                    backgroundSize: '24px 24px',
-                }}
-            />
+            <DottedBackground/>
 
             <div className="relative flex-1 min-h-0">
                 <div className="absolute inset-0 overflow-y-auto px-6 pt-10 pb-45 min-h-0 scroll-pb-100">

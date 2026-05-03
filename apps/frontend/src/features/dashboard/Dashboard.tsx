@@ -28,6 +28,8 @@ import {
 } from "@dnd-kit/sortable";
 
 import { CSS } from "@dnd-kit/utilities";
+import {useLocale} from "@/languageSupport/localeContext.tsx";
+import {useTranslation} from "@/languageSupport/useTranslation.ts";
 
 const sizeClasses: Record<WidgetSize, string> = {
     small: "col-span-1",
@@ -91,6 +93,8 @@ function DragOverlayCard({ id }: { id: WidgetId }) {
 }
 
 function Dashboard() {
+    const { locale } = useLocale();
+    const { ts } = useTranslation(locale);
     usePageTitle("Dashboard");
     //const user = useUser();
 
@@ -152,7 +156,7 @@ function Dashboard() {
             <Hero
                 icon={LayoutDashboard}
                 description="Find all your tools here."
-                title="Dashboard"
+                title={ts('sidebar.dashboard')}
             />
 
             {/* Customize Button */}

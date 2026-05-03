@@ -4,6 +4,7 @@ import {Button} from "@/components/ui/button.tsx";
 import {CalendarClock, FolderOpen, Plus, UserPlus, Users} from "lucide-react";
 import { useUser } from "@/hooks/use-user.ts"
 import DashboardCard from "@/features/dashboard/components/cards/DashboardCard.tsx";
+import InfoButton from "@/components/layout/InformationAlert.tsx";
 
 function QuickLinksCard() {
 
@@ -21,6 +22,9 @@ function QuickLinksCard() {
                 <p className="text-center text-sm text-muted-foreground">Quick Links</p>
             </CardHeader>
             <CardContent>
+                <div className="absolute right-1 top-1 w-8 h-8 cursor-pointer">
+                    <InfoButton content={"Shows quick access links based on your persona"}/>
+                </div>
                 <div className="flex flex-col gap-3 px-2">
                     {user?.persona === "admin" ?
                         <Link to="/usermanagement" className="w-full">

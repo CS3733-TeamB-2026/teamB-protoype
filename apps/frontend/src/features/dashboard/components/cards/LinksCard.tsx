@@ -2,6 +2,7 @@ import {CardContent, CardTitle} from "@/components/ui/card.tsx";
 import { Link } from "react-router-dom";
 import { useUser } from "@/hooks/use-user.ts";
 import DashboardCard from "@/features/dashboard/components/cards/DashboardCard.tsx";
+import InfoButton from "@/components/layout/InformationAlert.tsx";
 
 type LinkItem = {
     title: string;
@@ -45,6 +46,9 @@ function HelloCard() {
                 <h1>Additional Links:</h1>
             </CardTitle>
             <CardContent>
+                <div className="absolute right-1 top-1 w-8 h-8 cursor-pointer">
+                    <InfoButton content={"Shows additional links that may be relevant"}/>
+                </div>
                 <div className="grid grid-cols-1">
                     {links
                         .filter(item => item.access.length === 0 || (user && item.access.includes(user.persona)))
