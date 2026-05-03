@@ -3,6 +3,7 @@ import {req, res} from "./types"
 import { getEmployee } from "../helpers/getEmployee";
 import { isUserOrAdmin } from "../helpers/permissions";
 
+/** Returns every service request with full relations (owner, assignee, linked content/collection). */
 export const allServiceReqs = async (req: req, res: res) => {
     try {
         const servicereqs = await q.ServiceReqs.queryAllServiceReqs();
@@ -13,6 +14,7 @@ export const allServiceReqs = async (req: req, res: res) => {
     }
 };
 
+/** Returns service requests that have a non-null assignee. */
 export const allAssignedReqs = async (req: req, res: res) => {
     try {
         const assigned = await q.ServiceReqs.queryAssignedServiceReqs();
