@@ -12,7 +12,6 @@ import {
     FolderOpen,
     Loader2,
     Pencil,
-    Trash2,
     LucideFolders,
     Search,
     Plus,
@@ -20,7 +19,7 @@ import {
     Lock,
     RefreshCcw,
     KeyRound,
-    Ban, ChevronsLeft, ChevronsRight, ChevronLeft, UserRoundKey, Recycle, RotateCcw, FolderPlus,
+    Ban, ChevronsLeft, ChevronsRight, ChevronLeft, UserRoundKey, Recycle, FolderPlus,
 } from "lucide-react";
 import {Button} from "@/components/ui/button.tsx";
 import {
@@ -44,14 +43,11 @@ import {
     Table,
     TableBody,
     TableCell,
-    TableHead,
-    TableHeader,
     TableRow,
 } from "@/components/ui/table.tsx";
 import {Hero} from "@/components/shared/Hero.tsx";
 import {ContentIcon} from "@/features/content/components/ContentIcon.tsx";
 import {ConfirmDeleteDialog} from "@/components/dialogs/ConfirmDeleteDialog.tsx";
-import {SortableHead} from "@/components/shared/SortableHead.tsx";
 import {useSortState, applySortState} from "@/hooks/use-sort-state.ts";
 import {useUser} from "@/hooks/use-user.ts";
 import {
@@ -79,7 +75,6 @@ import { ALL_CATEGORIES } from "@/lib/mime.ts";
 import {usePageTitle} from "@/hooks/use-page-title.ts";
 import {ConfirmCheckoutDialog} from "@/features/content/forms/ConfirmCheckoutDialog.tsx";
 import {ConfirmCheckinDialog} from "@/features/content/forms/ConfirmCheckinDialog.tsx";
-import {ConfirmRestoreDialog} from "@/features/content/forms/ConfirmRestoreDialog.tsx";
 import {AddToCollectionDialog} from "@/features/collections/AddToCollectionDialog.tsx";
 import {TagInput} from "@/features/content/tags/TagInput.tsx";
 import {Tabs, TabsTrigger} from "@/components/ui/tabs"
@@ -90,6 +85,9 @@ import {useTranslation} from "@/languageSupport/useTranslation.ts";
 import type {TranslationKey} from "@/languageSupport/keys.ts";
 import {ForceCheckinDialog} from "@/features/content/forms/ForceCheckinDialog.tsx";
 import InfoButton from "@/components/layout/InformationAlert";
+import {RecycleBinTable} from "@/features/content/listing/RecycleBinTable.tsx";
+import {ContentTableHeader} from "@/features/content/listing/ContentTableHeader.tsx";
+import type {ContentSortCol} from "@/features/content/listing/ContentTableHeader.tsx";
 /**
  * Main content list page — the primary view for browsing, searching, filtering,
  * and managing content items.
@@ -133,8 +131,7 @@ function ViewContent() {
     /** Content item staged for the delete confirmation dialog. */
     const [deleteTarget, setDeleteTarget] = useState<ContentItem | null>(null);
     /** Content item staged for the permanent-delete confirmation dialog. */
-    const [permanentDeleteTarget, setPermanentDeleteTarget] = useState<ContentItem | null>(null);
-    const [sort, toggleSort] = useSortState<"name" | "owner" | "status" | "contentType" | "persona" | "docType">({
+    const [sort, toggleSort] = useSortState<ContentSortCol>({
         column: "persona",
         direction: "asc"
     });
@@ -146,9 +143,6 @@ function ViewContent() {
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
     const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
     const [addToCollectionOpen, setAddToCollectionOpen] = useState(false);
-    const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false);
-    const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
-    const [restoreTarget, setRestoreTarget] = useState<ContentItem | null>(null);
 
     const {user} = useUser();
     const navigate = useNavigate();
@@ -510,12 +504,10 @@ function ViewContent() {
         } catch {
             toast.error("Could not permanently delete.");
         }
-        setPermanentDeleteTarget(null);
     };
 
-    /** Restores all currently selected recycled items, reporting a toast for any failures. */
-    const handleBulkRestore = async () => {
-        const ids = [...selectedIds];
+    /** Restores the given recycled items, reporting a toast for any failures. */
+    const handleBulkRestore = async (ids: number[]) => {
         const token = await getAccessTokenSilently();
         let failed = 0;
         for (const id of ids) {
@@ -536,14 +528,12 @@ function ViewContent() {
             }
         }
         setSelectedIds(new Set());
-        setBulkRestoreOpen(false);
         if (failed > 0) toast.error(`Failed to restore ${failed} item${failed !== 1 ? "s" : ""}.`);
         else toast.success(`${ids.length} item${ids.length !== 1 ? "s" : ""} restored.`);
     };
 
-    /** Permanently deletes all currently selected recycled items, reporting a toast for any failures. */
-    const handleBulkPermanentDelete = async () => {
-        const ids = [...selectedIds];
+    /** Permanently deletes the given recycled items, reporting a toast for any failures. */
+    const handleBulkPermanentDelete = async (ids: number[]) => {
         const token = await getAccessTokenSilently();
         let failed = 0;
         for (const id of ids) {
@@ -562,7 +552,6 @@ function ViewContent() {
             }
         }
         setSelectedIds(new Set());
-        setBulkDeleteOpen(false);
         if (failed > 0) toast.error(`Failed to permanently delete ${failed} item${failed !== 1 ? "s" : ""}.`);
         else toast.success(`${ids.length} item${ids.length !== 1 ? "s" : ""} permanently deleted.`);
     };
@@ -616,10 +605,6 @@ function ViewContent() {
     const pageSelectedIds = paginatedContent.filter((i) => selectedIds.has(i.id)).map((i) => i.id);
     const allPageSelected = paginatedContent.length > 0 && pageSelectedIds.length === paginatedContent.length;
     const somePageSelected = pageSelectedIds.length > 0;
-
-    const deletedSelectedIds = deletedContent.filter((i) => selectedIds.has(i.id)).map((i) => i.id);
-    const allDeletedSelected = deletedContent.length > 0 && deletedSelectedIds.length === deletedContent.length;
-    const someDeletedSelected = deletedSelectedIds.length > 0;
 
     return (
         <>
@@ -707,130 +692,28 @@ function ViewContent() {
                     )}
                     {/* Recycle bin tab — separate data source, separate table */}
                     {!loading && !error && activeTab === "recyclebin" && (
-                        deletedContent.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
-                                <Recycle className="w-10 h-10"/>
-                                <p className="text-sm">Recycle bin is empty.</p>
-                            </div>
-                        ) : (
-                            <>
-                                {deletedSelectedIds.length > 0 && (
-                                    <div className="flex items-center gap-2 my-2">
-                                        <span className="text-sm text-muted-foreground whitespace-nowrap">{deletedSelectedIds.length} selected</span>
-                                        <Button
-                                            variant="outline"
-                                            className="hover:bg-secondary hover:text-secondary-foreground h-10 text-base border-input rounded-md text-foreground"
-                                            onClick={() => setBulkRestoreOpen(true)}
-                                        >
-                                            <RotateCcw className="w-4 h-4 mr-1" />
-                                            Restore
-                                        </Button>
-                                        <Button
-                                            variant="destructive"
-                                            className="h-10 text-base"
-                                            onClick={() => setBulkDeleteOpen(true)}
-                                        >
-                                            <Trash2 className="w-4 h-4 mr-1" />
-                                            Delete Permanently
-                                        </Button>
-                                    </div>
-                                )}
-                            <Table className="text-left mt-2">
-                                <TableHeader>
-                                    <TableRow className="hover:bg-transparent">
-                                        <TableHead className="w-8 pr-0">
-                                            <input
-                                                type="checkbox"
-                                                className="w-4 h-4 cursor-pointer accent-primary"
-                                                checked={allDeletedSelected}
-                                                ref={(el) => { if (el) el.indeterminate = someDeletedSelected && !allDeletedSelected; }}
-                                                onChange={() => {
-                                                    if (allDeletedSelected) {
-                                                        setSelectedIds((prev) => {
-                                                            const next = new Set(prev);
-                                                            deletedContent.forEach((i) => next.delete(i.id));
-                                                            return next;
-                                                        });
-                                                    } else {
-                                                        setSelectedIds((prev) => new Set([...prev, ...deletedContent.map((i) => i.id)]));
-                                                    }
-                                                }}
-                                            />
-                                        </TableHead>
-                                        <SortableHead column="name" label={ts('content.name')} sort={sort} onSort={toggleSort}/>
-                                        <SortableHead column="owner" label={ts('content.owner')} sort={sort} onSort={toggleSort} className="hidden sm:table-cell"/>
-                                        <SortableHead column="status" label={ts('status')} sort={sort} onSort={toggleSort} className="hidden sm:table-cell"/>
-                                        <SortableHead column="contentType" label={ts('kind')} sort={sort} onSort={toggleSort} className="hidden sm:table-cell"/>
-                                        <SortableHead column="persona" label={ts('persona')} sort={sort} onSort={toggleSort} className="hidden sm:table-cell"/>
-                                        <SortableHead column="docType" label={ts('file.type')} sort={sort} onSort={toggleSort} className="hidden sm:table-cell"/>
-                                        <TableHead className="uppercase tracking-wider text-muted-foreground select-none text-center">{ts('content.actions')}</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {deletedContent.map((item, index) => {
-                                        const isFile = !!item.fileURI;
-                                        const isLink = !!item.linkURL;
-                                        const originalFilename = isFile ? getOriginalFilename(item.fileURI!) : null;
-                                        const category = getCategory(null, originalFilename);
-                                        const ext = originalFilename ? getExtension(originalFilename) : null;
-                                        return (
-                                            <TableRow
-                                                key={item.id}
-                                                className={`${index % 2 === 0 ? "bg-muted/15" : ""}`}
-                                            >
-                                                <TableCell className="w-8 pr-0" onClick={(e) => e.stopPropagation()}>
-                                                    <input
-                                                        type="checkbox"
-                                                        className="w-4 h-4 cursor-pointer accent-primary"
-                                                        checked={selectedIds.has(item.id)}
-                                                        onChange={() => setSelectedIds((prev) => {
-                                                            const next = new Set(prev);
-                                                            if (next.has(item.id)) next.delete(item.id);
-                                                            else next.add(item.id);
-                                                            return next;
-                                                        })}
-                                                    />
-                                                </TableCell>
-                                                <TableCell className="w-8 pr-0">
-                                                    <ContentIcon category={category} isLink={isLink} className="w-5 h-5"/>
-                                                </TableCell>
-                                                <TableCell className="w-full max-w-0">
-                                                    <span className="truncate font-medium text-foreground">{item.displayName}</span>
-                                                </TableCell>
-                                                <TableCell className="hidden sm:table-cell">
-                                                    {item.owner
-                                                        ? <EmployeeAvatar employee={item.owner} size="sm"/>
-                                                        : <span className="text-muted-foreground">—</span>}
-                                                </TableCell>
-                                                <TableCell className="hidden sm:table-cell text-center">
-                                                    <ContentStatusBadge status={item.status}/>
-                                                </TableCell>
-                                                <TableCell className="hidden sm:table-cell text-center">
-                                                    <ContentTypeBadge contentType={item.contentType}/>
-                                                </TableCell>
-                                                <TableCell className="hidden sm:table-cell text-center">
-                                                    <PersonaBadge persona={item.targetPersona}/>
-                                                </TableCell>
-                                                <TableCell className="hidden sm:table-cell text-center">
-                                                    <ContentExtBadge category={category} ext={ext} isLink={isLink}/>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="flex justify-center gap-2">
-                                                        <Button variant="outline" size="sm" title="Restore" onClick={() => setRestoreTarget(item)}>
-                                                            <RotateCcw className="w-4 h-4"/>
-                                                        </Button>
-                                                        <Button variant="destructive" size="sm" title="Delete permanently" onClick={() => setPermanentDeleteTarget(item)}>
-                                                            <Trash2 className="w-4 h-4"/>
-                                                        </Button>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })}
-                                </TableBody>
-                            </Table>
-                            </>
-                        )
+                        <RecycleBinTable
+                            deletedContent={deletedContent}
+                            selectedIds={selectedIds}
+                            onToggleId={(id) => setSelectedIds((prev) => {
+                                const next = new Set(prev);
+                                if (next.has(id)) next.delete(id);
+                                else next.add(id);
+                                return next;
+                            })}
+                            onSelectIds={(ids) => setSelectedIds((prev) => new Set([...prev, ...ids]))}
+                            onDeselectIds={(ids) => setSelectedIds((prev) => {
+                                const next = new Set(prev);
+                                ids.forEach((id) => next.delete(id));
+                                return next;
+                            })}
+                            sort={sort}
+                            onSort={toggleSort}
+                            onRestore={handleRestore}
+                            onPermanentDelete={handlePermanentDelete}
+                            onBulkRestore={handleBulkRestore}
+                            onBulkPermanentDelete={handleBulkPermanentDelete}
+                        />
                     )}
 
                     {!loading && !error && activeTab !== "recyclebin" && content.length === 0 && (
@@ -1050,44 +933,23 @@ function ViewContent() {
                             {/* Table takes all remaining space */}
                             <div className="flex-1 min-w-0">
                                 <Table className="text-left md:col-span-2">
-                                    <TableHeader>
-                                        <TableRow className="hover:bg-transparent">
-                                            <TableHead className="w-8 pr-0">
-                                                <input
-                                                    type="checkbox"
-                                                    className="w-4 h-4 cursor-pointer accent-primary"
-                                                    checked={allPageSelected}
-                                                    ref={(el) => { if (el) el.indeterminate = somePageSelected && !allPageSelected; }}
-                                                    onChange={() => {
-                                                        if (allPageSelected) {
-                                                            setSelectedIds((prev) => {
-                                                                const next = new Set(prev);
-                                                                paginatedContent.forEach((i) => next.delete(i.id));
-                                                                return next;
-                                                            });
-                                                        } else {
-                                                            setSelectedIds((prev) => new Set([...prev, ...paginatedContent.map((i) => i.id)]));
-                                                        }
-                                                    }}
-                                                />
-                                            </TableHead>
-                                            <SortableHead column="name" label={ts('content.name')} sort={sort} onSort={toggleSort}/>
-                                            <SortableHead column="owner" label={ts('content.owner')} sort={sort} onSort={toggleSort}
-                                                          className="hidden sm:table-cell"/>
-                                            <SortableHead column="status" label={ts('status')} sort={sort} onSort={toggleSort}
-                                                          className="hidden sm:table-cell"/>
-                                            <SortableHead column="contentType" label={ts('kind')} sort={sort}
-                                                          onSort={toggleSort} className="hidden sm:table-cell"/>
-                                            <SortableHead column="persona" label={ts('persona')} sort={sort}
-                                                          onSort={toggleSort}
-                                                          className="hidden sm:table-cell"/>
-                                            <SortableHead column="docType" label={ts('file.type')} sort={sort} onSort={toggleSort}
-                                                          className="hidden sm:table-cell"/>
-
-                                            <TableHead
-                                                className="uppercase tracking-wider text-muted-foreground select-none text-center">{ts('content.actions')}</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
+                                    <ContentTableHeader
+                                        sort={sort}
+                                        onSort={toggleSort}
+                                        allSelected={allPageSelected}
+                                        someSelected={somePageSelected}
+                                        onToggleAll={() => {
+                                            if (allPageSelected) {
+                                                setSelectedIds((prev) => {
+                                                    const next = new Set(prev);
+                                                    paginatedContent.forEach((i) => next.delete(i.id));
+                                                    return next;
+                                                });
+                                            } else {
+                                                setSelectedIds((prev) => new Set([...prev, ...paginatedContent.map((i) => i.id)]));
+                                            }
+                                        }}
+                                    />
                                     <TableBody>
                                         {/* pre sorts the content */}
                                         {paginatedContent.map((item, index) => {
@@ -1496,18 +1358,6 @@ function ViewContent() {
                 onConfirm={() => handleDelete(deleteTarget!.id)}
             />
 
-            {/* Hard delete confirmation dialog, permanently deletes */}
-            <ConfirmDeleteDialog
-                open={!!permanentDeleteTarget}
-                onOpenChange={(open) => {
-                    if (!open) setPermanentDeleteTarget(null);
-                }}
-                description={permanentDeleteTarget
-                    ? <span>Permanently delete <strong>"{permanentDeleteTarget.displayName}"</strong>? This cannot be undone.</span>
-                    : undefined}
-                onConfirm={() => handlePermanentDelete(permanentDeleteTarget!.id)}
-            />
-
             <ConfirmCheckoutDialog
                 open={!!checkoutTarget}
                 onOpenChange={(open: boolean) => {
@@ -1614,38 +1464,8 @@ function ViewContent() {
                 onDone={() => setSelectedIds(new Set())}
             />
 
-            {/* Single-item restore confirmation */}
-            <ConfirmRestoreDialog
-                open={!!restoreTarget}
-                onOpenChange={(open) => { if (!open) setRestoreTarget(null); }}
-                description={restoreTarget
-                    ? <span>Restore <strong>"{restoreTarget.displayName}"</strong>? It will be moved back to your active content.</span>
-                    : undefined}
-                onConfirm={async () => {
-                    if (restoreTarget) {
-                        await handleRestore(restoreTarget);
-                        setRestoreTarget(null);
-                    }
-                }}
-            />
 
-            {/* Bulk restore confirmation */}
-            <ConfirmRestoreDialog
-                open={bulkRestoreOpen}
-                onOpenChange={(open) => { if (!open) setBulkRestoreOpen(false); }}
-                description={<span>Restore <strong>{deletedSelectedIds.length} item{deletedSelectedIds.length !== 1 ? "s" : ""}</strong>? They will be moved back to your active content.</span>}
-                onConfirm={handleBulkRestore}
-            />
-
-            {/* Bulk permanent delete confirmation */}
-            <ConfirmDeleteDialog
-                open={bulkDeleteOpen}
-                onOpenChange={(open) => { if (!open) setBulkDeleteOpen(false); }}
-                description={<span>Permanently delete <strong>{deletedSelectedIds.length} item{deletedSelectedIds.length !== 1 ? "s" : ""}</strong>? This cannot be undone.</span>}
-                onConfirm={handleBulkPermanentDelete}
-            />
-
-        </>
+</>
     );
 }
 
