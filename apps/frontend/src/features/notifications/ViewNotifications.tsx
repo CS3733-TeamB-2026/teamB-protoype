@@ -4,15 +4,12 @@ import {
     Loader2,
     AlertCircle,
     Bell,
-    ChevronLeft,
-    ChevronRight,
-    ChevronsLeft,
-    ChevronsRight,
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import { Separator } from "@/components/ui/separator.tsx";
 import { useUser } from "@/hooks/use-user.ts";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
+import { TablePagination } from "@/components/shared/TablePagination.tsx";
 import { toast } from "sonner";
 import { NotificationCard } from "@/features/notifications/NotificationCard.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -306,44 +303,14 @@ export default function ViewNotifications() {
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-between mt-6 px-1 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-2">
-                            <span>Rows per page</span>
-                            <select
-                                value={pageSize}
-                                onChange={(e) => {
-                                    setPageSize(Number(e.target.value));
-                                    setCurrentPage(1);
-                                }}
-                                className="border border-border rounded px-2 py-1 bg-background text-foreground text-sm"
-                            >
-                                {[10, 25, 50, 100].map((size) => (
-                                    <option key={size} value={size}>{size}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            <span>
-                                {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filteredItems.length)} of {filteredItems.length}
-                            </span>
-                            <div className="flex items-center gap-1">
-                                <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed" title="First page">
-                                    <ChevronsLeft className="w-4 h-4" />
-                                </button>
-                                <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed" title="Previous page">
-                                    <ChevronLeft className="w-4 h-4" />
-                                </button>
-                                <span className="px-2">Page {currentPage} of {totalPages}</span>
-                                <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed" title="Next page">
-                                    <ChevronRight className="w-4 h-4" />
-                                </button>
-                                <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed" title="Last page">
-                                    <ChevronsRight className="w-4 h-4" />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <TablePagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        pageSize={pageSize}
+                        totalItems={filteredItems.length}
+                        onPageChange={setCurrentPage}
+                        onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
+                    />
                 </>
             )}
             <ClearAllDialog
