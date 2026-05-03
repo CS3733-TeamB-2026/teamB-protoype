@@ -48,7 +48,7 @@ export default function SearchContent() {
         <>
             <DottedBackground/>
 
-            <div className="max-w-3xl mx-auto px-4 py-10">
+            <div className="max-w-3xl mx-auto px-4 py-10 relative">
                 <h1 className="text-2xl font-semibold mb-6">Search Content</h1>
 
                 {/* Search bar */}
