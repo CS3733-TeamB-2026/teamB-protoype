@@ -20,12 +20,12 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # 1. Build & Push ML Server
+      # 1. Build & Push ML Server (Updated folder name)
       - name: Build ML Server
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: apps/python/Dockerfile
+          file: python/Dockerfile # Changed from apps/ml-server/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/teamb-ml-server:latest
 
