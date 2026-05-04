@@ -41,7 +41,10 @@ function Credits() {
                 description={'Acknowledging the tools that made this project possible.'} // TODO: Make this work with locale
             />
 
-            <Card className="shadow-md border-4 border-primary-dark p-4 bg-primary hover:shadow-lg transition-shadow w-full max-w-6xl mx-auto mt-6">
+            <h1 className='text-center text-4xl text-primary font-semibold mt-6 mb-1'>Tools Used:</h1>
+            <p className="text-center text-muted-foreground mb-4">This project was made possible through these tools and technologies.</p>
+
+            <Card className="shadow-xl border-t-4 border-t-primary p-4 bg-linear-to-br from-primary to-primary-light/30 transition-shadow w-full max-w-6xl mx-auto mt-6">
                 <CardHeader className="text-white text-2xl">
                     PERN Stack:
                 </CardHeader>
@@ -125,7 +128,7 @@ function Credits() {
                 </div>
             </Card>
 
-            <Card className="shadow-md border-4 border-primary-dark p-4 bg-primary hover:shadow-lg transition-shadow w-full max-w-6xl mx-auto mt-12">
+            <Card className="shadow-xl border-t-4 border-t-primary bg-linear-to-br from-primary to-primary-light/30 p-4 transition-shadow w-full max-w-6xl mx-auto mt-12">
             <CardHeader className="text-white text-2xl">
                 Other Tools:
             </CardHeader>
