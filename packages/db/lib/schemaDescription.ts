@@ -15,7 +15,7 @@ All tables are in the "public" schema. Identifiers are case-sensitive — always
 mixed-case table and column names with double quotes (e.g., "Employee", "firstName").
 
 ENUMS (use the exact lowercase string values when filtering):
-  Persona: 'underwriter', 'businessAnalyst', 'actuarialAnalyst', 'EXLOperator', 'businessOps', 'admin'
+  Persona: 'underwriter', 'businessAnalyst', 'actuarialAnalyst', 'excelOperator', 'businessOps', 'admin'
   Status: 'new', 'inProgress', 'complete'
   ContentType: 'reference', 'workflow'
   RequestType: 'reviewClaim', 'requestAdjuster', 'checkClaim'

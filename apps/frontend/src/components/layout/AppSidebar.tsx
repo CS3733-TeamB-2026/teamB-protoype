@@ -37,16 +37,16 @@ For dropdowns, add more items in children array, leave the array empty for singl
  */
 const navItems: NavItem[] = [
     { title: "Home", icon: Home, href: "/", children: [], access: [], langKey: 'sidebar.home' },
-    { title: "Dashboard", icon: LayoutDashboard, href: "/employeehome", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"], langKey: 'sidebar.dashboard' },
+    { title: "Dashboard", icon: LayoutDashboard, href: "/employeehome", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "excelOperator", "businessOps"], langKey: 'sidebar.dashboard' },
     { title: "Content", icon: LucideFolders, href: "/files", children: [
-            { title: "Content Library", icon: Library, href: "/files", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"], langKey: 'sidebar.manageContent' },
-            { title: "Bulk Upload", icon: Upload, href: "/files/bulk", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"], langKey: 'sidebar.bulkUpload' },
-            { title: "Collections", icon: BookMarked, href: "/collections", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"] },
-        ], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"] },
-    { title: "Service Requests", icon: NetworkIcon, href: "/servicereqs", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"] },
-    { title: "Expiration Calendar", icon: CalendarClock, href: "/calendar", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"] },
+            { title: "Content Library", icon: Library, href: "/files", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "excelOperator", "businessOps"], langKey: 'sidebar.manageContent' },
+            { title: "Bulk Upload", icon: Upload, href: "/files/bulk", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "excelOperator", "businessOps"], langKey: 'sidebar.bulkUpload' },
+            { title: "Collections", icon: BookMarked, href: "/collections", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "excelOperator", "businessOps"] },
+        ], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "excelOperator", "businessOps"] },
+    { title: "Service Requests", icon: NetworkIcon, href: "/servicereqs", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "excelOperator", "businessOps"] },
+    { title: "Expiration Calendar", icon: CalendarClock, href: "/calendar", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "excelOperator", "businessOps"] },
     { title: "Manage Employees", icon: Users, href: "/usermanagement", children: [], access: ["admin"], langKey: 'sidebar.manageEmployees' },
-    { title: "Search", icon: Search, href: "/search", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"] },
+    { title: "Search", icon: Search, href: "/search", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "excelOperator", "businessOps"] },
     { title: "Insights", icon: Sparkles, href: "/insights", children: [], access: ["admin"] },
 ]
 

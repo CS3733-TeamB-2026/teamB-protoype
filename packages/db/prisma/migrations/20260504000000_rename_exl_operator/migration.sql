@@ -1,0 +1,1 @@
+ALTER TYPE "Persona" RENAME VALUE 'EXLOperator' TO 'excelOperator';

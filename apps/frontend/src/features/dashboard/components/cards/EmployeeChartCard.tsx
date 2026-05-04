@@ -25,7 +25,7 @@ const chartConfig = {
     underwriter: { label: "Underwriters"},
     businessAnalyst: { label: "Business Analysts"},
     actuarialAnalyst: { label: "Actuarial Analysts"},
-    EXLOperator: { label: "EXL Operator"},
+    excelOperator: { label: "Excel Operator"},
     businessOps: { label: "Business Ops"},
     admin: { label: "Administrators"},
 } satisfies ChartConfig;
