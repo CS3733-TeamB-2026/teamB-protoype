@@ -46,7 +46,7 @@ const navItems: NavItem[] = [
     { title: "Service Requests", icon: NetworkIcon, href: "/servicereqs", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "excelOperator", "businessOps"] },
     { title: "Expiration Calendar", icon: CalendarClock, href: "/calendar", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "excelOperator", "businessOps"] },
     { title: "Manage Employees", icon: Users, href: "/usermanagement", children: [], access: ["admin"], langKey: 'sidebar.manageEmployees' },
-    { title: "Search", icon: Search, href: "/search", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "excelOperator", "businessOps"] },
+    { title: "Global Search", icon: Search, href: "/search", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "excelOperator", "businessOps"] },
     { title: "Insights", icon: Sparkles, href: "/insights", children: [], access: ["admin"] },
 ]
 
@@ -120,7 +120,7 @@ function AppSidebar() {
                                     <Link to={item.href}>
                                         <item.icon />
                                         <span className="">{item.langKey ? ts(item.langKey) : item.title}</span>
-                                        { item.title === "Insights" ?
+                                        { (item.title === "Insights" || item.title === "Global Search") ?
                                             <span className="rounded-md bg-linear-to-r from-primary-light to-primary mb-px px-1.5 py-0.5 text-[10px] font-bold text-white">
                                               AI
                                             </span> : null}

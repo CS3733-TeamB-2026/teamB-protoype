@@ -52,7 +52,7 @@ function NavSearchBar() {
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && submit()}
-                placeholder="Search..."
+                placeholder="Global search..."
                 className="bg-transparent text-primary-foreground placeholder:text-primary-foreground/50 text-sm outline-none flex-1 min-w-0"
             />
         </div>
@@ -99,12 +99,10 @@ function Navbar() {
                     <DisclaimerAlert />
                 </div>
 
-                {/* centered search bar — hidden on the /search page */}
-                <div className="absolute left-1/2 -translate-x-1/2 z-20">
-                    <NavSearchBar />
-                </div>
-
                 <div className="flex-1" />
+
+                {/* search bar — right-aligned, hidden on the /search page */}
+                <NavSearchBar />
 
                 {/* user avatar popover */}
                 {isAuthenticated && <NotificationBell />}
