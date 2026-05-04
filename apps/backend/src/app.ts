@@ -73,6 +73,7 @@ app.post("/api/previews/:contentId", previews.addPreview)
 app.get("/api/previews/hits/:contentId", previews.getHits)
 // Collections
 app.get("/api/collections/favorites", collection.getFavorites)
+app.get("/api/collections/owned", collection.getCollectionByOwnerId)
 app.get("/api/collections/:id/service-requests", servicereqs.getServiceReqsByCollectionId)
 app.patch("/api/collections/:id/service-request", collection.setCollectionServiceRequest)
 app.get("/api/collections/:id", collection.getCollectionById)

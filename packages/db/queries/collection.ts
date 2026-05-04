@@ -92,6 +92,16 @@ export class Collection {
             .slice(0, 20);
     }
 
+    public static async queryByOwnerId(ownerId: number) {
+        return prisma.collection.findMany({
+            where: { ownerId: ownerId },
+            include: {
+                owner: { select: employeeSelect },
+                ...itemsInclude,
+            }
+        });
+    }
+
     /** Creates a new collection with the given name and owner. */
     public static async create(displayName: string, ownerId: number, isPublic: boolean) {
         const result = await prisma.collection.create({

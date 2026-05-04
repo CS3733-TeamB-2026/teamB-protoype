@@ -29,7 +29,7 @@ export default function MeetTheTeam() {
     const members: TeamMember[] = [
         { id: 1, name: "Dylan Zickus", initials: "DZ", role: 'role.lead', photo: "dylan",
             linkedin: "https://www.linkedin.com/in/dylan-zickus-a109892a8/",
-            quote: "DYLAN QUOTE" },
+            quote: "Dr. C counts as pair programming, right?" },
         { id: 2, name: "Oscar Stomberg", initials: "OS", role: 'role.assistantLead', photo: "oscar",
             linkedin: "https://www.linkedin.com/in/oscar-w-stomberg/",
             quote: "OSCAR QUOTE" },
@@ -44,16 +44,16 @@ export default function MeetTheTeam() {
             quote: "Did you prisma generate?" },
         { id: 6, name: "Nick Houghton", initials: "NH", role: 'role.fullTime', photo: "nicholas",
             linkedin: "https://www.linkedin.com/in/nick-houghton1/",
-            quote: "NICK QUOTE" },
+            quote: "When it errors in a new way, you're making progress" },
         { id: 7, name: "Cameron Pietraski", initials: "CP", role: 'role.fullTime', photo: "cameron",
             linkedin: "https://www.linkedin.com/in/cameron-pietraski-b43101353/",
-            quote: "CAMERON QUOTE" },
+            quote: "\"Absolutely — here are several original, assignment‑safe quotes you can drop into a software engineering project. I’ll give you a few different tones so you can pick the one that fits your vibe.\" - Claude" },
         { id: 8, name: "Philip Ostrowski", initials: "PO", role: 'role.ptManager', photo: "philip",
             linkedin: "https://www.linkedin.com/in/philip-ostrowski-96911b384/",
             quote: "PHILIP QUOTE" },
         { id: 9, name: "Joseph Hemmerle", initials: "JH", role: 'role.ptOwner', photo: "joey",
             linkedin: "https://www.linkedin.com/in/joey-hemmerle-67b9b9288/",
-            quote: "JOEY QUOTE" },
+            quote: "The power of excellence is overwhelming, it’s always in demand, and nobody cares about its color\" - Daniel S. “Chappie” James" },
         { id: 10, name: "Ricardo Guzman Volpe", initials: "RG", role: 'role.ptAnalyst', photo: "ricardo",
             linkedin: null,
             quote: "Jarvis, drop all tables." }
@@ -87,7 +87,7 @@ export default function MeetTheTeam() {
                         <Card
                             className={`w-full max-w-55 shadow-sm border-t-primary border-t-4 text-center hover:shadow-md hover:-translate-y-1 transition-all duration-150 relative`}
                             key={member.name}
-                            onMouseLeave={() => toggleQuote(0)}
+                            onMouseLeave={() => setCurrentQuote(0)}
                         >
                             <CardContent className="flex flex-col items-center justify-center gap-3 pt-6 pb-6 px-3">
                                 <Avatar className="w-16 h-16 ring-2 ring-primary/20">
