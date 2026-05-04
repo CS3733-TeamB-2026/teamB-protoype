@@ -54,3 +54,36 @@ export function formatInsightValue(value: unknown): string {
 
     return String(value);
 }
+
+/**
+ * Format a column key from a SQL result into a human-readable label.
+ *
+ * Handles snake_case ("activity_score" → "Activity Score"), camelCase
+ * ("displayName" → "Display Name"), and all-lowercase ("persona" → "Persona").
+ * Single-word lowercase keys are just capitalized.
+ *
+ * Used for axis titles, legend entries, tooltip headers, and table column
+ * headers — anywhere the column NAME (not its value) is shown to the user.
+ */
+export function formatInsightLabel(key: string): string {
+    if (!key) return key;
+
+    // snake_case and kebab-case → spaces
+    let normalized = key.replace(/[_-]+/g, " ");
+
+    // camelCase / PascalCase → insert space before each uppercase letter
+    // (but not at the start, and not between consecutive uppercase letters
+    // like "ID" or "URI" — keep those acronyms intact)
+    normalized = normalized.replace(/([a-z])([A-Z])/g, "$1 $2");
+
+    // Title-case each word
+    return normalized
+        .split(" ")
+        .filter(Boolean)
+        .map((word) => {
+            // Preserve all-uppercase acronyms as-is (URI, ID, URL, etc.)
+            if (word.length > 1 && word === word.toUpperCase()) return word;
+            return word[0].toUpperCase() + word.slice(1);
+        })
+        .join(" ");
+}
