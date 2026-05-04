@@ -1,5 +1,6 @@
 /**
- * Backfills text content and embeddings for all entity types.
+ * Backfills embeddings for all entity types. Assumes textContent is already
+ * populated for Content rows (run backfill-text.ts first if needed).
  *
  * Usage:
  *   pnpm --filter backend exec tsx scripts/backfill.ts [--target=content|employee|collection|servicereq] [--force]
@@ -14,16 +15,10 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 config({ path: resolve(__dirname, '../.env') });
 
-import { prisma, supabase, embeddingToSql } from '@softeng-app/db';
-import { generateEmbedding } from '../lib/embeddings';
-import {
-    buildContentEmbeddingInput,
-    buildEmployeeEmbeddingInput,
-    buildCollectionEmbeddingInput,
-    buildServiceReqEmbeddingInput,
-} from '../lib/embeddingInputs';
-import { extractText, SupportedMimeType } from '../lib/extractors';
-import mime from 'mime-types';
+// Dynamic imports so dotenv runs before @softeng-app/db initialises Prisma
+const { prisma, embeddingToSql } = await import('@softeng-app/db');
+const { generateEmbedding } = await import('../lib/embeddings.js');
+const { buildContentEmbeddingInput, buildEmployeeEmbeddingInput, buildCollectionEmbeddingInput, buildServiceReqEmbeddingInput } = await import('../lib/embeddingInputs.js');
 
 const force = process.argv.includes('--force');
 const targetArg = process.argv.find(a => a.startsWith('--target='))?.split('=')[1];
@@ -35,44 +30,21 @@ const targetArg = process.argv.find(a => a.startsWith('--target='))?.split('=')[
 async function backfillContent() {
     const rows = force
         ? await prisma.$queryRaw<any[]>`
-            SELECT id, "displayName", "fileURI", "linkURL", "contentType", "targetPersona", "tags", "textContent"
-            FROM "Content"`
-        : await prisma.$queryRaw<any[]>`
-            SELECT id, "displayName", "fileURI", "linkURL", "contentType", "targetPersona", "tags", "textContent"
+            SELECT id, "displayName", "contentType", "targetPersona", "tags", "textContent"
             FROM "Content"
-            WHERE "textContent" IS NULL OR "embedding" IS NULL`;
+            WHERE "textContent" IS NOT NULL`
+        : await prisma.$queryRaw<any[]>`
+            SELECT id, "displayName", "contentType", "targetPersona", "tags", "textContent"
+            FROM "Content"
+            WHERE "textContent" IS NOT NULL AND "embedding" IS NULL`;
 
     console.log(`\n[Content] ${rows.length} rows`);
     let success = 0, skipped = 0, failed = 0;
 
     for (const item of rows) {
         try {
-            let textContent: string | null = item.textContent;
-
-            if (!textContent) {
-                if (item.fileURI) {
-                    const { data, error } = await supabase.storage.from('content').download(item.fileURI);
-                    if (error || !data) {
-                        console.warn(`  [${item.id}] skipped — download failed:`, error?.message);
-                        skipped++; continue;
-                    }
-                    const mimeType = mime.lookup(item.fileURI) || null;
-                    if (!mimeType) {
-                        console.warn(`  [${item.id}] skipped — unknown MIME type`);
-                        skipped++; continue;
-                    }
-                    textContent = await extractText(Buffer.from(await data.arrayBuffer()), mimeType as SupportedMimeType);
-                } else if (item.linkURL) {
-                    textContent = await extractText(null, 'url', item.linkURL);
-                } else {
-                    console.warn(`  [${item.id}] skipped — no fileURI or linkURL`);
-                    skipped++; continue;
-                }
-                await prisma.content.update({ where: { id: item.id }, data: { textContent } });
-            }
-
             const embedding = await generateEmbedding(buildContentEmbeddingInput(
-                item.displayName, item.contentType, item.targetPersona, item.tags ?? [], textContent,
+                item.displayName, item.contentType, item.targetPersona, item.tags ?? [], item.textContent,
             ));
             await prisma.$executeRaw`UPDATE "Content" SET "embedding" = ${embeddingToSql(embedding)}::vector WHERE id = ${item.id}`;
             console.log(`  [${item.id}] "${item.displayName}"`);

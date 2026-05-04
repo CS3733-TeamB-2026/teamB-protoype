@@ -3,7 +3,9 @@
  * Run this before backfill.ts if you want a separate text-extraction pass.
  *
  * Usage:
- *   pnpm --filter backend exec tsx scripts/backfill-text.ts
+ *   pnpm --filter backend exec tsx scripts/backfill-text.ts [--force]
+ *
+ * --force  Re-extract text for rows that already have textContent
  */
 import { config } from 'dotenv';
 import { resolve, dirname } from 'path';
@@ -12,13 +14,16 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 config({ path: resolve(__dirname, '../.env') });
 
-import { prisma, supabase } from '@softeng-app/db';
-import { extractText, SupportedMimeType } from '../lib/extractors';
-import mime from 'mime-types';
+import type { SupportedMimeType } from '../lib/extractors.js';
+const { prisma, supabase } = await import('@softeng-app/db');
+const { extractText } = await import('../lib/extractors.js');
+const mime = (await import('mime-types')).default;
+
+const force = process.argv.includes('--force');
 
 async function backfill() {
-    const rows = await prisma.content.findMany({ where: { textContent: null } });
-    console.log(`Found ${rows.length} records to process.\n`);
+    const rows = await prisma.content.findMany({ where: force ? {} : { textContent: null } });
+    console.log(`Found ${rows.length} records to process (force=${force}).\n`);
 
     let success = 0, skipped = 0, failed = 0;
 
