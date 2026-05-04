@@ -2,11 +2,15 @@ import { useEffect, useState } from "react";
 import { useUser } from "@/hooks/use-user.ts";
 import { FolderOpen, Loader2 } from "lucide-react";
 import { useAuth0 } from "@auth0/auth0-react";
-import type { Collection } from "@/lib/types.ts";
+import type { Collection, CollectionFavorite } from "@/lib/types.ts";
 import {CollectionCard} from "@/components/shared/CollectionCard.tsx";
 
-function Collections() {
-    const [collections, setCollections] = useState<Collection[]>([]);
+type FavoriteWithCollection = CollectionFavorite & {
+    collection: Collection;
+};
+
+function FavoriteCollections() {
+    const [collections, setCollections] = useState<FavoriteWithCollection[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -15,24 +19,24 @@ function Collections() {
 
     useEffect(() => {
         if (!user) return;
-        const fetchOwnedCollections = async () => {
+        const fetchFavoritedCollections = async () => {
             try {
                 const token = await getAccessTokenSilently();
                 const headers = { Authorization: `Bearer ${token}` };
 
-                // Fetch collections owned by the current user
-                const res = await fetch(`/api/collections/owned`, { headers });
-                const collections: Collection[] = await res.json();
+                // Fetch the user's favorited collections
+                const res = await fetch(`/api/collections/favorites`, { headers });
+                const favoritedCollections: FavoriteWithCollection[] = await res.json();
 
                 // Limit to 5 collections
-                setCollections(collections.slice(0, 5));
+                setCollections(favoritedCollections.slice(0, 5));
                 setLoading(false);
             } catch {
                 setError("Failed to load collections");
                 setLoading(false);
             }
         };
-        void fetchOwnedCollections();
+        void fetchFavoritedCollections();
     }, [user, getAccessTokenSilently]);
 
     if (loading) {
@@ -56,18 +60,18 @@ function Collections() {
         return (
             <div className="text-center py-8 text-muted-foreground">
                 <FolderOpen className="w-10 h-10 mx-auto mb-2" />
-                <p className="text-sm">No owned collections</p>
+                <p className="text-sm">No favorited collections</p>
             </div>
         );
     }
 
     return (
         <div className="space-y-2">
-            {collections.map((collection) => (
-                <CollectionCard key={collection.id} collection={collection} />
+            {collections.map((favorite) => (
+                <CollectionCard key={favorite.collectionId} collection={favorite.collection} />
             ))}
         </div>
     );
 }
 
-export default Collections;
+export default FavoriteCollections;
