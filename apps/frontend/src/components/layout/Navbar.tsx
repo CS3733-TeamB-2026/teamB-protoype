@@ -96,7 +96,7 @@ function Navbar() {
                         }
 
                     </PopoverTrigger>
-                    <PopoverContent className="w-65 mr-8">
+                    <PopoverContent className="w-65 mr-2">
                         {
                             //login check
                             isAuthenticated ?
