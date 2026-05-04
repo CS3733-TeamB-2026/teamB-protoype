@@ -4,7 +4,6 @@ import torch
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sentence_transformers import SentenceTransformer
-from sentence_transformers import SentenceTransformer, export_optimized_onnx_model
 
 app = FastAPI(title="python", version="0.1.0")
 
@@ -34,4 +33,3 @@ def embed(body: dict) -> dict:
     text: str = body.get("text", "")
     vector = get_model().encode(text[:32768], normalize_embeddings=True)
     return {"embedding": vector.tolist()}
-
