@@ -21,9 +21,15 @@ function getOpenAI(): OpenAI | null {
 
 let _visionDisabled = false;
 let _visionTokensTotal = 0;
+let _verbose = false;
 
 /** Total tokens consumed by vision API calls this process lifetime. */
 export function getVisionTokensUsed(): number { return _visionTokensTotal; }
+
+/** Enable verbose logging of parser decisions and fallbacks. */
+export function setVerbose(enabled: boolean): void { _verbose = enabled; }
+
+function vlog(...args: unknown[]): void { if (_verbose) console.log(...args); }
 
 export type SupportedMimeType =
     | 'application/pdf'
@@ -36,6 +42,7 @@ export type SupportedMimeType =
     | 'image/jpeg'
     | 'image/png'
     | 'image/webp'
+    | 'image/gif'
     | 'text/plain'
     | 'text/csv'
     | 'text/markdown'
@@ -47,12 +54,14 @@ async function ocrImage(buffer: Buffer): Promise<string> {
         logger: () => {},
     });
     const ocrText = text.trim();
+    vlog(`    ocr: ${ocrText.length} chars`);
     if (ocrText.length >= OCR_VISION_THRESHOLD) return ocrText;
 
     // OCR found little text — image is likely a diagram/photo, try vision model
-    if (_visionDisabled) return ocrText;
+    vlog(`    ocr below threshold (${OCR_VISION_THRESHOLD}), trying vision`);
+    if (_visionDisabled) { vlog(`    vision disabled`); return ocrText; }
     const client = getOpenAI();
-    if (!client) return ocrText;
+    if (!client) { vlog(`    no OpenAI key, skipping vision`); return ocrText; }
 
     try {
         // Normalize to PNG — OpenAI vision accepts JPEG/PNG/WebP/GIF, not raw buffers of arbitrary format
@@ -104,24 +113,28 @@ async function ocrPdf(buffer: Buffer): Promise<string> {
             .trim();
 
         if (pageText.length > 50) {
-            // Page has real text, no need for OCR
+            vlog(`    page ${i}: native text (${pageText.length} chars)`);
             textParts.push(pageText);
         } else {
-            // Page is likely scanned, render to canvas and OCR
-            const viewport = page.getViewport({ scale: 2.0 });
-            const { createCanvas } = await import('canvas');
-            const canvas = createCanvas(viewport.width, viewport.height);
-            const context = canvas.getContext('2d');
+            vlog(`    page ${i}: sparse native text (${pageText.length} chars), trying OCR`);
+            try {
+                const viewport = page.getViewport({ scale: 2.0 });
+                const { createCanvas } = await import('canvas');
+                const canvas = createCanvas(viewport.width, viewport.height);
+                const context = canvas.getContext('2d');
 
-            await page.render({
-                canvasContext: context as any,
-                viewport,
-                canvas: canvas as any,
-            }).promise;
+                await page.render({
+                    canvasContext: context as any,
+                    viewport,
+                    canvas: canvas as any,
+                }).promise;
 
-            const imageBuffer = canvas.toBuffer('image/png');
-            const ocrText = await ocrImage(imageBuffer);
-            if (ocrText) textParts.push(ocrText);
+                const imageBuffer = canvas.toBuffer('image/png');
+                const ocrText = await ocrImage(imageBuffer);
+                if (ocrText) textParts.push(ocrText);
+            } catch {
+                // Page contains unsupported image format (e.g. JBIG2, JPEG2000) — skip
+            }
         }
     }
 
@@ -183,43 +196,54 @@ export async function extractText(
         switch (fileType) {
             case 'application/pdf': {
                 if (!fileBuffer) break;
+                vlog(`  parser: pdf (pdfjs + tesseract fallback)`);
                 result = await ocrPdf(fileBuffer);
                 break;
             }
 
             case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': {
                 if (!fileBuffer) break;
+                vlog(`  parser: docx (mammoth)`);
                 const docx = await mammoth.extractRawText({ buffer: fileBuffer });
                 result = docx.value;
                 break;
             }
 
-            // Legacy Office formats — officeparser handles .doc / .xls / .ppt
-            case 'application/msword':
+            // Legacy .xls — SheetJS handles both .xls and .xlsx
             case 'application/vnd.ms-excel':
-            case 'application/vnd.ms-powerpoint':
-            case 'application/vnd.openxmlformats-officedocument.presentationml.presentation': {
-                if (!fileBuffer) break;
-                result = await parseOfficeFile(fileBuffer);
-                break;
-            }
-
-            // Modern XLSX — SheetJS gives structured sheet/header/row output
+            // Modern .xlsx — SheetJS gives structured sheet/header/row output
             case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
                 if (!fileBuffer) break;
+                vlog(`  parser: spreadsheet (SheetJS)`);
                 result = parseXlsx(fileBuffer);
                 break;
             }
 
+            // .pptx — officeparser handles modern XML-based Office formats
+            case 'application/vnd.openxmlformats-officedocument.presentationml.presentation': {
+                if (!fileBuffer) break;
+                vlog(`  parser: pptx (officeparser)`);
+                result = await parseOfficeFile(fileBuffer);
+                break;
+            }
+
+            // Legacy .doc / .ppt (CfB binary format) — no parser available, skip
+            case 'application/msword':
+            case 'application/vnd.ms-powerpoint':
+                vlog(`  parser: none (legacy binary format unsupported)`);
+                break;
+
             case 'text/plain':
             case 'text/csv': {
                 if (!fileBuffer) break;
+                vlog(`  parser: plain text`);
                 result = fileBuffer.toString('utf-8');
                 break;
             }
 
             case 'text/markdown': {
                 if (!fileBuffer) break;
+                vlog(`  parser: markdown (stripped)`);
                 result = stripMarkdown(fileBuffer.toString('utf-8'));
                 break;
             }
@@ -245,13 +269,16 @@ export async function extractText(
                 // Prefer semantic content elements; fall back to full body
                 const main = $('main, article, [role="main"]').text().replace(/\s+/g, ' ').trim();
                 result = main || $('body').text().replace(/\s+/g, ' ').trim();
+                vlog(`  parser: html/url (cheerio${main ? ', semantic' : ', body fallback'})`);
                 break;
             }
 
             case 'image/jpeg':
             case 'image/png':
-            case 'image/webp': {
+            case 'image/webp':
+            case 'image/gif': {
                 if (!fileBuffer) break;
+                vlog(`  parser: image (tesseract${_visionDisabled ? '' : ' → vision fallback'})`);
                 result = await ocrImage(fileBuffer);
                 break;
             }
