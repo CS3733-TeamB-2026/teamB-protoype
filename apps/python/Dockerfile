@@ -24,4 +24,4 @@ COPY apps/python/main.py .
 RUN uv run python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('ibm-granite/granite-embedding-97m-multilingual-r2', device='cpu')"
 
 EXPOSE 3001
-CMD ["uv", "run", "python", "main.py"]
+CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3001"]
