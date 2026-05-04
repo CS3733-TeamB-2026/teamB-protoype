@@ -22,11 +22,6 @@ def get_model() -> SentenceTransformer:
     global _model
     if _model is None:
         _model = SentenceTransformer("ibm-granite/granite-embedding-97m-multilingual-r2", device="cpu", model_kwargs={"torch_dtype": torch.float16})
-        _model = SentenceTransformer("ibm-granite/granite-embedding-97m-multilingual-r2", backend="onnx")
-        export_optimized_onnx_model(
-            model=_model, optimization_config="O3", model_name_or_path="ibm-granite/granite-embedding-97m-multilingual-r2"
-        )
-        _model = SentenceTransformer("ibm-granite/granite-embedding-97m-multilingual-r2", backend="onnx", device="cpu", model_kwargs={"torch_dtype": torch.float16, "file_name": "onnx/model_O3.onnx"},)
     return _model
 
 @app.get("/health")
