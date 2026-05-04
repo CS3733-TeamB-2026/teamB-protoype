@@ -126,6 +126,7 @@ function ViewServiceReqs() {
                 icon={Users}
                 title="View Service Requests"
                 description="View, update, and delete service requests."
+                infoContent="Manage all service requests here. You can view all requests, ones created by you, or ones assigned to you with tabs."
             />
 
             <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center px-4">

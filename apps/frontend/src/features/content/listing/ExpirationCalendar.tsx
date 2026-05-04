@@ -121,6 +121,7 @@ function ExpirationCalendar() {
                 icon={CalendarClock}
                 title="Expiration Calendar"
                 description="See what content items are expiring soon."
+                infoContent="The calendar view shows upcoming expirations for content. Click on any date to see expiring content on that day."
             />
 
             <div className="max-w-7xl mx-auto my-6 px-4 relative" >

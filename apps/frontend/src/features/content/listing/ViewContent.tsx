@@ -625,6 +625,7 @@ function ViewContent() {
                 icon={LucideFolders}
                 title={ts('content.view')}
                 description={ts('content.description')}
+                infoContent="The Content View shows all available content items. You can search, filter, and add new content here."
             />
 
             <Card className="shadow-lg max-w-7xl mx-auto my-8 text-center px-4">
