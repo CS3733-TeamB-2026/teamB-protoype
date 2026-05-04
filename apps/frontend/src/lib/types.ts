@@ -159,3 +159,9 @@ export type CollectionFavorite = {
     employeeId: number;
     collectionId: number;
 };
+
+export type SearchResult =
+    | { kind: "content";    similarity: number; item: ContentItem }
+    | { kind: "collection"; similarity: number; item: Collection }
+    | { kind: "employee";   similarity: number; item: Employee }
+    | { kind: "servicereq"; similarity: number; item: ServiceReq };

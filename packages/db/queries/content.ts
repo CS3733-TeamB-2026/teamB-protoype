@@ -2,24 +2,8 @@ import * as p from "../generated/prisma/client";
 import {prisma} from "../lib/prisma";
 import {Helper, employeeSelect, contentSelect, srInclude} from "./helper";
 import { Notification } from "./notification";
-import { generateEmbedding, embeddingToSql } from '../../../apps/backend/lib/embeddings';
+import { embeddingToSql } from '../lib/embeddings';
 
-/** Concatenates the indexable fields into a single string for embedding generation. */
-function buildEmbeddingInput(
-    name: string,
-    contentType: string,
-    persona: string,
-    tags: string[],
-    textContent: string | null
-): string {
-    return [
-        name,
-        contentType,
-        persona,
-        tags.join(' '),
-        textContent ?? '',
-    ].join(' ');
-}
 
 /**
  * Query class for the `Content` table.
@@ -30,9 +14,8 @@ function buildEmbeddingInput(
  * or full-text search ranking (`ts_rank`).
  */
 export class Content {
-    public static async semanticSearch(query: string): Promise<p.Content[]> {
-        const embedding = await generateEmbedding(query);
-        const embeddingStr = embeddingToSql(embedding);
+    public static async semanticSearch(queryVector: number[]): Promise<p.Content[]> {
+        const embeddingStr = embeddingToSql(queryVector);
 
         return prisma.$queryRaw<p.Content[]>`
         SELECT
@@ -58,6 +41,16 @@ export class Content {
     `;
     }
 
+    /** Updates textContent and embedding vector together after background extraction. */
+    public static async updateTextAndEmbedding(id: number, textContent: string | null, embedding: number[]): Promise<void> {
+        await prisma.$executeRaw`
+            UPDATE "Content"
+            SET "textContent" = ${textContent},
+                "embedding" = ${embeddingToSql(embedding)}::vector
+            WHERE id = ${id}
+        `;
+    }
+
     public static async updateContent(
         id: number,
         _name: string,
@@ -71,7 +64,6 @@ export class Content {
         _targetPersona: string,
         _tags: string[],
         _checkedOutById: number | null,
-        _textContent: string | null = null,
     ): Promise<p.Content> {
         const _personaTyped: p.Persona | null = Helper.personaHelper(_targetPersona)
         if (_personaTyped === null) {
@@ -90,14 +82,6 @@ export class Content {
             throw new Error("You do not have this content checked out.")
         }
 
-        const embeddingInput = buildEmbeddingInput(_name, _contentType, _personaTyped, _tags, _textContent);
-        const embedding = await generateEmbedding(embeddingInput);
-
-        await prisma.$executeRaw`
-            UPDATE "Content" SET "embedding" = ${embeddingToSql(embedding)}::vector
-            WHERE id = ${id}
-        `;
-
         const updated = await prisma.content.update({
             where: { id: id },
             data: {
@@ -111,7 +95,6 @@ export class Content {
                 expiration: _expiration,
                 targetPersona: _personaTyped,
                 tags: _tags,
-                textContent: _textContent,
             }
         });
 
@@ -160,7 +143,6 @@ export class Content {
         _expiration: Date | null,
         _targetPersona: string,
         _tags: string[] = [],
-        _textContent: string | null = null,
     ): Promise<p.Content> {
         if (!_linkURL && !_fileURI) {
             throw new Error("Content must have either a linkURL or a fileURI")
@@ -176,19 +158,15 @@ export class Content {
         const _createdDate: Date = new Date()
         const _lastModified: Date = new Date()
 
-        const embeddingInput = buildEmbeddingInput(_name, _contentType, _personaTyped, _tags, _textContent);
-        const embedding = await generateEmbedding(embeddingInput);
-
-        // Prisma doesn't support vector type, use $executeRaw to insert then return
+        // Prisma doesn't support vector type, so use $executeRaw to insert; text and embedding filled in background
         await prisma.$executeRaw`
         INSERT INTO "Content" (
             "displayName", "linkURL", "fileURI", "ownerId", "contentType",
-            "status", "created", "lastModified", "expiration", "targetPersona", "tags",
-            "textContent", "embedding"
+            "status", "created", "lastModified", "expiration", "targetPersona", "tags"
         ) VALUES (
             ${_name}, ${_linkURL}, ${_fileURI}, ${_ownerId}, ${_contentType}::"ContentType",
             ${_statusTyped}::"Status", ${_createdDate}, ${_lastModified}, ${_expiration}, ${_personaTyped}::"Persona",
-            ${_tags}::text[], ${_textContent}, ${embeddingToSql(embedding)}::vector
+            ${_tags}::text[]
     )
 `;
 
@@ -211,6 +189,11 @@ export class Content {
             prisma.preview.deleteMany({ where: { previewedContentId: id } }),
             prisma.content.delete({ where: { id } }),
         ]);
+    }
+
+    /** Updates only the tags array. Does not touch textContent or regenerate embeddings. */
+    public static async updateTagsOnly(id: number, tags: string[]): Promise<void> {
+        await prisma.content.update({ where: { id }, data: { tags } });
     }
 
     /** Marks an item as deleted and clears its checkout lock. */

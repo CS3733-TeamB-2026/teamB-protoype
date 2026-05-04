@@ -3,6 +3,8 @@
 	"private": true,
 	"scripts": {
 		"dev": "turbo run dev",
+		"dev:python": "cd apps/python && .venv/bin/uvicorn main:app --reload --port 3001",
+		"dev:all": "pnpm dev:python & pnpm dev",
 		"build": "turbo run build",
 		"start": "turbo run start"
 	},

@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma";
 import { employeeSelect, srInclude } from "./helper";
+import { embeddingToSql } from '../lib/embeddings';
 
 // Items have no guaranteed DB order, so position must always be applied here
 const itemsInclude = {
@@ -57,6 +58,39 @@ export class Collection {
         });
     }
 
+    /**
+     * Semantic vector search over collections visible to the caller.
+     * Returns up to 20 results with an attached `similarity` score (0–1).
+     * Visibility is enforced in the ORM step so the raw SQL can stay simple.
+     */
+    public static async semanticSearch(queryVector: number[], employeeId: number, isAdmin: boolean) {
+        const embeddingStr = embeddingToSql(queryVector);
+
+        const rows = await prisma.$queryRaw<{ id: number; similarity: number }[]>`
+            SELECT id, 1 - (embedding <=> ${embeddingStr}::vector) AS similarity
+            FROM "Collection"
+            WHERE embedding IS NOT NULL
+            ORDER BY embedding <=> ${embeddingStr}::vector
+            LIMIT 100
+        `;
+
+        const ids = rows.map(r => r.id);
+        const similarityMap = new Map(rows.map(r => [r.id, Number(r.similarity)]));
+
+        const collections = await prisma.collection.findMany({
+            where: {
+                id: { in: ids },
+                ...(isAdmin ? {} : { OR: [{ public: true }, { ownerId: employeeId }] }),
+            },
+            include: { owner: { select: employeeSelect }, ...itemsInclude },
+        });
+
+        return collections
+            .map(c => ({ ...c, similarity: similarityMap.get(c.id) ?? 0 }))
+            .sort((a, b) => b.similarity - a.similarity)
+            .slice(0, 20);
+    }
+
     public static async queryByOwnerId(ownerId: number) {
         return prisma.collection.findMany({
             where: { ownerId: ownerId },
@@ -78,6 +112,13 @@ export class Collection {
         });
     }
 
+    /** Stores a pre-computed embedding vector for the given collection. */
+    public static async updateEmbedding(id: number, embedding: number[]): Promise<void> {
+        await prisma.$executeRaw`
+            UPDATE "Collection" SET embedding = ${embeddingToSql(embedding)}::vector WHERE id = ${id}
+        `;
+    }
+
     /** Updates name, visibility, owner, and replaces the full ordered item list.
      *  Positions are assigned by array index. All fields are optional except collectionId. */
     public static async update(
@@ -87,7 +128,7 @@ export class Collection {
         ownerId: number,
         contentIds: number[],
     ) {
-        return prisma.$transaction(async (tx) => {
+        const result = await prisma.$transaction(async (tx) => {
             await tx.collectionItem.deleteMany({ where: { collectionId } });
 
             if (contentIds.length > 0) {
@@ -109,6 +150,8 @@ export class Collection {
                 },
             });
         });
+
+        return result;
     }
 
     /** Appends items to a collection, skipping IDs already present. New items are positioned after the last existing item. */
