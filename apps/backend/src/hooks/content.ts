@@ -263,7 +263,6 @@ export const uploadFile = async (req: req, res: res) => {
             payload.expiration ? new Date(payload.expiration) : null,
             payload.targetPersona,
             JSON.parse(payload.tags || "[]"),
-            null    // textContent filled in background
         );
         await applyExpirationTagsToOne(result.id);
 
@@ -341,7 +340,6 @@ export const updateContent = async (req: req, res: res) => {
             payload.targetPersona,
             JSON.parse(payload.tags || "[]"),
             employee.id,
-            null    // textContent filled in background
         );
         if (oldURI && (uploaded || linkURL)) {
             await q.Bucket.deleteFile(oldURI).catch(console.error);

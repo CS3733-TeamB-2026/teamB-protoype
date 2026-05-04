@@ -64,7 +64,6 @@ export class Content {
         _targetPersona: string,
         _tags: string[],
         _checkedOutById: number | null,
-        _textContent: string | null = null,
     ): Promise<p.Content> {
         const _personaTyped: p.Persona | null = Helper.personaHelper(_targetPersona)
         if (_personaTyped === null) {
@@ -96,7 +95,6 @@ export class Content {
                 expiration: _expiration,
                 targetPersona: _personaTyped,
                 tags: _tags,
-                textContent: _textContent,
             }
         });
 
@@ -145,7 +143,6 @@ export class Content {
         _expiration: Date | null,
         _targetPersona: string,
         _tags: string[] = [],
-        _textContent: string | null = null,
     ): Promise<p.Content> {
         if (!_linkURL && !_fileURI) {
             throw new Error("Content must have either a linkURL or a fileURI")
@@ -161,16 +158,15 @@ export class Content {
         const _createdDate: Date = new Date()
         const _lastModified: Date = new Date()
 
-        // Prisma doesn't support vector type, so use $executeRaw to insert; embedding filled in background
+        // Prisma doesn't support vector type, so use $executeRaw to insert; text and embedding filled in background
         await prisma.$executeRaw`
         INSERT INTO "Content" (
             "displayName", "linkURL", "fileURI", "ownerId", "contentType",
-            "status", "created", "lastModified", "expiration", "targetPersona", "tags",
-            "textContent"
+            "status", "created", "lastModified", "expiration", "targetPersona", "tags"
         ) VALUES (
             ${_name}, ${_linkURL}, ${_fileURI}, ${_ownerId}, ${_contentType}::"ContentType",
             ${_statusTyped}::"Status", ${_createdDate}, ${_lastModified}, ${_expiration}, ${_personaTyped}::"Persona",
-            ${_tags}::text[], ${_textContent}
+            ${_tags}::text[]
     )
 `;
 
