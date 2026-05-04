@@ -2,7 +2,7 @@
  * Backfills text content and embeddings for all entity types.
  *
  * Usage:
- *   pnpm --filter db exec tsx scripts/backfill.ts [--target content|employee|collection|servicereq] [--force]
+ *   pnpm --filter backend exec tsx scripts/backfill.ts [--target=content|employee|collection|servicereq] [--force]
  *
  * --target  Run only one entity type (default: all four)
  * --force   Re-embed rows that already have an embedding
@@ -12,18 +12,17 @@ import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-config({ path: resolve(__dirname, '../../../apps/backend/.env') });
+config({ path: resolve(__dirname, '../.env') });
 
-import { prisma } from '../lib/prisma';
-import { supabase } from '../lib/supabase';
-import { generateEmbedding, embeddingToSql } from '../lib/embeddings';
+import { prisma, supabase, embeddingToSql } from '@softeng-app/db';
+import { generateEmbedding } from '../lib/embeddings';
 import {
     buildContentEmbeddingInput,
     buildEmployeeEmbeddingInput,
     buildCollectionEmbeddingInput,
     buildServiceReqEmbeddingInput,
 } from '../lib/embeddingInputs';
-import { extractText, SupportedMimeType } from '../../../apps/backend/lib/extractors';
+import { extractText, SupportedMimeType } from '../lib/extractors';
 import mime from 'mime-types';
 
 const force = process.argv.includes('--force');
@@ -34,11 +33,14 @@ const targetArg = process.argv.find(a => a.startsWith('--target='))?.split('=')[
 // ---------------------------------------------------------------------------
 
 async function backfillContent() {
-    const rows = await prisma.$queryRaw<any[]>`
-        SELECT id, "displayName", "fileURI", "linkURL", "contentType", "targetPersona", "tags", "textContent"
-        FROM "Content"
-        WHERE ${force ? prisma.$queryRaw`TRUE` : prisma.$queryRaw`"textContent" IS NULL OR "embedding" IS NULL`}
-    `;
+    const rows = force
+        ? await prisma.$queryRaw<any[]>`
+            SELECT id, "displayName", "fileURI", "linkURL", "contentType", "targetPersona", "tags", "textContent"
+            FROM "Content"`
+        : await prisma.$queryRaw<any[]>`
+            SELECT id, "displayName", "fileURI", "linkURL", "contentType", "targetPersona", "tags", "textContent"
+            FROM "Content"
+            WHERE "textContent" IS NULL OR "embedding" IS NULL`;
 
     console.log(`\n[Content] ${rows.length} rows`);
     let success = 0, skipped = 0, failed = 0;
@@ -88,10 +90,13 @@ async function backfillContent() {
 // ---------------------------------------------------------------------------
 
 async function backfillEmployees() {
-    const rows = await prisma.$queryRaw<{ id: number; firstName: string; lastName: string; persona: string }[]>`
-        SELECT id, "firstName", "lastName", persona::text FROM "Employee"
-        WHERE ${force ? prisma.$queryRaw`TRUE` : prisma.$queryRaw`embedding IS NULL`}
-    `;
+    const rows = force
+        ? await prisma.$queryRaw<{ id: number; firstName: string; lastName: string; persona: string }[]>`
+            SELECT id, "firstName", "lastName", persona::text FROM "Employee"`
+        : await prisma.$queryRaw<{ id: number; firstName: string; lastName: string; persona: string }[]>`
+            SELECT id, "firstName", "lastName", persona::text FROM "Employee"
+            WHERE embedding IS NULL`;
+
     console.log(`\n[Employee] ${rows.length} rows`);
     let success = 0, failed = 0;
     for (const row of rows) {
@@ -110,10 +115,13 @@ async function backfillEmployees() {
 // ---------------------------------------------------------------------------
 
 async function backfillCollections() {
-    const rows = await prisma.$queryRaw<{ id: number; displayName: string }[]>`
-        SELECT id, "displayName" FROM "Collection"
-        WHERE ${force ? prisma.$queryRaw`TRUE` : prisma.$queryRaw`embedding IS NULL`}
-    `;
+    const rows = force
+        ? await prisma.$queryRaw<{ id: number; displayName: string }[]>`
+            SELECT id, "displayName" FROM "Collection"`
+        : await prisma.$queryRaw<{ id: number; displayName: string }[]>`
+            SELECT id, "displayName" FROM "Collection"
+            WHERE embedding IS NULL`;
+
     console.log(`\n[Collection] ${rows.length} rows`);
     let success = 0, failed = 0;
     for (const row of rows) {
@@ -132,10 +140,13 @@ async function backfillCollections() {
 // ---------------------------------------------------------------------------
 
 async function backfillServiceReqs() {
-    const rows = await prisma.$queryRaw<{ id: number; name: string | null; type: string; notes: string | null }[]>`
-        SELECT id, name, type::text, notes FROM "ServiceRequest"
-        WHERE ${force ? prisma.$queryRaw`TRUE` : prisma.$queryRaw`embedding IS NULL`}
-    `;
+    const rows = force
+        ? await prisma.$queryRaw<{ id: number; name: string | null; type: string; notes: string | null }[]>`
+            SELECT id, name, type::text, notes FROM "ServiceRequest"`
+        : await prisma.$queryRaw<{ id: number; name: string | null; type: string; notes: string | null }[]>`
+            SELECT id, name, type::text, notes FROM "ServiceRequest"
+            WHERE embedding IS NULL`;
+
     console.log(`\n[ServiceRequest] ${rows.length} rows`);
     let success = 0, failed = 0;
     for (const row of rows) {

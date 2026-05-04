@@ -1,8 +1,21 @@
 import * as q from "@softeng-app/db";
+import { generateEmbedding } from "../../lib/embeddings";
+import { buildEmployeeEmbeddingInput } from "../../lib/embeddingInputs";
 import {req, res} from "./types"
 import { createAuth0User } from "../helpers/auth0Management";
 import { getEmployee } from "../helpers/getEmployee";
 import { isAdmin, isUserOrAdmin } from "../helpers/permissions";
+
+function scheduleEmployeeEmbedding(id: number, firstName: string, lastName: string, persona: string) {
+    setImmediate(async () => {
+        try {
+            const embedding = await generateEmbedding(buildEmployeeEmbeddingInput(firstName, lastName, persona));
+            await q.Employee.updateEmbedding(id, embedding);
+        } catch (err) {
+            console.error(`[background] Failed to embed employee id=${id}:`, err);
+        }
+    });
+}
 
 function buildPhotoURI(employeeId: number, filename:string): string {
     return `${employeeId}/${crypto.randomUUID()}/${filename}`;
@@ -139,6 +152,7 @@ export const createEmployee = async (req: req, res: res) => {
             payload.lastName,
             payload.persona
         );
+        scheduleEmployeeEmbedding(result.id, result.firstName, result.lastName, result.persona);
         return res.status(201).json(result);
     } catch (error) {
         console.error(error);
@@ -166,8 +180,8 @@ export const createEmployeeWithAuth0 = async (req: req, res: res) => {
             lastName,
             persona,
             auth0Id
-        )
-
+        );
+        scheduleEmployeeEmbedding(employee.id, employee.firstName, employee.lastName, employee.persona);
         return res.status(201).json(employee);
 
     } catch (error){
@@ -193,6 +207,7 @@ export const updateEmployee = async (req: req, res: res) => {
             payload.lastName,
             persona,
         );
+        scheduleEmployeeEmbedding(result.id, result.firstName, result.lastName, result.persona);
         return res.status(200).json(result);
     } catch (error) {
         console.error(error);

@@ -2,8 +2,7 @@ import * as p from "../generated/prisma/client";
 import {prisma} from "../lib/prisma";
 import {Helper, employeeSelect, contentSelect, srInclude} from "./helper";
 import { Notification } from "./notification";
-import { generateEmbedding, embeddingToSql } from '../lib/embeddings';
-import { buildContentEmbeddingInput } from '../lib/embeddingInputs';
+import { embeddingToSql } from '../lib/embeddings';
 
 
 /**
@@ -15,9 +14,8 @@ import { buildContentEmbeddingInput } from '../lib/embeddingInputs';
  * or full-text search ranking (`ts_rank`).
  */
 export class Content {
-    public static async semanticSearch(query: string): Promise<p.Content[]> {
-        const embedding = await generateEmbedding(query);
-        const embeddingStr = embeddingToSql(embedding);
+    public static async semanticSearch(queryVector: number[]): Promise<p.Content[]> {
+        const embeddingStr = embeddingToSql(queryVector);
 
         return prisma.$queryRaw<p.Content[]>`
         SELECT
@@ -41,6 +39,16 @@ export class Content {
         ORDER BY "embedding" <=> ${embeddingStr}::vector
         LIMIT 20;
     `;
+    }
+
+    /** Updates textContent and embedding vector together after background extraction. */
+    public static async updateTextAndEmbedding(id: number, textContent: string | null, embedding: number[]): Promise<void> {
+        await prisma.$executeRaw`
+            UPDATE "Content"
+            SET "textContent" = ${textContent},
+                "embedding" = ${embeddingToSql(embedding)}::vector
+            WHERE id = ${id}
+        `;
     }
 
     public static async updateContent(
@@ -74,14 +82,6 @@ export class Content {
         if (content.checkedOutById !== _checkedOutById) {
             throw new Error("You do not have this content checked out.")
         }
-
-        const embeddingInput = buildContentEmbeddingInput(_name, _contentType, _personaTyped, _tags, _textContent);
-        const embedding = await generateEmbedding(embeddingInput);
-
-        await prisma.$executeRaw`
-            UPDATE "Content" SET "embedding" = ${embeddingToSql(embedding)}::vector
-            WHERE id = ${id}
-        `;
 
         const updated = await prisma.content.update({
             where: { id: id },
@@ -161,19 +161,16 @@ export class Content {
         const _createdDate: Date = new Date()
         const _lastModified: Date = new Date()
 
-        const embeddingInput = buildContentEmbeddingInput(_name, _contentType, _personaTyped, _tags, _textContent);
-        const embedding = await generateEmbedding(embeddingInput);
-
-        // Prisma doesn't support vector type, use $executeRaw to insert then return
+        // Prisma doesn't support vector type, so use $executeRaw to insert; embedding filled in background
         await prisma.$executeRaw`
         INSERT INTO "Content" (
             "displayName", "linkURL", "fileURI", "ownerId", "contentType",
             "status", "created", "lastModified", "expiration", "targetPersona", "tags",
-            "textContent", "embedding"
+            "textContent"
         ) VALUES (
             ${_name}, ${_linkURL}, ${_fileURI}, ${_ownerId}, ${_contentType}::"ContentType",
             ${_statusTyped}::"Status", ${_createdDate}, ${_lastModified}, ${_expiration}, ${_personaTyped}::"Persona",
-            ${_tags}::text[], ${_textContent}, ${embeddingToSql(embedding)}::vector
+            ${_tags}::text[], ${_textContent}
     )
 `;
 

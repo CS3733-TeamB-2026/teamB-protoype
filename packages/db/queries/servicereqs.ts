@@ -1,7 +1,7 @@
 import * as p from "../generated/prisma/client";
 import {prisma} from "../lib/prisma";
 import {Helper, employeeSelect, srInclude} from "./helper";
-import { generateEmbedding, embeddingToSql } from '../lib/embeddings';
+import { embeddingToSql } from '../lib/embeddings';
 
 export class ServiceReqs {
 
@@ -64,9 +64,8 @@ export class ServiceReqs {
     }
 
     /** Semantic vector search over all service requests. Returns up to 20 results with `similarity` score (0–1). */
-    public static async semanticSearch(query: string) {
-        const embedding = await generateEmbedding(query);
-        const embeddingStr = embeddingToSql(embedding);
+    public static async semanticSearch(queryVector: number[]) {
+        const embeddingStr = embeddingToSql(queryVector);
 
         const rows = await prisma.$queryRaw<{ id: number; similarity: number }[]>`
             SELECT id, 1 - (embedding <=> ${embeddingStr}::vector) AS similarity
@@ -87,6 +86,13 @@ export class ServiceReqs {
         return requests
             .map(sr => ({ ...sr, similarity: similarityMap.get(sr.id) ?? 0 }))
             .sort((a, b) => b.similarity - a.similarity);
+    }
+
+    /** Stores a pre-computed embedding vector for the given service request. */
+    public static async updateEmbedding(id: number, embedding: number[]): Promise<void> {
+        await prisma.$executeRaw`
+            UPDATE "ServiceRequest" SET embedding = ${embeddingToSql(embedding)}::vector WHERE id = ${id}
+        `;
     }
 
     /**
@@ -133,18 +139,6 @@ export class ServiceReqs {
             },
         });
 
-        setImmediate(async () => {
-            try {
-                const embeddingInput = [_name, _type, _notes ?? ''].join(' ');
-                const embedding = await generateEmbedding(embeddingInput);
-                await prisma.$executeRaw`
-                    UPDATE "ServiceRequest" SET embedding = ${embeddingToSql(embedding)}::vector WHERE id = ${result.id}
-                `;
-            } catch (err) {
-                console.error(`[background] Failed to embed service request id=${result.id}:`, err);
-            }
-        });
-
         return result;
     }
 
@@ -166,18 +160,6 @@ export class ServiceReqs {
                 ownerId: _ownerId,
                 notes: _notes ?? null,
             },
-        });
-
-        setImmediate(async () => {
-            try {
-                const embeddingInput = [_name, _type, _notes ?? ''].join(' ');
-                const embedding = await generateEmbedding(embeddingInput);
-                await prisma.$executeRaw`
-                    UPDATE "ServiceRequest" SET embedding = ${embeddingToSql(embedding)}::vector WHERE id = ${_id}
-                `;
-            } catch (err) {
-                console.error(`[background] Failed to embed service request id=${_id}:`, err);
-            }
         });
 
         return result;

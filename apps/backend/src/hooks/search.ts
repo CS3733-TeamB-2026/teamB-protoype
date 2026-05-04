@@ -1,4 +1,5 @@
 import * as q from "@softeng-app/db";
+import { generateEmbedding } from "../../lib/embeddings";
 import { req, res } from "./types";
 import { getEmployee } from "../helpers/getEmployee";
 import { isAdmin } from "../helpers/permissions";
@@ -19,12 +20,13 @@ export const unifiedSearch = async (req: req, res: res) => {
         if (!employee) return res.status(404).json({ error: "Employee not found" });
 
         const admin = isAdmin(employee);
+        const queryVector = await generateEmbedding(searchQuery);
 
         const [content, collections, employees, serviceReqs] = await Promise.all([
-            q.Content.semanticSearch(searchQuery),
-            q.Collection.semanticSearch(searchQuery, employee.id, admin),
-            q.Employee.semanticSearch(searchQuery),
-            q.ServiceReqs.semanticSearch(searchQuery),
+            q.Content.semanticSearch(queryVector),
+            q.Collection.semanticSearch(queryVector, employee.id, admin),
+            q.Employee.semanticSearch(queryVector),
+            q.ServiceReqs.semanticSearch(queryVector),
         ]);
 
         const results = [

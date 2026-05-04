@@ -1,4 +1,4 @@
-/** One builder per entity type — used by both the query classes and the backfill script. */
+/** One builder per entity type — single source of truth for what goes into each embedding. */
 
 export const buildContentEmbeddingInput = (
     name: string,

@@ -1,7 +1,20 @@
 import * as q from "@softeng-app/db";
+import { generateEmbedding } from "../../lib/embeddings";
+import { buildCollectionEmbeddingInput } from "../../lib/embeddingInputs";
 import { req, res } from "./types";
 import { getEmployee } from "../helpers/getEmployee";
 import { isAdmin, isUserOrAdmin } from "../helpers/permissions";
+
+function scheduleCollectionEmbedding(id: number, displayName: string) {
+    setImmediate(async () => {
+        try {
+            const embedding = await generateEmbedding(buildCollectionEmbeddingInput(displayName));
+            await q.Collection.updateEmbedding(id, embedding);
+        } catch (err) {
+            console.error(`[background] Failed to embed collection id=${id}:`, err);
+        }
+    });
+}
 
 /** Returns collections visible to the caller — all for admins, public+own for regular employees.
  *  Pass ?unlinkedSR=true to restrict to collections not yet linked to a service request. */
@@ -61,6 +74,7 @@ export const createCollection = async (req: req, res: res) => {
 
         const { displayName, isPublic } = req.body;
         const collection = await q.Collection.create(displayName, employee.id, isPublic ?? false);
+        scheduleCollectionEmbedding(collection.id, collection.displayName);
         return res.status(201).json(collection);
     } catch (error) {
         console.error(error);
@@ -96,6 +110,7 @@ export const updateCollection = async (req: req, res: res) => {
             ownerId ?? existing.ownerId,
             contentIds ?? [],
         );
+        scheduleCollectionEmbedding(updated.id, updated.displayName);
         return res.status(200).json(updated);
     } catch (error) {
         console.error(error);
