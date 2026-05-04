@@ -272,7 +272,7 @@ export function BulkUploadPage() {
 
     return (
         <>
-            <Hero icon={Upload} title="Bulk Upload" description="Upload multiple files at once with shared metadata." />
+            <Hero icon={Upload} title="Bulk Upload" description="Upload multiple files at once with shared metadata." infoContent="Bulk upload allows you to select multiple files at once and apply the same metadata (target persona, document type, and tags) to all of them." />
 
             <Card className="relative shadow-lg max-w-5xl mx-auto my-8 text-center px-4">
                 <Link to="/files" className="absolute top-6 left-6 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground w-fit">

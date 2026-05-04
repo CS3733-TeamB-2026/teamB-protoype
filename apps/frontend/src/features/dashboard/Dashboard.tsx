@@ -157,6 +157,7 @@ function Dashboard() {
                 icon={LayoutDashboard}
                 description={ts('dashboard.subtitle')}
                 title={ts('sidebar.dashboard')}
+                infoContent="The Dashboard provides a customizable overview of important tools and information. Drag and drop widgets to arrange them, or use the Customize button to add or remove widgets."
             />
 
             {/* Customize Button */}

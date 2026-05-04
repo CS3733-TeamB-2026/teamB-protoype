@@ -3,6 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import React, { useEffect, useState } from "react";
 import {Loader2, Pencil, Trash2, Search, Plus, StickyNote, File, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
+import { Input } from "@/components/ui/input.tsx";
 import { Hero } from "@/components/shared/Hero.tsx";
 import { EditServiceReqDialog } from "@/features/servicereqs/EditServiceReqDialog.tsx";
 import { AddServiceReqDialog } from "@/features/servicereqs/AddServiceReqDialog.tsx";
@@ -87,10 +88,10 @@ function ViewServiceReqs() {
         const query = searchTerm.toLowerCase().trim().replace(/\s/g, "");
         if (!query) return true;
 
-        const ownerName = `${s.owner.firstName}${s.owner.lastName}`.toLowerCase();
-        const assigneeName = s.assignee ? `${s.assignee.firstName}${s.assignee.lastName}`.toLowerCase() : "";
+        const ownerName = `${s.owner.firstName} ${s.owner.lastName}`.toLowerCase();
+        const assigneeName = s.assignee ? `${s.assignee.firstName} ${s.assignee.lastName}`.toLowerCase() : "";
         return (
-            s.name.toString().includes(query) ||
+            s.name.toString().toLowerCase().includes(query) ||
             s.type.toLowerCase().includes(query) ||
             ownerName.includes(query) ||
             assigneeName.includes(query)
@@ -125,6 +126,7 @@ function ViewServiceReqs() {
                 icon={Users}
                 title="View Service Requests"
                 description="View, update, and delete service requests."
+                infoContent="Manage all service requests here. You can view all requests, ones created by you, or ones assigned to you with tabs."
             />
 
             <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center px-4">
@@ -157,14 +159,14 @@ function ViewServiceReqs() {
                     <div className="flex items-center justify-between mb-4 mt-4">
                         <div className="relative">
                             <Search
-                                className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 pointer-events-none"
+                                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground pointer-events-none"
                             />
-                            <input
+                            <Input
                                 type="text"
-                                placeholder="Search servicereqs..."
+                                placeholder="Search service requests..."
                                 value={searchTerm}
-                                onChange={(s) => setSearchTerm(s.target.value)}
-                                className="w-64 h-10 text-lg! pl-2! pr-8 border border-gray-700 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-64 h-10 text-base pl-10 pr-4 border border-input rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 bg-background"
                             />
                         </div>
                         <div>

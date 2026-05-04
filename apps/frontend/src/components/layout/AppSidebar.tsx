@@ -47,7 +47,7 @@ const navItems: NavItem[] = [
     { title: "Expiration Calendar", icon: CalendarClock, href: "/calendar", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"] },
     { title: "Manage Employees", icon: Users, href: "/usermanagement", children: [], access: ["admin"], langKey: 'sidebar.manageEmployees' },
     { title: "Search", icon: Search, href: "/search", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"] },
-    { title: "Insights", icon: Sparkles, href: "/insights", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"] },
+    { title: "Insights", icon: Sparkles, href: "/insights", children: [], access: ["admin"] },
 ]
 
 function AppSidebar() {
