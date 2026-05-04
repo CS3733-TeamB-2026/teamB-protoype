@@ -20,7 +20,7 @@ _model: SentenceTransformer | None = None
 def get_model() -> SentenceTransformer:
     global _model
     if _model is None:
-        _model = SentenceTransformer("ibm-granite/granite-embedding-97m-multilingual-r2", backend="onnx", device="cpu", model_kwargs={"torch_dtype": torch.float16})
+        _model = SentenceTransformer("ibm-granite/granite-embedding-97m-multilingual-r2", backend="onnx", device="cpu")
     return _model
 
 @app.get("/health")
