@@ -17,7 +17,7 @@ RUN mkdir -p /app/.cache
 
 # Copy only dependency files first (better layer caching)
 COPY apps/python/pyproject.toml apps/python/uv.lock ./
-RUN uv sync --no-dev --no-cache
+RUN uv sync --no-dev --frozen --no-cache
 
 # Copy source
 COPY apps/python/main.py .
