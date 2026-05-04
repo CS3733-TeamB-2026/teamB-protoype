@@ -1,29 +1,29 @@
 # Stage 1: Build the static files
 FROM node:20-slim AS builder
-# Enable pnpm
+
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
 
 WORKDIR /app
 
-# Copy the entire monorepo root to access workspace config
+# Copy workspace config first for better layer caching
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY apps/frontend/package.json ./apps/frontend/package.json
+COPY packages/db/package.json ./packages/db/package.json
+COPY apps/backend/package.json ./apps/backend/package.json
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy source and build
 COPY . .
-
-# Install dependencies (using the root lockfile)
-RUN pnpm install
-
-# Build only the frontend app
 RUN pnpm --filter frontend build
 
 # Stage 2: Serve with Nginx
 FROM nginx:stable-alpine AS runner
 
-# Copy the build output from the builder stage to Nginx's html folder
-# NOTE: If your Vite config uses a folder other than 'dist', change this path.
 COPY --from=builder /app/apps/frontend/dist /usr/share/nginx/html
 
-# Expose port 80 for web traffic
 EXPOSE 80
-
 CMD ["nginx", "-g", "daemon off;"]

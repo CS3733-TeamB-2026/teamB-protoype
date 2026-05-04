@@ -1,0 +1,27 @@
+services:
+  ml-server:
+    image: dmzickus/teamb-ml-server:latest
+    expose:
+      - "3001"
+    restart: always
+
+  backend:
+    image: dmzickus/teamb-backend:latest
+    env_file:
+      - ./apps/backend/.env
+      - ./packages/db/.env
+    ports:
+      - "3000:3000"
+    environment:
+      - ML_SERVER_URL=http://ml-server:3001
+    depends_on:
+      - ml-server
+    restart: always
+
+  frontend:
+    image: dmzickus/teamb-frontend:latest
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: always

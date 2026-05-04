@@ -2,14 +2,30 @@ name: Build and Push to Docker Hub
 
 on:
   push:
-    branches: [ "python" ] # Runs every time you push to main
+    branches: [ "python" ]
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - service: ml-server
+            image: teamb-ml-server
+            dockerfile: apps/python/Dockerfile
+          - service: backend
+            image: teamb-backend
+            dockerfile: apps/backend/Dockerfile
+          - service: frontend
+            image: teamb-frontend
+            dockerfile: apps/frontend/Dockerfile
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -17,32 +33,15 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      # 1. Build & Push ML Server (Updated folder name)
-      - name: Build ML Server
-        uses: docker/build-push-action@v5
+      - name: Build and push ${{ matrix.service }}
+        uses: docker/build-push-action@v6
         with:
           context: .
-          file: apps/python/Dockerfile # Changed from apps/ml-server/Dockerfile
+          file: ${{ matrix.dockerfile }}
+          platforms: linux/amd64
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/teamb-ml-server:latest
-
-      # 2. Build & Push Backend
-      - name: Build Backend
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: apps/backend/Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/teamb-backend:latest
-
-      # 3. Build & Push Frontend
-      - name: Build Frontend
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: apps/frontend/Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/teamb-frontend:latest
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/${{ matrix.image }}:latest
+            ${{ secrets.DOCKER_USERNAME }}/${{ matrix.image }}:${{ github.sha }}
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/${{ matrix.image }}:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/${{ matrix.image }}:buildcache,mode=max
