@@ -106,7 +106,7 @@ function ResultChart({ type, rows, columns }: Props) {
                     <YAxis />
                     <Tooltip
                         labelFormatter={formatInsightValue}
-                        formatter={(value) => formatInsightValue(value)}
+                        formatter={(value, name) => [formatInsightValue(value), formatInsightLabel(String(name))]}
                     />
                     {showLegend && <Legend />}
                     {valueKeys.map((key, i) => (

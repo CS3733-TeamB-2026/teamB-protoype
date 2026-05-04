@@ -5,10 +5,10 @@ import { req, res } from "./types";
 import { getEmployee } from "../helpers/getEmployee";
 import { isAdmin, isUserOrAdmin } from "../helpers/permissions";
 
-function scheduleCollectionEmbedding(id: number, displayName: string) {
+function scheduleCollectionEmbedding(id: number, displayName: string, itemNames: string[]) {
     setImmediate(async () => {
         try {
-            const embedding = await generateEmbedding(buildCollectionEmbeddingInput(displayName));
+            const embedding = await generateEmbedding(buildCollectionEmbeddingInput(displayName, itemNames));
             await q.Collection.updateEmbedding(id, embedding);
         } catch (err) {
             console.error(`[background] Failed to embed collection id=${id}:`, err);
@@ -74,7 +74,7 @@ export const createCollection = async (req: req, res: res) => {
 
         const { displayName, isPublic } = req.body;
         const collection = await q.Collection.create(displayName, employee.id, isPublic ?? false);
-        scheduleCollectionEmbedding(collection.id, collection.displayName);
+        scheduleCollectionEmbedding(collection.id, collection.displayName, collection.items.map(i => i.content.displayName));
         return res.status(201).json(collection);
     } catch (error) {
         console.error(error);
@@ -110,7 +110,7 @@ export const updateCollection = async (req: req, res: res) => {
             ownerId ?? existing.ownerId,
             contentIds ?? [],
         );
-        scheduleCollectionEmbedding(updated.id, updated.displayName);
+        scheduleCollectionEmbedding(updated.id, updated.displayName, updated.items.map(i => i.content.displayName));
         return res.status(200).json(updated);
     } catch (error) {
         console.error(error);
@@ -233,6 +233,9 @@ export const appendItemsToCollection = async (req: req, res: res) => {
         }
 
         const updated = await q.Collection.appendItems(collectionId, contentIds);
+        if (updated) {
+            scheduleCollectionEmbedding(updated.id, updated.displayName, updated.items.map(i => i.content.displayName));
+        }
         return res.status(200).json(updated);
     } catch (error) {
         console.error(error);

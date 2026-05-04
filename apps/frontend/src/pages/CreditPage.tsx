@@ -8,7 +8,9 @@ import Autoplay from "embla-carousel-autoplay";
 import {
     Carousel,
     CarouselContent,
-    CarouselItem
+    CarouselItem,
+    CarouselPrevious,
+    CarouselNext,
 } from "@/components/ui/carousel";
 import { Boxes } from "lucide-react";
 import ExpressIMG from "@/assets/Logos/expressIMG.png";
@@ -41,7 +43,7 @@ function Credits() {
                 description={'Acknowledging the tools that made this project possible.'} // TODO: Make this work with locale
             />
 
-            <Card className="shadow-md border-4 border-primary-dark p-4 bg-primary hover:shadow-lg transition-shadow w-full max-w-6xl mx-auto mt-6">
+            <Card className="shadow-xl border-t-4 border-t-primary p-4 bg-linear-to-br from-primary to-primary-light/30 transition-shadow w-full max-w-6xl mx-auto mt-6">
                 <CardHeader className="text-white text-2xl">
                     PERN Stack:
                 </CardHeader>
@@ -125,10 +127,11 @@ function Credits() {
                 </div>
             </Card>
 
-            <Card className="shadow-md border-4 border-primary-dark p-4 bg-primary hover:shadow-lg transition-shadow w-full max-w-6xl mx-auto mt-12">
+            <Card className="shadow-xl border-t-4 border-t-primary bg-linear-to-br from-primary to-primary-light/30 p-4 transition-shadow w-full max-w-6xl mx-auto mt-12">
             <CardHeader className="text-white text-2xl">
                 Other Tools:
             </CardHeader>
+
 
                 <Carousel
                     opts={{ loop: true }}
@@ -257,6 +260,8 @@ function Credits() {
                         </CarouselItem>
 
                     </CarouselContent>
+                    <CarouselPrevious className="w-10 h-10 left-4 z-10 bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"/>
+                    <CarouselNext className="w-10 h-10 right-4 z-10 bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"/>
                 </Carousel>
             <div className="mt-6"/>
             </Card>
