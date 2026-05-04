@@ -6,6 +6,7 @@ import { useAvatarUrl } from "@/hooks/use-avatar-url";
 import DashboardCard from "@/features/dashboard/components/cards/DashboardCard.tsx";
 import {useLocale} from "@/languageSupport/localeContext.tsx";
 import {useTranslation} from "@/languageSupport/useTranslation.ts";
+import InfoButton from "@/components/layout/InformationAlert.tsx";
 
 function HelloCard() {
 
@@ -20,6 +21,9 @@ function HelloCard() {
             borderColor="primary"
         >
             <CardHeader>
+                <div className="absolute right-1 top-1 w-8 h-8 cursor-pointer">
+                    <InfoButton content={"Welcome card shows you your user"}/>
+                </div>
                 <div className="flex justify-between items-center">
                     <div className="flex flex-row gap-5 items-center">
                         <Avatar className="w-15 h-15 ">

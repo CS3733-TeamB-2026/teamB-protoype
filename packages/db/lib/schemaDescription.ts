@@ -47,8 +47,16 @@ TABLES:
   - "checkedOutById" (int, nullable, FK → Employee.id)  -- who currently has it checked out
   - "ownerId" (int, nullable, FK → Employee.id)         -- the content's owner
   - tags (text[])                                       -- array of tag strings
+  - deleted (boolean, default false)                    -- soft-delete flag; filter "deleted" = false for active content
+  - "serviceRequestId" (int, unique, nullable, FK → ServiceRequest.id)
+                                                        -- the ServiceRequest this content is linked to (1:1)
+  COMMON PATTERNS:
+  - To extract a file extension from "fileURI", use:
+      LOWER(SUBSTRING("fileURI" FROM '\\.([^.]+)$'))
+    This returns 'pdf', 'docx', etc., or NULL if there's no extension.
+    Do NOT use REVERSE() — it's error-prone and produces backwards strings.
 
-"ServiceRequest" — work items, often linked to content or collections.
+"ServiceRequest" — work items, often linked to content or a collection.
   - id (int, PK)
   - created (timestamp, default now)
   - deadline (timestamp, nullable)
@@ -57,14 +65,17 @@ TABLES:
   - "ownerId" (int, FK → Employee.id)                   -- who created/owns the request
   - name (text, nullable)
   - notes (text, nullable)
-  - "linkedContentId" (int, nullable, FK → Content.id)
-  - "linkedCollectionId" (int, nullable, FK → Collection.id)
+  Notes: A ServiceRequest is linked to AT MOST ONE Content and AT MOST ONE Collection.
+  The FK lives on the OTHER side — to find a request's linked content or collection,
+  query "Content" or "Collection" WHERE "serviceRequestId" = the request's id.
 
 "Collection" — named groups of Content items.
   - id (int, PK)
   - "displayName" (text)
   - "ownerId" (int, FK → Employee.id)
   - public (boolean)
+  - "serviceRequestId" (int, unique, nullable, FK → ServiceRequest.id)
+                                                        -- the ServiceRequest this collection is linked to (1:1)
 
 "CollectionItem" — many-to-many between Collection and Content with ordering.
   - "collectionId" (int, FK → Collection.id)
@@ -113,7 +124,13 @@ TABLES:
 KEY RELATIONSHIPS AT A GLANCE:
   - Content has TWO Employee relationships: owner ("ownerId") and current checker-outer ("checkedOutById")
   - ServiceRequest has TWO Employee relationships: owner ("ownerId") and assignee ("assigneeId")
+  - ServiceRequest ↔ Content and ServiceRequest ↔ Collection are both 1:1, with the
+    "serviceRequestId" FK living on Content and Collection respectively. To list a
+    request's linked items, JOIN "Content"/"Collection" ON "serviceRequestId" = SR.id.
+  - "Content"."deleted" = true means soft-deleted — filter it out unless the question
+    is specifically about deleted items.
   - To count previews/views on Content, JOIN "Preview" on "previewedContentId"
   - To count bookmarks on Content, JOIN "Bookmark" on "bookmarkedContentId"
+  - To count favorites on a Collection, JOIN "CollectionFavorite" on "collectionId"
   - Tags are a Postgres text[] column — use ANY(tags), array overlap (&&), or unnest(tags) to query them
 `.trim();
