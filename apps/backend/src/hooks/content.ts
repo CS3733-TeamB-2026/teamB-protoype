@@ -198,6 +198,8 @@ function scheduleContentEmbedding(
     contentType: string,
     persona: string,
     tags: string[],
+    status: string,
+    fileURI: string | null,
     fileBuffer: Buffer | null,
     mimeType: string | null,
     linkURL: string | null,
@@ -214,7 +216,7 @@ function scheduleContentEmbedding(
                 textContent = existingTextContent;
             }
             const embedding = await generateEmbedding(
-                buildContentEmbeddingInput(name, contentType, persona, tags, textContent)
+                buildContentEmbeddingInput(name, contentType, persona, tags, status, fileURI, textContent)
             );
             await q.Content.updateTextAndEmbedding(id, textContent, embedding);
             console.log(`[background] Processed content id=${id}`);
@@ -275,6 +277,8 @@ export const uploadFile = async (req: req, res: res) => {
             payload.contentType,
             payload.targetPersona,
             JSON.parse(payload.tags || "[]"),
+            payload.status,
+            fileURI,
             req.file?.buffer ?? null,
             req.file?.mimetype ?? null,
             payload.linkURL ?? null,
@@ -355,6 +359,8 @@ export const updateContent = async (req: req, res: res) => {
             payload.contentType,
             payload.targetPersona,
             JSON.parse(payload.tags || "[]"),
+            payload.status,
+            fileURIForUpdate,
             req.file?.buffer ?? null,
             req.file?.mimetype ?? null,
             linkURL,
