@@ -74,7 +74,7 @@ export default function SearchContent() {
                 )}
 
                 <div className="flex flex-col gap-4">
-                    {results.map((result, i) => {
+                    {results.map((result) => {
                         switch (result.kind) {
                             case "content":
                                 return <ContentItemCard key={`content-${result.item.id}`} item={result.item} />;
