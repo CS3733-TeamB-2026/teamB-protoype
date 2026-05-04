@@ -28,9 +28,9 @@ export const WIDGET_REGISTRY = {
     myContent: { component: MyContentCard, label: "My Content", defaultSize: "small", description: "Shows content you own." },
     recentFiles: { component: RecentFilesCard, label: "Recent Files", defaultSize: "medium", description: "Shows recent files." },
     links: { component: LinksCard, label: "Role Links", defaultSize: "small", description: "Shows role specific links." },
-    preview: { component: PreviewedFilesCard, label: "Previewed", defaultSize: "small", description: "Shows recently viewed files" },
-    collections: { component: CollectionsCard, label: "Collections", defaultSize: "medium", description: "Shows favorited collections" },
-    reports: { component: ReportCard, label: "Reports", defaultSize: "full", description: "Shows reports and analytics" },
+    preview: { component: PreviewedFilesCard, label: "Previewed", defaultSize: "small", description: "Shows recently viewed files." },
+    collections: { component: CollectionsCard, label: "Collections", defaultSize: "medium", description: "Shows favorited collections." },
+    reports: { component: ReportCard, label: "Reports", defaultSize: "full", description: "Shows reports and analytics." },
 } satisfies Record<string, { component: React.ComponentType; label: string; defaultSize: WidgetSize; description: string }>;
 
 export type WidgetId = keyof typeof WIDGET_REGISTRY;
