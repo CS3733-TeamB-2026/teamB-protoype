@@ -16,16 +16,16 @@ type Props = {
 
 function EmptyState({ onSelectSuggestion }: Props) {
     return (
-        <div className="mx-auto max-w-3xl py-24 text-center">
+        <div className="mx-auto max-w-3xl mt-8 text-center">
             {/* Sparkle mark */}
-            <div className="mx-auto mb-8 h-20 w-20 rounded-full p-[2px] bg-conic from-primary-light via-primary to-primary-light shadow-lg shadow-primary-light/40">
+            <div className="mx-auto mb-6 h-16 w-16 rounded-full p-[2px] bg-conic from-primary-light via-primary to-primary-light shadow-lg shadow-primary-light/40">
                 <div className="flex h-full w-full items-center justify-center rounded-full bg-primary">
                     <Sparkles className="h-8 w-8 text-primary-foreground" />
                 </div>
             </div>
 
             {/* Title with gradient text */}
-            <h1 className="pb-2 text-6xl font-semibold bg-linear-to-r from-primary to-primary-light bg-clip-text text-transparent">
+            <h1 className="pb-2 text-5xl font-semibold bg-linear-to-r from-primary to-primary-light bg-clip-text text-transparent">
                 Welcome to Insights.
             </h1>
 
@@ -34,14 +34,14 @@ function EmptyState({ onSelectSuggestion }: Props) {
             </p>
 
             {/* Pills */}
-            <div className="mt-10 flex flex-wrap justify-center gap-2">
+            <div className="mt-8 flex flex-wrap justify-center gap-2">
                 {SUGGESTIONS.map((suggestion) => (
                     <Button
                         key={suggestion}
                         variant="outline"
                         size="sm"
                         onClick={() => onSelectSuggestion(suggestion)}
-                        className="gap-2 rounded-full bg-card shadow-sm border-primary/50 hover:bg-primary/10 hover:text-foreground dark:hover:bg-primary/30"
+                        className="gap-2 rounded-full bg-card shadow-sm border-primary/10 hover:bg-primary/10 hover:text-foreground dark:hover:bg-primary/30"
                     >
                         <span className="text-primary">•</span>
                         {suggestion}

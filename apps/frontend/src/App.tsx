@@ -35,11 +35,15 @@ import { ViewSingleCollection } from "@/features/collections/ViewSingleCollectio
 import About from "@/pages/About.tsx"
 import ViewNotifications from "@/features/notifications/ViewNotifications.tsx";
 import Insights from "@/features/insights/Insights.tsx";
+import {useUser} from "@/context/UserContext.tsx";
+import React from "react";
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+const ProtectedRoute = ({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean; }) => {
     const { isAuthenticated } = useAuth0();
+    const { user } = useUser();
 
-    if (!isAuthenticated) return <Navigate to="/" />;
+    if (!isAuthenticated) return <Navigate to="/" replace />;
+    if (adminOnly && user?.persona !== "admin") return <Navigate to="/" replace />;
 
     return <>{children}</>;
 };
@@ -74,7 +78,7 @@ function App() {
                             {/*This is where Home gets loaded automatically when it detected we are on "/" page*/}
                             <Route path="/" element={<Home/>}/>
                             <Route path="/employeeform" element={<ProtectedRoute><AddEmployee/></ProtectedRoute>}/>
-                            <Route path="/usermanagement" element={<ProtectedRoute><ViewEmployees/></ProtectedRoute>}/>
+                            <Route path="/usermanagement" element={<ProtectedRoute adminOnly={true}><ViewEmployees/></ProtectedRoute>}/>
                             <Route path="/underwriter" element={<UnderwriterPersona/>}/>
                             <Route path="/businessanalyst" element={<BusinessAnalystPersona/>}/>
                             <Route path="/actuarialanalyst" element={<ActuarialAnalystPersona/>}/>
@@ -92,7 +96,7 @@ function App() {
                             <Route path="/servicereqs" element={<ProtectedRoute><ViewServiceReqs/></ProtectedRoute>}/>
                             <Route path="/notifications" element={<ProtectedRoute><ViewNotifications/></ProtectedRoute>}/>
                             <Route path="/search" element={<ProtectedRoute><SearchContent/></ProtectedRoute>}/>
-                            <Route path="/insights" element={<ProtectedRoute><Insights/></ProtectedRoute>}/>
+                            <Route path="/insights" element={<ProtectedRoute adminOnly={true}><Insights/></ProtectedRoute>}/>
                             <Route path="/about" element={<About/>}/>
                             <Route path="/settings" element={<ProtectedRoute><SettingsLayout/></ProtectedRoute>}>
 
