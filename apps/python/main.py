@@ -21,29 +21,20 @@ _model: SentenceTransformer | None = None
 def get_model() -> SentenceTransformer:
     global _model
     if _model is None:
-        model_id = "ibm-granite/granite-embedding-97m-multilingual-r2"
         export_path = "granite-quantized"
 
-        # Only export if the folder doesn't exist to save time locally
+        # Use the absolute path to avoid directory resolution issues
         import os
-        if not os.path.exists(export_path):
-            _model = SentenceTransformer(model_id, backend="openvino")
-            quantization_config = OVQuantizationConfig()
-            export_static_quantized_openvino_model(
-                model=_model,
-                quantization_config=quantization_config,
-                model_name_or_path=export_path
-            )
+        abs_path = os.path.abspath(export_path)
 
-        # Explicitly load the quantized model
         _model = SentenceTransformer(
-            export_path,
+            abs_path,
             backend="openvino",
-            device="cpu",
             model_kwargs={
                 "file_name": "openvino/openvino_model_qint8_quantized.xml",
-                "library_name": "sentence_transformers" # Fixes the ValueError
-            },
+                # Explicitly pass library_name to optimum via model_kwargs
+                "library_name": "sentence_transformers"
+            }
         )
     return _model
 
