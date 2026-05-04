@@ -1,5 +1,5 @@
 import { CardContent, CardHeader } from "@/components/ui/card.tsx";
-import FavoriteCollections from "@/features/content/listing/FavoriteCollections.tsx";
+import OwnedCollections from "@/features/content/listing/Collections.tsx";
 import DashboardCard from "@/features/dashboard/components/cards/DashboardCard.tsx";
 
 function FavoritedCollectionsCard() {
@@ -8,9 +8,9 @@ function FavoritedCollectionsCard() {
             size="small"
             borderColor="secondary"
         >
-            <CardHeader className="text-left text-2xl! font-semibold">Favorited Collections: </CardHeader>
+            <CardHeader className="text-left text-2xl! font-semibold">Owned Collections: </CardHeader>
             <CardContent>
-                <FavoriteCollections />
+                <OwnedCollections />
             </CardContent>
         </DashboardCard>
     );

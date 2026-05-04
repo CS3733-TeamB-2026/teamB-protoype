@@ -39,6 +39,20 @@ export const getCollectionById = async (req: req, res: res) => {
     }
 };
 
+export const getCollectionByOwnerId = async (req: req, res: res) => {
+    try {
+        const employee = await getEmployee(req);
+        if (!employee) return res.status(404).json({ error: "Employee not found" });
+
+        const collections = await q.Collection.queryByOwnerId(employee.id);
+
+        return res.status(200).json(collections);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
 /** Creates a collection owned by the caller — ownerId is derived from the JWT, not the request body. */
 export const createCollection = async (req: req, res: res) => {
     try {
