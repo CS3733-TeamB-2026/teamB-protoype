@@ -7,17 +7,8 @@ RUN corepack enable
 
 WORKDIR /app
 
-# Copy workspace config first for better layer caching
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
-COPY apps/frontend/package.json ./apps/frontend/package.json
-COPY packages/db/package.json ./packages/db/package.json
-COPY apps/backend/package.json ./apps/backend/package.json
-
-# Install dependencies
-RUN pnpm install --frozen-lockfile
-
-# Copy source and build
 COPY . .
+RUN pnpm install
 RUN pnpm --filter frontend build
 
 # Stage 2: Serve with Nginx
