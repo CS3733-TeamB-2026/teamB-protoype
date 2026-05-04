@@ -21,28 +21,27 @@ _model: SentenceTransformer | None = None
 def get_model() -> SentenceTransformer:
     global _model
     if _model is None:
-        # 1. Load the base model using the OpenVINO backend
+        # 1. Load the base model
         _model = SentenceTransformer("ibm-granite/granite-embedding-97m-multilingual-r2", backend="openvino")
 
         quantization_config = OVQuantizationConfig()
 
-        # 2. Export and save the quantized model to a local folder
-        # We use 'model_name_or_path' as the output destination
+        # 2. Export and save the quantized model locally
         export_static_quantized_openvino_model(
             model=_model,
             quantization_config=quantization_config,
-            model_name_or_path="granite-quantized" # This becomes the folder name
+            model_name_or_path="granite-quantized"
         )
 
-        # 3. Load the model back from the local folder
-        # We point directly to the folder we just created
+        # 3. Load the model back with the library_name specified
         _model = SentenceTransformer(
             "granite-quantized",
             backend="openvino",
             device="cpu",
             model_kwargs={
                 "torch_dtype": torch.float16,
-                "file_name": "openvino/openvino_model_qint8_quantized.xml"
+                "file_name": "openvino/openvino_model_qint8_quantized.xml",
+                "library_name": "sentence_transformers" # ADD THIS LINE
             },
         )
     return _model
