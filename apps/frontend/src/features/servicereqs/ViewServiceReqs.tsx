@@ -21,6 +21,7 @@ import {formatLabel} from "@/lib/utils.ts";
 import { ServiceReqDetail } from "@/components/shared/ServiceReqDetail";
 import { Tabs, TabsTrigger } from "@/components/ui/tabs";
 import { SlidingTabs } from "@/components/shared/SlidingTabs";
+import InfoButton from "@/components/layout/InformationAlert.tsx";
 
 type ServiceReqTab = "all" | "mine" | "assigned";
 
@@ -131,7 +132,15 @@ function ViewServiceReqs() {
 
             <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center px-4">
                 <CardHeader>
-                    <CardTitle className="text-3xl text-primary mt-4">Service Requests</CardTitle>
+                        <CardTitle className="text-3xl text-primary mt-4 flex items-center gap-2 justify-center">
+                            Service Requests
+                            <div className="w-8 h-8 cursor-pointer">
+                                <InfoButton content={"Service requests make it easier for you to manage your workflow. " +
+                                    "They can be assigned to a specific employee, given either a single piece of content or a collection " +
+                                    "along with a note about them, and given a deadline."
+                                }/>
+                            </div>
+                        </CardTitle>
                     <CardDescription>
                         {filteredServiceReqs.length === servicereqs.length
                             ? `${servicereqs.length} service request${servicereqs.length !== 1 ? "s" : ""}`
