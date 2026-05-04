@@ -14,6 +14,7 @@ import * as collection from './hooks/collection'
 import * as notifications from './hooks/notifications'
 import * as previews from './hooks/preview'
 import * as nlQuery from './hooks/nlQuery'
+import * as search from './hooks/search'
 import { auth } from 'express-oauth2-jwt-bearer'
 
 const app = express();
@@ -40,6 +41,8 @@ app.post("/api/servicereqs",servicereqs.createServiceReq)
 app.put("/api/servicereqs", servicereqs.updateServiceReq)
 app.patch("/api/servicereqs/:id/link", servicereqs.linkServiceReq)
 app.delete("/api/servicereqs/:id", servicereqs.deleteServiceReq)
+// Unified search
+app.get("/api/search", search.unifiedSearch)
 // Content
 app.get("/api/content/info/:id", content.getContentInfo)
 app.get("/api/content/download/:id", content.downloadContent)
@@ -102,11 +105,6 @@ app.post("/api/nl-query", nlQuery.generateNLQuery);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-app.use(express.static(path.join(__dirname, '../../frontend/dist')));
-app.get('/{*splat}', (req, res) => {
-    res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'));
-});
 
 app.listen(3000, '0.0.0.0', () => {
         console.log(`Server is listening on port 3000`);

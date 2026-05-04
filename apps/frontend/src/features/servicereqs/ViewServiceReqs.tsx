@@ -173,12 +173,12 @@ function ViewServiceReqs() {
                             {/* Opens AddServiceReqDialog instead of navigating away */}
                             <Button
                                 onClick={() => setAddOpen(true)}
-                                className="cursor-pointer p-0! gap-0! border-0! group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-48 hover:bg-accent-dark hover:text-primary-foreground active:brightness-80 transition-all bg-accent text-primary-foreground w-12 h-12 text-lg justify-start"
+                                className="cursor-pointer p-0! gap-0! border-0! group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-42 hover:bg-accent-dark hover:text-primary-foreground active:brightness-80 transition-all bg-accent text-primary-foreground w-12 h-12 text-lg justify-start"
                             >
                                 <span className="flex items-center justify-center min-w-12 h-12">
                                     <Plus className="w-8! h-8! text-primary-foreground" />
                                 </span>
-                                <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Add ServiceReqs</span>
+                                <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Add Request</span>
                             </Button>
                         </div>
                     </div>

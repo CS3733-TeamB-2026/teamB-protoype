@@ -23,7 +23,7 @@ type UserContextValue = {
 const UserContext = createContext<UserContextValue | undefined>(undefined);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-    const { isAuthenticated, getAccessTokenSilently, user: auth0User } = useAuth0();
+    const { isAuthenticated, isLoading: authLoading, getAccessTokenSilently, user: auth0User } = useAuth0();
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -54,8 +54,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }, [isAuthenticated, getAccessTokenSilently, auth0User])
 
     useEffect(() => {
+        if (authLoading) return;
         fetchUser();
-    }, [fetchUser]);
+    }, [fetchUser, authLoading]);
 
     const updateUser = useCallback(
         async (updates: Partial<User>) => {
@@ -100,7 +101,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         if (user) invalidateAvatarCache(user.id);
         await fetchUser();
         
-    }, [fetchUser, getAccessTokenSilently]);
+    }, [fetchUser, getAccessTokenSilently, user]);
 
     return (
         <UserContext.Provider value={{ user, loading, updateUser, uploadProfilePhoto, refetch: fetchUser }}>

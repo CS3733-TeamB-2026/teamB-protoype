@@ -40,7 +40,7 @@ function WidgetRow({
             {...attributes}
             {...listeners}
             className="
-                mb-6 ml-6 mr-6 rounded-lg border bg-card p-4 shadow-sm
+                mb-6 ml-3 mr-1 rounded-lg border bg-card p-4 shadow-sm
                 cursor-grab active:cursor-grabbing touch-none
                 hover:bg-muted/40 transition-colors
             "

@@ -16,6 +16,7 @@ model Employee {
   auth0Id                String?                 @unique
   profilePhotoURI        String?
   widgetLayout           Json?
+  embedding              Unsupported("vector(384)")?
   bookmarks              Bookmark[]
   previews               Preview[]
   checkedOutContent      Content[]               @relation("CheckedOut")
@@ -74,6 +75,7 @@ model ServiceRequest {
   id               Int         @id @default(autoincrement())
   name             String?
   notes            String?
+  embedding        Unsupported("vector(384)")?
   assignee         Employee?   @relation("AssignedTo", fields: [assigneeId], references: [id])
   owner            Employee    @relation("OwnedBy", fields: [ownerId], references: [id])
   linkedContent    Content?
@@ -89,6 +91,7 @@ model Collection {
   ownerId          Int
   public           Boolean
   serviceRequestId Int?                @unique
+  embedding        Unsupported("vector(384)")?
 
   items           CollectionItem[]
   favorites       CollectionFavorite[]
@@ -189,7 +192,7 @@ enum Persona {
   underwriter
   businessAnalyst
   actuarialAnalyst
-  EXLOperator
+  excelOperator
   businessOps
   admin
 

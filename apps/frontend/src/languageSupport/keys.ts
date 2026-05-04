@@ -78,7 +78,7 @@ export type TranslationKey =
     | 'persona.underwriter'
     | 'persona.businessAnalyst'
     | 'persona.actuarialAnalyst'
-    | 'persona.EXLOperator'
+    | 'persona.excelOperator'
     | 'persona.businessOps'
     | 'persona.admin'
 

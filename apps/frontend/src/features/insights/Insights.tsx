@@ -13,23 +13,14 @@ function InsightsPage() {
     usePageTitle("Insights");
 
     async function handleSubmit(question: string) {
-        const userTurn: ChatTurn = { role: "user", content: question }
+        const userTurn: ChatTurn = { role: "user", content: question };
+
+        const historyToSend = pairUpValidTurns(conversation).slice(-6);
+
         setConversation((prev) => [...prev, userTurn]);
 
         try {
-            const result = await ask({
-                question,
-                history: conversation
-                    .filter((t) => !(t.role === "assistant" && t.isError))  // skip errored assistant turns
-                    .map((t) =>
-                        t.role === "user"
-                            ? { role: "user" as const, content: t.content ?? "" }
-                            : {
-                                role: "assistant" as const,
-                                content: t.result?.explanation ?? t.content ?? "",
-                            },
-                    ),
-            });
+            const result = await ask({ question, history: historyToSend });
             setConversation((prev) => [
                 ...prev,
                 { role: "assistant", content: "", result },
@@ -40,11 +31,37 @@ function InsightsPage() {
                 {
                     role: "assistant",
                     content: err instanceof Error ? err.message : "Something went wrong.",
-                    isError: true
-                }
-            ])
-
+                    isError: true,
+                },
+            ]);
         }
+    }
+
+    /**
+     * Returns history as strict alternating user/assistant pairs.
+     * Drops any user turn whose assistant response errored or is missing —
+     * sending a dangling user turn breaks the LLM's expected message sequence
+     * and produces a 400 that poisons all subsequent requests.
+     */
+    function pairUpValidTurns(turns: ChatTurn[]) {
+        const pairs: { role: "user" | "assistant"; content: string }[] = [];
+        for (let i = 0; i < turns.length - 1; i++) {
+            const a = turns[i];
+            const b = turns[i + 1];
+            if (
+                a.role === "user" &&
+                b.role === "assistant" &&
+                !b.isError
+            ) {
+                pairs.push({ role: "user", content: a.content ?? "" });
+                pairs.push({
+                    role: "assistant",
+                    content: b.result?.explanation ?? b.content ?? "",
+                });
+                i++; // skip the assistant we just consumed
+            }
+        }
+        return pairs;
     }
 
     return (
