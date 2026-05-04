@@ -21,28 +21,28 @@ _model: SentenceTransformer | None = None
 def get_model() -> SentenceTransformer:
     global _model
     if _model is None:
-        # 1. Load the base model
+        # 1. Load the base model using the OpenVINO backend
         _model = SentenceTransformer("ibm-granite/granite-embedding-97m-multilingual-r2", backend="openvino")
 
-        # 2. Configure and Run Quantization
         quantization_config = OVQuantizationConfig()
 
-        # ADD 'output_dir' here so the files are saved to the disk
+        # 2. Export and save the quantized model to a local folder
+        # We use 'model_name_or_path' as the output destination
         export_static_quantized_openvino_model(
             model=_model,
             quantization_config=quantization_config,
-            model_name_or_path="ibm-granite/granite-embedding-97m-multilingual-r2",
-            output_dir="granite-quantized"
+            model_name_or_path="granite-quantized" # This becomes the folder name
         )
 
-        # 3. Load the newly saved quantized model from the 'granite-quantized' folder
+        # 3. Load the model back from the local folder
+        # We point directly to the folder we just created
         _model = SentenceTransformer(
-            "granite-quantized", # Point to the local folder, not the HuggingFace ID
+            "granite-quantized",
             backend="openvino",
             device="cpu",
             model_kwargs={
                 "torch_dtype": torch.float16,
-                "file_name": "openvino_model_qint8_quantized.xml" # The file inside that folder
+                "file_name": "openvino/openvino_model_qint8_quantized.xml"
             },
         )
     return _model
