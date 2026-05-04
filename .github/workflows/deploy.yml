@@ -54,6 +54,14 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd ~/teamB-protoype
+            # 1. Clear out dangling images and build cache BEFORE pulling
+            docker system prune -af 
+
+            # 2. Pull the new baked image
             docker compose pull
+
+            # 3. Restart the container
             docker compose up -d --force-recreate
+
+            # 4. Optional: Final cleanup of the now-replaced old image
             docker image prune -f
