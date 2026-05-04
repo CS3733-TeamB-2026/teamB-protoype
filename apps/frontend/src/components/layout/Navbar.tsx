@@ -99,12 +99,12 @@ function Navbar() {
                     <DisclaimerAlert />
                 </div>
 
-                {/* centered search bar — hidden on the /search page */}
-                <div className="absolute left-1/2 -translate-x-1/2 z-20">
+                <div className="flex-1" />
+
+                {/* search bar — hidden on the /search page */}
+                <div>
                     <NavSearchBar />
                 </div>
-
-                <div className="flex-1" />
 
                 {/* user avatar popover */}
                 {isAuthenticated && <NotificationBell />}
@@ -125,8 +125,6 @@ function Navbar() {
                                         <AvatarFallback className="bg-accent text-primary-foreground">{isAuthenticated ? `${user?.firstName[0]}${user?.lastName[0]}` : <UserIcon />}</AvatarFallback>
                                     </Avatar>
                                 </button>
-
-
                         }
 
                     </PopoverTrigger>
