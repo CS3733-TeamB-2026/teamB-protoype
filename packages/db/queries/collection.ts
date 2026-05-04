@@ -63,7 +63,7 @@ export class Collection {
      * Returns up to 20 results with an attached `similarity` score (0–1).
      * Visibility is enforced in the ORM step so the raw SQL can stay simple.
      */
-    public static async semanticSearch(queryVector: number[], employeeId: number, isAdmin: boolean) {
+    public static async semanticSearch(queryVector: number[], employeeId: number, isAdmin: boolean, limit = 20) {
         const embeddingStr = embeddingToSql(queryVector);
 
         const rows = await prisma.$queryRaw<{ id: number; similarity: number }[]>`
@@ -71,7 +71,7 @@ export class Collection {
             FROM "Collection"
             WHERE embedding IS NOT NULL
             ORDER BY embedding <=> ${embeddingStr}::vector
-            LIMIT 100
+            LIMIT ${limit}
         `;
 
         const ids = rows.map(r => r.id);
@@ -87,8 +87,7 @@ export class Collection {
 
         return collections
             .map(c => ({ ...c, similarity: similarityMap.get(c.id) ?? 0 }))
-            .sort((a, b) => b.similarity - a.similarity)
-            .slice(0, 20);
+            .sort((a, b) => b.similarity - a.similarity);
     }
 
     public static async queryByOwnerId(ownerId: number) {

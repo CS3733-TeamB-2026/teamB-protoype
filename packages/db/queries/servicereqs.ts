@@ -63,8 +63,8 @@ export class ServiceReqs {
         });
     }
 
-    /** Semantic vector search over all service requests. Returns up to 20 results with `similarity` score (0–1). */
-    public static async semanticSearch(queryVector: number[]) {
+    /** Semantic vector search over all service requests. Returns up to `limit` results with `similarity` score (0–1). */
+    public static async semanticSearch(queryVector: number[], limit = 20) {
         const embeddingStr = embeddingToSql(queryVector);
 
         const rows = await prisma.$queryRaw<{ id: number; similarity: number }[]>`
@@ -72,7 +72,7 @@ export class ServiceReqs {
             FROM "ServiceRequest"
             WHERE embedding IS NOT NULL
             ORDER BY embedding <=> ${embeddingStr}::vector
-            LIMIT 20
+            LIMIT ${limit}
         `;
 
         const ids = rows.map(r => r.id);
