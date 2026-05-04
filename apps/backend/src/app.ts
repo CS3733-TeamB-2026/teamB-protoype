@@ -14,6 +14,7 @@ import * as collection from './hooks/collection'
 import * as notifications from './hooks/notifications'
 import * as previews from './hooks/preview'
 import * as nlQuery from './hooks/nlQuery'
+import * as search from './hooks/search'
 import { auth } from 'express-oauth2-jwt-bearer'
 
 const app = express();
@@ -40,6 +41,8 @@ app.post("/api/servicereqs",servicereqs.createServiceReq)
 app.put("/api/servicereqs", servicereqs.updateServiceReq)
 app.patch("/api/servicereqs/:id/link", servicereqs.linkServiceReq)
 app.delete("/api/servicereqs/:id", servicereqs.deleteServiceReq)
+// Unified search
+app.get("/api/search", search.unifiedSearch)
 // Content
 app.get("/api/content/info/:id", content.getContentInfo)
 app.get("/api/content/download/:id", content.downloadContent)
@@ -50,6 +53,7 @@ app.get("/api/content/transaction-summary", content.getTransactionSummary)
 app.get("/api/content/deleted", content.getDeletedContent)
 app.get("/api/content/:id/collections", collection.getCollectionsByContentId)
 app.get("/api/content/:id/service-requests", servicereqs.getServiceReqsByContentId)
+app.patch("/api/content/:id/service-request", content.setContentServiceRequest)
 app.get("/api/content/:id", content.getContentById)
 app.get("/api/content", content.getAllContent)
 app.post("/api/content/:id/checkin", content.checkinContent)
@@ -70,6 +74,7 @@ app.get("/api/previews/hits/:contentId", previews.getHits)
 // Collections
 app.get("/api/collections/favorites", collection.getFavorites)
 app.get("/api/collections/:id/service-requests", servicereqs.getServiceReqsByCollectionId)
+app.patch("/api/collections/:id/service-request", collection.setCollectionServiceRequest)
 app.get("/api/collections/:id", collection.getCollectionById)
 app.get("/api/collections", collection.getAllCollections)
 app.post("/api/collections/:id/items", collection.appendItemsToCollection)

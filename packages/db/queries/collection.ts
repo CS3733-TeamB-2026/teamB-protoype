@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma";
-import { employeeSelect } from "./helper";
+import { employeeSelect, srInclude } from "./helper";
+import { generateEmbedding, embeddingToSql } from '../../../apps/backend/lib/embeddings';
 
 // Items have no guaranteed DB order, so position must always be applied here
 const itemsInclude = {
@@ -22,15 +23,20 @@ const itemsInclude = {
  * addFavorite, and removeFavorite rather than inlining them into queryAll/queryById.
  */
 export class Collection {
-    /** Returns all public collections plus all collections owned by the given employee.
-     *  Pass isAdmin=true to return every collection regardless of visibility. */
-    public static async queryAll(employeeId: number, isAdmin: boolean) {
+    /**
+     * Returns all public collections plus all collections owned by the given employee.
+     * Pass `isAdmin=true` to return every collection regardless of visibility.
+     *
+     * `unlinkedSR=true` restricts to collections whose `serviceRequestId` is null —
+     * used by the SR creation form so that already-linked collections don't appear
+     * as candidates. Unlike the SR back-relation null-check (`{ linkedCollection: { is: null } }`),
+     * this uses a plain `serviceRequestId: null` because Collection owns the FK directly.
+     */
+    public static async queryAll(employeeId: number, isAdmin: boolean, unlinkedSR = false) {
         return prisma.collection.findMany({
-            where: isAdmin ? undefined : {
-                OR: [
-                    { public: true },
-                    { ownerId: employeeId },
-                ],
+            where: {
+                ...(isAdmin ? {} : { OR: [{ public: true }, { ownerId: employeeId }] }),
+                ...(unlinkedSR ? { serviceRequestId: null } : {}),
             },
             include: {
                 owner: { select: employeeSelect },
@@ -40,26 +46,74 @@ export class Collection {
         });
     }
 
-    /** Returns a single collection with all joined content items. */
+    /** Returns a single collection with all joined content items and its linked service request. */
     public static async queryById(collectionId: number) {
         return prisma.collection.findUniqueOrThrow({
             where: { id: collectionId },
             include: {
                 owner: { select: employeeSelect },
                 ...itemsInclude,
+                serviceRequest: { include: srInclude },
             },
         });
     }
 
+    /**
+     * Semantic vector search over collections visible to the caller.
+     * Returns up to 20 results with an attached `similarity` score (0–1).
+     * Visibility is enforced in the ORM step so the raw SQL can stay simple.
+     */
+    public static async semanticSearch(query: string, employeeId: number, isAdmin: boolean) {
+        const embedding = await generateEmbedding(query);
+        const embeddingStr = embeddingToSql(embedding);
+
+        const rows = await prisma.$queryRaw<{ id: number; similarity: number }[]>`
+            SELECT id, 1 - (embedding <=> ${embeddingStr}::vector) AS similarity
+            FROM "Collection"
+            WHERE embedding IS NOT NULL
+            ORDER BY embedding <=> ${embeddingStr}::vector
+            LIMIT 100
+        `;
+
+        const ids = rows.map(r => r.id);
+        const similarityMap = new Map(rows.map(r => [r.id, Number(r.similarity)]));
+
+        const collections = await prisma.collection.findMany({
+            where: {
+                id: { in: ids },
+                ...(isAdmin ? {} : { OR: [{ public: true }, { ownerId: employeeId }] }),
+            },
+            include: { owner: { select: employeeSelect }, ...itemsInclude },
+        });
+
+        return collections
+            .map(c => ({ ...c, similarity: similarityMap.get(c.id) ?? 0 }))
+            .sort((a, b) => b.similarity - a.similarity)
+            .slice(0, 20);
+    }
+
     /** Creates a new collection with the given name and owner. */
     public static async create(displayName: string, ownerId: number, isPublic: boolean) {
-        return prisma.collection.create({
+        const result = await prisma.collection.create({
             data: { displayName, ownerId, public: isPublic },
             include: {
                 owner: { select: employeeSelect },
                 ...itemsInclude,
             },
         });
+
+        setImmediate(async () => {
+            try {
+                const embedding = await generateEmbedding(displayName);
+                await prisma.$executeRaw`
+                    UPDATE "Collection" SET embedding = ${embeddingToSql(embedding)}::vector WHERE id = ${result.id}
+                `;
+            } catch (err) {
+                console.error(`[background] Failed to embed collection id=${result.id}:`, err);
+            }
+        });
+
+        return result;
     }
 
     /** Updates name, visibility, owner, and replaces the full ordered item list.
@@ -71,7 +125,7 @@ export class Collection {
         ownerId: number,
         contentIds: number[],
     ) {
-        return prisma.$transaction(async (tx) => {
+        const result = await prisma.$transaction(async (tx) => {
             await tx.collectionItem.deleteMany({ where: { collectionId } });
 
             if (contentIds.length > 0) {
@@ -93,6 +147,19 @@ export class Collection {
                 },
             });
         });
+
+        setImmediate(async () => {
+            try {
+                const embedding = await generateEmbedding(displayName);
+                await prisma.$executeRaw`
+                    UPDATE "Collection" SET embedding = ${embeddingToSql(embedding)}::vector WHERE id = ${collectionId}
+                `;
+            } catch (err) {
+                console.error(`[background] Failed to embed collection id=${collectionId}:`, err);
+            }
+        });
+
+        return result;
     }
 
     /** Appends items to a collection, skipping IDs already present. New items are positioned after the last existing item. */
@@ -142,6 +209,21 @@ export class Collection {
     public static async removeFavorite(collectionId: number, employeeId: number) {
         await prisma.collectionFavorite.delete({
             where: { employeeId_collectionId: { employeeId, collectionId } },
+        });
+    }
+
+    /**
+     * Links a collection to a service request, or clears the link when `serviceRequestId` is null.
+     *
+     * Collection owns the FK (`serviceRequestId`), so the link is set here rather than on
+     * the ServiceRequest row. The DB enforces `@unique` on this column — attempting to link
+     * a collection that already points at a different SR will throw a Prisma unique-constraint
+     * error; callers must clear the old link first.
+     */
+    public static async setServiceRequest(collectionId: number, serviceRequestId: number | null) {
+        return prisma.collection.update({
+            where: { id: collectionId },
+            data: { serviceRequestId },
         });
     }
 

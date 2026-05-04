@@ -18,7 +18,6 @@ interface Props {
     values: ServiceReqFormValues;
     patch: (p: Partial<ServiceReqFormValues>) => void;
     errors: Record<string, string>;
-    showLastModified?: boolean;
 }
 
 /**
@@ -26,17 +25,15 @@ interface Props {
  *
  * Purely presentational — all form state lives in the parent dialog via
  * `useServiceReqForm` and flows in through props. The parent passes `key={formKey}`
- * so this component remounts on reset, which clears the two popover-open states.
- *
- * `showLastModified` is false by default. Both dialogs currently pass `true`; the
- * prop exists to allow embedding the field set in a read-only or compact context.
+ * so this component remounts on reset, which clears the popover-open state.
  *
  * The Linked Resource section uses `linkMode` to switch between ContentPicker and
  * CollectionPicker. Switching modes resets both IDs to null so stale selections
  * from the previous picker are never serialised.
+ *
+ * `created` is not a form field — it is set server-side on creation and never edited.
  */
-export function ServiceReqFormFields({ values, patch, errors, showLastModified = false }: Props) {
-    const [openCreatedDate, setOpenCreatedDate] = React.useState(false);
+export function ServiceReqFormFields({ values, patch, errors }: Props) {
     const [openDeadlineDate, setOpenDeadlineDate] = React.useState(false);
 
     return (
@@ -63,7 +60,9 @@ export function ServiceReqFormFields({ values, patch, errors, showLastModified =
 
                 {/* Assignee */}
                 <Field className="bg-background">
-                    <FieldLabel className="text-primary text-lg mb-1">Assignee Employee</FieldLabel>
+                    <FieldLabel className="text-primary text-lg mb-1">
+                        Assignee Employee <span className="text-destructive">*</span>
+                    </FieldLabel>
                     <EmployeePicker
                         selectedId={values.assigneeId ?? null}
                         onSelect={(id) => patch({ assigneeId: id ?? undefined })}
@@ -76,51 +75,6 @@ export function ServiceReqFormFields({ values, patch, errors, showLastModified =
 
             {/* Dates */}
             <div className="flex flex-wrap items-end gap-4 bg-background py-4">
-                {showLastModified && (
-                    <>
-                        <Field className="bg-background flex-1">
-                            <FieldLabel className="text-primary text-lg" htmlFor="date-modified">
-                                Last Modified Date
-                            </FieldLabel>
-                            <Popover open={openCreatedDate} onOpenChange={setOpenCreatedDate}>
-                                <PopoverTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        id="date-modified"
-                                        className="justify-start font-normal text-sm h-10"
-                                    >
-                                        {values.createdDate ? values.createdDate.toLocaleDateString() : "Select date"}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-                                    <Calendar
-                                        mode="single"
-                                        selected={values.createdDate}
-                                        defaultMonth={values.createdDate}
-                                        captionLayout="dropdown"
-                                        onSelect={(date) => { patch({ createdDate: date }); setOpenCreatedDate(false); }}
-                                    />
-                                </PopoverContent>
-                            </Popover>
-                        </Field>
-
-                        <Field className="w-32">
-                            <FieldLabel className="text-primary text-lg" htmlFor="time-lastmodified">
-                                Time
-                            </FieldLabel>
-                            <Input
-                                type="time"
-                                id="time-lastmodified"
-                                step="1"
-                                value={values.createdTime}
-                                onChange={(e) => patch({ createdTime: e.target.value })}
-                                className="font-normal md:text-sm h-10! appearance-none bg-background [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-                            />
-                        </Field>
-
-                    </>
-                )}
-
                 <Field className="bg-background flex-1">
                     <FieldLabel className="text-primary text-lg" htmlFor="date-expiration">
                         Expiration Date
@@ -149,7 +103,9 @@ export function ServiceReqFormFields({ values, patch, errors, showLastModified =
             <div className="flex flex-row gap-2">
                 {/* Service Request Type */}
                 <Field className="bg-background">
-                    <FieldLabel className="text-primary text-lg">Type of Document</FieldLabel>
+                    <FieldLabel className="text-primary text-lg">
+                        Type of Document <span className="text-destructive">*</span>
+                    </FieldLabel>
                     <Select value={values.type} onValueChange={(v) => patch({ type: v as ServiceReqFormValues["type"] })}>
                         <SelectTrigger className="bg-background h-10! text-sm">
                             <SelectValue placeholder="Select service request type" />
@@ -184,6 +140,8 @@ export function ServiceReqFormFields({ values, patch, errors, showLastModified =
             {/* Linked Resource */}
             <Field className="bg-background">
                 <FieldLabel className="text-primary text-lg mb-4">Linked Resource</FieldLabel>
+                {/* Switching linkMode resets both IDs so the stale selection from the
+                    previous picker isn't silently serialised into the payload. */}
                 <RadioGroup
                     value={values.linkMode}
                     onValueChange={(v) => {
@@ -211,16 +169,28 @@ export function ServiceReqFormFields({ values, patch, errors, showLastModified =
                 </RadioGroup>
 
                 {values.linkMode === "content" && (
+                    // unlinkedSR filters to content not yet linked to any SR
                     <ContentPicker
                         selectedId={values.linkedContentId}
-                        onSelect={(id) => patch({ linkedContentId: id })}
+                        onSelect={(id, item) => {
+                            // Auto-fill deadline from the content item's expiration only when
+                            // no deadline has been set yet, so an explicit user choice isn't overwritten.
+                            const deadlinePatch = (!values.deadline && item?.expiration)
+                                ? { deadline: new Date(item.expiration) }
+                                : {};
+                            patch({ linkedContentId: id, ...deadlinePatch });
+                        }}
+                        unlinkedSR
                     />
                 )}
                 {values.linkMode === "collection" && (
+                    // publicOnly and unlinkedSR are both required: private collections
+                    // can't be linked to SRs, and already-linked ones must be excluded
                     <CollectionPicker
                         selectedId={values.linkedCollectionId}
                         onSelect={(id) => patch({ linkedCollectionId: id })}
                         publicOnly
+                        unlinkedSR
                     />
                 )}
             </Field>

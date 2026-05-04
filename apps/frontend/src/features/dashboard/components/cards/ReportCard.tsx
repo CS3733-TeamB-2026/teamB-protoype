@@ -5,6 +5,8 @@ import { TrendingUp, FileText, Clock } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import DashboardCard from "@/features/dashboard/components/cards/DashboardCard.tsx";
 import InfoButton from "@/components/layout/InformationAlert.tsx";
+import {useLocale} from "@/languageSupport/localeContext.tsx";
+import {useTranslation} from "@/languageSupport/useTranslation.ts";
 
 interface TransactionSummary {
     summary: {
@@ -43,6 +45,8 @@ function ReportCard() {
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<'overview' | 'by-owner' | 'currency' | 'expiration'>('overview');
     const { getAccessTokenSilently } = useAuth0();
+    const { locale } = useLocale();
+    const { ts } = useTranslation(locale);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -74,7 +78,7 @@ function ReportCard() {
         return (
             <Card className="border-t-secondary border-t-4 shadow-lg md:col-span-2 lg:col-span-3 flex items-center justify-center min-h-96">
                 <div className="text-center">
-                    <p className="text-muted-foreground">Loading report data...</p>
+                    <p className="text-muted-foreground">{ts('dashCard.LoadingReport')}</p>
                 </div>
             </Card>
         );
@@ -87,11 +91,11 @@ function ReportCard() {
                 borderColor="secondary"
             >
                 <CardHeader>
-                    <CardTitle className="text-2xl font-semibold">Reports</CardTitle>
+                    <CardTitle className="text-2xl font-semibold">{ts('dashCard.Reports')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="text-destructive text-sm">
-                        <p className="font-semibold mb-2">Unable to load report data</p>
+                        <p className="font-semibold mb-2">{ts('dashCard.loadFail')}</p>
                         <p className="text-xs">{error}</p>
                         <p className="text-xs mt-2 text-muted-foreground">
                             Make sure the backend endpoint <code className="bg-muted px-2 py-1 rounded">/api/reports/transaction-summary</code> is implemented.
@@ -347,12 +351,12 @@ function ReportCard() {
                 <div className="flex justify-between items-start">
                     <div>
                         <CardTitle className="capitalize text-2xl font-semibold flex items-center gap-2">
-                            Reports & Analytics
+                            {ts('dashCard.ReportsAndAnalytics')}
                         </CardTitle>
-                        <CardDescription>Transaction activity, content currency, and expiration status</CardDescription>
+                        <CardDescription>{ts('dashCard.reports.Subtitle')}</CardDescription>
                     </div>
                     <div className="absolute right-1 top-1 w-8 h-8 cursor-pointer">
-                        <InfoButton content={"The Overview tab shows the total accesses and content by each department. The By Owner tab shows the accesses and content for each user. The Currency tab shows the age and date of most recently added content. The Expiration tab shows a chart of all expiration status."}/>
+                        <InfoButton content={ts('dashCard.reports.infoButton')}/>
                     </div>
                 </div>
             </CardHeader>

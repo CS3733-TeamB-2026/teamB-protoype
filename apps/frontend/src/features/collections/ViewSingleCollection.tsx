@@ -33,7 +33,7 @@ import { ContentPicker } from "@/components/shared/ContentPicker";
 import { getCategory, getOriginalFilename, lookupByFilename } from "@/lib/mime";
 import { useUser } from "@/hooks/use-user";
 import { usePageTitle } from "@/hooks/use-page-title";
-import type { Collection, CollectionItem, ContentItem, Employee, ServiceReq } from "@/lib/types";
+import type { Collection, CollectionItem, ContentItem, Employee } from "@/lib/types";
 import { ClipboardList } from "lucide-react";
 import { ServiceRequestLinkDialog } from "@/components/shared/ServiceRequestLinkDialog";
 
@@ -80,7 +80,6 @@ export function ViewSingleCollection() {
     const [pickerItem, setPickerItem] = useState<ContentItem | null>(null);
     const [addDialogOpen, setAddDialogOpen] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [serviceReqs, setServiceReqs] = useState<ServiceReq[]>([]);
     const [srDialogOpen, setSrDialogOpen] = useState(false);
 
     usePageTitle(collection?.displayName ?? "Collection");
@@ -98,22 +97,6 @@ export function ViewSingleCollection() {
                 setError("Collection not found or failed to load.");
             } finally {
                 setLoading(false);
-            }
-        };
-        void load();
-    }, [id, getAccessTokenSilently]);
-
-    useEffect(() => {
-        if (!id) return;
-        const load = async () => {
-            try {
-                const token = await getAccessTokenSilently();
-                const res = await fetch(`/api/collections/${id}/service-requests`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
-                if (res.ok) setServiceReqs(await res.json());
-            } catch {
-                // non-critical
             }
         };
         void load();
@@ -423,13 +406,15 @@ export function ViewSingleCollection() {
                                     </Button>
                                 )}
                             </div>
-                            <button
-                                onClick={() => setSrDialogOpen(true)}
-                                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors shrink-0"
-                            >
-                                <ClipboardList className="w-3.5 h-3.5" />
-                                {serviceReqs.length === 0 ? "+ Add to Service Request" : "In service request"}
-                            </button>
+                            {collection.public && (
+                                <button
+                                    onClick={() => setSrDialogOpen(true)}
+                                    className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors shrink-0"
+                                >
+                                    <ClipboardList className="w-3.5 h-3.5" />
+                                    {collection.serviceRequest == null ? "+ Add to Service Request" : "In service request"}
+                                </button>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
@@ -649,7 +634,7 @@ export function ViewSingleCollection() {
                     collectionId={collection.id}
                     open={srDialogOpen}
                     onOpenChange={setSrDialogOpen}
-                    onServiceReqsChange={setServiceReqs}
+                    onServiceReqsChange={(srs) => setCollection((prev) => prev ? { ...prev, serviceRequest: srs[0] ?? null } : prev)}
                 />
             )}
         </>
