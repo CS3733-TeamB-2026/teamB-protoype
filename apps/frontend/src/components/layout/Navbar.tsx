@@ -1,6 +1,5 @@
-//import React from "react";
 import { useSidebar } from "@/components/ui/sidebar.tsx";
-import {Menu, Loader2, ChevronDown} from "lucide-react";
+import {Menu, Loader2} from "lucide-react";
 import logo from "../../assets/hanover_logo.svg"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import {
@@ -10,7 +9,7 @@ import {
 } from "@/components/ui/popover.tsx"
 import { Separator } from "@/components/ui/separator.tsx"
 //import LoginDialog from "@/dialogs/LoginDialog.tsx"
-import { UserIcon, Settings, LogOut, LayoutDashboard, Languages} from "lucide-react"
+import { UserIcon, Settings, LogOut, LayoutDashboard } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAuth0 } from "@auth0/auth0-react"
 import { useUser } from "@/hooks/use-user.ts"
@@ -19,17 +18,17 @@ import {useLocale} from "@/languageSupport/localeContext.tsx";
 import {useTranslation} from "@/languageSupport/useTranslation.ts";
 import DisclaimerAlert from "@/components/layout/DisclaimerAlert"
 import {useState} from "react";
-import React from "react";
+//import React from "react";
 import { NotificationBell } from "@/features/notifications/NotificationBell.tsx";
-import InfoButton from "@/components/layout/InformationAlert.tsx";
+//import InfoButton from "@/components/layout/InformationAlert.tsx";
 
 
-const LOCALES = [
+/*const LOCALES = [
     { code: "en_us", label: "English" },
     { code: "sp_sp", label: "Español" },
-] as const;
+] as const;*/
 
-type SettingsCategory = "language" | "theme" | null;
+//type SettingsCategory = "language" | "theme" | null;
 
 function Navbar() {
     const { toggleSidebar } = useSidebar();
@@ -43,12 +42,12 @@ function Navbar() {
 
     const {user} = useUser();
     const avatarUrl = useAvatarUrl(user?.id, user?.profilePhotoURI);
-    const { locale, setLocale } = useLocale();
+    const { locale } = useLocale();
     const { ts } = useTranslation(locale);
 
-    const [openCategory, setOpenCategory] = React.useState<SettingsCategory>(null);
-    const toggleCategory = (cat: SettingsCategory) =>
-        setOpenCategory(prev => (prev === cat ? null : cat));
+    //const [openCategory, setOpenCategory] = React.useState<SettingsCategory>(null);
+    //const toggleCategory = (cat: SettingsCategory) =>
+    //    setOpenCategory(prev => (prev === cat ? null : cat));
 
     return (
         <>
@@ -76,7 +75,7 @@ function Navbar() {
                 {/* user avatar popover */}
                 {isAuthenticated && <NotificationBell />}
                 <Popover open={userOpen} onOpenChange={setUserOpen}>
-                    <PopoverTrigger className="ml-2" asChild>
+                    <PopoverTrigger className="ml-3 mr-1" asChild>
                         {
                             isAuthenticated && !user ?
                                 <div className="flex items-center justify-center">
@@ -168,7 +167,7 @@ function Navbar() {
 
                 {/*settings*/}
                 {/* only allows one category to be open at a time */}
-                <Popover onOpenChange={(open) => { if (!open) setOpenCategory(null); }}>
+                {/*<Popover onOpenChange={(open) => { if (!open) setOpenCategory(null); }}>
                     <PopoverTrigger asChild>
                         <button className="group cursor-pointer p-2 ml-3 rounded-full active:scale-[0.96] transition-all duration-200">
                             <Languages
@@ -181,7 +180,6 @@ function Navbar() {
                     <PopoverContent className="w-52 p-2">
                         <div className="flex flex-col gap-1">
 
-                            {/* Language Settings */}
                             <button
                                 onClick={() => toggleCategory("language")}
                                 className="flex items-center justify-between w-full px-3 py-2 rounded-lg text-sm font-semibold transition-colors hover:bg-secondary"
@@ -196,7 +194,6 @@ function Navbar() {
                                 />
                             </button>
 
-                            {/* Maps each of the designated languages in LOCALES to a button, that button then changes the locale state */}
                             {openCategory === "language" && (
                                 <div className="flex flex-col gap-0.5 pl-3 pb-1">
                                     {LOCALES.map(({ code, label }) => (
@@ -217,7 +214,7 @@ function Navbar() {
 
                         </div>
                     </PopoverContent>
-                </Popover>
+                </Popover>*/}
 
                 {/* login dialog
                 <LoginDialog
