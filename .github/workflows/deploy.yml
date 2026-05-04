@@ -45,3 +45,15 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/${{ matrix.image }}:${{ github.sha }}
           cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/${{ matrix.image }}:buildcache
           cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/${{ matrix.image }}:buildcache,mode=max
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/teamB-protoype
+            docker compose pull
+            docker compose up -d --force-recreate
+            docker image prune -f
