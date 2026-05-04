@@ -23,20 +23,12 @@ import os
 def get_model() -> SentenceTransformer:
     global _model
     if _model is None:
-        # This path must match the 'model_name_or_path' from your setup script
-        export_path = os.path.abspath("granite-quantized")
+        model_id = "ibm-granite/granite-embedding-97m-multilingual-r2"
+        # We tell the library to look in our local 'model_cache' folder
+        cache_path = os.path.abspath("model_cache")
 
-        print(f"--- Loading quantized model from: {export_path} ---")
-
-        # Following the documentation's 'After quantizing' example:
-        _model = SentenceTransformer(
-            export_path,
-            backend="openvino",
-            model_kwargs={
-                # The export tool puts the XML inside an 'openvino' folder
-                "file_name": "openvino/openvino_model_qint8_quantized.xml"
-            }
-        )
+        print(f"--- Loading model {model_id} from {cache_path} ---")
+        _model = SentenceTransformer(model_id, cache_folder=cache_path)
         print("--- Model loaded successfully ---")
     return _model
 

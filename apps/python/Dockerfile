@@ -13,8 +13,7 @@ WORKDIR /app
 COPY apps/python/pyproject.toml apps/python/uv.lock ./
 RUN uv sync --no-dev --frozen
 
-# 2. Bake the model using the setup script
-# This is cached unless pyproject.toml or setup_model.py changes
+# 2. Pre-download the model (The "Simple Bake")
 COPY apps/python/setup_model.py .
 RUN uv run python setup_model.py
 
