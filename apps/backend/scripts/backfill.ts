@@ -31,15 +31,14 @@ async function backfillContent() {
     const rows = force
         ? await prisma.$queryRaw<any[]>`
             SELECT id, "displayName", "contentType", "targetPersona", "tags", status::text, "fileURI", "textContent"
-            FROM "Content"
-            WHERE "textContent" IS NOT NULL`
+            FROM "Content"`
         : await prisma.$queryRaw<any[]>`
             SELECT id, "displayName", "contentType", "targetPersona", "tags", status::text, "fileURI", "textContent"
             FROM "Content"
-            WHERE "textContent" IS NOT NULL AND "embedding" IS NULL`;
+            WHERE "embedding" IS NULL`;
 
     console.log(`\n[Content] ${rows.length} rows`);
-    let success = 0, skipped = 0, failed = 0;
+    let success = 0, failed = 0;
 
     for (const item of rows) {
         try {
@@ -54,7 +53,7 @@ async function backfillContent() {
             failed++;
         }
     }
-    console.log(`  Success: ${success}, Skipped: ${skipped}, Failed: ${failed}`);
+    console.log(`  Success: ${success}, Failed: ${failed}`);
 }
 
 // ---------------------------------------------------------------------------

@@ -3,29 +3,67 @@ import * as cheerio from 'cheerio';
 import axios from 'axios';
 import Tesseract from 'tesseract.js';
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
+import * as XLSX from 'xlsx';
+import OpenAI from 'openai';
 
+const MAX_TEXT_LENGTH = 8000;
+const OCR_VISION_THRESHOLD = 50; // chars below which we try the vision model
+const IMAGE_DESCRIPTION_MODEL = 'gpt-5.4-nano';
+
+let _openai: OpenAI | null = null;
+function getOpenAI(): OpenAI | null {
+    if (_openai) return _openai;
+    const key = process.env.OPENAI_API_KEY;
+    if (!key) return null;
+    _openai = new OpenAI({ apiKey: key });
+    return _openai;
+}
 
 export type SupportedMimeType =
     | 'application/pdf'
+    | 'application/msword'
+    | 'application/vnd.ms-excel'
+    | 'application/vnd.ms-powerpoint'
     | 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     | 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     | 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
     | 'image/jpeg'
     | 'image/png'
     | 'image/webp'
-    | 'image/tiff'
     | 'text/plain'
     | 'text/csv'
     | 'text/markdown'
-    | 'text/x-markdown'
     | 'text/html'
     | 'url';
 
 async function ocrImage(buffer: Buffer): Promise<string> {
     const { data: { text } } = await Tesseract.recognize(buffer, 'eng', {
-        logger: () => {}, // suppress progress logs
+        logger: () => {},
     });
-    return text.trim();
+    const ocrText = text.trim();
+    if (ocrText.length >= OCR_VISION_THRESHOLD) return ocrText;
+
+    // OCR found little text — image is likely a diagram/photo, try vision model
+    const client = getOpenAI();
+    if (!client) return ocrText;
+
+    // Normalize to PNG — OpenAI vision accepts JPEG/PNG/WebP/GIF, not raw buffers of arbitrary format
+    const { default: sharp } = await import('sharp');
+    const png = await sharp(buffer).png().toBuffer();
+    const b64 = png.toString('base64');
+
+    const response = await client.chat.completions.create({
+        model: IMAGE_DESCRIPTION_MODEL,
+        messages: [{
+            role: 'user',
+            content: [
+                { type: 'image_url', image_url: { url: `data:image/png;base64,${b64}`, detail: 'low' } },
+                { type: 'text', text: 'Describe the content of this image concisely for search indexing. Focus on the information it contains, not its visual style.' },
+            ],
+        }],
+        max_completion_tokens: 300,
+    });
+    return response.choices[0]?.message?.content?.trim() ?? ocrText;
 }
 
 async function ocrPdf(buffer: Buffer): Promise<string> {
@@ -68,7 +106,19 @@ async function ocrPdf(buffer: Buffer): Promise<string> {
     return textParts.join('\n').trim();
 }
 
-// promisify officeParser
+/** Extracts structured text from an XLSX workbook: sheet name + header row + data rows. */
+function parseXlsx(buffer: Buffer): string {
+    const workbook = XLSX.read(buffer, { type: 'buffer' });
+    return workbook.SheetNames.map(name => {
+        const sheet = workbook.Sheets[name];
+        const rows: string[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+        if (rows.length === 0) return '';
+        const lines = rows.map(row => row.map(String).join('\t')).join('\n');
+        return `Sheet: ${name}\n${lines}`;
+    }).filter(Boolean).join('\n\n');
+}
+
+// promisify officeParser (for .doc, .ppt, legacy formats)
 async function parseOfficeFile(buffer: Buffer): Promise<string> {
     const { parseOffice } = await import('officeparser');
     return new Promise((resolve, reject) => {
@@ -106,34 +156,50 @@ export async function extractText(
     url?: string
 ): Promise<string | null> {
     try {
+        let result: string | null = null;
+
         switch (fileType) {
             case 'application/pdf': {
-                if (!fileBuffer) return null;
-                return await ocrPdf(fileBuffer);
+                if (!fileBuffer) break;
+                result = await ocrPdf(fileBuffer);
+                break;
             }
 
             case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': {
-                if (!fileBuffer) return null;
+                if (!fileBuffer) break;
                 const docx = await mammoth.extractRawText({ buffer: fileBuffer });
-                return docx.value;
+                result = docx.value;
+                break;
             }
 
-            case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+            // Legacy Office formats — officeparser handles .doc / .xls / .ppt
+            case 'application/msword':
+            case 'application/vnd.ms-excel':
+            case 'application/vnd.ms-powerpoint':
             case 'application/vnd.openxmlformats-officedocument.presentationml.presentation': {
-                if (!fileBuffer) return null;
-                return await parseOfficeFile(fileBuffer);
+                if (!fileBuffer) break;
+                result = await parseOfficeFile(fileBuffer);
+                break;
+            }
+
+            // Modern XLSX — SheetJS gives structured sheet/header/row output
+            case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
+                if (!fileBuffer) break;
+                result = parseXlsx(fileBuffer);
+                break;
             }
 
             case 'text/plain':
             case 'text/csv': {
-                if (!fileBuffer) return null;
-                return fileBuffer.toString('utf-8');
+                if (!fileBuffer) break;
+                result = fileBuffer.toString('utf-8');
+                break;
             }
 
-            case 'text/markdown':
-            case 'text/x-markdown': {
-                if (!fileBuffer) return null;
-                return stripMarkdown(fileBuffer.toString('utf-8'));
+            case 'text/markdown': {
+                if (!fileBuffer) break;
+                result = stripMarkdown(fileBuffer.toString('utf-8'));
+                break;
             }
 
             case 'text/html':
@@ -150,24 +216,29 @@ export async function extractText(
                 } else if (fileBuffer) {
                     html = fileBuffer.toString('utf-8');
                 } else {
-                    return null;
+                    break;
                 }
                 const $ = cheerio.load(html);
-                $('script, style, nav, footer, head').remove();
-                return $('body').text().replace(/\s+/g, ' ').trim();
+                $('script, style, nav, header, footer, aside, head, [role="banner"], [role="navigation"], [role="complementary"]').remove();
+                // Prefer semantic content elements; fall back to full body
+                const main = $('main, article, [role="main"]').text().replace(/\s+/g, ' ').trim();
+                result = main || $('body').text().replace(/\s+/g, ' ').trim();
+                break;
             }
 
             case 'image/jpeg':
             case 'image/png':
-            case 'image/webp':
-            case 'image/tiff': {
-                if (!fileBuffer) return null;
-                return await ocrImage(fileBuffer);
+            case 'image/webp': {
+                if (!fileBuffer) break;
+                result = await ocrImage(fileBuffer);
+                break;
             }
-
-            default:
-                return null;
         }
+
+        if (result && result.length > MAX_TEXT_LENGTH) {
+            result = result.slice(0, MAX_TEXT_LENGTH);
+        }
+        return result || null;
     } catch (err) {
         console.error(`[extractText] Failed to extract text for type "${fileType}":`, err);
         return null;
