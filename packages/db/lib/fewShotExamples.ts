@@ -111,4 +111,20 @@ ORDER BY days.day ASC`,
             title: "Service Requests per Day (Last 30 Days)",
         },
     },
+    {
+        question: "What content is trending?",
+        response: {
+            sql: `SELECT c."title", COUNT(DISTINCT b."id") AS bookmarks, 
+           COUNT(DISTINCT v."id") AS views
+           FROM "Content" c
+           LEFT JOIN "Bookmark" b ON ...
+           LEFT JOIN "View" v ON ...
+           WHERE ... last 30 days ...
+           GROUP BY c."id", c."title"
+           ORDER BY bookmarks + views DESC
+           LIMIT 10`,
+            chartType: "bar",
+            explanation: "Showing top content by bookmarks and views in the last 30 days"
+        }
+    }
 ] as const;

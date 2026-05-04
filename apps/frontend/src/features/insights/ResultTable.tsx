@@ -14,6 +14,9 @@ type Props = {
 };
 
 function ResultTable({ rows, columns }: Props) {
+
+    const MAX_TABLE_ROWS = 20;
+
     return (
         <div className="overflow-x-auto rounded border">
             <Table>
@@ -25,7 +28,7 @@ function ResultTable({ rows, columns }: Props) {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {rows.slice(0, 100).map((row, i) => (
+                    {rows.slice(0, MAX_TABLE_ROWS).map((row, i) => (
                         <TableRow key={i}>
                             {columns.map((col) => (
                                 <TableCell key={col}>{formatCell(formatInsightValue(row[col]))}</TableCell>
@@ -34,9 +37,9 @@ function ResultTable({ rows, columns }: Props) {
                     ))}
                 </TableBody>
             </Table>
-            {rows.length > 100 && (
+            {rows.length > MAX_TABLE_ROWS && (
                 <p className="border-t p-2 text-center text-xs text-muted-foreground">
-                    Showing first 100 of {rows.length} rows
+                    Showing first {MAX_TABLE_ROWS} of {rows.length} rows
                 </p>
             )}
         </div>
