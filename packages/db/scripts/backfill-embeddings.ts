@@ -6,8 +6,11 @@
  * Usage: pnpm --filter db exec ts-node scripts/backfill-embeddings.ts
  */
 import { config } from 'dotenv';
-import { resolve } from 'path';
-config({ path: resolve(process.cwd(), '../../apps/backend/.env') });
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+config({ path: resolve(__dirname, '../../../apps/backend/.env') });
 
 import { prisma } from '../lib/prisma';
 import { generateEmbedding, embeddingToSql } from '../../../apps/backend/lib/embeddings';
