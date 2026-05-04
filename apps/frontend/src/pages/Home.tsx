@@ -119,7 +119,7 @@ function Home() {
                 </div>
             </div>
 
-            <MeetTheTeam width="max-w-[1110px]" />
+            <MeetTheTeam width="max-w-[1100px]" />
 
         </>
 
