@@ -55,7 +55,7 @@ export default function MeetTheTeam({width = "max-w-5xl"}:{width?: string}) {
             linkedin: "https://www.linkedin.com/in/joey-hemmerle-67b9b9288/",
             quote: "The power of excellence is overwhelming, it’s always in demand, and nobody cares about its color\" - Daniel S. “Chappie” James" },
         { id: 10, name: "Ricardo Guzman Volpe", initials: "RG", role: 'role.ptAnalyst', photo: "ricardo",
-            linkedin: null,
+            linkedin: "https://www.linkedin.com/in/ra-guzvol-90b1b0326/",
             quote: "Jarvis, drop all tables." }
     ]
 
