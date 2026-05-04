@@ -86,7 +86,6 @@ export function EditServiceReqDialog({ content, open, onOpenChange, onSave }: Pr
                         values={values}
                         patch={patch}
                         errors={errors}
-                        showLastModified
                     />
 
                 </div>

@@ -16,6 +16,8 @@ import {
 import type { ContentItem } from "@/lib/types";
 import InfoButton from "@/components/layout/InformationAlert.tsx";
 import DashboardCard from "@/features/dashboard/components/cards/DashboardCard.tsx";
+import {useLocale} from "@/languageSupport/localeContext.tsx";
+import {useTranslation} from "@/languageSupport/useTranslation.ts";
 
 const chartConfig = {
     count: { label: "Files" },
@@ -40,7 +42,8 @@ function categorize(filename: string) {
  * renders bars sorted ascending by count.
  */
 function ContentTypeChartCard() {
-
+    const { locale } = useLocale();
+    const { ts } = useTranslation(locale);
     const [content, setContent] = useState<ContentItem[]>([]);
     const { getAccessTokenSilently } = useAuth0();
 
@@ -96,8 +99,8 @@ function ContentTypeChartCard() {
             borderColor="secondary"
         >
             <CardHeader className="items-center pb-0">
-                <CardTitle className="capitalize text-2xl font-semibold">Content Type Breakdown</CardTitle>
-                <CardDescription>Current distribution of file types in database.</CardDescription>
+                <CardTitle className="capitalize text-2xl font-semibold">{ts('dashCard.ContentBreakdown')}</CardTitle>
+                <CardDescription>{ts('dashCard.ContentDistribution')}</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 pb-0 pl-0 pr-4">
                 <div className="absolute right-1 top-1 w-8 h-8 cursor-pointer">

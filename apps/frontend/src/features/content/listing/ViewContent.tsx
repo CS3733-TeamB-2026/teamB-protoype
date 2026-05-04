@@ -12,7 +12,6 @@ import {
     FolderOpen,
     Loader2,
     Pencil,
-    Trash2,
     LucideFolders,
     Search,
     Plus,
@@ -20,7 +19,7 @@ import {
     Lock,
     RefreshCcw,
     KeyRound,
-    Ban, ChevronsLeft, ChevronsRight, ChevronLeft, UserRoundKey,
+    Ban, UserRoundKey, Recycle, FolderPlus,
 } from "lucide-react";
 import {Button} from "@/components/ui/button.tsx";
 import {
@@ -44,14 +43,11 @@ import {
     Table,
     TableBody,
     TableCell,
-    TableHead,
-    TableHeader,
     TableRow,
 } from "@/components/ui/table.tsx";
 import {Hero} from "@/components/shared/Hero.tsx";
 import {ContentIcon} from "@/features/content/components/ContentIcon.tsx";
 import {ConfirmDeleteDialog} from "@/components/dialogs/ConfirmDeleteDialog.tsx";
-import {SortableHead} from "@/components/shared/SortableHead.tsx";
 import {useSortState, applySortState} from "@/hooks/use-sort-state.ts";
 import {useUser} from "@/hooks/use-user.ts";
 import {
@@ -62,6 +58,7 @@ import {
 import {ContentExtBadge} from "@/features/content/components/ContentExtBadge.tsx";
 import {ContentStatusBadge} from "@/features/content/components/ContentStatusBadge.tsx";
 import {ContentTypeBadge} from "@/features/content/components/ContentTypeBadge.tsx";
+import {ExpirationBadge} from "@/features/content/components/ExpirationBadge.tsx";
 import {PersonaBadge} from "@/components/shared/PersonaBadge.tsx";
 import {EditContentDialog} from "@/features/content/forms/EditContentDialog.tsx";
 import {AddContentDialog} from "@/features/content/forms/AddContentDialog.tsx";
@@ -72,22 +69,36 @@ import {invalidateFileCacheById} from "@/features/content/previews/file-cache.ts
 import {useAuth0} from "@auth0/auth0-react"
 import {highlight} from "@/lib/highlight.tsx";
 import {formatLabel, formatName} from "@/lib/utils.ts";
-import { EmployeeAvatar } from "@/components/shared/EmployeeAvatar.tsx";
+import {EmployeeAvatar} from "@/components/shared/EmployeeAvatar.tsx";
 import {toast} from "sonner";
-import type { ContentItem, BookmarkRecord, ContentStatus, ContentType, Persona, UrlPreview } from "@/lib/types.ts";
-import { ALL_CATEGORIES } from "@/lib/mime.ts";
+import type {
+    ContentItem,
+    BookmarkRecord,
+    ContentStatus,
+    ContentType,
+    ExpirationStatus,
+    Persona,
+    UrlPreview
+} from "@/lib/types.ts";
+import {ALL_CATEGORIES} from "@/lib/mime.ts";
 import {usePageTitle} from "@/hooks/use-page-title.ts";
 import {ConfirmCheckoutDialog} from "@/features/content/forms/ConfirmCheckoutDialog.tsx";
 import {ConfirmCheckinDialog} from "@/features/content/forms/ConfirmCheckinDialog.tsx";
+import {AddToCollectionDialog} from "@/features/collections/AddToCollectionDialog.tsx";
 import {TagInput} from "@/features/content/tags/TagInput.tsx";
 import {Tabs, TabsTrigger} from "@/components/ui/tabs"
-import { SlidingTabs } from "@/components/shared/SlidingTabs.tsx";
-import { useContentFilters, type ContentTab } from "@/hooks/use-content-filters.ts";
+import {SlidingTabs} from "@/components/shared/SlidingTabs.tsx";
+import {useContentFilters, type ContentTab} from "@/hooks/use-content-filters.ts";
 import {useLocale} from "@/languageSupport/localeContext.tsx";
 import {useTranslation} from "@/languageSupport/useTranslation.ts";
 import type {TranslationKey} from "@/languageSupport/keys.ts";
 import {ForceCheckinDialog} from "@/features/content/forms/ForceCheckinDialog.tsx";
 import InfoButton from "@/components/layout/InformationAlert";
+import {RecycleBinTable} from "@/features/content/listing/RecycleBinTable.tsx";
+import {ContentTableHeader} from "@/features/content/listing/ContentTableHeader.tsx";
+import {TablePagination} from "@/components/shared/TablePagination.tsx";
+import type {ContentSortCol} from "@/features/content/listing/ContentTableHeader.tsx";
+
 /**
  * Main content list page — the primary view for browsing, searching, filtering,
  * and managing content items.
@@ -106,15 +117,20 @@ import InfoButton from "@/components/layout/InformationAlert";
  *   invalidated so the next inline preview re-fetches the updated file.
  * - Bookmarks are optimistically updated: the UI reflects the change
  *   immediately and rolls back if the API call fails.
+ * - The Recycle Bin tab uses a separate `deletedContent` state fetched from
+ *   `/api/content/deleted` in parallel with the main content fetch. Recycling
+ *   requires a checkout lock; restore and permanent delete require ownership or
+ *   admin. The recycle bin table never shows lock/checkout actions.
  */
 function ViewContent() {
 
-    const { locale } = useLocale();
-    const { ts } = useTranslation(locale);
+    const {locale} = useLocale();
+    const {ts} = useTranslation(locale);
 
     usePageTitle("Manage Content");
 
     const [content, setContent] = useState<ContentItem[]>([]);
+    const [deletedContent, setDeletedContent] = useState<ContentItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [addOpen, setAddOpen] = useState(false);
     const [editOpen, setEditOpen] = useState(false);
@@ -125,7 +141,8 @@ function ViewContent() {
     const [bookmarks, setBookmarks] = useState<BookmarkRecord[]>([]);
     /** Content item staged for the delete confirmation dialog. */
     const [deleteTarget, setDeleteTarget] = useState<ContentItem | null>(null);
-    const [sort, toggleSort] = useSortState<"name" | "owner" | "status" | "contentType" | "persona" | "docType">({
+    /** Content item staged for the permanent-delete confirmation dialog. */
+    const [sort, toggleSort] = useSortState<ContentSortCol>({
         column: "persona",
         direction: "asc"
     });
@@ -135,6 +152,8 @@ function ViewContent() {
      */
     const [linkPreviews, setLinkPreviews] = useState<Record<number, UrlPreview | null>>({});
     const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+    const [addToCollectionOpen, setAddToCollectionOpen] = useState(false);
 
     const {user} = useUser();
     const navigate = useNavigate();
@@ -230,9 +249,14 @@ function ViewContent() {
     const refreshContent = useCallback(async () => {
         try {
             const token = await getAccessTokenSilently();
-            const res = await fetch(`/api/content`, {headers: {Authorization: `Bearer ${token}`}});
+            const [res, deletedRes] = await Promise.all([
+                fetch(`/api/content`, {headers: {Authorization: `Bearer ${token}`}}),
+                fetch(`/api/content/deleted`, {headers: {Authorization: `Bearer ${token}`}}),
+            ]);
             const data: ContentItem[] = await res.json();
+            const deletedData: ContentItem[] = await deletedRes.json();
             setContent(data);
+            setDeletedContent(deletedData);
             fetchPreviews(data);
             await updateBookmarks();
         } catch {
@@ -251,11 +275,14 @@ function ViewContent() {
         const fetchContent = async () => {
             try {
                 const token = await getAccessTokenSilently();
-                const res = await fetch('/api/content', {
-                    headers: {Authorization: `Bearer ${token}`},
-                });
+                const [res, deletedRes] = await Promise.all([
+                    fetch('/api/content', {headers: {Authorization: `Bearer ${token}`}}),
+                    fetch('/api/content/deleted', {headers: {Authorization: `Bearer ${token}`}}),
+                ]);
                 const data: ContentItem[] = await res.json();
+                const deletedData: ContentItem[] = await deletedRes.json();
                 setContent(data);
+                setDeletedContent(deletedData);
                 setLoading(false);
                 fetchPreviews(data);
                 await updateBookmarks();
@@ -349,8 +376,8 @@ function ViewContent() {
     }
 
     /**
-     * Deletes the content item with the given ID and removes it from local
-     * state. Called by `ConfirmDeleteDialog` after the user confirms.
+     * Soft-deletes the content item with the given ID (moves it to the recycle bin).
+     * Called by the recycle confirm dialog after the user confirms.
      */
     const handleDelete = async (id: number) => {
         const token = await getAccessTokenSilently();
@@ -359,7 +386,10 @@ function ViewContent() {
             headers: {Authorization: `Bearer ${token}`},
         });
         if (res.ok) {
+            const recycled = content.find((item) => item.id === id);
             setContent((prev) => prev.filter((item) => item.id !== id));
+            if (recycled) setDeletedContent((prev) => [...prev, {...recycled, deleted: true}]);
+            toast.success("Moved to recycle bin.");
         } else if (res.status === 409) {
             toast.error("This item has been forcibly checked in.");
             void refreshContent();
@@ -382,7 +412,7 @@ function ViewContent() {
             const token = await getAccessTokenSilently();
             const res = await fetch(`/api/content/${item.id}/checkout`, {
                 method: "POST",
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {Authorization: `Bearer ${token}`},
             });
             const data = await res.json();
             if (!res.ok) {
@@ -390,7 +420,7 @@ function ViewContent() {
                 return;
             }
             setContent((prev) => prev.map((c) => c.id === item.id ? {...c, ...data} : c));
-            toast.success("Successfully checked out. You can now edit or delete.");
+            toast.success("Successfully checked out. You can now edit or recycle.");
         } catch {
             toast.error("Could not check out.");
         }
@@ -408,7 +438,7 @@ function ViewContent() {
             const token = await getAccessTokenSilently();
             const res = await fetch(`/api/content/${item.id}/checkin`, {
                 method: "POST",
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {Authorization: `Bearer ${token}`},
             });
             if (res.ok) {
                 setContent((prev) => prev.map((c) => c.id === item.id
@@ -431,11 +461,11 @@ function ViewContent() {
             const token = await getAccessTokenSilently();
             const res = await fetch(`/api/content/${item.id}/checkin`, {
                 method: "POST",
-                headers: { Authorization: `Bearer ${token}` },
+                headers: {Authorization: `Bearer ${token}`},
             });
             if (res.ok) {
                 setContent((prev) => prev.map((c) => c.id === item.id
-                    ? { ...c, checkedOutById: null, checkedOutAt: null, checkedOutBy: null }
+                    ? {...c, checkedOutById: null, checkedOutAt: null, checkedOutBy: null}
                     : c
                 ));
                 toast.success("Force check-in successful.");
@@ -446,6 +476,95 @@ function ViewContent() {
         } catch {
             toast.error("Could not force check in.");
         }
+    };
+
+    /** Restores a recycled item and moves it back into the active content list. */
+    const handleRestore = async (item: ContentItem) => {
+        try {
+            const token = await getAccessTokenSilently();
+            const res = await fetch(`/api/content/${item.id}/restore`, {
+                method: "POST",
+                headers: {Authorization: `Bearer ${token}`},
+            });
+            if (res.ok) {
+                setDeletedContent((prev) => prev.filter((c) => c.id !== item.id));
+                setContent((prev) => [...prev, {...item, deleted: false}]);
+                toast.success(`"${item.displayName}" restored.`);
+            } else {
+                toast.error("Could not restore item.");
+            }
+        } catch {
+            toast.error("Could not restore item.");
+        }
+    };
+
+    /** Permanently deletes a recycled item from the database and Supabase bucket. */
+    const handlePermanentDelete = async (id: number) => {
+        try {
+            const token = await getAccessTokenSilently();
+            const res = await fetch(`/api/content/${id}/permanent`, {
+                method: "DELETE",
+                headers: {Authorization: `Bearer ${token}`},
+            });
+            if (res.ok) {
+                setDeletedContent((prev) => prev.filter((c) => c.id !== id));
+                toast.success("Permanently deleted.");
+            } else {
+                toast.error("Could not permanently delete.");
+            }
+        } catch {
+            toast.error("Could not permanently delete.");
+        }
+    };
+
+    /** Restores the given recycled items, reporting a toast for any failures. */
+    const handleBulkRestore = async (ids: number[]) => {
+        const token = await getAccessTokenSilently();
+        let failed = 0;
+        for (const id of ids) {
+            try {
+                const res = await fetch(`/api/content/${id}/restore`, {
+                    method: "POST",
+                    headers: {Authorization: `Bearer ${token}`},
+                });
+                if (res.ok) {
+                    const item = deletedContent.find((c) => c.id === id);
+                    setDeletedContent((prev) => prev.filter((c) => c.id !== id));
+                    if (item) setContent((prev) => [...prev, {...item, deleted: false}]);
+                } else {
+                    failed++;
+                }
+            } catch {
+                failed++;
+            }
+        }
+        setSelectedIds(new Set());
+        if (failed > 0) toast.error(`Failed to restore ${failed} item${failed !== 1 ? "s" : ""}.`);
+        else toast.success(`${ids.length} item${ids.length !== 1 ? "s" : ""} restored.`);
+    };
+
+    /** Permanently deletes the given recycled items, reporting a toast for any failures. */
+    const handleBulkPermanentDelete = async (ids: number[]) => {
+        const token = await getAccessTokenSilently();
+        let failed = 0;
+        for (const id of ids) {
+            try {
+                const res = await fetch(`/api/content/${id}/permanent`, {
+                    method: "DELETE",
+                    headers: {Authorization: `Bearer ${token}`},
+                });
+                if (res.ok) {
+                    setDeletedContent((prev) => prev.filter((c) => c.id !== id));
+                } else {
+                    failed++;
+                }
+            } catch {
+                failed++;
+            }
+        }
+        setSelectedIds(new Set());
+        if (failed > 0) toast.error(`Failed to permanently delete ${failed} item${failed !== 1 ? "s" : ""}.`);
+        else toast.success(`${ids.length} item${ids.length !== 1 ? "s" : ""} permanently deleted.`);
     };
 
     /**
@@ -463,7 +582,7 @@ function ViewContent() {
 
 
     // Total column count used for colSpan on the expanded detail rows.
-    const NUM_COLS = 8;
+    const NUM_COLS = 10;
 
     // UserProvider hasn't resolved yet — show a full-screen spinner rather than
     // rendering the page without a user (which would break permission checks).
@@ -479,6 +598,8 @@ function ViewContent() {
         else if (col === "name") primarySort = item.displayName;
         else if (col === "owner") primarySort = formatName(item.owner);
         else if (col === "status") primarySort = item.status ?? "";
+        // Sentinel puts null expirations last on ascending sort; ISO strings compare lexicographically.
+        else if (col === "expiration") primarySort = item.expiration ?? "9999-99-99";
         else if (col === "contentType") primarySort = item.contentType;
         else if (col === "docType") primarySort = item.fileURI
             ? (getExtension(getOriginalFilename(item.fileURI!)) ?? getCategory(null, getOriginalFilename(item.fileURI!)))
@@ -492,6 +613,12 @@ function ViewContent() {
         currentPage * pageSize
     );
 
+    // Effective selection = selectedIds intersected with what's currently visible.
+    // Handles filter/page changes without clearing state explicitly.
+    const pageSelectedIds = paginatedContent.filter((i) => selectedIds.has(i.id)).map((i) => i.id);
+    const allPageSelected = paginatedContent.length > 0 && pageSelectedIds.length === paginatedContent.length;
+    const somePageSelected = pageSelectedIds.length > 0;
+
     return (
         <>
             <Hero
@@ -500,34 +627,40 @@ function ViewContent() {
                 description={ts('content.description')}
             />
 
-            <Card className="shadow-lg max-w-6xl mx-auto my-8 text-center px-4">
+            <Card className="shadow-lg max-w-7xl mx-auto my-8 text-center px-4">
                 <CardHeader>
                     <CardTitle className="text-3xl text-primary mt-4">
                         {user.persona === "admin" ? "" : formatLabel(user.persona)} {ts('content')}
                     </CardTitle>
                     <CardDescription>
-                        {activeTab === "bookmarks"
-                            ? `${filteredContent.length} ${ts('content.favorite')} ${ts('item')}${filteredContent.length !== 1 ? "s" : ""}`
-                            : filteredContent.length === content.length
-                                ? `${content.length} ${ts('item')}${content.length !== 1 ? "s" : ""}`
-                                : `${filteredContent.length} ${ts('of')} ${content.length} ${ts('item')}s`}
+                        {activeTab === "recyclebin"
+                            ? `${deletedContent.length} recycled item${deletedContent.length !== 1 ? "s" : ""}`
+                            : activeTab === "bookmarks"
+                                ? `${filteredContent.length} ${ts('content.favorite')} ${ts('item')}${filteredContent.length !== 1 ? "s" : ""}`
+                                : filteredContent.length === content.length
+                                    ? `${content.length} ${ts('item')}${content.length !== 1 ? "s" : ""}`
+                                    : `${filteredContent.length} ${ts('of')} ${content.length} ${ts('item')}s`}
                     </CardDescription>
                 </CardHeader>
 
                 <CardContent>
                     {/* Top-level Tabs for filtering Content Items */}
                     {/* activeTab controls whether "All Content" or "Bookmarks" view is shown */}
-                    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ContentTab)}>
+                    <Tabs value={activeTab} onValueChange={(v) => {
+                        setActiveTab(v as ContentTab);
+                        setSelectedIds(new Set());
+                    }}>
                         <SlidingTabs
                             activeTab={activeTab}
-                            indicatorColor={activeTab === "bookmarks" ? "bg-accent" : "bg-foreground"}
+                            indicatorColor={activeTab === "bookmarks" ? "bg-accent" : activeTab === "recyclebin" ? "bg-destructive" : "bg-foreground"}
                         >
                             <TabsTrigger
                                 value="forYou"
                                 className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0"
                             >
                                 {ts('content.forYou')}
-                                <span className="ml-2 text-xs opacity-70"> {content.filter(c => c.targetPersona === user.persona
+                                <span
+                                    className="ml-2 text-xs opacity-70"> {content.filter(c => c.targetPersona === user.persona
                                 ).length}</span>
                             </TabsTrigger>
                             <TabsTrigger
@@ -542,7 +675,8 @@ function ViewContent() {
                                 className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0"
                             >
                                 {ts('content.ownedByMe')}
-                                <span className="ml-2 text-xs opacity-70">{content.filter(c => c.ownerId === user.id).length}</span>
+                                <span
+                                    className="ml-2 text-xs opacity-70">{content.filter(c => c.ownerId === user.id).length}</span>
                             </TabsTrigger>
                             <TabsTrigger
                                 value="bookmarks"
@@ -551,6 +685,24 @@ function ViewContent() {
                                 {ts('content.favorites')}
                                 <span className="ml-2 text-xs opacity-70">{bookmarks.length}</span>
                             </TabsTrigger>
+                            <TabsTrigger
+                                value="checkedOut"
+                                className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0"
+                            >
+                                <KeyRound className="w-4 h-4 mr-1 inline-block" />
+                                Checked Out
+                                <span className="ml-2 text-xs opacity-70">
+        {content.filter(c => c.checkedOutById === user.id).length}
+    </span>
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="recyclebin"
+                                className="relative z-10 data-active:bg-transparent data-active:text-destructive hover:text-foreground/80 data-active:hover:text-destructive px-0"
+                            >
+                                <Recycle className="w-4 h-4 mr-1 inline-block"/>
+                                Recycle Bin
+                            </TabsTrigger>
+
                             {/*THEN ADD MORE TAB TRIGGERs FOR MORE TABS!!*/}
                         </SlidingTabs>
                     </Tabs>
@@ -567,7 +719,33 @@ function ViewContent() {
                             <AlertDescription>{error}</AlertDescription>
                         </Alert>
                     )}
-                    {!loading && !error && content.length === 0 && (
+                    {/* Recycle bin tab — separate data source, separate table */}
+                    {!loading && !error && activeTab === "recyclebin" && (
+                        <RecycleBinTable
+                            deletedContent={deletedContent}
+                            selectedIds={selectedIds}
+                            onToggleId={(id) => setSelectedIds((prev) => {
+                                const next = new Set(prev);
+                                if (next.has(id)) next.delete(id);
+                                else next.add(id);
+                                return next;
+                            })}
+                            onSelectIds={(ids) => setSelectedIds((prev) => new Set([...prev, ...ids]))}
+                            onDeselectIds={(ids) => setSelectedIds((prev) => {
+                                const next = new Set(prev);
+                                ids.forEach((id) => next.delete(id));
+                                return next;
+                            })}
+                            sort={sort}
+                            onSort={toggleSort}
+                            onRestore={handleRestore}
+                            onPermanentDelete={handlePermanentDelete}
+                            onBulkRestore={handleBulkRestore}
+                            onBulkPermanentDelete={handleBulkPermanentDelete}
+                        />
+                    )}
+
+                    {!loading && !error && activeTab !== "recyclebin" && content.length === 0 && (
                         <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
                             <FolderOpen className="w-10 h-10"/>
                             <p className="text-sm">No content found.</p>
@@ -577,13 +755,13 @@ function ViewContent() {
                         </div>
 
                     )}
-                    {!loading && !error && content.length > 0 && <>
+                    {!loading && !error && activeTab !== "recyclebin" && content.length > 0 && <>
                         <div className="flex flex-row justify-between items-baseline mb-2">
                             <div className="flex flex-row gap-2 items-center">
                                 <Button
                                     variant="outline"
                                     onClick={() => setShowAdvancedFilters((prev) => !prev)}
-                                    className="hover:bg-secondary hover:text-secondary-foreground h-11 w-25 text-base"
+                                    className="hover:bg-secondary hover:text-secondary-foreground h-10 w-25 text-base border-input rounded-md text-foreground"
                                 >
                                     {showAdvancedFilters
                                         ? "Hide Filters"
@@ -591,16 +769,30 @@ function ViewContent() {
                                             ? `Filters (${activeFilterCount})`
                                             : "Filters"}
                                 </Button>
+                                {pageSelectedIds.length > 0 && (
+                                    <>
+                                        <span
+                                            className="text-sm text-muted-foreground whitespace-nowrap">{pageSelectedIds.length} selected</span>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => setAddToCollectionOpen(true)}
+                                            className="hover:bg-secondary hover:text-secondary-foreground h-10 text-base border-input rounded-md text-foreground whitespace-nowrap"
+                                        >
+                                            <FolderPlus className="w-4 h-4 mr-1"/>
+                                            Add to Collection
+                                        </Button>
+                                    </>
+                                )}
                                 <div className="relative">
                                     <Search
-                                        className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 pointer-events-none"
+                                        className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground pointer-events-none"
                                     />
                                     <Input
                                         type="text"
                                         placeholder={ts('search.genericDialogue')}
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-64 h-10 text-base pl-2! pr-8 border border-gray-700 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                                        className="w-64 h-10 text-base pl-10 pr-4 border border-input rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 bg-background"
                                     />
                                 </div>
                             </div>
@@ -652,7 +844,9 @@ function ViewContent() {
                                         <div>
                                             <span className="flex items-center justify-between mb-2">
                                                 <p className="font-medium">{(ts('status'))}</p>
-                                                <InfoButton content={"Here you can add advanced filters, add as many as you'd like!"} size="w-5 h-5"/>
+                                                <InfoButton
+                                                    content={"Here you can add advanced filters, add as many as you'd like!"}
+                                                    size="w-5 h-5"/>
                                             </span>
                                             <div className="flex flex-col gap-1.5">
                                                 {["new", "inProgress", "complete"].map((status) => (
@@ -693,7 +887,7 @@ function ViewContent() {
                                                                 }));
                                                             }}
                                                         />
-                                                        <span>{ts(`kind.${type}`  as TranslationKey)}</span>
+                                                        <span>{ts(`kind.${type}` as TranslationKey)}</span>
                                                     </label>
                                                 ))}
                                             </div>
@@ -716,7 +910,38 @@ function ViewContent() {
                                                                 }));
                                                             }}
                                                         />
-                                                        <span>{ts(`persona.${persona}`  as TranslationKey)}</span>
+                                                        <span>{ts(`persona.${persona}` as TranslationKey)}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <p className="font-medium mb-2">Expiration</p>
+                                            <div className="flex flex-col gap-1.5">
+                                                {([
+                                                    {value: "expired", label: "Expired"},
+                                                    {value: "expiringSoon", label: "Expiring soon"},
+                                                    {value: "future", label: "Future expiry"},
+                                                    {value: "none", label: "No expiry"},
+                                                ] as { value: ExpirationStatus; label: string }[]).map(({
+                                                                                                            value,
+                                                                                                            label
+                                                                                                        }) => (
+                                                    <label key={value} className="flex items-center gap-2">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={advancedFilters.expirationStatus.includes(value)}
+                                                            onChange={(e) => {
+                                                                setAdvancedFilters((prev) => ({
+                                                                    ...prev,
+                                                                    expirationStatus: e.target.checked
+                                                                        ? [...prev.expirationStatus, value]
+                                                                        : prev.expirationStatus.filter((s) => s !== value),
+                                                                }));
+                                                            }}
+                                                        />
+                                                        <span>{label}</span>
                                                     </label>
                                                 ))}
                                             </div>
@@ -746,14 +971,16 @@ function ViewContent() {
                                                     )
                                                 })}
                                             </div>
+                                        </div>
+
+                                        <div>
                                             <p className="font-medium mb-2">Tags</p>
                                             <TagInput
                                                 value={advancedFilters.tags}
-                                                onChange={(tags) => setAdvancedFilters((prev) => ({ ...prev, tags }))}
+                                                onChange={(tags) => setAdvancedFilters((prev) => ({...prev, tags}))}
                                                 creatable={false}
                                             />
                                         </div>
-
                                     </div>
 
                                     <div className="mt-4">
@@ -771,26 +998,23 @@ function ViewContent() {
                             {/* Table takes all remaining space */}
                             <div className="flex-1 min-w-0">
                                 <Table className="text-left md:col-span-2">
-                                    <TableHeader>
-                                        <TableRow className="hover:bg-transparent">
-                                            <TableHead className="w-8"/>
-                                            <SortableHead column="name" label={ts('content.name')} sort={sort} onSort={toggleSort}/>
-                                            <SortableHead column="owner" label={ts('content.owner')} sort={sort} onSort={toggleSort}
-                                                          className="hidden sm:table-cell"/>
-                                            <SortableHead column="status" label={ts('status')} sort={sort} onSort={toggleSort}
-                                                          className="hidden sm:table-cell"/>
-                                            <SortableHead column="contentType" label={ts('kind')} sort={sort}
-                                                          onSort={toggleSort} className="hidden sm:table-cell"/>
-                                            <SortableHead column="persona" label={ts('persona')} sort={sort}
-                                                          onSort={toggleSort}
-                                                          className="hidden sm:table-cell"/>
-                                            <SortableHead column="docType" label={ts('file.type')} sort={sort} onSort={toggleSort}
-                                                          className="hidden sm:table-cell"/>
-
-                                            <TableHead
-                                                className="uppercase tracking-wider text-muted-foreground select-none text-center">{ts('content.actions')}</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
+                                    <ContentTableHeader
+                                        sort={sort}
+                                        onSort={toggleSort}
+                                        allSelected={allPageSelected}
+                                        someSelected={somePageSelected}
+                                        onToggleAll={() => {
+                                            if (allPageSelected) {
+                                                setSelectedIds((prev) => {
+                                                    const next = new Set(prev);
+                                                    paginatedContent.forEach((i) => next.delete(i.id));
+                                                    return next;
+                                                });
+                                            } else {
+                                                setSelectedIds((prev) => new Set([...prev, ...paginatedContent.map((i) => i.id)]));
+                                            }
+                                        }}
+                                    />
                                     <TableBody>
                                         {/* pre sorts the content */}
                                         {paginatedContent.map((item, index) => {
@@ -809,7 +1033,7 @@ function ViewContent() {
                                             return (
                                                 <React.Fragment key={item.id}>
                                                     <TableRow
-                                                        className={`cursor-pointer ${item.checkedOutById === user!.id ? "bg-accent/10 border-l-4 border-l-accent" : ""} ${index % 2 === 0 ? "bg-muted/15" : ""} ${isExpanded ? "bg-muted/80 hover:bg-muted/90" : ""} ${isCheckedOut(item) ? "opacity-50" : ""}`}
+                                                        className={`cursor-pointer ${index % 2 === 0 ? "bg-muted/15" : ""} ${isExpanded ? "bg-muted/80 hover:bg-muted/90" : ""} ${isCheckedOut(item) ? "opacity-50" : ""} ${item.checkedOutById === user!.id ? "!bg-accent/10 border-l-4 border-l-accent" : ""}`}
                                                         onClick={() => toggleExpand(item.id)}
                                                         tabIndex={0}
                                                         onKeyDown={(e) => {
@@ -819,16 +1043,31 @@ function ViewContent() {
                                                             }
                                                         }}
                                                     >
+                                                        <TableCell className="w-8 pr-0"
+                                                                   onClick={(e) => e.stopPropagation()}>
+                                                            <input
+                                                                type="checkbox"
+                                                                className="w-4 h-4 cursor-pointer accent-primary"
+                                                                checked={selectedIds.has(item.id)}
+                                                                onChange={() => setSelectedIds((prev) => {
+                                                                    const next = new Set(prev);
+                                                                    if (next.has(item.id)) next.delete(item.id);
+                                                                    else next.add(item.id);
+                                                                    return next;
+                                                                })}
+                                                            />
+                                                        </TableCell>
                                                         <TableCell className="w-8 pr-0">
                                                             {isLink && linkPreviews[item.id]?.favicon ? (
-                                                                <div className="w-5 h-5 flex items-center justify-center">
+                                                                <div
+                                                                    className="w-5 h-5 flex items-center justify-center">
                                                                     <img
                                                                         src={linkPreviews[item.id]!.favicon!}
                                                                         alt=""
                                                                         className="size-full object-contain"
                                                                     />
                                                                 </div>
-                                                                ) : (<ContentIcon
+                                                            ) : (<ContentIcon
                                                                     category={category}
                                                                     isLink={isLink}
                                                                     className="w-5 h-5"
@@ -852,8 +1091,12 @@ function ViewContent() {
                                                         {/* owner */}
                                                         <TableCell className="hidden sm:table-cell">
                                                             {item.owner
-                                                                ? <EmployeeAvatar employee={item.owner} size="sm" />
+                                                                ? <EmployeeAvatar employee={item.owner} size="sm"/>
                                                                 : <span className="text-muted-foreground">—</span>}
+                                                        </TableCell>
+                                                        {/* expiration */}
+                                                        <TableCell className="hidden sm:table-cell text-center">
+                                                            <ExpirationBadge expiration={item.expiration}/>
                                                         </TableCell>
                                                         {/* status */}
                                                         <TableCell className="hidden sm:table-cell text-center">
@@ -877,18 +1120,15 @@ function ViewContent() {
                                                         <TableCell>
                                                             <div className="flex justify-end gap-1">
                                                                 {(() => {
-                                                                    const icon = <HugeiconsIcon icon={LinkSquare01Icon} className="w-4 h-4"/>;
+                                                                    const icon = <HugeiconsIcon icon={LinkSquare01Icon}
+                                                                                                className="w-4 h-4"/>;
                                                                     const btnClass = "w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground";
-                                                                    if (item.fileURI) return (
-                                                                        <Link to={`/file/${item.id}`} onClick={(e) => e.stopPropagation()}>
-                                                                            <button className={btnClass} title="View file">{icon}</button>
+                                                                    if (item.fileURI || item.linkURL) return (
+                                                                        <Link to={`/file/${item.id}`}
+                                                                              onClick={(e) => e.stopPropagation()}>
+                                                                            <button className={btnClass}
+                                                                                    title="View item">{icon}</button>
                                                                         </Link>
-                                                                    );
-                                                                    if (item.linkURL) return (
-                                                                        <a href={item.linkURL} target="_blank" rel="noopener noreferrer"
-                                                                           onClick={(e) => e.stopPropagation()}>
-                                                                            <button className={btnClass} title="Open link">{icon}</button>
-                                                                        </a>
                                                                     );
                                                                     return (
                                                                         <button
@@ -903,21 +1143,25 @@ function ViewContent() {
                                                                     onClick={(e) => toggleBookmark(item.id, e)}
                                                                     aria-label={isBookmarked ? "Remove bookmark" : "Bookmark"}
                                                                 >
-                                                                    <Star className="w-4 h-4" fill={isBookmarked ? "currentColor" : "none"}/>
+                                                                    <Star className="w-4 h-4"
+                                                                          fill={isBookmarked ? "currentColor" : "none"}/>
                                                                 </button>
                                                                 {(() => {
                                                                     if (item.checkedOutById === user!.id) {
                                                                         return (
                                                                             <DropdownMenu>
-                                                                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                                                                <DropdownMenuTrigger asChild
+                                                                                                     onClick={(e) => e.stopPropagation()}>
                                                                                     <button
                                                                                         className="w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground"
                                                                                         title="More actions"
                                                                                     >
-                                                                                        <EllipsisVertical className="w-4 h-4"/>
+                                                                                        <EllipsisVertical
+                                                                                            className="w-4 h-4"/>
                                                                                     </button>
                                                                                 </DropdownMenuTrigger>
-                                                                                <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                                                                                <DropdownMenuContent align="end"
+                                                                                                     onClick={(e) => e.stopPropagation()}>
                                                                                     <DropdownMenuItem
                                                                                         title="Edit content"
                                                                                         onClick={(e) => handleStartEdit(item, e)}
@@ -933,14 +1177,15 @@ function ViewContent() {
                                                                                         Check In
                                                                                     </DropdownMenuItem>
                                                                                     <DropdownMenuItem
-                                                                                        className="text-destructive focus:text-destructive"
+                                                                                        className="text-destructive focus:text-destructive! focus:bg-destructive/10"
                                                                                         onClick={(e) => {
                                                                                             e.stopPropagation();
                                                                                             setDeleteTarget(item);
                                                                                         }}
                                                                                     >
-                                                                                        <Trash2 className="w-4 h-4"/>
-                                                                                        Delete
+                                                                                        <Recycle className="w-4 h-4"
+                                                                                                 style={{stroke: "var(--destructive)"}}/>
+                                                                                        Move to Bin
                                                                                     </DropdownMenuItem>
                                                                                 </DropdownMenuContent>
                                                                             </DropdownMenu>
@@ -977,7 +1222,7 @@ function ViewContent() {
                                                                         return (
                                                                             <button
                                                                                 className="w-8 h-8 flex items-center justify-center rounded-md transition-colors text-muted-foreground hover:text-foreground"
-                                                                                title="Check out to edit or delete"
+                                                                                title="Check out to edit or recycle"
                                                                                 onClick={(e) => {
                                                                                     e.stopPropagation();
                                                                                     setCheckoutTarget(item);
@@ -1007,44 +1252,56 @@ function ViewContent() {
                                                             <TableCell
                                                                 colSpan={NUM_COLS}
                                                                 className="px-6 py-2 bg-muted/10 border-t border-border">
-                                                                <div className="flex gap-6 text-xs text-muted-foreground">
+                                                                <div
+                                                                    className="flex gap-6 text-xs text-muted-foreground">
                                                                     {item.checkedOutBy && (
                                                                         <span>
-                                                                            <span className="font-medium text-foreground">Editing </span>
+                                                                            <span
+                                                                                className="font-medium text-foreground">Editing </span>
                                                                             {item.checkedOutBy.firstName} {item.checkedOutBy.lastName}
                                                                         </span>
                                                                     )}
                                                                     {item.created && (
                                                                         <span>
-                                                                            <span className="font-medium text-foreground">Created:{" "}</span>
+                                                                            <span
+                                                                                className="font-medium text-foreground">Created:{" "}</span>
                                                                             {new Date(item.created).toLocaleString()}
                                                                         </span>
                                                                     )}
                                                                     <span>
-                                                                        <span className="font-medium text-foreground">Modified:{" "}</span>
+                                                                        <span
+                                                                            className="font-medium text-foreground">Modified:{" "}</span>
                                                                         {new Date(item.lastModified).toLocaleString()}
                                                                     </span>
-                                                                    {item.expiration && (
-                                                                        <span>
-                                                                            <span className="font-medium text-foreground">Expires:{" "}</span>
+                                                                    {/* IIFE computes days once so both the label ("Expired:" vs "Days left:") and value share the same calculation. */}
+                                                                    {item.expiration && (() => {
+                                                                        const days = Math.ceil((new Date(item.expiration).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                                                                        return (<>
+                                                                            <span>
+                                                                                <span
+                                                                                    className="font-medium text-foreground">Expires:{" "}</span>
                                                                                 {new Date(item.expiration).toLocaleString()}
                                                                             </span>
-                                                                            )}
-                                                                            {item.expiration && (
                                                                             <span>
-                                                                                <span className="font-medium text-foreground">Days left:{" "}</span>
-                                                                                    {Math.ceil((new Date(item.expiration).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)).toLocaleString()}
+                                                                                <span
+                                                                                    className="font-medium text-foreground">
+                                                                                    {days < 0 ? "Expired:" : "Days left:"}
+                                                                                    {" "}
                                                                                 </span>
-                                                                                )}
-                                                                                {item.tags.length > 0 && (
-                                                                            <span>
-                                                                                <span className="font-medium text-foreground">Tags:{" "}</span>
-                                                                                    {item.tags.join(", ")}
+                                                                                {days < 0 ? `${Math.abs(days)}d ago` : days === 0 ? "Today" : `${days}`}
+                                                                            </span>
+                                                                        </>);
+                                                                    })()}
+                                                                    {item.tags.length > 0 && (
+                                                                        <span>
+                                                                                <span
+                                                                                    className="font-medium text-foreground">Tags:{" "}</span>
+                                                                            {item.tags.join(", ")}
                                                                             </span>)}
-                                                                        </div>
-                                                                    </TableCell>
-                                                                </TableRow>
-                                                            )}
+                                                                </div>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    )}
                                                     {/* link preview */}
                                                     {isExpanded && isLink && (() => {
                                                         const url = item.linkURL!;
@@ -1060,7 +1317,7 @@ function ViewContent() {
                                                                             //youtube embed data
                                                                             src={`https://www.youtube.com/embed/${youtubeMatch[1]}`}
                                                                             className="w-full border-0"
-                                                                            style={{ minHeight: "400px" }}
+                                                                            style={{minHeight: "400px"}}
                                                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                                                             allowFullScreen
                                                                             title={url}
@@ -1092,7 +1349,8 @@ function ViewContent() {
                                                     {/* file preview */}
                                                     {isExpanded && isFile && (
                                                         <TableRow className="hover:bg-transparent">
-                                                            <TableCell colSpan={NUM_COLS} className="p-0 max-w-0 overflow-hidden">
+                                                            <TableCell colSpan={NUM_COLS}
+                                                                       className="p-0 max-w-0 overflow-hidden">
                                                                 <FilePreview
                                                                     filename={originalFilename!}
                                                                     src={`/api/content/download/${item.id}`}
@@ -1107,65 +1365,17 @@ function ViewContent() {
                                     </TableBody>
                                 </Table>
                                 {sortedContent.length > 0 && (
-                                    <div className="flex items-center justify-between mt-4 px-1 text-sm text-muted-foreground">
-                                        <div className="flex items-center gap-2">
-                                            <span>{ts('pages.rowsPerPage')}</span>
-                                            <select
-                                                value={pageSize}
-                                                onChange={(e) => {
-                                                    setPageSize(Number(e.target.value));
-                                                    setCurrentPage(1);
-                                                }}
-                                                className="border border-border rounded px-2 py-1 bg-background text-foreground text-sm">
-                                                {[10, 25, 50, 100].map((size) => (
-                                                    <option key={size} value={size}>{size}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        <div className="flex items-center gap-3">
-                                            <span>
-                                                {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, filteredContent.length)} of {filteredContent.length}
-                                            </span>
-                                            <div className="flex items-center gap-1">
-                                                <button
-                                                    onClick={() => setCurrentPage(1)}
-                                                    disabled={currentPage === 1}
-                                                    className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
-                                                    title="First page"
-                                                >
-                                                    <ChevronsLeft className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                                                    disabled={currentPage === 1}
-                                                    className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
-                                                    title="Previous page"
-                                                >
-                                                    <ChevronLeft className="w-4 h-4" />
-                                                </button>
-                                                <span className="px-2">
-                    {ts('page')} {currentPage} {ts('of')} {totalPages}
-                </span>
-                                                <button
-                                                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                                                    disabled={currentPage === totalPages}
-                                                    className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
-                                                    title="Next page"
-                                                >
-                                                    <ChevronRight className="w-4 h-4" />
-                                                </button>
-                                                <button
-                                                    onClick={() => setCurrentPage(totalPages)}
-                                                    disabled={currentPage === totalPages}
-                                                    className="w-8 h-8 flex items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
-                                                    title="Last page"
-                                                >
-                                                    <ChevronsRight className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <TablePagination
+                                        currentPage={currentPage}
+                                        totalPages={totalPages}
+                                        pageSize={pageSize}
+                                        totalItems={filteredContent.length}
+                                        onPageChange={setCurrentPage}
+                                        onPageSizeChange={(size) => {
+                                            setPageSize(size);
+                                            setCurrentPage(1);
+                                        }}
+                                    />
                                 )}
                             </div>
 
@@ -1175,22 +1385,25 @@ function ViewContent() {
                 </CardContent>
             </Card>
 
+            {/* Soft delete confirmation dialog, moves to recycle bin */}
             <ConfirmDeleteDialog
                 open={!!deleteTarget}
                 onOpenChange={(open) => {
                     if (!open) setDeleteTarget(null);
                 }}
                 description={deleteTarget ?
-                    <span>{ts('content.deleteDialogue')}<strong>"{deleteTarget.displayName}"</strong>.</span> : undefined}
+                    <span>Move <strong>"{deleteTarget.displayName}"</strong> to the recycle bin?</span> : undefined}
                 onConfirm={() => handleDelete(deleteTarget!.id)}
             />
+
             <ConfirmCheckoutDialog
                 open={!!checkoutTarget}
                 onOpenChange={(open: boolean) => {
                     if (!open) setCheckoutTarget(null);
                 }}
                 description={checkoutTarget
-                    ? <span>{ts('content.checkoutDesc1')}<strong>"{checkoutTarget.displayName}"</strong>{ts('content.checkoutDesc2')}</span>
+                    ?
+                    <span>{ts('content.checkoutDesc1')}<strong>"{checkoutTarget.displayName}"</strong>{ts('content.checkoutDesc2')}</span>
                     : undefined}
                 onConfirm={async () => {
                     if (checkoutTarget) {
@@ -1199,6 +1412,7 @@ function ViewContent() {
                     }
                 }}
             />
+
             <ConfirmCheckinDialog
                 open={!!checkinTarget}
                 onOpenChange={(open: boolean) => {
@@ -1206,7 +1420,7 @@ function ViewContent() {
                 }}
                 description={checkinTarget
                     ?
-                    <span>Check in <strong>"{checkinTarget.displayName}"</strong>? Other users will be able to edit and delete it.</span>
+                    <span>Check in <strong>"{checkinTarget.displayName}"</strong>? Other users will be able to edit and recycle it.</span>
                     : undefined}
                 onConfirm={async () => {
                     if (checkinTarget) {
@@ -1252,7 +1466,9 @@ function ViewContent() {
                     ? <span>
             Force check in <strong>"{forceCheckinTarget.displayName}"</strong>?
                         {forceCheckinTarget.checkedOutBy && (
-                            <> This will release the lock currently held by <strong>{forceCheckinTarget.checkedOutBy.firstName} {forceCheckinTarget.checkedOutBy.lastName}</strong>, and they may lose unsaved changes.</>
+                            <> This will release the lock currently held
+                                by <strong>{forceCheckinTarget.checkedOutBy.firstName} {forceCheckinTarget.checkedOutBy.lastName}</strong>,
+                                and they may lose unsaved changes.</>
                         )}
         </span>
                     : undefined}
@@ -1281,6 +1497,14 @@ function ViewContent() {
                     }}
                 />
             )}
+
+            <AddToCollectionDialog
+                open={addToCollectionOpen}
+                onOpenChange={setAddToCollectionOpen}
+                contentIds={pageSelectedIds}
+                onDone={() => setSelectedIds(new Set())}
+            />
+
 
         </>
     );

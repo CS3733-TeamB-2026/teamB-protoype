@@ -9,6 +9,8 @@ import ContentTypeChartCard from "@/features/dashboard/components/cards/ContentT
 import LinksCard from "@/features/dashboard/components/cards/LinksCard.tsx";
 import PreviewedFilesCard from "@/features/dashboard/components/cards/PreviewedFilesCard.tsx";
 import ReportCard from "@/features/dashboard/components/cards/ReportCard.tsx";
+import OwnedCollectionsCard from "@/features/dashboard/components/cards/OwnedCollectionsCard.tsx";
+import FavoritedCollectionsCard from "@/features/dashboard/components/cards/FavoritedCollectionsCard.tsx";
 import React from "react";
 
 export type WidgetLayoutEntry = {
@@ -27,8 +29,10 @@ export const WIDGET_REGISTRY = {
     myContent: { component: MyContentCard, label: "My Content", defaultSize: "small", description: "Shows content you own." },
     recentFiles: { component: RecentFilesCard, label: "Recent Files", defaultSize: "medium", description: "Shows recent files." },
     links: { component: LinksCard, label: "Role Links", defaultSize: "small", description: "Shows role specific links." },
-    preview: { component: PreviewedFilesCard, label: "Previewed", defaultSize: "small", description: "Shows recently viewed files" },
-    reports: { component: ReportCard, label: "Reports", defaultSize: "full", description: "Shows reports and analytics" },
+    preview: { component: PreviewedFilesCard, label: "Previewed", defaultSize: "small", description: "Shows recently viewed files." },
+    collections: { component: OwnedCollectionsCard, label: "OwnedCollections", defaultSize: "medium", description: "Shows owned collections." },
+    favoritedCollections: { component: FavoritedCollectionsCard, label: "FavoritedCollections", defaultSize: "medium", description: "Shows favorited collections." },
+    reports: { component: ReportCard, label: "Reports", defaultSize: "full", description: "Shows reports and analytics." },
 } satisfies Record<string, { component: React.ComponentType; label: string; defaultSize: WidgetSize; description: string }>;
 
 export type WidgetId = keyof typeof WIDGET_REGISTRY;

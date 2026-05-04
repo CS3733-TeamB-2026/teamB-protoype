@@ -8,6 +8,7 @@ export const en_us: Record<TranslationKey, string> = {
     "all": "All",
     'other': 'Other',
     'bookmarked': 'Bookmarked',
+    'notFullySupported': 'Currently not every language has full support.',
 
     'settings.language': 'Language',
 
@@ -124,6 +125,34 @@ export const en_us: Record<TranslationKey, string> = {
     'content.checkoutTitle': 'Are you sure you want to checkout this content?',
     'content.checkoutDesc1': 'Check out ',
     'content.checkoutDesc2': "? You'll be able to edit and delete it until you check it back in.",
+
+    'dashboard.subtitle': "Find all your tools here.",
+    'dashCard.myFiles': "My Files: ",
+    'dashCard.timeItIs': 'It Is ',
+    'dashCard.timeOn': 'On ',
+    'dashCard.ContentBreakdown': 'Content Type Breakdown',
+    'dashCard.ContentDistribution': 'Current distribution of file types in database',
+    'dashCard.DepartmentBreakdown': 'Department Breakdown',
+    'dashCard.DepartmentHeadcount': 'Current Headcount by Department',
+    'dashCard.WelcomeBack': 'Welcome back,',
+    'dashCard.LetsPickUp': "Let's pick up where you left off.",
+    'dashCard.AdditionalLinks': 'Additional Links:',
+    'dashCard.RecentlyViewed': 'Recently Viewed: ',
+    'dashCard.ViewFiles': 'View Files',
+    'dashCard.RecentFiles': 'Recent Files: ',
+    'dashCard.QuickLinks': 'Quick Links',
+    'dashCard.ViewCalendar': 'View Calendar',
+    'dashCard.LoadingReport': 'Loading Report...',
+    'dashCard.Reports': 'Reports',
+    'dashCard.loadFail': 'Unable to load report data',
+    'dashCard.ReportsAndAnalytics': 'Reports & Analytics',
+    'dashCard.reports.Subtitle': 'Transaction activity, content currency, and expiration status',
+    'dashCard.reports.infoButton': "The Overview tab shows the total accesses and content by each department. The By Owner tab shows the accesses and content for each user. The Currency tab shows the age and date of most recently added content. The Expiration tab shows a chart of all expiration status.",
+
+
+    'customize': "Customize",
+    'customize.title': "Customize Dashboard",
+    'customize.subtitle': 'Show, hide, and resize widgets on your dashboard.',
 };
 
 export const sp_sp: Partial<Record<TranslationKey, string>> = {
@@ -134,6 +163,7 @@ export const sp_sp: Partial<Record<TranslationKey, string>> = {
     "all": "Todo",
     'other': 'Otro',
     'bookmarked': 'Marcado',
+    'notFullySupported': 'Actualmente, no todos los idiomas cuentan con soporte completo.',
 
     'settings.language': 'Idioma',
 
@@ -216,6 +246,33 @@ export const sp_sp: Partial<Record<TranslationKey, string>> = {
     'disclaimer.start': 'Aviso legal:',
     'disclaimer.middle': ' Este sitio web ha sido creado para el CS 3733 Ingeniería de Software de WPI como proyecto de clase y ',
     'disclaimer.end': 'no está en uso por Hanover Insurance.',
+
+    'dashboard.subtitle': 'Encuentra todas tus herramientas aquí.',
+    'dashCard.myFiles': 'Mis Archivos: ',
+    'dashCard.timeItIs': 'Son las ',
+    'dashCard.timeOn': 'en ',
+    'dashCard.ContentBreakdown': 'Desglose por tipo de contenido',
+    'dashCard.ContentDistribution': 'Distribución actual de tipos de archivo en la base de datos',
+    'dashCard.DepartmentBreakdown': 'Desglose por departamento',
+    'dashCard.DepartmentHeadcount': 'Recuento actual de personal por departamento',
+    'dashCard.WelcomeBack': 'Bienvenido de nuevo, ',
+    'dashCard.LetsPickUp': 'Retomemos donde lo dejaste.',
+    'dashCard.AdditionalLinks': 'Enlaces adicionales: ',
+    'dashCard.RecentlyViewed': 'Vistos recientemente: ',
+    'dashCard.ViewFiles': 'Ver archivos',
+    'dashCard.RecentFiles': 'Archivos recientes: ',
+    'dashCard.QuickLinks': 'Enlaces rápidos',
+    'dashCard.ViewCalendar': 'Ver calendario',
+    'dashCard.LoadingReport': 'Cargando informe...',
+    'dashCard.Reports': 'Informes',
+    'dashCard.loadFail': 'No se pudieron cargar los datos del informe',
+    'dashCard.ReportsAndAnalytics': 'Informes y análisis',
+    'dashCard.reports.Subtitle': 'Actividad de transacciones, vigencia del contenido y estado de vencimiento',
+    'dashCard.reports.infoButton': "La pestaña «Resumen» muestra el total de accesos y el contenido por departamento. La pestaña «Por propietario» muestra los accesos y el contenido de cada usuario. La pestaña «Vigencia» muestra la antigüedad y la fecha del contenido añadido más recientemente. La pestaña «Vencimiento» muestra un gráfico con todos los estados de vencimiento.",
+
+    'customize': "Personalizar",
+    'customize.title': "Personalizar el panel",
+    'customize.subtitle': 'Muestra, oculta y redimensiona los widgets de tu panel.',
 
     'content.filters': "Filtros",
     'content.hide': "Ocultar",

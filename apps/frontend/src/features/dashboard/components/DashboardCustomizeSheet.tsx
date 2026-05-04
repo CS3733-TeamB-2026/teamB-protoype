@@ -11,6 +11,8 @@ import {
 import { Settings2 } from "lucide-react";
 import { type WidgetLayoutEntry, type WidgetId, DEFAULT_LAYOUT } from "@/features/dashboard/widget-registry.ts";
 import WidgetRow from "@/features/dashboard/components/WidgetRow.tsx";
+import {useLocale} from "@/languageSupport/localeContext.tsx";
+import {useTranslation} from "@/languageSupport/useTranslation.ts";
 
 type DashboardCustomizeSheetProps = {
     layout: WidgetLayoutEntry[];
@@ -18,6 +20,8 @@ type DashboardCustomizeSheetProps = {
 };
 
 function DashboardCustomizeSheet({ layout, setLayout }: DashboardCustomizeSheetProps) {
+    const { locale } = useLocale();
+    const { ts } = useTranslation(locale);
     const updateEntry = (id: WidgetId, updates: Partial<WidgetLayoutEntry>) => {
         setLayout((prev) => prev.map((w) => (w.id === id ? { ...w, ...updates } : w)));
     };
@@ -27,17 +31,17 @@ function DashboardCustomizeSheet({ layout, setLayout }: DashboardCustomizeSheetP
             <SheetTrigger asChild>
                 <Button className="bg-accent-dark hover:bg-accent-dark/80 active:scale-97">
                     <Settings2 className="mr-2 h-4 w-4" />
-                    Customize
+                    {ts('customize')}
                 </Button>
             </SheetTrigger>
 
             <SheetContent className="flex h-full w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
                 <SheetHeader className="border-b px-6 py-5 text-left">
                     <SheetTitle className="text-3xl font-bold tracking-tight text-primary">
-                        Customize Dashboard
+                        {ts('customize.title')}
                     </SheetTitle>
                     <SheetDescription className="text-base text-muted-foreground">
-                        Show, hide, and resize widgets on your dashboard.
+                        {ts('customize.subtitle')}
                     </SheetDescription>
                 </SheetHeader>
 

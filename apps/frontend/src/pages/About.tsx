@@ -1,36 +1,13 @@
-import {HelpCircle, Users} from "lucide-react";
+import {HelpCircle} from "lucide-react";
 import {Hero} from "@/components/shared/Hero.tsx";
 import {Card, CardContent} from "@/components/ui/card.tsx";
-import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
-import {teamPhotos} from "@/components/ui/team-photos.tsx";
+import MeetTheTeam from "@/components/shared/MeetTheTeam.tsx"
 import { BookOpen, UserCheck, Building2, Briefcase, Heart } from "lucide-react";
 import {usePageTitle} from "@/hooks/use-page-title.ts";
-
 
 function About() {
 
     usePageTitle("About");
-
-    type ImageKey = keyof typeof teamPhotos;
-    type TeamMember = {
-        name: string;
-        initials: string;
-        role: string;
-        photo: ImageKey;
-    }
-
-    const members: TeamMember[] = [
-        { name: "Dylan Zickus", initials: "DZ", role: 'Lead Software Engineer', photo: "dylan" },
-        { name: "Oscar Stomberg", initials: "OS", role: 'Assistant Lead Software Engineer', photo: "oscar" },
-        { name: "Jake Swanson", initials: "JS", role: 'Assistant Lead Software Engineer', photo: "jake" },
-        { name: "Hayden Schultz", initials: "HS", role: 'Assistant Lead Software Engineer & Scrum Master', photo: "hayden" },
-        { name: "Luke Ciarletta", initials: "LC", role: 'Full-Time Software Engineer', photo: "luke" },
-        { name: "Nick Houghton", initials: "NH", role: 'Full-Time Software Engineer', photo: "nicholas" },
-        { name: "Cameron Pietraski", initials: "CP", role: 'Full-Time Software Engineer', photo: "cameron" },
-        { name: "Philip Ostrowski", initials: "PO", role: 'Part-Time Software Engineer & Project Manager', photo: "philip" },
-        { name: "Joseph Hemmerle", initials: "JH", role: 'Part-Time Software Engineer & Product Owner', photo: "joey" },
-        { name: "Ricardo Guzman Volpe", initials: "RG", role: 'Part-Time Software Engineer & Documentation Analyst', photo: "ricardo" }
-    ]
 
     return (
         <>
@@ -79,44 +56,7 @@ function About() {
                     </CardContent>
                 </Card>
 
-                <div className="relative max-w-5xl mx-auto px-6 mb-8">
-                    <div className="absolute inset-0 flex items-center px-6">
-                        <div className="w-full border-t border-border" />
-                    </div>
-                    <div className="relative flex justify-center">
-                        <div className="flex items-center gap-2 bg-card px-4 py-1.5 rounded-full border border-border shadow-sm">
-                            <Users className="w-4 h-4 text-primary" />
-                            <span className="text-sm font-semibold text-primary">Meet The Team</span>
-                        </div>
-                    </div>
-                </div>
-
-                <section className="max-w-5xl mx-auto mb-12">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 justify-items-center">
-                        {members.map((member: TeamMember) => (
-                            <Card
-                                className={`w-full max-w-55 shadow-sm border-t-primary border-t-4 text-center hover:shadow-md hover:-translate-y-1 transition-all duration-150`}
-                                key={member.name}
-                            >
-                                <CardContent className="flex flex-col items-center justify-center gap-3 pt-6 pb-6 px-3">
-                                    <Avatar className="w-16 h-16 ring-2 ring-primary/20">
-                                        <AvatarImage
-                                            src={teamPhotos[member.photo]}
-                                            alt={member.name}
-                                        />
-                                        <AvatarFallback className="text-base bg-primary text-primary-foreground">
-                                            {member.initials}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <h2 className="font-semibold text-sm leading-tight">{member.name}</h2>
-                                        <p className="text-muted-foreground text-xs mt-1 leading-snug">{member.role}</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                </section>
+                <MeetTheTeam />
 
                 <div className="relative max-w-5xl mx-auto px-6 mb-8">
                     <div className="absolute inset-0 flex items-center px-6">
