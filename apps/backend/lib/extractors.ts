@@ -19,6 +19,12 @@ function getOpenAI(): OpenAI | null {
     return _openai;
 }
 
+let _visionDisabled = false;
+let _visionTokensTotal = 0;
+
+/** Total tokens consumed by vision API calls this process lifetime. */
+export function getVisionTokensUsed(): number { return _visionTokensTotal; }
+
 export type SupportedMimeType =
     | 'application/pdf'
     | 'application/msword'
@@ -44,26 +50,42 @@ async function ocrImage(buffer: Buffer): Promise<string> {
     if (ocrText.length >= OCR_VISION_THRESHOLD) return ocrText;
 
     // OCR found little text — image is likely a diagram/photo, try vision model
+    if (_visionDisabled) return ocrText;
     const client = getOpenAI();
     if (!client) return ocrText;
 
-    // Normalize to PNG — OpenAI vision accepts JPEG/PNG/WebP/GIF, not raw buffers of arbitrary format
-    const { default: sharp } = await import('sharp');
-    const png = await sharp(buffer).png().toBuffer();
-    const b64 = png.toString('base64');
+    try {
+        // Normalize to PNG — OpenAI vision accepts JPEG/PNG/WebP/GIF, not raw buffers of arbitrary format
+        const { default: sharp } = await import('sharp');
+        const png = await sharp(buffer).png().toBuffer();
+        const b64 = png.toString('base64');
 
-    const response = await client.chat.completions.create({
-        model: IMAGE_DESCRIPTION_MODEL,
-        messages: [{
-            role: 'user',
-            content: [
-                { type: 'image_url', image_url: { url: `data:image/png;base64,${b64}`, detail: 'low' } },
-                { type: 'text', text: 'Describe the content of this image concisely for search indexing. Focus on the information it contains, not its visual style.' },
-            ],
-        }],
-        max_completion_tokens: 300,
-    });
-    return response.choices[0]?.message?.content?.trim() ?? ocrText;
+        const response = await client.chat.completions.create({
+            model: IMAGE_DESCRIPTION_MODEL,
+            messages: [{
+                role: 'user',
+                content: [
+                    { type: 'image_url', image_url: { url: `data:image/png;base64,${b64}`, detail: 'low' } },
+                    { type: 'text', text: 'Describe the content of this image concisely for search indexing. Focus on the information it contains, not its visual style.' },
+                ],
+            }],
+            max_completion_tokens: 300,
+        });
+
+        const tokens = response.usage?.total_tokens ?? 0;
+        _visionTokensTotal += tokens;
+        console.log(`  [vision] ${tokens} tokens (running total: ${_visionTokensTotal})`);
+
+        return response.choices[0]?.message?.content?.trim() ?? ocrText;
+    } catch (err: any) {
+        if (err?.code === 'missing_scope' || err?.status === 401) {
+            _visionDisabled = true;
+            console.warn(`  [vision] API key lacks model.request scope — skipping vision for remaining images`);
+        } else {
+            console.error(`  [vision] error:`, err?.message ?? err);
+        }
+        return ocrText;
+    }
 }
 
 async function ocrPdf(buffer: Buffer): Promise<string> {

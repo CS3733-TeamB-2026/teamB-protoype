@@ -70,7 +70,7 @@ async function backfillEmployees() {
 
     console.log(`\n[Employee] ${rows.length} rows`);
     let success = 0, failed = 0;
-    for (const row of rows) {
+for (const row of rows) {
         try {
             const embedding = await generateEmbedding(buildEmployeeEmbeddingInput(row.firstName, row.lastName, row.persona));
             await prisma.$executeRaw`UPDATE "Employee" SET embedding = ${embeddingToSql(embedding)}::vector WHERE id = ${row.id}`;

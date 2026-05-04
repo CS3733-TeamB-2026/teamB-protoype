@@ -16,7 +16,7 @@ config({ path: resolve(__dirname, '../.env') });
 
 import type { SupportedMimeType } from '../lib/extractors.js';
 const { prisma, supabase } = await import('@softeng-app/db');
-const { extractText } = await import('../lib/extractors.js');
+const { extractText, getVisionTokensUsed } = await import('../lib/extractors.js');
 const mime = (await import('mime-types')).default;
 
 const force = process.argv.includes('--force');
@@ -59,7 +59,9 @@ async function backfill() {
         }
     }
 
+    const visionTokens = getVisionTokensUsed();
     console.log(`\nSuccess: ${success}, Skipped: ${skipped}, Failed: ${failed}`);
+    if (visionTokens > 0) console.log(`Vision tokens used: ${visionTokens}`);
     await prisma.$disconnect();
 }
 
