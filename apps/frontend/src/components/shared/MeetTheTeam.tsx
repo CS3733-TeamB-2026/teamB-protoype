@@ -35,7 +35,7 @@ export default function MeetTheTeam({width = "max-w-5xl"}:{width?: string}) {
             quote: "I think we need to do a small refactor." },
         { id: 3, name: "Jake Swanson", initials: "JS", role: 'role.assistantLead', photo: "jake",
             linkedin: "https://www.linkedin.com/in/jake-l-swanson/",
-            quote: "Hi guys I'm Jake!" },
+            quote: "Don't forget to like, subscribe, and hit that bell icon!" },
         { id: 4, name: "Hayden Schultz", initials: "HS", role: 'role.assistantLeadAndScrumMaster', photo: "hayden",
             linkedin: "https://www.linkedin.com/in/hayden-schultz-819a7b39b/s",
             quote: "git add .env\ngit commit -m \"small changes\"\ngit push origin main --force" },
