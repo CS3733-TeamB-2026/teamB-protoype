@@ -10,9 +10,17 @@ import { ServiceRequestCard } from "@/components/shared/ServiceRequestCard.tsx";
 import { DottedBackground } from "@/components/shared/DottedBackground.tsx";
 import type { SearchResult } from "@/lib/types.ts";
 
+/**
+ * Full-text semantic search page across all four entity types: content, collections,
+ * employees, and service requests.
+ *
+ * The last query is persisted to localStorage so navigating away and back re-runs it
+ * automatically. Results can be filtered client-side by kind using the pill toggles —
+ * the API always returns all matching kinds and filtering is purely presentational.
+ */
 export default function SearchContent() {
     const { getAccessTokenSilently } = useAuth0();
-    const [query, setQuery] = useState(window.localStorage.getItem("query") ?? "");
+    const [query, setQuery] = useState(window.localStorage.getItem("query") ?? ""); // restored on mount
     const [results, setResults] = useState<SearchResult[]>([]);
     const [loading, setLoading] = useState(false);
     const [searched, setSearched] = useState(false);
@@ -21,7 +29,7 @@ export default function SearchContent() {
     const toggleKind = (kind: string) =>
         setVisibleKinds((prev) => {
             const next = new Set(prev);
-            next.has(kind) ? next.delete(kind) : next.add(kind);
+            if (next.has(kind)) next.delete(kind); else next.add(kind);
             return next;
         });
 
@@ -44,11 +52,12 @@ export default function SearchContent() {
         }
     };
 
-    // Re-run the last query on mount if one was persisted in localStorage
+    // Trigger the persisted query once on mount without waiting for user interaction.
+    // autoSearched guards against re-firing on every render while handleSearch is in flight.
     const [autoSearched, setAutoSearched] = useState(false);
     if (!autoSearched && !searched && window.localStorage.getItem("query")) {
         setAutoSearched(true);
-        handleSearch();
+        void handleSearch();
     }
 
     return (
