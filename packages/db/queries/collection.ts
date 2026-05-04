@@ -1,6 +1,6 @@
 import { prisma } from "../lib/prisma";
 import { employeeSelect, srInclude } from "./helper";
-import { generateEmbedding, embeddingToSql } from '../../../apps/backend/lib/embeddings';
+import { generateEmbedding, embeddingToSql } from '../lib/embeddings';
 
 // Items have no guaranteed DB order, so position must always be applied here
 const itemsInclude = {

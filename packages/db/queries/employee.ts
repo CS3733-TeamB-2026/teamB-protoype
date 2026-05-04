@@ -1,7 +1,7 @@
 import * as p from "../generated/prisma/client";
 import {prisma} from "../lib/prisma";
 import {Helper, employeeSelect} from "./helper";
-import { generateEmbedding, embeddingToSql } from '../../../apps/backend/lib/embeddings';
+import { generateEmbedding, embeddingToSql } from '../lib/embeddings';
 
 export class Employee {
     public static async queryAllEmployees() {

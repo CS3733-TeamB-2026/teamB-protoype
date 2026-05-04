@@ -1,4 +1,5 @@
 import * as q from "@softeng-app/db";
+import { generateEmbedding, embeddingToSql, buildContentEmbeddingInput } from "@softeng-app/db";
 import mime from "mime-types";
 import * as cheerio from "cheerio";
 import { req, res } from "./types";
@@ -6,8 +7,6 @@ import { getEmployee } from "../helpers/getEmployee";
 import { assertPublicUrl } from "../helpers/validateUrl";
 import { isAdmin, isPersonaOrAdmin, isUserOrAdmin } from "../helpers/permissions";
 import { extractText, SupportedMimeType } from "../../lib/extractors";
-import { generateEmbedding, embeddingToSql } from '../../lib/embeddings';
-import dns from "node:dns/promises";
 import {applyExpirationTagsToOne} from "../jobs/autoTag"
 
 const PREVIEW_MAX_BYTES = 2 * 1024 * 1024; // 2 MB
@@ -248,15 +247,13 @@ export const uploadFile = async (req: req, res: res) => {
                     textContent = await extractText(null, 'url', payload.linkURL);
                 }
 
-                const embeddingInput = [
+                const embedding = await generateEmbedding(buildContentEmbeddingInput(
                     payload.name,
                     payload.contentType,
                     payload.targetPersona,
-                    JSON.parse(payload.tags || "[]").join(' '),
-                    textContent ?? '',
-                ].join(' ');
-
-                const embedding = await generateEmbedding(embeddingInput);
+                    JSON.parse(payload.tags || "[]"),
+                    textContent,
+                ));
 
                 await q.prisma.$executeRaw`
                     UPDATE "Content"
@@ -358,15 +355,13 @@ export const updateContent = async (req: req, res: res) => {
                     textContent = oldContent.textContent;
                 }
 
-                const embeddingInput = [
+                const embedding = await generateEmbedding(buildContentEmbeddingInput(
                     payload.name,
                     payload.contentType,
                     payload.targetPersona,
-                    JSON.parse(payload.tags || "[]").join(' '),
-                    textContent ?? '',
-                ].join(' ');
-
-                const embedding = await generateEmbedding(embeddingInput);
+                    JSON.parse(payload.tags || "[]"),
+                    textContent,
+                ));
 
                 await q.prisma.$executeRaw`
                     UPDATE "Content"

@@ -2,24 +2,9 @@ import * as p from "../generated/prisma/client";
 import {prisma} from "../lib/prisma";
 import {Helper, employeeSelect, contentSelect, srInclude} from "./helper";
 import { Notification } from "./notification";
-import { generateEmbedding, embeddingToSql } from '../../../apps/backend/lib/embeddings';
+import { generateEmbedding, embeddingToSql } from '../lib/embeddings';
+import { buildContentEmbeddingInput } from '../lib/embeddingInputs';
 
-/** Concatenates the indexable fields into a single string for embedding generation. */
-function buildEmbeddingInput(
-    name: string,
-    contentType: string,
-    persona: string,
-    tags: string[],
-    textContent: string | null
-): string {
-    return [
-        name,
-        contentType,
-        persona,
-        tags.join(' '),
-        textContent ?? '',
-    ].join(' ');
-}
 
 /**
  * Query class for the `Content` table.
@@ -90,7 +75,7 @@ export class Content {
             throw new Error("You do not have this content checked out.")
         }
 
-        const embeddingInput = buildEmbeddingInput(_name, _contentType, _personaTyped, _tags, _textContent);
+        const embeddingInput = buildContentEmbeddingInput(_name, _contentType, _personaTyped, _tags, _textContent);
         const embedding = await generateEmbedding(embeddingInput);
 
         await prisma.$executeRaw`
@@ -176,7 +161,7 @@ export class Content {
         const _createdDate: Date = new Date()
         const _lastModified: Date = new Date()
 
-        const embeddingInput = buildEmbeddingInput(_name, _contentType, _personaTyped, _tags, _textContent);
+        const embeddingInput = buildContentEmbeddingInput(_name, _contentType, _personaTyped, _tags, _textContent);
         const embedding = await generateEmbedding(embeddingInput);
 
         // Prisma doesn't support vector type, use $executeRaw to insert then return
@@ -211,6 +196,11 @@ export class Content {
             prisma.preview.deleteMany({ where: { previewedContentId: id } }),
             prisma.content.delete({ where: { id } }),
         ]);
+    }
+
+    /** Updates only the tags array. Does not touch textContent or regenerate embeddings. */
+    public static async updateTagsOnly(id: number, tags: string[]): Promise<void> {
+        await prisma.content.update({ where: { id }, data: { tags } });
     }
 
     /** Marks an item as deleted and clears its checkout lock. */
