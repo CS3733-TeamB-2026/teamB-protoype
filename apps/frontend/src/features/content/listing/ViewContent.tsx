@@ -897,7 +897,7 @@ function ViewContent() {
                                         <div>
                                             <p className="font-medium mb-2">{ts('persona')}</p>
                                             <div className="flex flex-col gap-1.5">
-                                                {["underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps", "admin"].map((persona) => (
+                                                {["underwriter", "businessAnalyst", "actuarialAnalyst", "excelOperator", "businessOps", "admin"].map((persona) => (
                                                     <label key={persona} className="flex items-center gap-2">
                                                         <input
                                                             type="checkbox"

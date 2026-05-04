@@ -80,7 +80,7 @@ export const en_us: Record<TranslationKey, string> = {
     'persona.underwriter': 'Underwriter',
     'persona.businessAnalyst': 'Business Analyst',
     'persona.actuarialAnalyst': 'Actuarial Analyst',
-    'persona.EXLOperator': 'EXL Operator',
+    'persona.excelOperator': 'Excel Operator',
     'persona.businessOps': 'Business Ops',
     'persona.admin': 'Admin',
 

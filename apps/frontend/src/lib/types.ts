@@ -2,7 +2,7 @@ export type Persona =
     | "underwriter"
     | "businessAnalyst"
     | "actuarialAnalyst"
-    | "EXLOperator"
+    | "excelOperator"
     | "businessOps"
     | "admin";
 

@@ -75,8 +75,8 @@ export class Helper {
             return p.Persona.businessAnalyst
         } else if (_persona == "actuarialAnalyst") {
             return p.Persona.actuarialAnalyst
-        } else if (_persona == "EXLOperator") {
-            return p.Persona.EXLOperator
+        } else if (_persona == "excelOperator") {
+            return p.Persona.excelOperator
         } else if (_persona == "businessOps") {
             return p.Persona.businessOps
         } else if (_persona == "admin") {

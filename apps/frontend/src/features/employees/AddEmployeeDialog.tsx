@@ -219,7 +219,7 @@ export function AddEmployeeDialog({ open, onOpenChange, onSave }: Props) {
                                         <DropdownMenuRadioItem value="underwriter">Underwriter</DropdownMenuRadioItem>
                                         <DropdownMenuRadioItem value="businessAnalyst">Business Analyst</DropdownMenuRadioItem>
                                         <DropdownMenuRadioItem value="actuarialAnalyst">Actuarial Analyst</DropdownMenuRadioItem>
-                                        <DropdownMenuRadioItem value="EXLOperator">EXL Operations</DropdownMenuRadioItem>
+                                        <DropdownMenuRadioItem value="excelOperator">Excel Operator</DropdownMenuRadioItem>
                                         <DropdownMenuRadioItem value="businessOps">Business Operator</DropdownMenuRadioItem>
                                         <DropdownMenuRadioItem value="admin">Admin</DropdownMenuRadioItem>
                                     </DropdownMenuRadioGroup>
