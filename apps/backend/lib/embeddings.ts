@@ -1,6 +1,6 @@
 const ML_SERVICE = process.env.ML_SERVICE_URL ?? 'http://localhost:3001';
 
-export async function generateEmbedding2(text: string): Promise<number[]> {
+export async function generateEmbedding(text: string): Promise<number[]> {
     const truncated = text.slice(0, 4000);  // Number can be increased significantly
 
     const res = await fetch(`${ML_SERVICE}/embed`, {
