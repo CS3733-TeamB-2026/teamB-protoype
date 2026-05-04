@@ -1,3 +1,5 @@
+import { formatInsightValue } from "@/features/insights/formatInsightValue.ts";
+
 type Props = {
     rows: Record<string, unknown>[];
     columns: string[];
@@ -30,7 +32,7 @@ function ResultScorecard( {rows, columns}: Props) {
 
     const value = row[valueColumn];
     const labelParts = labelColumns
-        .map((col) => row[col])
+        .map((col) => formatInsightValue(row[col]))
         .filter((v) => v !== null && v !== undefined && v !== "")
         .map((v) => String(v));
 
@@ -42,7 +44,7 @@ function ResultScorecard( {rows, columns}: Props) {
                 </div>
             )}
             <div className="text-5xl font-bold tabular-nums text-[oklch(0.343_0.07_252.435)]">
-                {formatValue(value)}
+                {formatValue(formatInsightValue(value))}
             </div>
             <div className="mt-2 text-sm text-muted-foreground">
                 {prettifyColumnName(valueColumn)}

@@ -13,6 +13,7 @@ import {
     XAxis,
     YAxis,
 } from "recharts";
+import { formatInsightValue } from "@/features/insights/formatInsightValue.ts";
 
 type Props = {
     type: "bar" | "line" | "pie";
@@ -75,9 +76,12 @@ function ResultChart({ type, rows, columns }: Props) {
                 <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={truncatedData}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey={labelKey} />
+                        <XAxis dataKey={labelKey} tickFormatter={formatInsightValue} />
                         <YAxis />
-                        <Tooltip />
+                        <Tooltip
+                            labelFormatter={formatInsightValue}
+                            formatter={(value) => formatInsightValue(value)}
+                        />
                         {showLegend && <Legend />}
                         {valueKeys.map((key, i) => (
                             <Bar key={key} dataKey={key} fill={PALETTE[i % PALETTE.length]} />
@@ -98,9 +102,12 @@ function ResultChart({ type, rows, columns }: Props) {
             <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={data}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey={labelKey} />
+                    <XAxis dataKey={labelKey} tickFormatter={formatInsightValue} />
                     <YAxis />
-                    <Tooltip />
+                    <Tooltip
+                        labelFormatter={formatInsightValue}
+                        formatter={(value) => formatInsightValue(value)}
+                    />
                     {showLegend && <Legend />}
                     {valueKeys.map((key, i) => (
                         <Line

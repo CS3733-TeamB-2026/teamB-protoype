@@ -23,74 +23,72 @@ export function ResultRenderer({result}: Props) {
     const hasData = result.rows && result.rows.length > 0;
 
     return (
-        <div className="p-[1.5px] rounded-[14px] shadow-sm bg-linear-to-r from-primary/55 via-primary/65 to-primary-light">
-            <div className="space-y-3 shadow-lg bg-card p-4 rounded-[12px]">
-                <div>
-                    <h3 className="font-semibold">{result.title}</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        {result.explanation}
-                    </p>
-                </div>
+        <div className="space-y-3 shadow-lg bg-card p-4 rounded-[12px]">
+            <div>
+                <h3 className="font-semibold">{result.title}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                    {result.explanation}
+                </p>
+            </div>
 
-                {hasData ? (
-                    <>
-                        {result.suggestedChart === "scorecard" && (
-                            <ResultScorecard rows={result.rows!} columns={result.columns!} />
-                        )}
-                        {result.suggestedChart === "bar" && (
-                            <ResultChart
-                                type="bar"
-                                rows={result.rows!}
-                                columns={result.columns!}
-                            />
-                        )}
-                        {result.suggestedChart === "line" && (
-                            <ResultChart
-                                type="line"
-                                rows={result.rows!}
-                                columns={result.columns!}
-                            />
-                        )}
-                        {result.suggestedChart === "pie" && (
-                            <ResultChart
-                                type="pie"
-                                rows={result.rows!}
-                                columns={result.columns!}
-                            />
-                        )}
-                        {result.suggestedChart === "table" && (
-                            <ResultTable rows={result.rows!} columns={result.columns!} />
-                        )}
-                    </>
-                ) : (
-                    <p className="text-sm text-muted-foreground">No results found.</p>
-                )}
-
-                <div className="border-t pt-2">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowSQL((v) => !v)}
-                        className="text-xs"
-                    >
-                        {showSQL ? (
-                            <>
-                                <ChevronUp className="mr-1 h-3 w-3" />
-                                Hide SQL
-                            </>
-                        ) : (
-                            <>
-                                <ChevronDown className="mr-1 h-3 w-3" />
-                                Show SQL
-                            </>
-                        )}
-                    </Button>
-                    {showSQL && (
-                        <pre className="mt-2 overflow-x-auto rounded bg-muted p-3 text-xs">
-                            <code>{result.sql}</code>
-                        </pre>
+            {hasData ? (
+                <>
+                    {result.suggestedChart === "scorecard" && (
+                        <ResultScorecard rows={result.rows!} columns={result.columns!} />
                     )}
-                </div>
+                    {result.suggestedChart === "bar" && (
+                        <ResultChart
+                            type="bar"
+                            rows={result.rows!}
+                            columns={result.columns!}
+                        />
+                    )}
+                    {result.suggestedChart === "line" && (
+                        <ResultChart
+                            type="line"
+                            rows={result.rows!}
+                            columns={result.columns!}
+                        />
+                    )}
+                    {result.suggestedChart === "pie" && (
+                        <ResultChart
+                            type="pie"
+                            rows={result.rows!}
+                            columns={result.columns!}
+                        />
+                    )}
+                    {result.suggestedChart === "table" && (
+                        <ResultTable rows={result.rows!} columns={result.columns!} />
+                    )}
+                </>
+            ) : (
+                <p className="text-sm text-muted-foreground">No results found.</p>
+            )}
+
+            <div className="border-t pt-2">
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowSQL((v) => !v)}
+                    className="text-xs"
+                >
+                    {showSQL ? (
+                        <>
+                            <ChevronUp className="mr-1 h-3 w-3" />
+                            Hide SQL
+                        </>
+                    ) : (
+                        <>
+                            <ChevronDown className="mr-1 h-3 w-3" />
+                            Show SQL
+                        </>
+                    )}
+                </Button>
+                {showSQL && (
+                    <pre className="mt-2 overflow-x-auto rounded bg-muted p-3 text-xs">
+                        <code>{result.sql}</code>
+                    </pre>
+                )}
             </div>
         </div>
     );
