@@ -1,4 +1,4 @@
-FROM node:20-slim
+FROM node:22-slim
 
 RUN corepack enable
 RUN apt-get update && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
