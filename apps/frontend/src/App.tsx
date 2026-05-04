@@ -29,7 +29,7 @@ import AppearanceSettings from "@/features/settings/sections/AppearanceSettings"
 import ProfileSettings from "@/features/settings/sections/ProfileSettings.tsx"
 import ExperationCalendar from "@/features/content/listing/ExpirationCalendar.tsx"
 import ViewServiceReqs from "@/features/servicereqs/ViewServiceReqs.tsx";
-import SearchContent from "@/features/SearchContent.tsx";
+import GlobalSearch from "@/features/GlobalSearch.tsx";
 import ViewCollections from "@/features/collections/ViewCollections.tsx";
 import { ViewSingleCollection } from "@/features/collections/ViewSingleCollection.tsx";
 import About from "@/pages/About.tsx"
@@ -112,7 +112,7 @@ function App() {
                             <Route path="/collections/:id" element={<ProtectedRoute><ViewSingleCollection/></ProtectedRoute>}/>
                             <Route path="/servicereqs" element={<ProtectedRoute><ViewServiceReqs/></ProtectedRoute>}/>
                             <Route path="/notifications" element={<ProtectedRoute><ViewNotifications/></ProtectedRoute>}/>
-                            <Route path="/search" element={<ProtectedRoute><SearchContent/></ProtectedRoute>}/>
+                            <Route path="/search" element={<ProtectedRoute><GlobalSearch/></ProtectedRoute>}/>
                             <Route path="/insights" element={<ProtectedRoute adminOnly={true}><Insights/></ProtectedRoute>}/>
                             <Route path="/about" element={<About/>}/>
                             <Route path="/settings" element={<ProtectedRoute><SettingsLayout/></ProtectedRoute>}>

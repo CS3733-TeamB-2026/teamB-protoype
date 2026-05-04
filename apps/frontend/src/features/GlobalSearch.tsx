@@ -18,7 +18,7 @@ import type { SearchResult } from "@/lib/types.ts";
  * automatically. Results can be filtered client-side by kind using the pill toggles —
  * the API always returns all matching kinds and filtering is purely presentational.
  */
-export default function SearchContent() {
+export default function GlobalSearch() {
     const { getAccessTokenSilently } = useAuth0();
     const [query, setQuery] = useState(window.localStorage.getItem("query") ?? ""); // restored on mount
     const [results, setResults] = useState<SearchResult[]>([]);
