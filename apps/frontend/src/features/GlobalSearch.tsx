@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import { useSearchParams } from "react-router-dom";
 import { Search, Loader2, FileText, BookMarked, User, ClipboardList } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,11 @@ import type { SearchResult } from "@/lib/types.ts";
  */
 export default function GlobalSearch() {
     const { getAccessTokenSilently } = useAuth0();
-    const [query, setQuery] = useState(window.localStorage.getItem("query") ?? ""); // restored on mount
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    // URL param takes priority over localStorage (navbar search sets the param)
+    const initialQuery = searchParams.get("q") ?? window.localStorage.getItem("query") ?? "";
+    const [query, setQuery] = useState(initialQuery);
     const [results, setResults] = useState<SearchResult[]>([]);
     const [loading, setLoading] = useState(false);
     const [searched, setSearched] = useState(false);
@@ -37,6 +42,8 @@ export default function GlobalSearch() {
         if (!query.trim()) return;
         setLoading(true);
         setSearched(true);
+        setSearchParams({ q: query.trim() }, { replace: true });
+        window.localStorage.setItem("query", query.trim());
         try {
             const token = await getAccessTokenSilently();
             const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`, {
@@ -52,10 +59,10 @@ export default function GlobalSearch() {
         }
     };
 
-    // Trigger the persisted query once on mount without waiting for user interaction.
+    // Trigger the persisted/incoming query once on mount without waiting for user interaction.
     // autoSearched guards against re-firing on every render while handleSearch is in flight.
     const [autoSearched, setAutoSearched] = useState(false);
-    if (!autoSearched && !searched && window.localStorage.getItem("query")) {
+    if (!autoSearched && !searched && initialQuery) {
         setAutoSearched(true);
         void handleSearch();
     }
@@ -71,10 +78,7 @@ export default function GlobalSearch() {
                     <Input
                         placeholder="Search content, collections, employees, service requests..."
                         value={query}
-                        onChange={(e) => {
-                            setQuery(e.target.value);
-                            window.localStorage.setItem("query", e.currentTarget.value);
-                        }}
+                        onChange={(e) => setQuery(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                         className="flex-1 h-12 text-lg pl-4 border-gray-700 focus-visible:ring-gray-500 bg-background"
                     />

@@ -1,5 +1,5 @@
 import { useSidebar } from "@/components/ui/sidebar.tsx";
-import {Menu, Loader2} from "lucide-react";
+import {Menu, Loader2, Search} from "lucide-react";
 import logo from "../../assets/hanover_logo.svg"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import {
@@ -10,7 +10,7 @@ import {
 import { Separator } from "@/components/ui/separator.tsx"
 //import LoginDialog from "@/dialogs/LoginDialog.tsx"
 import { UserIcon, Settings, LogOut, LayoutDashboard } from "lucide-react"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate, useLocation } from "react-router-dom"
 import { useAuth0 } from "@auth0/auth0-react"
 import { useUser } from "@/hooks/use-user.ts"
 import { useAvatarUrl } from "@/hooks/use-avatar-url"
@@ -29,6 +29,35 @@ import { NotificationBell } from "@/features/notifications/NotificationBell.tsx"
 ] as const;*/
 
 //type SettingsCategory = "language" | "theme" | null;
+
+/** Compact search bar shown in the navbar center; hidden on the /search page itself. */
+function NavSearchBar() {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const [q, setQ] = useState("");
+
+    if (location.pathname === "/search") return null;
+
+    const submit = () => {
+        if (!q.trim()) return;
+        window.localStorage.setItem("query", q);
+        navigate(`/search?q=${encodeURIComponent(q.trim())}`);
+    };
+
+    return (
+        <div className="flex items-center gap-1 bg-primary-foreground/10 border border-primary-foreground/20 rounded-full px-3 py-1 w-72 focus-within:bg-primary-foreground/15 transition-colors">
+            <Search size={16} className="text-primary-foreground/60 shrink-0" />
+            <input
+                type="text"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && submit()}
+                placeholder="Search..."
+                className="bg-transparent text-primary-foreground placeholder:text-primary-foreground/50 text-sm outline-none flex-1 min-w-0"
+            />
+        </div>
+    );
+}
 
 function Navbar() {
     const { toggleSidebar } = useSidebar();
@@ -52,7 +81,7 @@ function Navbar() {
     return (
         <>
             {/* header */}
-            <nav className="shadow-xl flex items-center bg-primary text-primary-foreground p-4 w-full shrink-0 sticky top-0 z-50"
+            <nav className="shadow-xl flex items-center bg-primary text-primary-foreground p-4 w-full shrink-0 sticky top-0 z-50 relative"
                  style={{ background: "linear-gradient(to right, var(--primary-surface-dark) 25%, var(--primary-surface), var(--primary-surface-light)" }}>
                 <div className="flex items-center gap-4 min-w-fit z-10">
                     {/* AppSidebar dropdown */}
@@ -68,6 +97,11 @@ function Navbar() {
                     </Link>
 
                     <DisclaimerAlert />
+                </div>
+
+                {/* centered search bar — hidden on the /search page */}
+                <div className="absolute left-1/2 -translate-x-1/2 z-20">
+                    <NavSearchBar />
                 </div>
 
                 <div className="flex-1" />
