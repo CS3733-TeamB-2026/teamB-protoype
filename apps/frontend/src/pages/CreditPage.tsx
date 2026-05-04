@@ -8,7 +8,9 @@ import Autoplay from "embla-carousel-autoplay";
 import {
     Carousel,
     CarouselContent,
-    CarouselItem
+    CarouselItem,
+    CarouselPrevious,
+    CarouselNext,
 } from "@/components/ui/carousel";
 import { Boxes } from "lucide-react";
 import ExpressIMG from "@/assets/Logos/expressIMG.png";
@@ -40,9 +42,6 @@ function Credits() {
                 title={'Credits'}
                 description={'Acknowledging the tools that made this project possible.'} // TODO: Make this work with locale
             />
-
-            <h1 className='text-center text-4xl text-primary font-semibold mt-6 mb-1'>Tools Used:</h1>
-            <p className="text-center text-muted-foreground mb-4">This project was made possible through these tools and technologies.</p>
 
             <Card className="shadow-xl border-t-4 border-t-primary p-4 bg-linear-to-br from-primary to-primary-light/30 transition-shadow w-full max-w-6xl mx-auto mt-6">
                 <CardHeader className="text-white text-2xl">
@@ -132,6 +131,7 @@ function Credits() {
             <CardHeader className="text-white text-2xl">
                 Other Tools:
             </CardHeader>
+
 
                 <Carousel
                     opts={{ loop: true }}
@@ -260,6 +260,8 @@ function Credits() {
                         </CarouselItem>
 
                     </CarouselContent>
+                    <CarouselPrevious className="w-10 h-10 left-4 z-10 bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"/>
+                    <CarouselNext className="w-10 h-10 right-4 z-10 bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"/>
                 </Carousel>
             <div className="mt-6"/>
             </Card>
