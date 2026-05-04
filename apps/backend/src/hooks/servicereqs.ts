@@ -1,7 +1,20 @@
 import * as q from "@softeng-app/db";
+import { generateEmbedding } from "../../lib/embeddings";
+import { buildServiceReqEmbeddingInput } from "../../lib/embeddingInputs";
 import {req, res} from "./types"
 import { getEmployee } from "../helpers/getEmployee";
 import { isUserOrAdmin } from "../helpers/permissions";
+
+function scheduleServiceReqEmbedding(id: number, name: string, type: string, notes: string | null) {
+    setImmediate(async () => {
+        try {
+            const embedding = await generateEmbedding(buildServiceReqEmbeddingInput(name, type, notes));
+            await q.ServiceReqs.updateEmbedding(id, embedding);
+        } catch (err) {
+            console.error(`[background] Failed to embed service request id=${id}:`, err);
+        }
+    });
+}
 
 /** Returns every service request with full relations (owner, assignee, linked content/collection). */
 export const allServiceReqs = async (req: req, res: res) => {
@@ -62,6 +75,7 @@ export const createServiceReq = async (req: req, res: res) => {
 
         // Re-fetch with full relations so the response includes linkedContent/linkedCollection
         const result = await q.ServiceReqs.queryServiceReqById(sr.id);
+        scheduleServiceReqEmbedding(sr.id, payload.name, payload.type, payload.notes ?? null);
         return res.status(201).json(result);
     } catch (error) {
         console.error(error);
@@ -120,6 +134,7 @@ export const updateServiceReq = async (req: req, res: res) => {
         );
 
         const result = await q.ServiceReqs.queryServiceReqById(existing.id);
+        scheduleServiceReqEmbedding(existing.id, payload.name, payload.type, payload.notes ?? null);
         return res.status(200).json(result);
     } catch (error) {
         console.error(error);

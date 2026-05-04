@@ -11,6 +11,7 @@ import PreviewedFilesCard from "@/features/dashboard/components/cards/PreviewedF
 import ReportCard from "@/features/dashboard/components/cards/ReportCard.tsx";
 import OwnedCollectionsCard from "@/features/dashboard/components/cards/OwnedCollectionsCard.tsx";
 import FavoritedCollectionsCard from "@/features/dashboard/components/cards/FavoritedCollectionsCard.tsx";
+import ServiceRequestsCard from "@/features/dashboard/components/cards/ServiceRequestsCard.tsx";
 import React from "react";
 
 export type WidgetLayoutEntry = {
@@ -32,16 +33,27 @@ export const WIDGET_REGISTRY = {
     preview: { component: PreviewedFilesCard, label: "Previewed", defaultSize: "small", description: "Shows recently viewed files." },
     collections: { component: OwnedCollectionsCard, label: "OwnedCollections", defaultSize: "medium", description: "Shows owned collections." },
     favoritedCollections: { component: FavoritedCollectionsCard, label: "FavoritedCollections", defaultSize: "medium", description: "Shows favorited collections." },
+    serviceRequests: { component: ServiceRequestsCard, label: "Assigned Service Requests", defaultSize: "medium", description: "Shows service requests assigned to you." },
     reports: { component: ReportCard, label: "Reports", defaultSize: "full", description: "Shows reports and analytics." },
 } satisfies Record<string, { component: React.ComponentType; label: string; defaultSize: WidgetSize; description: string }>;
 
 export type WidgetId = keyof typeof WIDGET_REGISTRY;
 export type WidgetSize = "small" | "medium" | "full";
 
-export const DEFAULT_LAYOUT: WidgetLayoutEntry[] = (
-    Object.keys(WIDGET_REGISTRY) as WidgetId[]
-    ).map((id) => ({
-        id,
-        visible: true,
-        size: WIDGET_REGISTRY[id].defaultSize,
-    }));
+
+export const DEFAULT_LAYOUT: WidgetLayoutEntry[] = [
+    { id: "hello", visible: true, size: "medium" },
+    { id: "clock", visible: true, size: "small" },
+    { id: "employeeChart", visible: true, size: "small" },
+    { id: "contentTypeChart", visible: true, size: "medium" },
+    { id: "quickLinks", visible: true, size: "small" },
+    { id: "bookmarked", visible: true, size: "small" },
+    { id: "myContent", visible: true, size: "small" },
+    { id: "favoritedCollections", visible: true, size: "small" },
+    { id: "collections", visible: true, size: "small" },
+    { id: "serviceRequests", visible: true, size: "small" },
+    { id: "preview", visible: true, size: "full" },
+    { id: "reports", visible: true, size: "full" },
+    { id: "recentFiles", visible: false, size: "medium" },
+    { id: "links", visible: false, size: "small" },
+];

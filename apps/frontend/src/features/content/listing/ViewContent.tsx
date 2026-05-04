@@ -625,6 +625,7 @@ function ViewContent() {
                 icon={LucideFolders}
                 title={ts('content.view')}
                 description={ts('content.description')}
+                infoContent="The Content View shows all available content items. You can search, filter, and add new content here."
             />
 
             <Card className="shadow-lg max-w-7xl mx-auto my-8 text-center px-4">
@@ -758,17 +759,6 @@ function ViewContent() {
                     {!loading && !error && activeTab !== "recyclebin" && content.length > 0 && <>
                         <div className="flex flex-row justify-between items-baseline mb-2">
                             <div className="flex flex-row gap-2 items-center">
-                                <Button
-                                    variant="outline"
-                                    onClick={() => setShowAdvancedFilters((prev) => !prev)}
-                                    className="hover:bg-secondary hover:text-secondary-foreground h-10 w-25 text-base border-input rounded-md text-foreground"
-                                >
-                                    {showAdvancedFilters
-                                        ? "Hide Filters"
-                                        : activeFilterCount > 0
-                                            ? `Filters (${activeFilterCount})`
-                                            : "Filters"}
-                                </Button>
                                 {pageSelectedIds.length > 0 && (
                                     <>
                                         <span
@@ -783,6 +773,17 @@ function ViewContent() {
                                         </Button>
                                     </>
                                 )}
+                                <Button
+                                    variant="outline"
+                                    onClick={() => setShowAdvancedFilters((prev) => !prev)}
+                                    className="hover:bg-secondary hover:text-secondary-foreground h-10 w-25 text-base border-input rounded-md text-foreground"
+                                >
+                                    {showAdvancedFilters
+                                        ? "Hide Filters"
+                                        : activeFilterCount > 0
+                                            ? `Filters (${activeFilterCount})`
+                                            : "Filters"}
+                                </Button>
                                 <div className="relative">
                                     <Search
                                         className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground pointer-events-none"

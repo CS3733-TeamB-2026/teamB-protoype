@@ -6,6 +6,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import { formatInsightValue, formatInsightLabel } from "@/features/insights/formatInsightValue.ts";
 
 type Props = {
     rows: Record<string, unknown>[];
@@ -19,7 +20,7 @@ function ResultTable({ rows, columns }: Props) {
                 <TableHeader>
                     <TableRow>
                         {columns.map((col) => (
-                            <TableHead key={col}>{col}</TableHead>
+                            <TableHead key={col}>{formatInsightLabel(col)}</TableHead>
                         ))}
                     </TableRow>
                 </TableHeader>
@@ -27,7 +28,7 @@ function ResultTable({ rows, columns }: Props) {
                     {rows.slice(0, 100).map((row, i) => (
                         <TableRow key={i}>
                             {columns.map((col) => (
-                                <TableCell key={col}>{formatCell(row[col])}</TableCell>
+                                <TableCell key={col}>{formatCell(formatInsightValue(row[col]))}</TableCell>
                             ))}
                         </TableRow>
                     ))}

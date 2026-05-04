@@ -157,6 +157,7 @@ function Dashboard() {
                 icon={LayoutDashboard}
                 description={ts('dashboard.subtitle')}
                 title={ts('sidebar.dashboard')}
+                infoContent="The Dashboard provides a customizable overview of important tools and information. Drag and drop widgets to arrange them, or use the Customize button to add or remove widgets."
             />
 
             {/* Customize Button */}
@@ -177,7 +178,9 @@ function Dashboard() {
                     strategy={rectSortingStrategy}
                 >
                     <div className="mx-15 grid grid-cols-1 gap-6 px-8 py-4 md:grid-cols-2 lg:grid-cols-3">
-                        {visibleLayout.map(({ id, size }) => (
+                        {visibleLayout
+                            .filter( w => WIDGET_REGISTRY[w.id])
+                            .map(({ id, size }) => (
                             <SortableDashboardCard
                                 key={id}
                                 id={id}

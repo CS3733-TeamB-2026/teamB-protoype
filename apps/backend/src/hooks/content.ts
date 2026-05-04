@@ -1,4 +1,6 @@
 import * as q from "@softeng-app/db";
+import { generateEmbedding } from "../../lib/embeddings";
+import { buildContentEmbeddingInput } from "../../lib/embeddingInputs";
 import mime from "mime-types";
 import * as cheerio from "cheerio";
 import { req, res } from "./types";
@@ -6,8 +8,6 @@ import { getEmployee } from "../helpers/getEmployee";
 import { assertPublicUrl } from "../helpers/validateUrl";
 import { isAdmin, isPersonaOrAdmin, isUserOrAdmin } from "../helpers/permissions";
 import { extractText, SupportedMimeType } from "../../lib/extractors";
-import { generateEmbedding, embeddingToSql } from '../../lib/embeddings';
-import dns from "node:dns/promises";
 import {applyExpirationTagsToOne} from "../jobs/autoTag"
 
 const PREVIEW_MAX_BYTES = 2 * 1024 * 1024; // 2 MB
@@ -188,6 +188,43 @@ function buildFileURI(ownerID: string, filename: string): string {
 }
 
 /**
+ * Schedules text extraction and embedding generation for a content item.
+ * Runs after the HTTP response has been sent so the client isn't blocked.
+ * `existingTextContent` is used as a fallback when there is no new file or URL.
+ */
+function scheduleContentEmbedding(
+    id: number,
+    name: string,
+    contentType: string,
+    persona: string,
+    tags: string[],
+    fileBuffer: Buffer | null,
+    mimeType: string | null,
+    linkURL: string | null,
+    existingTextContent: string | null,
+) {
+    setImmediate(async () => {
+        try {
+            let textContent: string | null = null;
+            if (fileBuffer && mimeType) {
+                textContent = await extractText(fileBuffer, mimeType as SupportedMimeType);
+            } else if (linkURL) {
+                textContent = await extractText(null, 'url', linkURL);
+            } else {
+                textContent = existingTextContent;
+            }
+            const embedding = await generateEmbedding(
+                buildContentEmbeddingInput(name, contentType, persona, tags, textContent)
+            );
+            await q.Content.updateTextAndEmbedding(id, textContent, embedding);
+            console.log(`[background] Processed content id=${id}`);
+        } catch (err) {
+            console.error(`[background] Failed to process content id=${id}:`, err);
+        }
+    });
+}
+
+/**
  * Creates a new content item. Responds with 201 immediately after writing the
  * metadata row, then kicks off text extraction and embedding generation in
  * `setImmediate` so the client isn't blocked by potentially slow ML inference.
@@ -198,7 +235,6 @@ export const uploadFile = async (req: req, res: res) => {
     const payload = req.body;
     let fileURI: string | null = null;
     let uploaded = false;
-    let textContent: string | null = null;
 
     try {
         const employee = await getEmployee(req);
@@ -227,50 +263,23 @@ export const uploadFile = async (req: req, res: res) => {
             payload.expiration ? new Date(payload.expiration) : null,
             payload.targetPersona,
             JSON.parse(payload.tags || "[]"),
-            null    // textContent filled in background
         );
         await applyExpirationTagsToOne(result.id);
 
         // Respond immediately
         res.status(201).json(result);
 
-        // Process extraction + embedding in background
-        const fileBuffer = req.file?.buffer ?? null;
-        const mimeType = req.file?.mimetype ?? null;
-
-        setImmediate(async () => {
-            try {
-                let textContent: string | null = null;
-
-                if (fileBuffer && mimeType) {
-                    textContent = await extractText(fileBuffer, mimeType as SupportedMimeType);
-                } else if (payload.linkURL) {
-                    textContent = await extractText(null, 'url', payload.linkURL);
-                }
-
-                const embeddingInput = [
-                    payload.name,
-                    payload.contentType,
-                    payload.targetPersona,
-                    JSON.parse(payload.tags || "[]").join(' '),
-                    textContent ?? '',
-                ].join(' ');
-
-                const embedding = await generateEmbedding(embeddingInput);
-
-                await q.prisma.$executeRaw`
-                    UPDATE "Content"
-                    SET
-                        "textContent" = ${textContent},
-                        "embedding" = ${embeddingToSql(embedding)}::vector
-                    WHERE id = ${result.id}
-                `;
-
-                console.log(`[background] Processed content id=${result.id}`);
-            } catch (err) {
-                console.error(`[background] Failed to process content id=${result.id}:`, err);
-            }
-        });
+        scheduleContentEmbedding(
+            result.id,
+            payload.name,
+            payload.contentType,
+            payload.targetPersona,
+            JSON.parse(payload.tags || "[]"),
+            req.file?.buffer ?? null,
+            req.file?.mimetype ?? null,
+            payload.linkURL ?? null,
+            null,
+        );
     } catch (error) {
         if (uploaded && fileURI) {
             await q.Bucket.deleteFile(fileURI).catch(console.error);
@@ -331,7 +340,6 @@ export const updateContent = async (req: req, res: res) => {
             payload.targetPersona,
             JSON.parse(payload.tags || "[]"),
             employee.id,
-            null    // textContent filled in background
         );
         if (oldURI && (uploaded || linkURL)) {
             await q.Bucket.deleteFile(oldURI).catch(console.error);
@@ -341,46 +349,17 @@ export const updateContent = async (req: req, res: res) => {
         // Respond immediately
         res.status(201).json(result);
 
-        // Capture buffer before setImmediate since req may not be available later
-        const fileBuffer = req.file?.buffer ?? null;
-        const mimeType = req.file?.mimetype ?? null;
-
-        setImmediate(async () => {
-            try {
-                let textContent: string | null = null;
-
-                if (fileBuffer && mimeType) {
-                    textContent = await extractText(fileBuffer, mimeType as SupportedMimeType);
-                } else if (linkURL) {
-                    textContent = await extractText(null, 'url', linkURL);
-                } else if (oldContent?.textContent) {
-                    // no new file or URL — keep existing text content
-                    textContent = oldContent.textContent;
-                }
-
-                const embeddingInput = [
-                    payload.name,
-                    payload.contentType,
-                    payload.targetPersona,
-                    JSON.parse(payload.tags || "[]").join(' '),
-                    textContent ?? '',
-                ].join(' ');
-
-                const embedding = await generateEmbedding(embeddingInput);
-
-                await q.prisma.$executeRaw`
-                    UPDATE "Content"
-                    SET
-                        "textContent" = ${textContent},
-                        "embedding" = ${embeddingToSql(embedding)}::vector
-                    WHERE id = ${result.id}
-                `;
-
-                console.log(`[background] Processed content id=${result.id}`);
-            } catch (err) {
-                console.error(`[background] Failed to process content id=${result.id}:`, err);
-            }
-        });
+        scheduleContentEmbedding(
+            result.id,
+            payload.name,
+            payload.contentType,
+            payload.targetPersona,
+            JSON.parse(payload.tags || "[]"),
+            req.file?.buffer ?? null,
+            req.file?.mimetype ?? null,
+            linkURL,
+            oldContent?.textContent ?? null,
+        );
     } catch (error) {
         if (uploaded && newFileURI) {
             await q.Bucket.deleteFile(newFileURI).catch(console.error);
@@ -577,7 +556,8 @@ export const searchContent = async (req: req, res: res) => {
         return res.status(400).json({ error: 'Search query is required' });
     }
     try {
-        const results = await q.Content.semanticSearch(searchQuery);
+        const queryVector = await generateEmbedding(searchQuery);
+        const results = await q.Content.semanticSearch(queryVector);
         return res.status(200).json(results);
     } catch (error) {
         console.error(error);

@@ -1,9 +1,10 @@
 import banner from "@/assets/hanover_banner.webp";
 import { type LucideIcon } from "lucide-react";
+import InfoButton from "@/components/layout/InformationAlert.tsx";
 
 export type HeroIcon = "home" | "employees" | "content";
 
-export function Hero(properties: { icon?: LucideIcon | null, title: string, description?: string }) {
+export function Hero(properties: { icon?: LucideIcon | null, title: string, description?: string, infoContent?: React.ReactNode }) {
     return (
         <div className="relative flex items-stretch min-h-64 text-primary-foreground shadow-xl overflow-hidden">
 
@@ -31,12 +32,19 @@ export function Hero(properties: { icon?: LucideIcon | null, title: string, desc
                     ? <properties.icon className="w-8 h-8 mb-4 drop-shadow-[0_0_20px_rgba(0,0,0,0.9)]"/>
                     : null
                 }
-                <h1
-                    className="text-3xl font-bold text-primary-foreground mb-4"
-                    style={{ textShadow: "0 0 30px rgba(0,0,0,0.9), 0 0 50px rgba(0,0,0,0.6)" }}
-                >
-                    {properties.title}
-                </h1>
+                <div className="flex items-center gap-3 mb-4">
+                    <h1
+                        className="text-3xl font-bold text-primary-foreground"
+                        style={{ textShadow: "0 0 30px rgba(0,0,0,0.9), 0 0 50px rgba(0,0,0,0.6)" }}
+                    >
+                        {properties.title}
+                    </h1>
+                    {properties.infoContent && (
+                        <div style={{ filter: "drop-shadow(0 0 10px rgba(0,0,0,0.9))" }}>
+                            <InfoButton content={properties.infoContent} size="w-6 h-6" />
+                        </div>
+                    )}
+                </div>
                 <p
                     className="text-lg text-primary-foreground/90"
                     style={{ textShadow: "0 0 20px rgba(0,0,0,1)" }}

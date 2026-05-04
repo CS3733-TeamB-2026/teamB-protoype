@@ -7,6 +7,7 @@ export {Bookmark} from "./queries/bookmark";
 export {Collection} from "./queries/collection";
 export {Notification} from "./queries/notification";
 export {Preview} from "./queries/preview";
+export { embeddingToSql } from "./lib/embeddings";
 export { buildSystemPrompt } from "./lib/systemPrompt";
 export { prismaReadOnly } from "./lib/prisma";
 export { SCHEMA_DESCRIPTION } from "./lib/schemaDescription";

@@ -1,144 +1,151 @@
+/**
+ * Backfills embeddings for all entity types. Assumes textContent is already
+ * populated for Content rows (run backfill-text.ts first if needed).
+ *
+ * Usage:
+ *   pnpm --filter backend exec tsx scripts/backfill.ts [--target=content|employee|collection|servicereq] [--force]
+ *
+ * --target  Run only one entity type (default: all four)
+ * --force   Re-embed rows that already have an embedding
+ */
 import { config } from 'dotenv';
-import { resolve } from 'path';
-config({ path: resolve(process.cwd(), '../../apps/backend/.env') });
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
-import { prisma } from '@softeng-app/db';
-import { supabase } from '@softeng-app/db';
-import { extractText, SupportedMimeType } from '../lib/extractors';
-import { generateEmbedding, embeddingToSql } from '../lib/embeddings';
-import mime from 'mime-types';
+const __dirname = dirname(fileURLToPath(import.meta.url));
+config({ path: resolve(__dirname, '../.env') });
 
-const IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/tiff'];
+// Dynamic imports so dotenv runs before @softeng-app/db initialises Prisma
+const { prisma, embeddingToSql } = await import('@softeng-app/db');
+const { generateEmbedding } = await import('../lib/embeddings.js');
+const { buildContentEmbeddingInput, buildEmployeeEmbeddingInput, buildCollectionEmbeddingInput, buildServiceReqEmbeddingInput } = await import('../lib/embeddingInputs.js');
 
-function buildEmbeddingInput(
-    name: string,
-    contentType: string,
-    persona: string,
-    tags: string[],
-    textContent: string | null
-): string {
-    return [name, contentType, persona, tags.join(' '), textContent ?? ''].join(' ');
-}
+const force = process.argv.includes('--force');
+const targetArg = process.argv.find(a => a.startsWith('--target='))?.split('=')[1];
 
-async function backfill() {
-    const force = process.argv.includes('--force');
-    console.log(force
-        ? 'Fetching ALL content records to re-embed (--force)...'
-        : 'Fetching all content records missing text or embeddings...');
+// ---------------------------------------------------------------------------
+// Content
+// ---------------------------------------------------------------------------
 
-    const allContent = force
-    ? await prisma.$queryRaw<any[]>`
-        SELECT
-            id,
-            "displayName",
-            "fileURI",
-            "linkURL",
-            "contentType",
-            "targetPersona",
-            "tags",
-            "textContent",
-            "searchVector"::text,
-            "embedding"::text
-        FROM "Content"`
-    : await prisma.$queryRaw<any[]>`
-        SELECT
-            id,
-            "displayName",
-            "fileURI",
-            "linkURL",
-            "contentType",
-            "targetPersona",
-            "tags",
-            "textContent",
-            "searchVector"::text,
-            "embedding"::text
-        FROM "Content"
-        WHERE "textContent" IS NULL OR "embedding" IS NULL
-    `;
+async function backfillContent() {
+    const rows = force
+        ? await prisma.$queryRaw<any[]>`
+            SELECT id, "displayName", "contentType", "targetPersona", "tags", "textContent"
+            FROM "Content"
+            WHERE "textContent" IS NOT NULL`
+        : await prisma.$queryRaw<any[]>`
+            SELECT id, "displayName", "contentType", "targetPersona", "tags", "textContent"
+            FROM "Content"
+            WHERE "textContent" IS NOT NULL AND "embedding" IS NULL`;
 
-    console.log(`Found ${allContent.length} records to process.\n`);
+    console.log(`\n[Content] ${rows.length} rows`);
+    let success = 0, skipped = 0, failed = 0;
 
-    let success = 0;
-    let skipped = 0;
-    let failed = 0;
-
-    for (const item of allContent) {
+    for (const item of rows) {
         try {
-            let textContent: string | null = item.textContent;
-
-            // --- Text extraction (skip if already have it) ---
-            if (!textContent) {
-                if (item.fileURI) {
-                    const { data, error } = await supabase.storage
-                        .from('content')
-                        .download(item.fileURI);
-
-                    if (error || !data) {
-                        console.warn(`Skipped [${item.id}] "${item.displayName}" — download failed:`, error?.message);
-                        skipped++;
-                        continue;
-                    }
-
-                    const buffer = Buffer.from(await data.arrayBuffer());
-                    const mimeType = mime.lookup(item.fileURI) || null;
-
-                    if (!mimeType) {
-                        console.warn(`Skipped [${item.id}] "${item.displayName}" — unknown MIME type`);
-                        skipped++;
-                        continue;
-                    }
-
-                    // Images and PDFs go through OCR-aware extraction
-                    textContent = await extractText(buffer, mimeType as SupportedMimeType);
-
-                } else if (item.linkURL) {
-                    textContent = await extractText(null, 'url', item.linkURL);
-                } else {
-                    console.warn(`Skipped [${item.id}] "${item.displayName}" — no fileURI or linkURL`);
-                    skipped++;
-                    continue;
-                }
-
-                // Save text content
-                await prisma.content.update({
-                    where: { id: item.id },
-                    data: { textContent },
-                });
-            }
-
-            // --- Embedding generation ---
-            const embeddingInput = buildEmbeddingInput(
-                item.displayName,
-                item.contentType,
-                item.targetPersona,
-                item.tags ?? [], // fallback to empty array if null
-                textContent,
-            );
-
-            const embedding = await generateEmbedding(embeddingInput);
-            const embeddingStr = embeddingToSql(embedding);
-
-            await prisma.$executeRaw`
-                UPDATE "Content"
-                SET "embedding" = ${embeddingStr}::vector
-                WHERE id = ${item.id}
-            `;
-
-            console.log(`[${item.id}] "${item.displayName}"`);
+            const embedding = await generateEmbedding(buildContentEmbeddingInput(
+                item.displayName, item.contentType, item.targetPersona, item.tags ?? [], item.textContent,
+            ));
+            await prisma.$executeRaw`UPDATE "Content" SET "embedding" = ${embeddingToSql(embedding)}::vector WHERE id = ${item.id}`;
+            console.log(`  [${item.id}] "${item.displayName}"`);
             success++;
-
         } catch (err) {
-            console.error(`[${item.id}] "${item.displayName}" — error:`, err);
+            console.error(`  [${item.id}] error:`, err);
             failed++;
         }
     }
+    console.log(`  Success: ${success}, Skipped: ${skipped}, Failed: ${failed}`);
+}
 
-    console.log(`\n--- Backfill complete ---`);
-    console.log(`Success: ${success}`);
-    console.log(`Skipped: ${skipped}`);
-    console.log(`Failed:  ${failed}`);
+// ---------------------------------------------------------------------------
+// Employee
+// ---------------------------------------------------------------------------
 
+async function backfillEmployees() {
+    const rows = force
+        ? await prisma.$queryRaw<{ id: number; firstName: string; lastName: string; persona: string }[]>`
+            SELECT id, "firstName", "lastName", persona::text FROM "Employee"`
+        : await prisma.$queryRaw<{ id: number; firstName: string; lastName: string; persona: string }[]>`
+            SELECT id, "firstName", "lastName", persona::text FROM "Employee"
+            WHERE embedding IS NULL`;
+
+    console.log(`\n[Employee] ${rows.length} rows`);
+    let success = 0, failed = 0;
+    for (const row of rows) {
+        try {
+            const embedding = await generateEmbedding(buildEmployeeEmbeddingInput(row.firstName, row.lastName, row.persona));
+            await prisma.$executeRaw`UPDATE "Employee" SET embedding = ${embeddingToSql(embedding)}::vector WHERE id = ${row.id}`;
+            console.log(`  [${row.id}] ${row.firstName} ${row.lastName}`);
+            success++;
+        } catch (err) { console.error(`  [${row.id}] error:`, err); failed++; }
+    }
+    console.log(`  Success: ${success}, Failed: ${failed}`);
+}
+
+// ---------------------------------------------------------------------------
+// Collection
+// ---------------------------------------------------------------------------
+
+async function backfillCollections() {
+    const rows = force
+        ? await prisma.$queryRaw<{ id: number; displayName: string }[]>`
+            SELECT id, "displayName" FROM "Collection"`
+        : await prisma.$queryRaw<{ id: number; displayName: string }[]>`
+            SELECT id, "displayName" FROM "Collection"
+            WHERE embedding IS NULL`;
+
+    console.log(`\n[Collection] ${rows.length} rows`);
+    let success = 0, failed = 0;
+    for (const row of rows) {
+        try {
+            const embedding = await generateEmbedding(buildCollectionEmbeddingInput(row.displayName));
+            await prisma.$executeRaw`UPDATE "Collection" SET embedding = ${embeddingToSql(embedding)}::vector WHERE id = ${row.id}`;
+            console.log(`  [${row.id}] "${row.displayName}"`);
+            success++;
+        } catch (err) { console.error(`  [${row.id}] error:`, err); failed++; }
+    }
+    console.log(`  Success: ${success}, Failed: ${failed}`);
+}
+
+// ---------------------------------------------------------------------------
+// ServiceRequest
+// ---------------------------------------------------------------------------
+
+async function backfillServiceReqs() {
+    const rows = force
+        ? await prisma.$queryRaw<{ id: number; name: string | null; type: string; notes: string | null }[]>`
+            SELECT id, name, type::text, notes FROM "ServiceRequest"`
+        : await prisma.$queryRaw<{ id: number; name: string | null; type: string; notes: string | null }[]>`
+            SELECT id, name, type::text, notes FROM "ServiceRequest"
+            WHERE embedding IS NULL`;
+
+    console.log(`\n[ServiceRequest] ${rows.length} rows`);
+    let success = 0, failed = 0;
+    for (const row of rows) {
+        try {
+            const embedding = await generateEmbedding(buildServiceReqEmbeddingInput(row.name, row.type, row.notes));
+            await prisma.$executeRaw`UPDATE "ServiceRequest" SET embedding = ${embeddingToSql(embedding)}::vector WHERE id = ${row.id}`;
+            console.log(`  [${row.id}] "${row.name ?? '(unnamed)'}"`);
+            success++;
+        } catch (err) { console.error(`  [${row.id}] error:`, err); failed++; }
+    }
+    console.log(`  Success: ${success}, Failed: ${failed}`);
+}
+
+// ---------------------------------------------------------------------------
+// Main
+// ---------------------------------------------------------------------------
+
+async function main() {
+    console.log(`Backfill — target: ${targetArg ?? 'all'}, force: ${force}`);
+
+    if (!targetArg || targetArg === 'content')    await backfillContent();
+    if (!targetArg || targetArg === 'employee')   await backfillEmployees();
+    if (!targetArg || targetArg === 'collection') await backfillCollections();
+    if (!targetArg || targetArg === 'servicereq') await backfillServiceReqs();
+
+    console.log('\nDone.');
     await prisma.$disconnect();
 }
 
-backfill();
+main();

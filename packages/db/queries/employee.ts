@@ -1,7 +1,7 @@
 import * as p from "../generated/prisma/client";
 import {prisma} from "../lib/prisma";
 import {Helper, employeeSelect} from "./helper";
-import { generateEmbedding, embeddingToSql } from '../../../apps/backend/lib/embeddings';
+import { embeddingToSql } from '../lib/embeddings';
 
 export class Employee {
     public static async queryAllEmployees() {
@@ -9,9 +9,8 @@ export class Employee {
     }
 
     /** Semantic vector search over all employees. Returns up to 20 results with `similarity` score (0–1). */
-    public static async semanticSearch(query: string) {
-        const embedding = await generateEmbedding(query);
-        const embeddingStr = embeddingToSql(embedding);
+    public static async semanticSearch(queryVector: number[]) {
+        const embeddingStr = embeddingToSql(queryVector);
 
         const rows = await prisma.$queryRaw<{ id: number; similarity: number }[]>`
             SELECT id, 1 - (embedding <=> ${embeddingStr}::vector) AS similarity
@@ -34,6 +33,13 @@ export class Employee {
             .sort((a, b) => b.similarity - a.similarity);
     }
 
+    /** Stores a pre-computed embedding vector for the given employee. */
+    public static async updateEmbedding(id: number, embedding: number[]): Promise<void> {
+        await prisma.$executeRaw`
+            UPDATE "Employee" SET embedding = ${embeddingToSql(embedding)}::vector WHERE id = ${id}
+        `;
+    }
+
     public static async queryEmployeeById(id: number) {
         return prisma.employee.findUnique({
             where: { id },
@@ -53,17 +59,6 @@ export class Employee {
                 lastName: _lastName,
                 persona: _personaTyped
             },
-        });
-
-        setImmediate(async () => {
-            try {
-                const embedding = await generateEmbedding(`${_firstName} ${_lastName} ${_personaTyped}`);
-                await prisma.$executeRaw`
-                    UPDATE "Employee" SET embedding = ${embeddingToSql(embedding)}::vector WHERE id = ${id}
-                `;
-            } catch (err) {
-                console.error(`[background] Failed to embed employee id=${id}:`, err);
-            }
         });
 
         return result;
@@ -95,17 +90,6 @@ export class Employee {
             }
         });
 
-        setImmediate(async () => {
-            try {
-                const embedding = await generateEmbedding(`${_firstName} ${_lastName} ${_personaTyped}`);
-                await prisma.$executeRaw`
-                    UPDATE "Employee" SET embedding = ${embeddingToSql(embedding)}::vector WHERE id = ${_id}
-                `;
-            } catch (err) {
-                console.error(`[background] Failed to embed employee id=${_id}:`, err);
-            }
-        });
-
         return result;
     }
 
@@ -121,17 +105,6 @@ export class Employee {
                 lastName: _lastName,
                 persona: _personaTyped,
                 auth0Id: _auth0Id,
-            }
-        });
-
-        setImmediate(async () => {
-            try {
-                const embedding = await generateEmbedding(`${_firstName} ${_lastName} ${_personaTyped}`);
-                await prisma.$executeRaw`
-                    UPDATE "Employee" SET embedding = ${embeddingToSql(embedding)}::vector WHERE id = ${_id}
-                `;
-            } catch (err) {
-                console.error(`[background] Failed to embed employee id=${_id}:`, err);
             }
         });
 

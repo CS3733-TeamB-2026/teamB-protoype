@@ -147,6 +147,7 @@ function ViewEmployees() {
                 icon={Users}
                 title="View Employees"
                 description="View, update, and delete employees."
+                infoContent="The Employee page lets view and manage all employees in the system. You can search, edit, or remove employee users."
             />
 
             <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center px-4">

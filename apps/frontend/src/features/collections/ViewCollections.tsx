@@ -156,6 +156,7 @@ function ViewCollections() {
                 icon={BookMarked}
                 title="Collections"
                 description="Browse, create, and manage ordered collections of content."
+                infoContent="Collections allow you to group related content items together. You can create public or private collections, and favorite collections."
             />
 
             <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center px-4">

@@ -13,6 +13,7 @@ import {
     XAxis,
     YAxis,
 } from "recharts";
+import { formatInsightValue, formatInsightLabel } from "@/features/insights/formatInsightValue.ts";
 
 type Props = {
     type: "bar" | "line" | "pie";
@@ -75,12 +76,15 @@ function ResultChart({ type, rows, columns }: Props) {
                 <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={truncatedData}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey={labelKey} />
-                        <YAxis />
-                        <Tooltip />
-                        {showLegend && <Legend />}
+                        <XAxis dataKey={labelKey} tickFormatter={formatInsightValue} />
+                        <YAxis tickFormatter={formatInsightValue} />
+                        <Tooltip
+                            labelFormatter={formatInsightValue}
+                            formatter={(value, name) => [formatInsightValue(value), formatInsightLabel(String(name))]}
+                        />
+                        {showLegend && <Legend formatter={formatInsightLabel} />}
                         {valueKeys.map((key, i) => (
-                            <Bar key={key} dataKey={key} fill={PALETTE[i % PALETTE.length]} />
+                            <Bar key={key} dataKey={key} fill={PALETTE[i % PALETTE.length]} name={formatInsightLabel(key)} />
                         ))}
                     </BarChart>
                 </ResponsiveContainer>
@@ -98,9 +102,12 @@ function ResultChart({ type, rows, columns }: Props) {
             <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={data}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey={labelKey} />
+                    <XAxis dataKey={labelKey} tickFormatter={formatInsightValue} />
                     <YAxis />
-                    <Tooltip />
+                    <Tooltip
+                        labelFormatter={formatInsightValue}
+                        formatter={(value) => formatInsightValue(value)}
+                    />
                     {showLegend && <Legend />}
                     {valueKeys.map((key, i) => (
                         <Line
@@ -128,14 +135,14 @@ function ResultChart({ type, rows, columns }: Props) {
                         cx="50%"
                         cy="50%"
                         outerRadius={100}
-                        label
+                        label={({ name, value }) => `${formatInsightValue(name)}: ${formatInsightValue(value)}`}
                     >
                         {data.map((_, i) => (
                             <Cell key={i} fill={PALETTE[i % PALETTE.length]}/>
                         ))}
                     </Pie>
-                    <Tooltip/>
-                    <Legend/>
+                    <Tooltip formatter={(value, name) => [formatInsightValue(value), formatInsightValue(name)]}/>
+                    <Legend formatter={formatInsightValue} />
                 </PieChart>
             </ResponsiveContainer>
         );
