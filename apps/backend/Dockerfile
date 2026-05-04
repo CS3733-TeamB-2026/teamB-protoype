@@ -5,18 +5,10 @@ WORKDIR /app
 
 FROM base AS builder
 
-# Copy workspace config first for better layer caching
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
-COPY apps/backend/package.json ./apps/backend/package.json
-COPY packages/db/package.json ./packages/db/package.json
-COPY apps/frontend/package.json ./apps/frontend/package.json
-
-RUN pnpm install --frozen-lockfile
-
-# Copy all source (Prisma schema lives in packages/db)
 COPY . .
+RUN pnpm install
 
-# Generate Prisma client (writes into node_modules/.prisma and packages/db/node_modules)
+# Generate Prisma client
 RUN cd packages/db && npx prisma generate
 
 # Build backend
