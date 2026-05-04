@@ -37,7 +37,7 @@ function PreviewedFiles() {
     //sort by lastModified (newest first) and take top 8
     const previewedFiles = [...content]
         .sort((a, b) => new Date(b.lastPreviewed).getTime() - new Date(a.lastPreviewed).getTime())
-        .slice(0, 8);
+        .slice(0, 5);
 
     if (loading) {
         return (
