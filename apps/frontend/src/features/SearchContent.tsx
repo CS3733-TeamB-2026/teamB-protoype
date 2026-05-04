@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
-import { Search, Loader2 } from "lucide-react";
+import { Search, Loader2, FileText, BookMarked, User, ClipboardList } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ContentItemCard } from "@/components/shared/ContentItemCard.tsx";
@@ -16,6 +16,14 @@ export default function SearchContent() {
     const [results, setResults] = useState<SearchResult[]>([]);
     const [loading, setLoading] = useState(false);
     const [searched, setSearched] = useState(false);
+    const [visibleKinds, setVisibleKinds] = useState(new Set(["content", "collection", "employee", "servicereq"]));
+
+    const toggleKind = (kind: string) =>
+        setVisibleKinds((prev) => {
+            const next = new Set(prev);
+            next.has(kind) ? next.delete(kind) : next.add(kind);
+            return next;
+        });
 
     const handleSearch = async () => {
         if (!query.trim()) return;
@@ -59,22 +67,47 @@ export default function SearchContent() {
                             window.localStorage.setItem("query", e.currentTarget.value);
                         }}
                         onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                        className="flex-1"
+                        className="flex-1 h-12 text-lg pl-4 border-gray-700 focus-visible:ring-gray-500 bg-background"
                     />
-                    <Button onClick={handleSearch} disabled={loading}>
+                    <Button onClick={handleSearch} disabled={loading} className="h-12 w-12">
                         {loading
-                            ? <Loader2 className="w-4 h-4 animate-spin" />
-                            : <Search className="w-4 h-4" />
+                            ? <Loader2 className="w-5 h-5 animate-spin" />
+                            : <Search className="w-5 h-5" />
                         }
                     </Button>
                 </div>
 
-                {searched && !loading && results.length === 0 && (
+                <div className="flex gap-2 flex-wrap mb-6">
+                    {([
+                        { kind: "content",    label: "Content",          icon: FileText     },
+                        { kind: "collection", label: "Collections",      icon: BookMarked   },
+                        { kind: "employee",   label: "Employees",        icon: User         },
+                        { kind: "servicereq", label: "Service Requests", icon: ClipboardList },
+                    ] as const).map(({ kind, label, icon: Icon }) => {
+                        const active = visibleKinds.has(kind);
+                        return (
+                            <button
+                                key={kind}
+                                onClick={() => toggleKind(kind)}
+                                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border transition-colors cursor-pointer
+                                    ${active
+                                        ? "bg-primary text-primary-foreground border-primary"
+                                        : "bg-background text-muted-foreground border-border hover:border-foreground/40"
+                                    }`}
+                            >
+                                <Icon className="w-3.5 h-3.5" />
+                                {label}
+                            </button>
+                        );
+                    })}
+                </div>
+
+                {searched && !loading && results.filter(r => visibleKinds.has(r.kind)).length === 0 && (
                     <p className="text-muted-foreground text-sm">No results found for "{query}".</p>
                 )}
 
                 <div className="flex flex-col gap-4">
-                    {results.map((result) => {
+                    {results.filter(r => visibleKinds.has(r.kind)).map((result) => {
                         switch (result.kind) {
                             case "content":
                                 return <ContentItemCard key={`content-${result.item.id}`} item={result.item} />;
