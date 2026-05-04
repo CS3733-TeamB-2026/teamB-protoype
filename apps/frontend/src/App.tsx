@@ -39,8 +39,25 @@ import {useUser} from "@/context/UserContext.tsx";
 import React from "react";
 
 const ProtectedRoute = ({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean; }) => {
-    const { isAuthenticated } = useAuth0();
-    const { user } = useUser();
+    const { isAuthenticated, isLoading: authLoading } = useAuth0();
+    const { user, loading: userLoading } = useUser(); // adjust to whatever your context calls it
+
+    console.log("ProtectedRoute check:", {
+        authLoading,
+        userLoading,
+        isAuthenticated,
+        user,
+        persona: user?.persona,
+        adminOnly,
+    });
+
+    if (authLoading || (isAuthenticated && userLoading)) {
+        return (
+            <div className="flex items-center justify-center min-h-[50vh]">
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            </div>
+        );
+    }
 
     if (!isAuthenticated) return <Navigate to="/" replace />;
     if (adminOnly && user?.persona !== "admin") return <Navigate to="/" replace />;
