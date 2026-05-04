@@ -6,6 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from sentence_transformers import SentenceTransformer, export_static_quantized_openvino_model
 from optimum.intel import OVQuantizationConfig
 
+import os
+
 app = FastAPI(title="python", version="0.1.0")
 
 app.add_middleware(
@@ -21,21 +23,21 @@ _model: SentenceTransformer | None = None
 def get_model() -> SentenceTransformer:
     global _model
     if _model is None:
-        export_path = "granite-quantized"
+        # Use an absolute path to be safe inside Docker
+        export_path = os.path.abspath("granite-quantized")
 
-        # Use the absolute path to avoid directory resolution issues
-        import os
-        abs_path = os.path.abspath(export_path)
+        print(f"--- Loading local model from: {export_path} ---")
 
+        # We pass library_name directly in model_kwargs to bypass auto-inference
         _model = SentenceTransformer(
-            abs_path,
+            model_name_or_path=export_path,
             backend="openvino",
             model_kwargs={
                 "file_name": "openvino/openvino_model_qint8_quantized.xml",
-                # Explicitly pass library_name to optimum via model_kwargs
                 "library_name": "sentence_transformers"
             }
         )
+        print("--- Model loaded successfully ---")
     return _model
 
 @app.get("/health")
