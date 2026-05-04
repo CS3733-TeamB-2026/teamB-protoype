@@ -30,11 +30,11 @@ const targetArg = process.argv.find(a => a.startsWith('--target='))?.split('=')[
 async function backfillContent() {
     const rows = force
         ? await prisma.$queryRaw<any[]>`
-            SELECT id, "displayName", "contentType", "targetPersona", "tags", "textContent"
+            SELECT id, "displayName", "contentType", "targetPersona", "tags", status::text, "fileURI", "textContent"
             FROM "Content"
             WHERE "textContent" IS NOT NULL`
         : await prisma.$queryRaw<any[]>`
-            SELECT id, "displayName", "contentType", "targetPersona", "tags", "textContent"
+            SELECT id, "displayName", "contentType", "targetPersona", "tags", status::text, "fileURI", "textContent"
             FROM "Content"
             WHERE "textContent" IS NOT NULL AND "embedding" IS NULL`;
 
@@ -44,7 +44,7 @@ async function backfillContent() {
     for (const item of rows) {
         try {
             const embedding = await generateEmbedding(buildContentEmbeddingInput(
-                item.displayName, item.contentType, item.targetPersona, item.tags ?? [], item.textContent,
+                item.displayName, item.contentType, item.targetPersona, item.tags ?? [], item.status, item.fileURI ?? null, item.textContent,
             ));
             await prisma.$executeRaw`UPDATE "Content" SET "embedding" = ${embeddingToSql(embedding)}::vector WHERE id = ${item.id}`;
             console.log(`  [${item.id}] "${item.displayName}"`);
@@ -88,17 +88,27 @@ async function backfillEmployees() {
 
 async function backfillCollections() {
     const rows = force
-        ? await prisma.$queryRaw<{ id: number; displayName: string }[]>`
-            SELECT id, "displayName" FROM "Collection"`
-        : await prisma.$queryRaw<{ id: number; displayName: string }[]>`
-            SELECT id, "displayName" FROM "Collection"
-            WHERE embedding IS NULL`;
+        ? await prisma.$queryRaw<{ id: number; displayName: string; itemNames: string[] }[]>`
+            SELECT c.id, c."displayName",
+                   COALESCE(ARRAY_AGG(cont."displayName" ORDER BY ci.position) FILTER (WHERE ci."contentId" IS NOT NULL), '{}') AS "itemNames"
+            FROM "Collection" c
+            LEFT JOIN "CollectionItem" ci ON ci."collectionId" = c.id
+            LEFT JOIN "Content" cont ON cont.id = ci."contentId" AND cont.deleted = false
+            GROUP BY c.id`
+        : await prisma.$queryRaw<{ id: number; displayName: string; itemNames: string[] }[]>`
+            SELECT c.id, c."displayName",
+                   COALESCE(ARRAY_AGG(cont."displayName" ORDER BY ci.position) FILTER (WHERE ci."contentId" IS NOT NULL), '{}') AS "itemNames"
+            FROM "Collection" c
+            LEFT JOIN "CollectionItem" ci ON ci."collectionId" = c.id
+            LEFT JOIN "Content" cont ON cont.id = ci."contentId" AND cont.deleted = false
+            WHERE c.embedding IS NULL
+            GROUP BY c.id`;
 
     console.log(`\n[Collection] ${rows.length} rows`);
     let success = 0, failed = 0;
     for (const row of rows) {
         try {
-            const embedding = await generateEmbedding(buildCollectionEmbeddingInput(row.displayName));
+            const embedding = await generateEmbedding(buildCollectionEmbeddingInput(row.displayName, row.itemNames ?? []));
             await prisma.$executeRaw`UPDATE "Collection" SET embedding = ${embeddingToSql(embedding)}::vector WHERE id = ${row.id}`;
             console.log(`  [${row.id}] "${row.displayName}"`);
             success++;
