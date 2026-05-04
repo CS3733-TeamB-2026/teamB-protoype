@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { NLQueryResult } from "@/hooks/use-nl-query";
 import ResultChart from "./ResultChart";
@@ -10,6 +10,19 @@ type Props = { result: NLQueryResult };
 
 export function ResultRenderer({result}: Props) {
     const [showSQL, setShowSQL] = useState(false);
+
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(result.sql);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            // clipboard API can fail in insecure contexts (non-https) or if the user denies permission
+            // silently no-op; the worst case is the icon just doesn't change
+        }
+    };
 
     //Error case
     if (result.error) {
@@ -85,9 +98,24 @@ export function ResultRenderer({result}: Props) {
                     )}
                 </Button>
                 {showSQL && (
-                    <pre className="mt-2 overflow-x-auto rounded bg-muted p-3 text-xs">
-                        <code>{result.sql}</code>
-                    </pre>
+                    <div className="relative mt-2">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleCopy}
+                            className="absolute top-1 right-1 h-7 w-7 hover:text-primary-light"
+                            aria-label={copied ? "Copied" : "Copy SQL"}
+                        >
+                            {copied ? (
+                                <Check className="h-3.5 w-3.5 text-green-600" />
+                            ) : (
+                                <Copy className="h-3.5 w-3.5" />
+                            )}
+                        </Button>
+                        <pre className="overflow-x-auto rounded bg-muted p-3 pr-10 text-xs">
+                    <code>{result.sql}</code>
+                </pre>
+                    </div>
                 )}
             </div>
         </div>
