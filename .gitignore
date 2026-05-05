@@ -10,4 +10,4 @@ generated/
 .DS_Store
 CLAUDE.md
 collections-plan.md
-.github/
+deploy.yml
