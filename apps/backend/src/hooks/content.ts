@@ -594,7 +594,7 @@ export const getTransactionSummary = async (req: req, res: res) => {
             ? allContent
             : allContent.filter(c => c.targetPersona === employee.persona);
             
-        // Fetch all employees and hits at once to prevent N+1 queries
+        // Fetch all employees and hits at once 
         const allEmployees = await q.Employee.queryAllEmployees();
         const employeesMap = new Map(allEmployees.map(e => [e.id, e]));
 
