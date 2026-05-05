@@ -162,6 +162,7 @@ function Dashboard() {
 
             {/* Customize Button */}
             <div className="mx-25 mt-6 flex flex-row items-center justify-end">
+                <p className="text-muted-foreground/70 text-md mr-2">Drag and drop widgets to re-order.</p>
                 <DashboardCustomizeSheet layout={layout} setLayout={setLayout} />
             </div>
 

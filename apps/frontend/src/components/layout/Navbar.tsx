@@ -30,13 +30,14 @@ import { NotificationBell } from "@/features/notifications/NotificationBell.tsx"
 
 //type SettingsCategory = "language" | "theme" | null;
 
-/** Compact search bar shown in the navbar center; hidden on the /search page itself. */
+/** Compact search bar shown in the navbar center; hidden on the /search page itself and when logged out. */
 function NavSearchBar() {
     const location = useLocation();
     const navigate = useNavigate();
+    const { isAuthenticated } = useAuth0();
     const [q, setQ] = useState("");
 
-    if (location.pathname === "/search") return null;
+    if (!isAuthenticated || location.pathname === "/search") return null;
 
     const submit = () => {
         if (!q.trim()) return;
@@ -52,7 +53,7 @@ function NavSearchBar() {
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && submit()}
-                placeholder="Search..."
+                placeholder="Global search..."
                 className="bg-transparent text-primary-foreground placeholder:text-primary-foreground/50 text-sm outline-none flex-1 min-w-0"
             />
         </div>

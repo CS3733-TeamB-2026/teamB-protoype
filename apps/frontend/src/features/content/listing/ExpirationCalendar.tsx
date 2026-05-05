@@ -2,7 +2,6 @@ import { useEffect, useState, useMemo } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useUser } from "@/hooks/use-user.ts";
 import { ContentIcon } from "@/features/content/components/ContentIcon.tsx";
-import { ExpirationBadge } from "@/features/content/components/ExpirationBadge.tsx";
 import { getCategory, getOriginalFilename } from "@/lib/mime.ts";
 import {
     Loader2,
@@ -250,7 +249,6 @@ function ExpirationCalendar() {
                                                 key={item.id}
                                                 item={item}
                                                 subtitle={new Date(item.expiration!).toLocaleString()}
-                                                actions={<ExpirationBadge expiration={item.expiration} />}
                                             />
                                         ))}
                                     </div>

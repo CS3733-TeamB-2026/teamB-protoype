@@ -9,6 +9,7 @@ import { getCategory, getExtension, getOriginalFilename, lookupByFilename } from
 import { getCachedPreview, setCachedPreview } from "@/features/content/previews/preview-cache.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
+import {ExpirationBadge} from "@/features/content/components/ExpirationBadge.tsx";
 
 interface Props {
     item: ContentItem;
@@ -97,6 +98,7 @@ export function ContentItemCard({ item, subtitle, actions }: Props) {
             </div>
             <div className="flex items-center gap-2 shrink-0">
                 {actions}
+                <ExpirationBadge expiration={item.expiration} />
                 <ContentExtBadge category={category} ext={ext} isLink={!!item.linkURL} />
                 {navButton}
             </div>

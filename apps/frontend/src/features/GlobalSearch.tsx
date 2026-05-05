@@ -73,7 +73,7 @@ export default function GlobalSearch() {
             <DottedBackground />
 
             <div className="max-w-3xl mx-auto px-4 py-10 relative">
-                <h1 className="text-2xl font-semibold mb-6">Search</h1>
+                <h1 className="text-2xl font-semibold mb-6">Global Search</h1>
 
                 <div className="flex gap-2 mb-8">
                     <Input

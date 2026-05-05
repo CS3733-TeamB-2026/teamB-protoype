@@ -668,7 +668,7 @@ function ViewContent() {
                                 value="all"
                                 className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0"
                             >
-                                {ts('content')}
+                                All Content
                                 <span className="ml-2 text-xs opacity-70">{content.length}</span>
                             </TabsTrigger>
                             <TabsTrigger
@@ -1097,7 +1097,7 @@ function ViewContent() {
                                                         </TableCell>
                                                         {/* expiration */}
                                                         <TableCell className="hidden sm:table-cell text-center">
-                                                            <ExpirationBadge expiration={item.expiration}/>
+                                                            <ExpirationBadge expiration={item.expiration} colorMode="blue"/>
                                                         </TableCell>
                                                         {/* status */}
                                                         <TableCell className="hidden sm:table-cell text-center">
