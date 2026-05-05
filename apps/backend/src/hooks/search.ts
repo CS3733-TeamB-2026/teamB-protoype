@@ -7,13 +7,17 @@ import { isAdmin } from "../helpers/permissions";
 /**
  * Unified semantic search across all four entity types.
  * Fans out to each `semanticSearch` in parallel, tags each result with its
- * entity kind and similarity score, then returns the top 20 by similarity.
+ * entity kind and similarity score, then returns the top `limit` per type
+ * sorted by similarity. Returning `limit` per type (4× total) means the
+ * caller can filter down to a single type and still see a full result set.
  */
 export const unifiedSearch = async (req: req, res: res) => {
-    const { q: searchQuery } = req.query;
+    const { q: searchQuery, limit: limitParam } = req.query;
     if (!searchQuery || typeof searchQuery !== "string") {
         return res.status(400).json({ error: "Search query is required" });
     }
+
+    const limit = Math.min(Math.max(parseInt(String(limitParam ?? "20"), 10) || 20, 1), 50);
 
     try {
         const employee = await getEmployee(req);
@@ -23,10 +27,10 @@ export const unifiedSearch = async (req: req, res: res) => {
         const queryVector = await generateEmbedding(searchQuery);
 
         const [content, collections, employees, serviceReqs] = await Promise.all([
-            q.Content.semanticSearch(queryVector),
-            q.Collection.semanticSearch(queryVector, employee.id, admin),
-            q.Employee.semanticSearch(queryVector),
-            q.ServiceReqs.semanticSearch(queryVector),
+            q.Content.semanticSearch(queryVector, limit),
+            q.Collection.semanticSearch(queryVector, employee.id, admin, limit),
+            q.Employee.semanticSearch(queryVector, limit),
+            q.ServiceReqs.semanticSearch(queryVector, limit),
         ]);
 
         const results = [
@@ -38,7 +42,7 @@ export const unifiedSearch = async (req: req, res: res) => {
 
         results.sort((a, b) => b.similarity - a.similarity);
 
-        return res.status(200).json(results.slice(0, 20));
+        return res.status(200).json(results);
     } catch (error) {
         console.error(error);
         return res.status(500).end();

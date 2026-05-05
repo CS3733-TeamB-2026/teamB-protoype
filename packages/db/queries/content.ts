@@ -14,7 +14,7 @@ import { embeddingToSql } from '../lib/embeddings';
  * or full-text search ranking (`ts_rank`).
  */
 export class Content {
-    public static async semanticSearch(queryVector: number[]): Promise<p.Content[]> {
+    public static async semanticSearch(queryVector: number[], limit = 20): Promise<p.Content[]> {
         const embeddingStr = embeddingToSql(queryVector);
 
         return prisma.$queryRaw<p.Content[]>`
@@ -37,7 +37,7 @@ export class Content {
         FROM "Content"
         WHERE "embedding" IS NOT NULL AND "deleted" = false
         ORDER BY "embedding" <=> ${embeddingStr}::vector
-        LIMIT 20;
+        LIMIT ${limit};
     `;
     }
 
