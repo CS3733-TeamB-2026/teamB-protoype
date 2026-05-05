@@ -2,7 +2,7 @@ name: Build and Push to Docker Hub
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "dev" ]
 
 jobs:
   build-and-push:
@@ -11,13 +11,13 @@ jobs:
       matrix:
         include:
           - service: ml-server
-            image: teamb-ml-server
+            image: teamb-ml-server-live
             dockerfile: apps/python/Dockerfile
           - service: backend
-            image: teamb-backend
+            image: teamb-backend-live
             dockerfile: apps/backend/Dockerfile
           - service: frontend
-            image: teamb-frontend
+            image: teamb-frontend-live
             dockerfile: apps/frontend/Dockerfile
 
     steps:
@@ -49,7 +49,7 @@ jobs:
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.EC2_HOST }}
+          host: ${{ secrets.EC2_HOST_LIVE }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
