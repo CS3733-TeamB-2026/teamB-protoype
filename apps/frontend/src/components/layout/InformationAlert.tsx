@@ -1,5 +1,6 @@
 import { CircleQuestionMark } from "lucide-react";
 import React from "react";
+import { Link } from "react-router-dom";
 import { createPortal } from "react-dom";
 
 interface InfoButtonProps {
@@ -57,7 +58,11 @@ function InfoButton({ content, size = "w-7 h-7" }: InfoButtonProps) {
                 onMouseLeave={() => { setHovered(false);}}
                 className="relative"
             >
-                <CircleQuestionMark className={`${size} cursor-pointer ${hovered ? "text-accent" : "opacity-30"}`} />
+                <Link to="/tutorial">
+                    <CircleQuestionMark
+                        className={`${size} cursor-pointer ${hovered ? "text-accent" : "opacity-30"}`}
+                    />
+                </Link>
             </div>
             {popup}
         </div>
