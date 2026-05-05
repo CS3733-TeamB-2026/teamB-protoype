@@ -593,6 +593,13 @@ export const getTransactionSummary = async (req: req, res: res) => {
         const visibleContent = isAdminUser
             ? allContent
             : allContent.filter(c => c.targetPersona === employee.persona);
+            
+        // Fetch all employees and hits at once to prevent N+1 queries
+        const allEmployees = await q.Employee.queryAllEmployees();
+        const employeesMap = new Map(allEmployees.map(e => [e.id, e]));
+
+        const contentIds = visibleContent.map(c => c.id);
+        const hitsMap = await q.Preview.queryHitsByContentIds(contentIds);
 
         // Aggregate hits by owner
         const hitsByOwner: Record<number, {
@@ -606,10 +613,10 @@ export const getTransactionSummary = async (req: req, res: res) => {
         for (const content of visibleContent) {
             if (!content.ownerId) continue;
 
-            const hitCount = await q.Preview.queryHits(content.id)
+            const hitCount = hitsMap[content.id] || 0;
 
             if (!hitsByOwner[content.ownerId]) {
-                const owner = await q.Employee.queryEmployeeById(content.ownerId);
+                const owner = employeesMap.get(content.ownerId);
                 if (owner) {
                     hitsByOwner[content.ownerId] = {
                         firstName: owner.firstName,
@@ -628,7 +635,7 @@ export const getTransactionSummary = async (req: req, res: res) => {
         // Aggregate hits by persona
         const hitsByPersona: Record<string, number> = {};
         for (const content of visibleContent) {
-            const hitCount = await q.Preview.queryHits(content.id);
+            const hitCount = hitsMap[content.id] || 0;
             hitsByPersona[content.targetPersona] =
                 (hitsByPersona[content.targetPersona] ?? 0) + hitCount;
         }
@@ -655,7 +662,7 @@ export const getTransactionSummary = async (req: req, res: res) => {
 
         const now = Date.now();
         for (const [ownerId, contents] of ownerGroups) {
-            const owner = await q.Employee.queryEmployeeById(ownerId);
+            const owner = employeesMap.get(ownerId);
             if (!owner) continue;
 
             const lastModifiedDates = contents.map(c => c.lastModified.getTime());

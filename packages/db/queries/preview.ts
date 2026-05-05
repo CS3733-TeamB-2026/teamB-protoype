@@ -47,4 +47,23 @@ export class Preview {
         }
         return aggregations._count
     }
+
+    public static async queryHitsByContentIds(
+        contentIds: number[]
+    ): Promise<Record<number, number>> {
+        const aggregations = await prisma.preview.groupBy({
+            by: ['previewedContentId'],
+            where: { previewedContentId: { in: contentIds } },
+            _count: true
+        });
+        
+        const result: Record<number, number> = {};
+        for (const id of contentIds) {
+            result[id] = 0;
+        }
+        for (const agg of aggregations) {
+            result[agg.previewedContentId] = agg._count;
+        }
+        return result;
+    }
 }
