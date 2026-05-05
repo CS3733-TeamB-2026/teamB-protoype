@@ -120,7 +120,7 @@ function AppSidebar() {
                                     <Link to={item.href}>
                                         <item.icon />
                                         <span className="">{item.langKey ? ts(item.langKey) : item.title}</span>
-                                        { (item.title === "Insights" || item.title === "Global Search") ?
+                                        { (item.title === "Insights") ?
                                             <span className="rounded-md bg-linear-to-r from-primary-light to-primary mb-px px-1.5 py-0.5 text-[10px] font-bold text-white">
                                               AI
                                             </span> : null}
