@@ -1,8 +1,21 @@
 import * as q from "@softeng-app/db";
+import { generateEmbedding } from "../../lib/embeddings";
+import { buildEmployeeEmbeddingInput } from "../../lib/embeddingInputs";
 import {req, res} from "./types"
 import { createAuth0User } from "../helpers/auth0Management";
 import { getEmployee } from "../helpers/getEmployee";
 import { isAdmin, isUserOrAdmin } from "../helpers/permissions";
+
+function scheduleEmployeeEmbedding(id: number, firstName: string, lastName: string, persona: string) {
+    setImmediate(async () => {
+        try {
+            const embedding = await generateEmbedding(buildEmployeeEmbeddingInput(firstName, lastName, persona));
+            await q.Employee.updateEmbedding(id, embedding);
+        } catch (err) {
+            console.error(`[background] Failed to embed employee id=${id}:`, err);
+        }
+    });
+}
 
 function buildPhotoURI(employeeId: number, filename:string): string {
     return `${employeeId}/${crypto.randomUUID()}/${filename}`;
@@ -99,6 +112,7 @@ export const getMe = async (req: req, res: res) => {
 
 }
 
+/** GET /api/employees — returns all employees with signed profile photo URLs (1-hour TTL). */
 export const getAllEmployees = async (req: req, res: res) => {
     try {
         const employees = await q.Employee.queryAllEmployees();
@@ -112,6 +126,7 @@ export const getAllEmployees = async (req: req, res: res) => {
     }
 };
 
+/** GET /api/employees/:id — returns a single employee by internal ID with a signed photo URL. */
 export const getEmployeeById = async (req: req, res: res) => {
     try {
         const id = parseInt(req.params.id);
@@ -126,6 +141,7 @@ export const getEmployeeById = async (req: req, res: res) => {
     }
 };
 
+/** POST /api/employees — admin-only. Creates an employee record without an Auth0 binding (for seeding/import). */
 export const createEmployee = async (req: req, res: res) => {
     const payload = req.body;
     try {
@@ -139,6 +155,7 @@ export const createEmployee = async (req: req, res: res) => {
             payload.lastName,
             payload.persona
         );
+        scheduleEmployeeEmbedding(result.id, result.firstName, result.lastName, result.persona);
         return res.status(201).json(result);
     } catch (error) {
         console.error(error);
@@ -146,6 +163,7 @@ export const createEmployee = async (req: req, res: res) => {
     }
 };
 
+/** POST /api/employees/auth — admin-only. Creates an employee record and provisions a new Auth0 user in the same step. */
 export const createEmployeeWithAuth0 = async (req: req, res: res) => {
     const { id, firstName, lastName, persona, username, password, email } = req.body;
 
@@ -166,8 +184,8 @@ export const createEmployeeWithAuth0 = async (req: req, res: res) => {
             lastName,
             persona,
             auth0Id
-        )
-
+        );
+        scheduleEmployeeEmbedding(employee.id, employee.firstName, employee.lastName, employee.persona);
         return res.status(201).json(employee);
 
     } catch (error){
@@ -193,6 +211,7 @@ export const updateEmployee = async (req: req, res: res) => {
             payload.lastName,
             persona,
         );
+        scheduleEmployeeEmbedding(result.id, result.firstName, result.lastName, result.persona);
         return res.status(200).json(result);
     } catch (error) {
         console.error(error);
@@ -200,6 +219,7 @@ export const updateEmployee = async (req: req, res: res) => {
     }
 };
 
+/** DELETE /api/employees — admin-only. Hard-deletes an employee record. */
 export const deleteEmployee = async (req: req, res: res) => {
     const payload = req.body;
     try {
@@ -215,6 +235,7 @@ export const deleteEmployee = async (req: req, res: res) => {
     }
 };
 
+/** GET /api/employees/dashboard-layout — returns the authenticated employee's saved widget layout, or `{ layout: null }` if not yet set. */
 export const getDashboardLayout = async (req: req, res: res) => {
     try {
         const employee = await getEmployee(req);
@@ -228,6 +249,7 @@ export const getDashboardLayout = async (req: req, res: res) => {
     }
 };
 
+/** PUT /api/employees/dashboard-layout — persists the authenticated employee's widget layout array. */
 export const updateDashboardLayout = async (req: req, res: res) => {
     try {
         const employee = await getEmployee(req);

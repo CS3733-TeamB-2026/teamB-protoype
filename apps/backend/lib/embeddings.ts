@@ -1,32 +1,20 @@
-import { pipeline, env } from '@xenova/transformers';
+/** Embedding service URL. Defaults to the local ML sidecar on port 3001. */
+const ML_SERVICE = process.env.ML_SERVICE_URL ?? 'http://localhost:3001';
 
-let embedder: Awaited<ReturnType<typeof pipeline>> | null = null;
-
-env.cacheDir = './models';
-// @ts-ignore - skip image processor to avoid sharp dependency
-env.backends.onnx.wasm.numThreads = 1;
-
-async function getEmbedder() {
-    if (!embedder) {
-        console.log('[embeddings] Loading model (first time may take a moment)...');
-        embedder = await pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
-        console.log('[embeddings] Model loaded.');
-    }
-    return embedder;
-}
-
+/**
+ * Generates a numeric embedding vector for the given text by calling the ML
+ * microservice at `ML_SERVICE_URL/embed`.
+ *
+ * The sidecar wraps `text-embedding-3-small` (1536 dimensions). Throws if the
+ * service is unreachable or returns a non-2xx status.
+ */
 export async function generateEmbedding(text: string): Promise<number[]> {
-    const embedder = await getEmbedder();
-
-    const truncated = text.slice(0, 4000);
-
-    // @ts-ignore - output type is too broad in @xenova/transformers types
-    const output = await embedder(truncated, { pooling: 'mean', normalize: true });
-
-    // @ts-ignore
-    return Array.from(output.data) as number[];
-}
-
-export function embeddingToSql(embedding: number[]): string {
-    return `[${embedding.join(',')}]`;
+    const res = await fetch(`${ML_SERVICE}/embed`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+    });
+    if (!res.ok) throw new Error(`ML service /embed failed: ${res.status}`);
+    const { embedding } = await res.json() as { embedding: number[] };
+    return embedding;
 }

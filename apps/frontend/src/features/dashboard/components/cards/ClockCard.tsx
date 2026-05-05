@@ -2,9 +2,13 @@ import {CardContent} from "@/components/ui/card.tsx";
 import {Clock} from "lucide-react";
 import {useEffect, useState} from "react";
 import DashboardCard from "@/features/dashboard/components/cards/DashboardCard.tsx";
+import {useLocale} from "@/languageSupport/localeContext.tsx";
+import {useTranslation} from "@/languageSupport/useTranslation.ts";
+import InfoButton from "@/components/layout/InformationAlert.tsx";
 
 function ClockCard() {
-
+    const { locale } = useLocale();
+    const { ts } = useTranslation(locale);
     const [currentDateTime, setCurrentDateTime] = useState({
         day: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
         time: new Date().toLocaleTimeString()
@@ -28,9 +32,12 @@ function ClockCard() {
             borderColor="accent"
         >
             <CardContent className="p-0">
+                <div className="absolute right-1 top-1 w-8 h-8 cursor-pointer">
+                    <InfoButton content={"Displays the current day and time"}/>
+                </div>
                 <div className="flex flex-row items-center gap-5 justify-center">
                     <Clock className="w-15! h-15!"/>
-                    <p className="text-lg font-semibold">It is {currentDateTime.time} on {currentDateTime.day}.</p>
+                    <p className="text-lg font-semibold">{ts('dashCard.timeItIs')}{currentDateTime.time} {ts('dashCard.timeOn')}{currentDateTime.day}.</p>
                 </div>
             </CardContent>
         </DashboardCard>

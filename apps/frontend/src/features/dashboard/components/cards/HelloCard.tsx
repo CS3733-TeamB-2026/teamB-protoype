@@ -4,11 +4,16 @@ import {LayoutDashboard} from "lucide-react";
 import { useUser } from "@/hooks/use-user.ts";
 import { useAvatarUrl } from "@/hooks/use-avatar-url";
 import DashboardCard from "@/features/dashboard/components/cards/DashboardCard.tsx";
+import {useLocale} from "@/languageSupport/localeContext.tsx";
+import {useTranslation} from "@/languageSupport/useTranslation.ts";
+import InfoButton from "@/components/layout/InformationAlert.tsx";
 
 function HelloCard() {
 
     const {user} = useUser();
     const avatarUrl = useAvatarUrl(user?.id, user?.profilePhotoURI);
+    const { locale } = useLocale();
+    const { ts } = useTranslation(locale);
 
     return (
         <DashboardCard
@@ -16,6 +21,9 @@ function HelloCard() {
             borderColor="primary"
         >
             <CardHeader>
+                <div className="absolute right-1 top-1 w-8 h-8 cursor-pointer">
+                    <InfoButton content={"Welcome card shows you your user"}/>
+                </div>
                 <div className="flex justify-between items-center">
                     <div className="flex flex-row gap-5 items-center">
                         <Avatar className="w-15 h-15 ">
@@ -23,8 +31,8 @@ function HelloCard() {
                             <AvatarFallback className="bg-accent text-primary-foreground">{user?.firstName[0]}{user?.lastName[0]}</AvatarFallback>
                         </Avatar>
                         <div>
-                            <CardTitle className="text-3xl text-left">Welcome back, {user?.firstName} {user?.lastName}.</CardTitle>
-                            <CardDescription className="text-lg text-left">Let's pick up where you left off.</CardDescription>
+                            <CardTitle className="text-3xl text-left">{ts('dashCard.WelcomeBack')} {user?.firstName} {user?.lastName}.</CardTitle>
+                            <CardDescription className="text-lg text-left">{ts('dashCard.LetsPickUp')}</CardDescription>
                         </div>
                     </div>
                     <LayoutDashboard className="w-15! h-15!"/>

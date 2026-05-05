@@ -9,6 +9,7 @@ import { getCategory, getExtension, getOriginalFilename, lookupByFilename } from
 import { getCachedPreview, setCachedPreview } from "@/features/content/previews/preview-cache.ts";
 import { Button } from "@/components/ui/button.tsx";
 import { Card } from "@/components/ui/card.tsx";
+import {ExpirationBadge} from "@/features/content/components/ExpirationBadge.tsx";
 
 interface Props {
     item: ContentItem;
@@ -66,14 +67,9 @@ export function ContentItemCard({ item, subtitle, actions }: Props) {
     // Disabled ghost button when item has neither a file nor a link — preserves right-side alignment.
     const navButton = (() => {
         const icon = <HugeiconsIcon icon={LinkSquare01Icon} className="w-4 h-4" />;
-        if (item.fileURI) return (
-            <Button variant="ghost" size="icon" asChild onClick={(e) => e.stopPropagation()} title="View file">
+        if (item.fileURI || item.linkURL) return (
+            <Button variant="ghost" size="icon" asChild onClick={(e) => e.stopPropagation()} title="View item">
                 <Link to={`/file/${item.id}`}>{icon}</Link>
-            </Button>
-        );
-        if (item.linkURL) return (
-            <Button variant="ghost" size="icon" asChild onClick={(e) => e.stopPropagation()} title="Open link">
-                <a href={item.linkURL} target="_blank" rel="noopener noreferrer">{icon}</a>
             </Button>
         );
         return (
@@ -102,6 +98,7 @@ export function ContentItemCard({ item, subtitle, actions }: Props) {
             </div>
             <div className="flex items-center gap-2 shrink-0">
                 {actions}
+                <ExpirationBadge expiration={item.expiration} />
                 <ContentExtBadge category={category} ext={ext} isLink={!!item.linkURL} />
                 {navButton}
             </div>

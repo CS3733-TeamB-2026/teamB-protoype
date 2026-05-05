@@ -3,6 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import React, { useEffect, useState } from "react";
 import {Loader2, Pencil, Trash2, Search, Plus, StickyNote, File, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button.tsx";
+import { Input } from "@/components/ui/input.tsx";
 import { Hero } from "@/components/shared/Hero.tsx";
 import { EditServiceReqDialog } from "@/features/servicereqs/EditServiceReqDialog.tsx";
 import { AddServiceReqDialog } from "@/features/servicereqs/AddServiceReqDialog.tsx";
@@ -17,11 +18,19 @@ import { usePageTitle } from "@/hooks/use-page-title.ts";
 import {findMatches, highlightRange} from "@/lib/highlight.tsx";
 import { EmployeeAvatar } from "@/components/shared/EmployeeAvatar.tsx";
 import {formatLabel} from "@/lib/utils.ts";
-import { ContentItemCard } from "@/components/shared/ContentItemCard.tsx";
-import { CollectionCard } from "@/components/shared/CollectionCard.tsx";
+import { ServiceReqDetail } from "@/components/shared/ServiceReqDetail";
+import { Tabs, TabsTrigger } from "@/components/ui/tabs";
+import { SlidingTabs } from "@/components/shared/SlidingTabs";
+import InfoButton from "@/components/layout/InformationAlert.tsx";
+
+type ServiceReqTab = "all" | "mine" | "assigned";
 
 /**
  * Full-page table for browsing, adding, editing, and deleting service requests.
+ *
+ * Three tabs — All / Mine (created by me) / Assigned (assigned to me) — filter
+ * client-side from a single `/api/servicereqs` fetch, so switching tabs is instant
+ * with no additional network calls.
  *
  * Clicking a row toggles an inline detail panel showing notes and any linked
  * content item or collection. Edit/Delete buttons call `e.stopPropagation()` so
@@ -46,6 +55,7 @@ function ViewServiceReqs() {
     const [expandedId, setExpandedId] = useState<number | null>(null); // id of the currently expanded detail row, null = collapsed
     const user = useUser();
     const [sort, toggleSort] = useSortState<"name" | "created" | "deadline" | "type" | "assignee" | "owner">({column: "name", direction: "asc"});
+    const [activeTab, setActiveTab] = useState<ServiceReqTab>("all");
     const [searchTerm, setSearchTerm] = useState("");
     const { getAccessTokenSilently } = useAuth0();
 
@@ -66,14 +76,23 @@ function ViewServiceReqs() {
 
     useEffect(() => { void fetchServiceReqs(); }, [fetchServiceReqs]);
 
-    const filteredServiceReqs = servicereqs.filter((s) => {
+    const currentUserId = user.user?.id;
+
+    // Tab filters first, then search narrows further — two independent passes over the same data.
+    const tabServiceReqs = (() => {
+        if (activeTab === "mine") return servicereqs.filter((s) => s.ownerId === currentUserId);
+        if (activeTab === "assigned") return servicereqs.filter((s) => s.assigneeId === currentUserId);
+        return servicereqs;
+    })();
+
+    const filteredServiceReqs = tabServiceReqs.filter((s) => {
         const query = searchTerm.toLowerCase().trim().replace(/\s/g, "");
         if (!query) return true;
 
-        const ownerName = `${s.owner.firstName}${s.owner.lastName}`.toLowerCase();
-        const assigneeName = s.assignee ? `${s.assignee.firstName}${s.assignee.lastName}`.toLowerCase() : "";
+        const ownerName = `${s.owner.firstName} ${s.owner.lastName}`.toLowerCase();
+        const assigneeName = s.assignee ? `${s.assignee.firstName} ${s.assignee.lastName}`.toLowerCase() : "";
         return (
-            s.name.toString().includes(query) ||
+            s.name.toString().toLowerCase().includes(query) ||
             s.type.toLowerCase().includes(query) ||
             ownerName.includes(query) ||
             assigneeName.includes(query)
@@ -108,37 +127,67 @@ function ViewServiceReqs() {
                 icon={Users}
                 title="View Service Requests"
                 description="View, update, and delete service requests."
+                infoContent="Manage all service requests here. You can view all requests, ones created by you, or ones assigned to you with tabs."
             />
 
             <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center px-4">
                 <CardHeader>
-                    <CardTitle className="text-3xl text-primary mt-4">All Service Requests</CardTitle>
-                    <CardDescription>Total Service Requests: {servicereqs.length}</CardDescription>
+                        <CardTitle className="text-3xl text-primary mt-4 flex items-center gap-2 justify-center">
+                            Service Requests
+                            <div className="w-8 h-8 cursor-pointer">
+                                <InfoButton content={"Service requests make it easier for you to manage your workflow. " +
+                                    "They can be assigned to a specific employee, given either a single piece of content or a collection " +
+                                    "along with a note about them, and given a deadline."
+                                }/>
+                            </div>
+                        </CardTitle>
+                    <CardDescription>
+                        {filteredServiceReqs.length === servicereqs.length
+                            ? `${servicereqs.length} service request${servicereqs.length !== 1 ? "s" : ""}`
+                            : `${filteredServiceReqs.length} of ${servicereqs.length} service requests`}
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex items-center justify-between mb-4">
+                    <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ServiceReqTab)}>
+                        <SlidingTabs activeTab={activeTab} indicatorColor="bg-foreground">
+                            <TabsTrigger value="all" className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0">
+                                All
+                                <span className="ml-2 text-xs opacity-70">{servicereqs.length}</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="mine" className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0">
+                                Mine
+                                <span className="ml-2 text-xs opacity-70">{servicereqs.filter((s) => s.ownerId === currentUserId).length}</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="assigned" className="relative z-10 data-active:bg-transparent data-active:text-foreground hover:text-foreground/80 data-active:hover:text-foreground px-0">
+                                Assigned
+                                <span className="ml-2 text-xs opacity-70">{servicereqs.filter((s) => s.assigneeId === currentUserId).length}</span>
+                            </TabsTrigger>
+                        </SlidingTabs>
+                    </Tabs>
+
+                    <div className="flex items-center justify-between mb-4 mt-4">
                         <div className="relative">
                             <Search
-                                className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 pointer-events-none"
+                                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground pointer-events-none"
                             />
-                            <input
+                            <Input
                                 type="text"
-                                placeholder="Search servicereqs..."
+                                placeholder="Search service requests..."
                                 value={searchTerm}
-                                onChange={(s) => setSearchTerm(s.target.value)}
-                                className="w-64 h-10 text-lg! pl-2! pr-8 border border-gray-700 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-64 h-10 text-base pl-10 pr-4 border border-input rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 bg-background"
                             />
                         </div>
                         <div>
                             {/* Opens AddServiceReqDialog instead of navigating away */}
                             <Button
                                 onClick={() => setAddOpen(true)}
-                                className="cursor-pointer p-0! gap-0! border-0! group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-48 hover:bg-accent-dark hover:text-primary-foreground active:brightness-80 transition-all bg-accent text-primary-foreground w-12 h-12 text-lg justify-start"
+                                className="cursor-pointer p-0! gap-0! border-0! group flex duration-300 items-center overflow-hidden ease-in-out rounded-full hover:w-42 hover:bg-accent-dark hover:text-primary-foreground active:brightness-80 transition-all bg-accent text-primary-foreground w-12 h-12 text-lg justify-start"
                             >
                                 <span className="flex items-center justify-center min-w-12 h-12">
                                     <Plus className="w-8! h-8! text-primary-foreground" />
                                 </span>
-                                <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Add ServiceReqs</span>
+                                <span className="whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">Add Request</span>
                             </Button>
                         </div>
                     </div>
@@ -284,39 +333,6 @@ function ViewServiceReqs() {
                 onSave={() => void fetchServiceReqs()}
             />
         </>
-    );
-}
-
-/** Expanded detail panel rendered below a service request row. */
-function ServiceReqDetail({ servicereq }: { servicereq: ServiceReq }) {
-    const hasNotes = !!servicereq.notes?.trim();
-    const hasLinked = !!(servicereq.linkedContent || servicereq.linkedCollection);
-
-    if (!hasNotes && !hasLinked) {
-        return <p className="text-sm text-muted-foreground italic">No additional details.</p>;
-    }
-
-    return (
-        <div className="flex flex-col gap-3">
-            {hasNotes && (
-                <div>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Notes</p>
-                    <p className="text-sm whitespace-pre-wrap">{servicereq.notes}</p>
-                </div>
-            )}
-            {servicereq.linkedContent && (
-                <div>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Linked Content</p>
-                    <ContentItemCard item={servicereq.linkedContent} />
-                </div>
-            )}
-            {servicereq.linkedCollection && (
-                <div>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Linked Collection</p>
-                    <CollectionCard collection={servicereq.linkedCollection} />
-                </div>
-            )}
-        </div>
     );
 }
 

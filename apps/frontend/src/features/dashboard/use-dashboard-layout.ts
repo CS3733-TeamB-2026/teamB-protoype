@@ -2,6 +2,16 @@ import { useEffect, useState } from "react";
 import { DEFAULT_LAYOUT, type WidgetLayoutEntry } from "@/features/dashboard/widget-registry";
 import { useAuth0 } from "@auth0/auth0-react";
 
+/**
+ * Loads and persists the current employee's dashboard widget layout.
+ *
+ * On mount: fetches `GET /api/employee/dashboard-layout`; falls back to
+ * `DEFAULT_LAYOUT` if the employee has no saved layout or the request fails.
+ *
+ * `setLayout` mirrors the `useState` setter API but fire-and-forgets a
+ * `PUT /api/employee/dashboard-layout` on every call so changes are persisted
+ * without requiring an explicit save action.
+ */
 export function useDashboardLayout() {
 
     const [layout, setLayoutState] = useState<WidgetLayoutEntry[]>(DEFAULT_LAYOUT);

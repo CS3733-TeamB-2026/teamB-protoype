@@ -30,7 +30,11 @@ export function SlidingTabs({
     }, [activeTab]);
 
     return (
-        <TabsList ref={listRef} className="relative bg-transparent p-0 gap-4">
+        <TabsList 
+            ref={listRef} 
+            variant="line" 
+            className="relative bg-transparent p-0 gap-4 [&_[data-slot=tabs-trigger]]:after:hidden"
+        >
             <div
                 ref={indicatorRef}
                 className={`absolute bottom-0 h-[2px] rounded-full transition-all duration-300 ease-out opacity-0 ${indicatorColor}`}

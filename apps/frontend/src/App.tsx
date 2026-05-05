@@ -17,11 +17,11 @@ import Dashboard from "@/features/dashboard/Dashboard.tsx";
 import ViewEmployees from "@/features/employees/ViewEmployees.tsx";
 import ViewContent from "@/features/content/listing/ViewContent.tsx";
 import { BulkUploadPage } from "@/features/content/bulk/BulkUploadPage.tsx";
-import { ViewSingleFile } from "@/features/content/previews/ViewSingleFile.tsx";
+import { ViewSingleContentItem } from "@/features/content/previews/ViewSingleContentItem.tsx";
 import SidebarOverlay from "./components/layout/SidebarOverlay.tsx";
 import { Route, Routes } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import {LocaleProvider} from "@/languageSupport/localeContext.tsx";
 import SettingsLayout from "@/features/settings/SettingsLayout.tsx";
@@ -29,16 +29,38 @@ import AppearanceSettings from "@/features/settings/sections/AppearanceSettings"
 import ProfileSettings from "@/features/settings/sections/ProfileSettings.tsx"
 import ExperationCalendar from "@/features/content/listing/ExpirationCalendar.tsx"
 import ViewServiceReqs from "@/features/servicereqs/ViewServiceReqs.tsx";
-import SearchContent from "@/features/SearchContent.tsx";
+import GlobalSearch from "@/features/GlobalSearch.tsx";
 import ViewCollections from "@/features/collections/ViewCollections.tsx";
 import { ViewSingleCollection } from "@/features/collections/ViewSingleCollection.tsx";
 import About from "@/pages/About.tsx"
 import ViewNotifications from "@/features/notifications/ViewNotifications.tsx";
+import Insights from "@/features/insights/Insights.tsx";
+import {useUser} from "@/context/UserContext.tsx";
+import React from "react";
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-    const { isAuthenticated } = useAuth0();
+const ProtectedRoute = ({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean; }) => {
+    const { isAuthenticated, isLoading: authLoading } = useAuth0();
+    const { user, loading: userLoading } = useUser(); // adjust to whatever your context calls it
 
-    if (!isAuthenticated) return <Navigate to="/" />;
+    console.log("ProtectedRoute check:", {
+        authLoading,
+        userLoading,
+        isAuthenticated,
+        user,
+        persona: user?.persona,
+        adminOnly,
+    });
+
+    if (authLoading || (isAuthenticated && userLoading)) {
+        return (
+            <div className="flex items-center justify-center min-h-[50vh]">
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+            </div>
+        );
+    }
+
+    if (!isAuthenticated) return <Navigate to="/" replace />;
+    if (adminOnly && user?.persona !== "admin") return <Navigate to="/" replace />;
 
     return <>{children}</>;
 };
@@ -47,12 +69,16 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 function App() {
 
     const { isLoading } = useAuth0();
+    const location = useLocation();
+    const hideFooter = location.pathname === "/insights" || location.pathname === "/calendar";
 
     if (isLoading) return (
         <div className="flex items-center justify-center min-h-screen bg-secondary">
             <Loader2 className="w-10 h-10 text-primary animate-spin" />
         </div>
     )
+
+
 
     // Your application must be wrapped with the BrowserRouter component to enable routing
     return (
@@ -69,7 +95,7 @@ function App() {
                             {/*This is where Home gets loaded automatically when it detected we are on "/" page*/}
                             <Route path="/" element={<Home/>}/>
                             <Route path="/employeeform" element={<ProtectedRoute><AddEmployee/></ProtectedRoute>}/>
-                            <Route path="/usermanagement" element={<ProtectedRoute><ViewEmployees/></ProtectedRoute>}/>
+                            <Route path="/usermanagement" element={<ProtectedRoute adminOnly={true}><ViewEmployees/></ProtectedRoute>}/>
                             <Route path="/underwriter" element={<UnderwriterPersona/>}/>
                             <Route path="/businessanalyst" element={<BusinessAnalystPersona/>}/>
                             <Route path="/actuarialanalyst" element={<ActuarialAnalystPersona/>}/>
@@ -80,13 +106,14 @@ function App() {
                             <Route path="/files/bulk" element={<ProtectedRoute><BulkUploadPage/></ProtectedRoute>}/>
                             <Route path="/employeehome" element={<ProtectedRoute><Dashboard/></ProtectedRoute>}/>
                             <Route path="/calendar" element={<ExperationCalendar/>}/>
-                            <Route path="/file/:id" element={<ProtectedRoute><ViewSingleFile/></ProtectedRoute>}/>
+                            <Route path="/file/:id" element={<ProtectedRoute><ViewSingleContentItem/></ProtectedRoute>}/>
                             <Route path="/collections" element={<ProtectedRoute><ViewCollections/></ProtectedRoute>}/>
                             <Route path="/credits" element={<Credits />}/>
                             <Route path="/collections/:id" element={<ProtectedRoute><ViewSingleCollection/></ProtectedRoute>}/>
                             <Route path="/servicereqs" element={<ProtectedRoute><ViewServiceReqs/></ProtectedRoute>}/>
                             <Route path="/notifications" element={<ProtectedRoute><ViewNotifications/></ProtectedRoute>}/>
-                            <Route path="/search" element={<ProtectedRoute><SearchContent/></ProtectedRoute>}/>
+                            <Route path="/search" element={<ProtectedRoute><GlobalSearch/></ProtectedRoute>}/>
+                            <Route path="/insights" element={<ProtectedRoute adminOnly={true}><Insights/></ProtectedRoute>}/>
                             <Route path="/about" element={<About/>}/>
                             <Route path="/settings" element={<ProtectedRoute><SettingsLayout/></ProtectedRoute>}>
 
@@ -96,7 +123,7 @@ function App() {
                             </Route>
                         </Routes>
                     </main>
-                    <Footer />
+                    {!hideFooter && <Footer />}
                 </div>
 
             </SidebarProvider>

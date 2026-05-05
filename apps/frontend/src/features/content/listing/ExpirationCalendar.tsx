@@ -3,7 +3,12 @@ import { useAuth0 } from "@auth0/auth0-react";
 import { useUser } from "@/hooks/use-user.ts";
 import { ContentIcon } from "@/features/content/components/ContentIcon.tsx";
 import { getCategory, getOriginalFilename } from "@/lib/mime.ts";
-import {Loader2, ChevronLeft, ChevronRight, Home as HomeIcon} from "lucide-react";
+import {
+    Loader2,
+    ChevronLeft,
+    ChevronRight,
+    CalendarClock,
+} from "lucide-react";
 import { ContentItemCard } from "@/components/shared/ContentItemCard.tsx";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
 import { Button } from "@/components/ui/button.tsx";
@@ -81,11 +86,9 @@ function ExpirationCalendar() {
     }
 
     function urgencyColor(days: number): string {
-        if (days <= 0) return "bg-destructive/75 text-white";
-        if (days <= 7) return "bg-amber-600/75 text-white";
-        if (days <= 14) return "bg-yellow-500/75 text-white";
-        if (days <= 30) return "bg-slate-100/75 text-black";
-        return "bg-slate-100/70 text-black";
+        if (days <= 0) return "bg-destructive/30 text-destructive";
+        if (days <= 7) return "bg-amber-500/25 text-amber-700 dark:text-amber-400";
+        return "bg-green-500/20 text-green-700 dark:text-green-400";
     }
 
     function prevMonth() {
@@ -114,11 +117,13 @@ function ExpirationCalendar() {
     return (
         <>
             <Hero
-                icon={HomeIcon}
-                title={"Expiration Calender"}
-                description={"See whats due soon."}
+                icon={CalendarClock}
+                title="Expiration Calendar"
+                description="See what content items are expiring soon."
+                infoContent="The calendar view shows upcoming expirations for content. Click on any date to see expiring content on that day."
             />
-            <div className="max-w-6xl mx-auto my-6 px-4">
+
+            <div className="max-w-7xl mx-auto my-6 px-4 relative" >
                 {loading && (
                     <div className="flex items-center justify-center py-24 gap-3 text-muted-foreground">
                         <Loader2 className="w-6 h-6 animate-spin" />
@@ -239,21 +244,13 @@ function ExpirationCalendar() {
                                     <p className="text-sm text-muted-foreground">No items expiring on this day.</p>
                                 ) : (
                                     <div className="flex flex-col gap-2">
-                                        {selectedItems.map(item => {
-                                            const days = daysUntil(item.expiration!);
-                                            return (
-                                                <ContentItemCard
-                                                    key={item.id}
-                                                    item={item}
-                                                    subtitle={new Date(item.expiration!).toLocaleString()}
-                                                    actions={
-                                                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${urgencyColor(days)}`}>
-                                                            {days < 0 ? `Expired ${Math.abs(days)}d ago` : days === 0 ? "Today" : `${days}d left`}
-                                                        </span>
-                                                    }
-                                                />
-                                            );
-                                        })}
+                                        {selectedItems.map(item => (
+                                            <ContentItemCard
+                                                key={item.id}
+                                                item={item}
+                                                subtitle={new Date(item.expiration!).toLocaleString()}
+                                            />
+                                        ))}
                                     </div>
                                 )}
                             </div>

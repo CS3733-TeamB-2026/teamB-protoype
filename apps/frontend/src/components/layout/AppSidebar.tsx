@@ -1,4 +1,4 @@
-import { FileText, HelpCircle, Home, User, ChevronDown, Users, X, Library, LayoutDashboard, Upload, NetworkIcon, CalendarClock, Search, BookMarked } from "lucide-react"
+import { LucideFolders, Sparkles, FileText, HelpCircle, Home, ChevronDown, Users, X, Library, LayoutDashboard, Upload, NetworkIcon, CalendarClock, Search, BookMarked } from "lucide-react"
 import React from "react"
 import {Link} from "react-router-dom";
 import {
@@ -37,22 +37,17 @@ For dropdowns, add more items in children array, leave the array empty for singl
  */
 const navItems: NavItem[] = [
     { title: "Home", icon: Home, href: "/", children: [], access: [], langKey: 'sidebar.home' },
-    { title: "Dashboard", icon: LayoutDashboard, href: "/employeehome", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"], langKey: 'sidebar.dashboard' },
-    { title: "Content Library", icon: Library, href: "/files", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"], langKey: 'sidebar.manageContent' },
-    { title: "Bulk Upload", icon: Upload, href: "/files/bulk", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"], langKey: 'sidebar.bulkUpload' },
-    { title: "Manage Employees", icon: Users, href: "/usermanagement", children: [
-        ], access: ["admin"], langKey: 'sidebar.manageEmployees' },
-    { title: "Collections", icon: BookMarked, href: "/collections", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"] },
-    { title: "Service Requests", icon: NetworkIcon, href: "/servicereqs", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"] },
-    { title: "Expiration Calendar", icon: CalendarClock, href: "/calendar", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"] },
-    { title: "Personas", icon: User, href: "/", children: [
-            {title: "Underwriter", icon: User, href: "/underwriter", children: [], access: [], langKey: 'sidebar.underwriter'},
-            {title: "Business Analyst", icon: User, href: "/businessanalyst", children: [], access: [], langKey: "sidebar.businessAnalyst"},
-            {title: "Actuarial Analyst", icon: User, href: "/actuarialanalyst", children: [], access: [], langKey: "sidebar.actuarialAnalyst"},
-            {title: "EXL Operations", icon: User, href: "/exloperations", children: [], access: [], langKey: "sidebar.exlOperations"},
-            {title: "Business Operations", icon: User, href: "/businessoperations", children: [], access: [], langKey: "sidebar.businessOperations"},
-        ], access: [], langKey: "sidebar.personas" },
-    { title: "Search", icon: Search, href: "/search", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "EXLOperator", "businessOps"] },
+    { title: "Dashboard", icon: LayoutDashboard, href: "/employeehome", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "excelOperator", "businessOps"], langKey: 'sidebar.dashboard' },
+    { title: "Content", icon: LucideFolders, href: "/files", children: [
+            { title: "Content Library", icon: Library, href: "/files", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "excelOperator", "businessOps"], langKey: 'sidebar.manageContent' },
+            { title: "Bulk Upload", icon: Upload, href: "/files/bulk", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "excelOperator", "businessOps"], langKey: 'sidebar.bulkUpload' },
+            { title: "Collections", icon: BookMarked, href: "/collections", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "excelOperator", "businessOps"] },
+        ], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "excelOperator", "businessOps"] },
+    { title: "Service Requests", icon: NetworkIcon, href: "/servicereqs", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "excelOperator", "businessOps"] },
+    { title: "Expiration Calendar", icon: CalendarClock, href: "/calendar", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "excelOperator", "businessOps"] },
+    { title: "Manage Employees", icon: Users, href: "/usermanagement", children: [], access: ["admin"], langKey: 'sidebar.manageEmployees' },
+    { title: "Global Search", icon: Search, href: "/search", children: [], access: ["admin", "underwriter", "businessAnalyst", "actuarialAnalyst", "excelOperator", "businessOps"] },
+    { title: "Insights", icon: Sparkles, href: "/insights", children: [], access: ["admin"] },
 ]
 
 function AppSidebar() {
@@ -125,6 +120,10 @@ function AppSidebar() {
                                     <Link to={item.href}>
                                         <item.icon />
                                         <span className="">{item.langKey ? ts(item.langKey) : item.title}</span>
+                                        { (item.title === "Insights") ?
+                                            <span className="rounded-md bg-linear-to-r from-primary-light to-primary mb-px px-1.5 py-0.5 text-[10px] font-bold text-white">
+                                              AI
+                                            </span> : null}
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>

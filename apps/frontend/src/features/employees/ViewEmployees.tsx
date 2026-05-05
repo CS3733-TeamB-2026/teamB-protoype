@@ -18,6 +18,7 @@ import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
 import type { Employee } from "@/lib/types.ts";
 import { usePageTitle } from "@/hooks/use-page-title.ts";
 import { useAvatarUrl } from "@/hooks/use-avatar-url";
+import { Input } from "@/components/ui/input.tsx";
 
 type EmployeeRowProps = {
     employee: Employee;
@@ -146,6 +147,7 @@ function ViewEmployees() {
                 icon={Users}
                 title="View Employees"
                 description="View, update, and delete employees."
+                infoContent="The Employee page lets view and manage all employees in the system. You can search, edit, or remove employee users."
             />
 
             <Card className="shadow-lg max-w-5xl mx-auto my-8 text-center px-4">
@@ -157,14 +159,14 @@ function ViewEmployees() {
                     <div className="flex items-center justify-between mb-4">
                         <div className="relative">
                             <Search
-                                className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 pointer-events-none"
+                                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-secondary-foreground pointer-events-none"
                             />
-                            <input
+                            <Input
                                 type="text"
                                 placeholder="Search employees..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-64 h-10 text-lg! pl-2! pr-8 border border-gray-700 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                                className="w-64 h-10 text-base pl-10 pr-4 border border-input rounded-md focus:outline-none focus:ring-1 focus:ring-gray-500 bg-background"
                             />
                         </div>
                         <div>

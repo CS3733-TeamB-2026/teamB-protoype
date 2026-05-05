@@ -1,9 +1,11 @@
 import { prisma } from "../lib/prisma";
-import { employeeSelect } from "./helper";
+import { employeeSelect, srInclude } from "./helper";
+import { embeddingToSql } from '../lib/embeddings';
 
 // Items have no guaranteed DB order, so position must always be applied here
 const itemsInclude = {
     items: {
+        where: { content: { deleted: false } },
         orderBy: { position: "asc" as const },
         include: { content: true },
     },
@@ -21,15 +23,20 @@ const itemsInclude = {
  * addFavorite, and removeFavorite rather than inlining them into queryAll/queryById.
  */
 export class Collection {
-    /** Returns all public collections plus all collections owned by the given employee.
-     *  Pass isAdmin=true to return every collection regardless of visibility. */
-    public static async queryAll(employeeId: number, isAdmin: boolean) {
+    /**
+     * Returns all public collections plus all collections owned by the given employee.
+     * Pass `isAdmin=true` to return every collection regardless of visibility.
+     *
+     * `unlinkedSR=true` restricts to collections whose `serviceRequestId` is null —
+     * used by the SR creation form so that already-linked collections don't appear
+     * as candidates. Unlike the SR back-relation null-check (`{ linkedCollection: { is: null } }`),
+     * this uses a plain `serviceRequestId: null` because Collection owns the FK directly.
+     */
+    public static async queryAll(employeeId: number, isAdmin: boolean, unlinkedSR = false) {
         return prisma.collection.findMany({
-            where: isAdmin ? undefined : {
-                OR: [
-                    { public: true },
-                    { ownerId: employeeId },
-                ],
+            where: {
+                ...(isAdmin ? {} : { OR: [{ public: true }, { ownerId: employeeId }] }),
+                ...(unlinkedSR ? { serviceRequestId: null } : {}),
             },
             include: {
                 owner: { select: employeeSelect },
@@ -39,14 +46,57 @@ export class Collection {
         });
     }
 
-    /** Returns a single collection with all joined content items. */
+    /** Returns a single collection with all joined content items and its linked service request. */
     public static async queryById(collectionId: number) {
         return prisma.collection.findUniqueOrThrow({
             where: { id: collectionId },
             include: {
                 owner: { select: employeeSelect },
                 ...itemsInclude,
+                serviceRequest: { include: srInclude },
             },
+        });
+    }
+
+    /**
+     * Semantic vector search over collections visible to the caller.
+     * Returns up to 20 results with an attached `similarity` score (0–1).
+     * Visibility is enforced in the ORM step so the raw SQL can stay simple.
+     */
+    public static async semanticSearch(queryVector: number[], employeeId: number, isAdmin: boolean, limit = 20) {
+        const embeddingStr = embeddingToSql(queryVector);
+
+        const rows = await prisma.$queryRaw<{ id: number; similarity: number }[]>`
+            SELECT id, 1 - (embedding <=> ${embeddingStr}::vector) AS similarity
+            FROM "Collection"
+            WHERE embedding IS NOT NULL
+            ORDER BY embedding <=> ${embeddingStr}::vector
+            LIMIT ${limit}
+        `;
+
+        const ids = rows.map(r => r.id);
+        const similarityMap = new Map(rows.map(r => [r.id, Number(r.similarity)]));
+
+        const collections = await prisma.collection.findMany({
+            where: {
+                id: { in: ids },
+                ...(isAdmin ? {} : { OR: [{ public: true }, { ownerId: employeeId }] }),
+            },
+            include: { owner: { select: employeeSelect }, ...itemsInclude },
+        });
+
+        return collections
+            .map(c => ({ ...c, similarity: similarityMap.get(c.id) ?? 0 }))
+            .sort((a, b) => b.similarity - a.similarity);
+    }
+
+    public static async queryByOwnerId(ownerId: number) {
+        return prisma.collection.findMany({
+            where: { ownerId: ownerId },
+            include: {
+                owner: { select: employeeSelect },
+                ...itemsInclude,
+            }
         });
     }
 
@@ -61,6 +111,13 @@ export class Collection {
         });
     }
 
+    /** Stores a pre-computed embedding vector for the given collection. */
+    public static async updateEmbedding(id: number, embedding: number[]): Promise<void> {
+        await prisma.$executeRaw`
+            UPDATE "Collection" SET embedding = ${embeddingToSql(embedding)}::vector WHERE id = ${id}
+        `;
+    }
+
     /** Updates name, visibility, owner, and replaces the full ordered item list.
      *  Positions are assigned by array index. All fields are optional except collectionId. */
     public static async update(
@@ -70,7 +127,7 @@ export class Collection {
         ownerId: number,
         contentIds: number[],
     ) {
-        return prisma.$transaction(async (tx) => {
+        const result = await prisma.$transaction(async (tx) => {
             await tx.collectionItem.deleteMany({ where: { collectionId } });
 
             if (contentIds.length > 0) {
@@ -86,6 +143,39 @@ export class Collection {
             return tx.collection.update({
                 where: { id: collectionId },
                 data: { displayName, public: isPublic, ownerId },
+                include: {
+                    owner: { select: employeeSelect },
+                    ...itemsInclude,
+                },
+            });
+        });
+
+        return result;
+    }
+
+    /** Appends items to a collection, skipping IDs already present. New items are positioned after the last existing item. */
+    public static async appendItems(collectionId: number, contentIds: number[]) {
+        return prisma.$transaction(async (tx) => {
+            const existing = await tx.collectionItem.findMany({
+                where: { collectionId },
+                select: { contentId: true, position: true },
+            });
+            const existingIds = new Set(existing.map((i) => i.contentId));
+            const toAdd = contentIds.filter((id) => !existingIds.has(id));
+            const maxPosition = existing.length > 0 ? Math.max(...existing.map((i) => i.position)) : -1;
+
+            if (toAdd.length > 0) {
+                await tx.collectionItem.createMany({
+                    data: toAdd.map((contentId, index) => ({
+                        collectionId,
+                        contentId,
+                        position: maxPosition + 1 + index,
+                    })),
+                });
+            }
+
+            return tx.collection.findUnique({
+                where: { id: collectionId },
                 include: {
                     owner: { select: employeeSelect },
                     ...itemsInclude,
@@ -110,6 +200,38 @@ export class Collection {
     public static async removeFavorite(collectionId: number, employeeId: number) {
         await prisma.collectionFavorite.delete({
             where: { employeeId_collectionId: { employeeId, collectionId } },
+        });
+    }
+
+    /**
+     * Links a collection to a service request, or clears the link when `serviceRequestId` is null.
+     *
+     * Collection owns the FK (`serviceRequestId`), so the link is set here rather than on
+     * the ServiceRequest row. The DB enforces `@unique` on this column — attempting to link
+     * a collection that already points at a different SR will throw a Prisma unique-constraint
+     * error; callers must clear the old link first.
+     */
+    public static async setServiceRequest(collectionId: number, serviceRequestId: number | null) {
+        return prisma.collection.update({
+            where: { id: collectionId },
+            data: { serviceRequestId },
+        });
+    }
+
+    /** Returns all collections that contain the given content item, filtered by visibility. */
+    public static async queryByContentId(contentId: number, employeeId: number, isAdmin: boolean) {
+        return prisma.collection.findMany({
+            where: {
+                items: { some: { contentId } },
+                ...(isAdmin ? {} : {
+                    OR: [{ public: true }, { ownerId: employeeId }],
+                }),
+            },
+            include: {
+                owner: { select: employeeSelect },
+                ...itemsInclude,
+            },
+            orderBy: { id: "asc" },
         });
     }
 

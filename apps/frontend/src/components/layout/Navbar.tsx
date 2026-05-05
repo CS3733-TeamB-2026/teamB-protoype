@@ -1,6 +1,5 @@
-//import React from "react";
 import { useSidebar } from "@/components/ui/sidebar.tsx";
-import {Menu, Loader2, ChevronDown} from "lucide-react";
+import {Menu, Loader2, Search} from "lucide-react";
 import logo from "../../assets/hanover_logo.svg"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.tsx";
 import {
@@ -10,8 +9,8 @@ import {
 } from "@/components/ui/popover.tsx"
 import { Separator } from "@/components/ui/separator.tsx"
 //import LoginDialog from "@/dialogs/LoginDialog.tsx"
-import { UserIcon, Settings, LogOut, LayoutDashboard, Languages} from "lucide-react"
-import { Link, useNavigate } from "react-router-dom"
+import { UserIcon, Settings, LogOut, LayoutDashboard } from "lucide-react"
+import { Link, useNavigate, useLocation } from "react-router-dom"
 import { useAuth0 } from "@auth0/auth0-react"
 import { useUser } from "@/hooks/use-user.ts"
 import { useAvatarUrl } from "@/hooks/use-avatar-url"
@@ -19,17 +18,47 @@ import {useLocale} from "@/languageSupport/localeContext.tsx";
 import {useTranslation} from "@/languageSupport/useTranslation.ts";
 import DisclaimerAlert from "@/components/layout/DisclaimerAlert"
 import {useState} from "react";
-import React from "react";
+//import React from "react";
 import { NotificationBell } from "@/features/notifications/NotificationBell.tsx";
-import InfoButton from "@/components/layout/InformationAlert.tsx";
+//import InfoButton from "@/components/layout/InformationAlert.tsx";
 
 
-const LOCALES = [
+/*const LOCALES = [
     { code: "en_us", label: "English" },
     { code: "sp_sp", label: "Español" },
-] as const;
+] as const;*/
 
-type SettingsCategory = "language" | "theme" | null;
+//type SettingsCategory = "language" | "theme" | null;
+
+/** Compact search bar shown in the navbar center; hidden on the /search page itself and when logged out. */
+function NavSearchBar() {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const { isAuthenticated } = useAuth0();
+    const [q, setQ] = useState("");
+
+    if (!isAuthenticated || location.pathname === "/search") return null;
+
+    const submit = () => {
+        if (!q.trim()) return;
+        window.localStorage.setItem("query", q);
+        navigate(`/search?q=${encodeURIComponent(q.trim())}`);
+    };
+
+    return (
+        <div className="flex items-center gap-1 bg-primary-foreground/10 border border-primary-foreground/20 rounded-full px-3 py-1 w-72 focus-within:bg-primary-foreground/15 transition-colors">
+            <Search size={16} className="text-primary-foreground/60 shrink-0" />
+            <input
+                type="text"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && submit()}
+                placeholder="Global search..."
+                className="bg-transparent text-primary-foreground placeholder:text-primary-foreground/50 text-sm outline-none flex-1 min-w-0"
+            />
+        </div>
+    );
+}
 
 function Navbar() {
     const { toggleSidebar } = useSidebar();
@@ -43,17 +72,17 @@ function Navbar() {
 
     const {user} = useUser();
     const avatarUrl = useAvatarUrl(user?.id, user?.profilePhotoURI);
-    const { locale, setLocale } = useLocale();
+    const { locale } = useLocale();
     const { ts } = useTranslation(locale);
 
-    const [openCategory, setOpenCategory] = React.useState<SettingsCategory>(null);
-    const toggleCategory = (cat: SettingsCategory) =>
-        setOpenCategory(prev => (prev === cat ? null : cat));
+    //const [openCategory, setOpenCategory] = React.useState<SettingsCategory>(null);
+    //const toggleCategory = (cat: SettingsCategory) =>
+    //    setOpenCategory(prev => (prev === cat ? null : cat));
 
     return (
         <>
             {/* header */}
-            <nav className="shadow-xl flex items-center bg-primary text-primary-foreground p-4 w-full shrink-0 sticky top-0 z-50"
+            <nav className="shadow-xl flex items-center bg-primary text-primary-foreground p-4 w-full shrink-0 sticky top-0 z-50 relative"
                  style={{ background: "linear-gradient(to right, var(--primary-surface-dark) 25%, var(--primary-surface), var(--primary-surface-light)" }}>
                 <div className="flex items-center gap-4 min-w-fit z-10">
                     {/* AppSidebar dropdown */}
@@ -73,10 +102,15 @@ function Navbar() {
 
                 <div className="flex-1" />
 
+                {/* search bar — hidden on the /search page */}
+                <div>
+                    <NavSearchBar />
+                </div>
+
                 {/* user avatar popover */}
                 {isAuthenticated && <NotificationBell />}
                 <Popover open={userOpen} onOpenChange={setUserOpen}>
-                    <PopoverTrigger className="ml-2" asChild>
+                    <PopoverTrigger className="ml-2 mr-1" asChild>
                         {
                             isAuthenticated && !user ?
                                 <div className="flex items-center justify-center">
@@ -92,12 +126,10 @@ function Navbar() {
                                         <AvatarFallback className="bg-accent text-primary-foreground">{isAuthenticated ? `${user?.firstName[0]}${user?.lastName[0]}` : <UserIcon />}</AvatarFallback>
                                     </Avatar>
                                 </button>
-
-
                         }
 
                     </PopoverTrigger>
-                    <PopoverContent className="w-65 mr-8">
+                    <PopoverContent className="w-65 mr-2">
                         {
                             //login check
                             isAuthenticated ?
@@ -168,7 +200,7 @@ function Navbar() {
 
                 {/*settings*/}
                 {/* only allows one category to be open at a time */}
-                <Popover onOpenChange={(open) => { if (!open) setOpenCategory(null); }}>
+                {/*<Popover onOpenChange={(open) => { if (!open) setOpenCategory(null); }}>
                     <PopoverTrigger asChild>
                         <button className="group cursor-pointer p-2 ml-3 rounded-full active:scale-[0.96] transition-all duration-200">
                             <Languages
@@ -181,14 +213,13 @@ function Navbar() {
                     <PopoverContent className="w-52 p-2">
                         <div className="flex flex-col gap-1">
 
-                            {/* Language Settings */}
                             <button
                                 onClick={() => toggleCategory("language")}
                                 className="flex items-center justify-between w-full px-3 py-2 rounded-lg text-sm font-semibold transition-colors hover:bg-secondary"
                             >
                                 <span className="flex items-center gap-1">
                                     {ts('settings.language')}
-                                    <InfoButton content={"Currently not every language has full support."} size={"w-5 h-5"}/>
+                                    <InfoButton content={ts('notFullySupported')} size={"w-5 h-5"}/>
                                 </span>
                                 <ChevronDown
                                     size={14}
@@ -196,7 +227,6 @@ function Navbar() {
                                 />
                             </button>
 
-                            {/* Maps each of the designated languages in LOCALES to a button, that button then changes the locale state */}
                             {openCategory === "language" && (
                                 <div className="flex flex-col gap-0.5 pl-3 pb-1">
                                     {LOCALES.map(({ code, label }) => (
@@ -217,7 +247,7 @@ function Navbar() {
 
                         </div>
                     </PopoverContent>
-                </Popover>
+                </Popover>*/}
 
                 {/* login dialog
                 <LoginDialog

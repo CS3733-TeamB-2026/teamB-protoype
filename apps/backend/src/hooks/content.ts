@@ -1,18 +1,21 @@
 import * as q from "@softeng-app/db";
+import { generateEmbedding } from "../../lib/embeddings";
+import { buildContentEmbeddingInput } from "../../lib/embeddingInputs";
 import mime from "mime-types";
 import * as cheerio from "cheerio";
 import { req, res } from "./types";
 import { getEmployee } from "../helpers/getEmployee";
 import { assertPublicUrl } from "../helpers/validateUrl";
-import { isAdmin, isPersonaOrAdmin } from "../helpers/permissions";
+import { isAdmin, isPersonaOrAdmin, isUserOrAdmin } from "../helpers/permissions";
 import { extractText, SupportedMimeType } from "../../lib/extractors";
-import { generateEmbedding, embeddingToSql } from '../../lib/embeddings';
-import { prisma } from '../../../../packages/db/lib/prisma';
-import dns from "node:dns/promises";
 import {applyExpirationTagsToOne} from "../jobs/autoTag"
 
 const PREVIEW_MAX_BYTES = 2 * 1024 * 1024; // 2 MB
 
+/**
+ * GET /api/content/preview?url=... — fetches Open Graph metadata (title, description, image, favicon) for a URL.
+ * Proxied server-side to avoid browser CORS restrictions. Caps the response at 2 MB.
+ */
 export const previewContent = async (req: req, res: res) => {
     try {
         const url = req.query.url as string;
@@ -70,12 +73,14 @@ export const previewContent = async (req: req, res: res) => {
     }
 };
 
+/** GET /api/content — returns all non-deleted content. Pass `?persona=` to filter by persona or `?unlinkedSR=true` to exclude content already linked to a service request. */
 export const getAllContent = async (req: req, res: res) => {
     const persona = req.query.persona as string | null;
+    const unlinkedSR = req.query.unlinkedSR === "true";
     try {
         const content = persona
             ? await q.Content.queryContentByPersona(persona)
-            : await q.Content.queryAllContent();
+            : await q.Content.queryAllContent(unlinkedSR);
         return res.status(200).json(content);
     } catch (error) {
         console.error(error);
@@ -83,6 +88,7 @@ export const getAllContent = async (req: req, res: res) => {
     }
 };
 
+/** GET /api/content/tags — returns a deduplicated list of all tags currently in use across non-deleted content. */
 export const getAllTags = async (_req: req, res: res) => {
     try {
         const content = await q.Content.queryAllContent();
@@ -94,6 +100,7 @@ export const getAllTags = async (_req: req, res: res) => {
     }
 };
 
+/** GET /api/content/:id — returns a single non-deleted content item with its linked service request. */
 export const getContentById = async (req: req, res: res) => {
     try {
         const id = parseInt(req.params.id);
@@ -109,6 +116,28 @@ export const getContentById = async (req: req, res: res) => {
     }
 };
 
+/** Sets the service request linked to a content item. Owner/admin only. */
+export const setContentServiceRequest = async (req: req, res: res) => {
+    try {
+        const employee = await getEmployee(req);
+        if (!employee) return res.status(404).json({ error: "Employee not found" });
+
+        const contentId = parseInt(req.params.id);
+        const content = await q.Content.queryContentById(contentId);
+        if (!content) return res.status(404).json({ error: "Content not found" });
+        if (!isUserOrAdmin(content.ownerId ?? 0, employee))
+            return res.status(403).json({ error: "Access denied" });
+
+        const { serviceRequestId } = req.body;
+        await q.Content.setServiceRequest(contentId, serviceRequestId ?? null);
+        return res.status(204).end();
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+/** GET /api/content/:id/info — returns Supabase file metadata (size, MIME type, etc.) for the content item's attached file. */
 export const getContentInfo = async (req: req, res: res) => {
     try {
         const id = parseInt(req.params.id);
@@ -124,6 +153,7 @@ export const getContentInfo = async (req: req, res: res) => {
     }
 };
 
+/** GET /api/content/:id/download — streams the attached file with `Content-Disposition: inline`. */
 export const downloadContent = async (req: req, res: res) => {
     try {
         const id = parseInt(req.params.id);
@@ -145,6 +175,7 @@ export const downloadContent = async (req: req, res: res) => {
     }
 };
 
+/** GET /api/content/:id/url — returns a short-lived (2-minute) signed URL for the attached file. */
 export const getPublicFileUrl = async (req: req, res: res) => {
     try {
         const id = parseInt(req.params.id);
@@ -157,15 +188,65 @@ export const getPublicFileUrl = async (req: req, res: res) => {
     }
 };
 
+/**
+ * Builds the Supabase storage path for a new file upload.
+ * The UUID segment prevents collisions when the same filename is uploaded more
+ * than once by the same owner. Format: `<ownerID>/<uuid>/<originalFilename>`.
+ */
 function buildFileURI(ownerID: string, filename: string): string {
     return `${ownerID}/${crypto.randomUUID()}/${filename}`;
 }
 
+/**
+ * Schedules text extraction and embedding generation for a content item.
+ * Runs after the HTTP response has been sent so the client isn't blocked.
+ * `existingTextContent` is used as a fallback when there is no new file or URL.
+ */
+function scheduleContentEmbedding(
+    id: number,
+    name: string,
+    contentType: string,
+    persona: string,
+    tags: string[],
+    status: string,
+    fileURI: string | null,
+    fileBuffer: Buffer | null,
+    mimeType: string | null,
+    linkURL: string | null,
+    existingTextContent: string | null,
+) {
+    setImmediate(async () => {
+        try {
+            let textContent: string | null = null;
+            if (fileBuffer && mimeType) {
+                textContent = await extractText(fileBuffer, mimeType as SupportedMimeType);
+            } else if (linkURL) {
+                textContent = await extractText(null, 'url', linkURL);
+            } else {
+                textContent = existingTextContent;
+            }
+            const embedding = await generateEmbedding(
+                buildContentEmbeddingInput(name, contentType, persona, tags, status, fileURI, textContent)
+            );
+            await q.Content.updateTextAndEmbedding(id, textContent, embedding);
+            console.log(`[background] Processed content id=${id}`);
+        } catch (err) {
+            console.error(`[background] Failed to process content id=${id}:`, err);
+        }
+    });
+}
+
+/**
+ * Creates a new content item. Responds with 201 immediately after writing the
+ * metadata row, then kicks off text extraction and embedding generation in
+ * `setImmediate` so the client isn't blocked by potentially slow ML inference.
+ * If the Supabase upload succeeds but the DB write fails, the orphaned file is
+ * cleaned up before returning the error.
+ */
 export const uploadFile = async (req: req, res: res) => {
     const payload = req.body;
     let fileURI: string | null = null;
     let uploaded = false;
-    let textContent: string | null = null;
 
     try {
         const employee = await getEmployee(req);
@@ -194,50 +275,25 @@ export const uploadFile = async (req: req, res: res) => {
             payload.expiration ? new Date(payload.expiration) : null,
             payload.targetPersona,
             JSON.parse(payload.tags || "[]"),
-            null    // textContent filled in background
         );
         await applyExpirationTagsToOne(result.id);
 
         // Respond immediately
         res.status(201).json(result);
 
-        // Process extraction + embedding in background
-        const fileBuffer = req.file?.buffer ?? null;
-        const mimeType = req.file?.mimetype ?? null;
-
-        setImmediate(async () => {
-            try {
-                let textContent: string | null = null;
-
-                if (fileBuffer && mimeType) {
-                    textContent = await extractText(fileBuffer, mimeType as SupportedMimeType);
-                } else if (payload.linkURL) {
-                    textContent = await extractText(null, 'url', payload.linkURL);
-                }
-
-                const embeddingInput = [
-                    payload.name,
-                    payload.contentType,
-                    payload.targetPersona,
-                    JSON.parse(payload.tags || "[]").join(' '),
-                    textContent ?? '',
-                ].join(' ');
-
-                const embedding = await generateEmbedding(embeddingInput);
-
-                await prisma.$executeRaw`
-                    UPDATE "Content"
-                    SET
-                        "textContent" = ${textContent},
-                        "embedding" = ${embeddingToSql(embedding)}::vector
-                    WHERE id = ${result.id}
-                `;
-
-                console.log(`[background] Processed content id=${result.id}`);
-            } catch (err) {
-                console.error(`[background] Failed to process content id=${result.id}:`, err);
-            }
-        });
+        scheduleContentEmbedding(
+            result.id,
+            payload.name,
+            payload.contentType,
+            payload.targetPersona,
+            JSON.parse(payload.tags || "[]"),
+            payload.status,
+            fileURI,
+            req.file?.buffer ?? null,
+            req.file?.mimetype ?? null,
+            payload.linkURL ?? null,
+            null,
+        );
     } catch (error) {
         if (uploaded && fileURI) {
             await q.Bucket.deleteFile(fileURI).catch(console.error);
@@ -247,6 +303,14 @@ export const uploadFile = async (req: req, res: res) => {
     }
 };
 
+/**
+ * Updates an existing content item. Like `uploadFile`, responds immediately
+ * and processes text/embedding in the background via `setImmediate`.
+ * Returns 409 when the caller no longer holds the checkout lock — this can
+ * happen after a force check-in, lock expiry, or check-in from another tab.
+ * If a new file is uploaded but the DB write fails, the new file is deleted;
+ * the old file is deleted only after a successful update that replaced it.
+ */
 export const updateContent = async (req: req, res: res) => {
     const payload = req.body;
     let newFileURI: string | null = null;
@@ -256,7 +320,7 @@ export const updateContent = async (req: req, res: res) => {
         if (!employee)
             return res.status(404).json({ error: "Employee not found" });
 
-        const oldContent = await q.Content.queryContentById(
+        const oldContent = await q.Content.queryContentByIdWithVectors(
             parseInt(payload.id),
         );
         const oldURI: string | null = oldContent?.fileURI ?? null;
@@ -290,7 +354,6 @@ export const updateContent = async (req: req, res: res) => {
             payload.targetPersona,
             JSON.parse(payload.tags || "[]"),
             employee.id,
-            null    // textContent filled in background
         );
         if (oldURI && (uploaded || linkURL)) {
             await q.Bucket.deleteFile(oldURI).catch(console.error);
@@ -300,46 +363,19 @@ export const updateContent = async (req: req, res: res) => {
         // Respond immediately
         res.status(201).json(result);
 
-        // Capture buffer before setImmediate since req may not be available later
-        const fileBuffer = req.file?.buffer ?? null;
-        const mimeType = req.file?.mimetype ?? null;
-
-        setImmediate(async () => {
-            try {
-                let textContent: string | null = null;
-
-                if (fileBuffer && mimeType) {
-                    textContent = await extractText(fileBuffer, mimeType as SupportedMimeType);
-                } else if (linkURL) {
-                    textContent = await extractText(null, 'url', linkURL);
-                } else if (oldContent?.textContent) {
-                    // no new file or URL — keep existing text content
-                    textContent = oldContent.textContent;
-                }
-
-                const embeddingInput = [
-                    payload.name,
-                    payload.contentType,
-                    payload.targetPersona,
-                    JSON.parse(payload.tags || "[]").join(' '),
-                    textContent ?? '',
-                ].join(' ');
-
-                const embedding = await generateEmbedding(embeddingInput);
-
-                await prisma.$executeRaw`
-                    UPDATE "Content"
-                    SET
-                        "textContent" = ${textContent},
-                        "embedding" = ${embeddingToSql(embedding)}::vector
-                    WHERE id = ${result.id}
-                `;
-
-                console.log(`[background] Processed content id=${result.id}`);
-            } catch (err) {
-                console.error(`[background] Failed to process content id=${result.id}:`, err);
-            }
-        });
+        scheduleContentEmbedding(
+            result.id,
+            payload.name,
+            payload.contentType,
+            payload.targetPersona,
+            JSON.parse(payload.tags || "[]"),
+            payload.status,
+            fileURIForUpdate,
+            req.file?.buffer ?? null,
+            req.file?.mimetype ?? null,
+            linkURL,
+            oldContent?.textContent ?? null,
+        );
     } catch (error) {
         if (uploaded && newFileURI) {
             await q.Bucket.deleteFile(newFileURI).catch(console.error);
@@ -364,10 +400,10 @@ export const updateContent = async (req: req, res: res) => {
 };
 
 /**
- * Deletes a content item and its Supabase file (if any).
+ * Soft-deletes a content item (moves it to the recycle bin).
  * Requires the caller to hold the checkout lock — same gate as updateContent.
- * Returns 409 both when the item is not checked out and when someone else holds it,
- * so the frontend can display a consistent "lock required" message in both cases.
+ * Clears the checkout lock as part of the operation.
+ * The Supabase file (if any) is NOT deleted here; that happens on permanent delete.
  */
 export const deleteContent = async (req: req, res: res) => {
     try {
@@ -391,11 +427,79 @@ export const deleteContent = async (req: req, res: res) => {
                     message: "This item has been forcibly checked in.",
                 });
         }
+        await q.Content.softDeleteContent(id);
+        return res.status(200).json(content);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+/** Returns all deleted content visible to the caller: all items for admins, owned items only for everyone else. */
+export const getDeletedContent = async (req: req, res: res) => {
+    try {
+        const employee = await getEmployee(req);
+        if (!employee)
+            return res.status(404).json({ error: "Employee not found" });
+
+        const content = await q.Content.queryDeletedContent(employee.id, isAdmin(employee));
+        return res.status(200).json(content);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+/**
+ * Restores a soft-deleted content item.
+ * Requires the caller to be the item owner or an admin.
+ */
+export const restoreContent = async (req: req, res: res) => {
+    try {
+        const employee = await getEmployee(req);
+        if (!employee)
+            return res.status(404).json({ error: "Employee not found" });
+
+        const id = parseInt(req.params.id);
+        const content = await q.Content.queryDeletedContentById(id);
+        if (!content) {
+            return res.status(404).json({ message: "Content not found" });
+        }
+        if (!isUserOrAdmin(content.ownerId ?? -1, employee)) {
+            return res.status(403).json({ error: "Only the owner or an admin can restore this item." });
+        }
+        await q.Content.restoreContent(id);
+        return res.status(200).json({ message: "Restored" });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).end();
+    }
+};
+
+/**
+ * Permanently deletes a content item and its Supabase file.
+ * Requires the caller to be the item owner or an admin.
+ * The item must already be in the recycle bin (deleted = true).
+ */
+export const permanentDeleteContent = async (req: req, res: res) => {
+    try {
+        const employee = await getEmployee(req);
+        if (!employee)
+            return res.status(404).json({ error: "Employee not found" });
+
+        const id = parseInt(req.params.id);
+        const content = await q.Content.queryDeletedContentById(id);
+        if (!content) {
+            return res.status(404).json({ message: "Content not found in recycle bin." });
+        }
+        if (!isUserOrAdmin(content.ownerId ?? -1, employee)) {
+            return res.status(403).json({ error: "Only the owner or an admin can permanently delete this item." });
+        }
         if (content.fileURI) {
             await q.Bucket.deleteFile(content.fileURI);
         }
-        await q.Content.deleteContent(id);
-        return res.status(205).json(content);
+        await q.Content.permanentDeleteContent(id);
+        return res.status(200).json(content);
     } catch (error) {
         console.error(error);
         return res.status(500).end();
@@ -418,8 +522,8 @@ export const checkoutContent = async (req: req, res: res) => {
         const content = await q.Content.queryContentById(contentId);
         if (!content) return res.status(404).json({ error: "Content not found" });
 
-        // Only employees whose persona matches the content's targetPersona (or admins) may check out
-        if (!isPersonaOrAdmin(content.targetPersona, employee)) {
+        // Only employees whose persona matches the content's targetPersona (or admins) may check out, or if you are the content owner
+        if (!isPersonaOrAdmin(content.targetPersona, employee) && content.ownerId !== employee.id) {
             return res.status(403).json({ error: "Your persona does not have access to this content" });
         }
 
@@ -462,13 +566,15 @@ export const checkinContent = async (req: req, res: res) => {
     }
 };
 
+/** GET /api/content/search?q=... — generates an embedding for the query and returns semantically ranked content results. */
 export const searchContent = async (req: req, res: res) => {
     const { q: searchQuery } = req.query;
     if (!searchQuery || typeof searchQuery !== 'string') {
         return res.status(400).json({ error: 'Search query is required' });
     }
     try {
-        const results = await q.Content.semanticSearch(searchQuery);
+        const queryVector = await generateEmbedding(searchQuery);
+        const results = await q.Content.semanticSearch(queryVector);
         return res.status(200).json(results);
     } catch (error) {
         console.error(error);
@@ -476,6 +582,16 @@ export const searchContent = async (req: req, res: res) => {
     }
 };
 
+/**
+ * Aggregates content analytics for the dashboard insights page.
+ * Admins see all content; non-admins only see content targeting their persona.
+ * Three aggregations are computed in a single pass over visible content:
+ *   - `hitsByOwner`   — total preview hits grouped by content owner
+ *   - `hitsByPersona` — total preview hits grouped by target persona
+ *   - `contentCurrency` — average age (days since lastModified) per owner
+ * Expiration counts are derived from the "Expired" / "Expiring Soon" tags
+ * written by the `autoTag` background job.
+ */
 export const getTransactionSummary = async (req: req, res: res) => {
     try {
         const employee = await getEmployee(req);
@@ -488,6 +604,13 @@ export const getTransactionSummary = async (req: req, res: res) => {
         const visibleContent = isAdminUser
             ? allContent
             : allContent.filter(c => c.targetPersona === employee.persona);
+            
+        // Fetch all employees and hits at once 
+        const allEmployees = await q.Employee.queryAllEmployees();
+        const employeesMap = new Map(allEmployees.map(e => [e.id, e]));
+
+        const contentIds = visibleContent.map(c => c.id);
+        const hitsMap = await q.Preview.queryHitsByContentIds(contentIds);
 
         // Aggregate hits by owner
         const hitsByOwner: Record<number, {
@@ -501,10 +624,10 @@ export const getTransactionSummary = async (req: req, res: res) => {
         for (const content of visibleContent) {
             if (!content.ownerId) continue;
 
-            const hitCount = await q.Preview.queryHits(content.id)
+            const hitCount = hitsMap[content.id] || 0;
 
             if (!hitsByOwner[content.ownerId]) {
-                const owner = await q.Employee.queryEmployeeById(content.ownerId);
+                const owner = employeesMap.get(content.ownerId);
                 if (owner) {
                     hitsByOwner[content.ownerId] = {
                         firstName: owner.firstName,
@@ -523,7 +646,7 @@ export const getTransactionSummary = async (req: req, res: res) => {
         // Aggregate hits by persona
         const hitsByPersona: Record<string, number> = {};
         for (const content of visibleContent) {
-            const hitCount = await q.Preview.queryHits(content.id);
+            const hitCount = hitsMap[content.id] || 0;
             hitsByPersona[content.targetPersona] =
                 (hitsByPersona[content.targetPersona] ?? 0) + hitCount;
         }
@@ -550,7 +673,7 @@ export const getTransactionSummary = async (req: req, res: res) => {
 
         const now = Date.now();
         for (const [ownerId, contents] of ownerGroups) {
-            const owner = await q.Employee.queryEmployeeById(ownerId);
+            const owner = employeesMap.get(ownerId);
             if (!owner) continue;
 
             const lastModifiedDates = contents.map(c => c.lastModified.getTime());

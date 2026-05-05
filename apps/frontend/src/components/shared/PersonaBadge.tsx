@@ -5,7 +5,7 @@ const PERSONA_STYLES: Record<Persona, { label: string; className: string }> = {
     underwriter:     { label: "Underwriter",           className: "bg-labellight1a text-labeltext"  },
     businessAnalyst: { label: "Business Analyst",      className: "bg-labellight2a text-labeltext"  },
     actuarialAnalyst:{ label: "Actuarial Analyst",    className: "bg-labellight2a text-labeltext"  },
-    EXLOperator:     { label: "EXL Operations",        className: "bg-labellight2a text-labeltext"  },
+    excelOperator:   { label: "Excel Operator",         className: "bg-labellight2a text-labeltext"  },
     businessOps:     { label: "Business Ops",          className: "bg-labellight2a text-labeltext"  },
     admin:           { label: "Admin",                 className: "bg-labellight4a text-labeltext"  },
 };
