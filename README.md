@@ -1,3 +1,25 @@
+Team Name: Blue Basilisks 
+
+# Special Features:
+- AI Powered Insights Feature (Natural language to SQL queries and charts. It is able to interpret broad language requests as specific database queries, and keeps chat context in a message chain. It has multiple layers of security to prevent harmful interactions with the database)
+- Global Search (Full text search with OCR across all content and collections, and service requests)
+- Service Requests (Allows you to manage your workflow by assigning a service request to a specific employee, with a deadline. The service requests can be attached to content or a collection)
+- Collections (Allows you to group similar content together)
+- Admin Force Checkin (Allows you to force checkin a piece of content from a user who has it checked out)
+- Recycle Bin (Makes it so when you delete content, it gets added to the recycle bin where admins can decide what is deleted permanently, or recovered)
+- Bulk Upload (Lets you upload several documents at once)
+- Document Timeline (A visual timeline for when documents will expire)
+- Expiration Calendar (Lets you see when content will expire on a calendar)
+- Drag and Drop Widgets on Dashboard
+- Filtering Notifications
+- Autofill Add Content Form with Metadata
+- Auth0 for Additional Security
+- AWS Domain Deployment
+- Additional supported content preview types (Video)
+- Autotagging Documents if Expiring Soon or Already Expired
+- Dark Mode
+
+
 # teamB-prototype
 
 A content management system for an insurance company. Employees with role-based personas can view, add, edit, recycle, and permanently delete content items (uploaded files or external URLs), manage other employees, and track service requests. A checkout/check-in locking mechanism prevents simultaneous edits on the same content item. Deleted items go to a per-user recycle bin; only the owner or an admin can restore or permanently delete them.
@@ -606,22 +628,8 @@ The `packages/db/lib/embeddings.ts` module provides `embeddingToSql()`, which se
 - **Polling (not WebSockets)** — consistent pattern: `ViewContent` lists poll every 10s, `EditContentDialog` polls every 5s.
 - **Express 5 wildcards** — use `app.get('/{*splat}', ...)`, not `app.get('*', ...)`. Required for the SPA fallback.
 
----
-
-## Known issues / TODOs
-
-- `queryContentByOwnerId` (in `packages/db/queries/content.ts`) uses `localStorage` on the server — unfixed.
 
 ---
-
-## Deployment (Render)
-
-Deployed as a single web service from the `render` branch. Express serves the frontend's built `dist/` as static files; `app.get('/{*splat}', ...)` sends `index.html` for all non-API routes (SPA fallback, Express 5 syntax).
-
-- **Build:** `pnpm install --no-frozen-lockfile && pnpm --filter @softeng-app/db exec prisma generate && pnpm run build`
-- **Start:** `pnpm run --filter backend start`
-- **Bind:** `app.listen(3000, '0.0.0.0')` — required on Render.
-
 ### Testing
 
 - Backend tests live at `apps/backend/src/*.test.tsx`; run via `cd apps/backend && pnpm test`.
