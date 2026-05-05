@@ -1,4 +1,4 @@
-Team Name: Blue Basilisks 
+# Team Name: Blue Basilisks 
 
 # Special Features:
 - AI Powered Insights Feature (Natural language to SQL queries and charts. It is able to interpret broad language requests as specific database queries, and keeps chat context in a message chain. It has multiple layers of security to prevent harmful interactions with the database)
