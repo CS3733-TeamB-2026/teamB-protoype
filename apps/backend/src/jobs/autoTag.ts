@@ -1,5 +1,9 @@
 import * as q from "@softeng-app/db";
 
+/**
+ * Scans every non-deleted content item and adds/updates "Expiring Soon" or "Expired" tags.
+ * Scheduled nightly via node-cron to keep tag state current without manual updates.
+ */
 export async function applyExpirationTagsToAll() {
     const all = await q.Content.queryAllContent();
     const now = new Date();
@@ -10,6 +14,7 @@ export async function applyExpirationTagsToAll() {
     }
 }
 
+/** Applies or updates expiration tags for a single content item. Called after create/update to keep tags current immediately. */
 export async function applyExpirationTagsToOne(contentId: number) {
     const item = await q.Content.queryContentById(contentId);
     if (!item) return;

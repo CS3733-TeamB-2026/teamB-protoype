@@ -5,6 +5,14 @@ type Props = {
     columns: string[];
 }
 
+/**
+ * Renders a single aggregate value (count, sum, average, etc.) in a large
+ * centered display. Expects the first row of a scalar query result.
+ *
+ * Column classification: the first numeric-looking column becomes the headline
+ * value; remaining columns render as smaller subtitle text joined by " · ".
+ * Falls back to the last column if no numeric column is found.
+ */
 function ResultScorecard( {rows, columns}: Props) {
     if (rows.length === 0) return null;
     const row = rows[0];
@@ -53,12 +61,14 @@ function ResultScorecard( {rows, columns}: Props) {
     )
 }
 
+/** Formats the headline number with locale thousands separators. */
 function formatValue(value: unknown): string {
     if (value === null || value === undefined) return "—";
     if (typeof value === "number") return value.toLocaleString();
     return String(value);
 }
 
+/** Converts a snake_case or camelCase column key to a Title Case label. */
 function prettifyColumnName(col: string): string {
     return col
         .replace(/_/g, " ")

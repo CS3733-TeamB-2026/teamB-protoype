@@ -8,6 +8,11 @@ type Props = {
     disabled?: boolean;
 }
 
+/**
+ * Auto-growing textarea with a send button for the Insights chat interface.
+ * Submits on Enter (without Shift), clears input after submission, and
+ * prevents submission of whitespace-only messages.
+ */
 function ChatInput({ onSubmit, disabled }: Props) {
     const [value, setValue] = useState("");
 

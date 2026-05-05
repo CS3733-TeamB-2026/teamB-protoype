@@ -104,6 +104,7 @@ export const getNotifications = async (req: req, res: res) => {
         return res.status(500).end();
     }
 };
+/** GET /api/notifications/dismissed — returns previously dismissed notification records for the authenticated employee, sorted by dismissal date. */
 export const getDismissedNotifications = async (req: req, res: res) => {
     const auth0Id = req.auth?.payload.sub;
 

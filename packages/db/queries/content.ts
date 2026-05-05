@@ -51,6 +51,11 @@ export class Content {
         `;
     }
 
+    /**
+     * Updates a content item's metadata and emits change/ownership notifications.
+     * The caller must hold the checkout lock (`_checkedOutById` must match the current lock holder).
+     * Notification emission is best-effort — a failure to emit does not roll back the update.
+     */
     public static async updateContent(
         id: number,
         _name: string,
@@ -133,6 +138,11 @@ export class Content {
         return updated;
     }
 
+    /**
+     * Inserts a new content item via raw SQL (Prisma ORM can't write the `vector` type).
+     * Text extraction and embedding are filled in separately by the background job.
+     * Throws if neither `linkURL` nor `fileURI` is provided, or if both are provided.
+     */
     public static async createContent(
         _name: string,
         _linkURL: string | null,
@@ -234,6 +244,7 @@ export class Content {
         })
     }
 
+    /** Returns non-deleted content targeted at a persona. Admin persona returns all content. */
     public static async queryContentByPersona(persona: string) {
         if (persona == "admin") {
             return this.queryAllContent()
@@ -286,6 +297,7 @@ export class Content {
         });
     }
 
+    /** Like `queryContentById` but includes the raw embedding vector — used by the background embedding job. */
     public static async queryContentByIdWithVectors(_id: number) {
         return prisma.content.findUnique({
             where: { id: _id, deleted: false },
@@ -324,6 +336,11 @@ export class Content {
     }
 
 
+    /**
+     * Acquires an optimistic checkout lock for the given employee.
+     * Throws if the item is already checked out by a different employee, naming them in the error message.
+     * Re-checking out as the same employee (e.g. after a page reload) is a no-op.
+     */
     public static async checkoutContent(id: number, employeeID: number){
         const content = await prisma.content.findUnique({
             where: {id: id},
@@ -351,6 +368,7 @@ export class Content {
         });
     }
 
+    /** Releases the checkout lock without validating the caller — callers should verify ownership before calling. */
     public static async checkinContent(id: number, employeeID: number): Promise<void> {
         await prisma.content.update({
             where: { id },
@@ -358,6 +376,7 @@ export class Content {
         })
     }
 
+    /** Full-text search using Postgres `ts_rank` and `ts_headline`. Returns up to 20 non-deleted results with a `snippet` field. */
     public static async searchContent(query: string): Promise<p.Content[]> {
         const results = await prisma.$queryRaw<p.Content[]>`
         SELECT

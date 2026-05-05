@@ -185,6 +185,20 @@ function stripMarkdown(content: string): string {
         .trim();
 }
 
+/**
+ * Extracts plain text from a file buffer or URL for embedding and full-text search indexing.
+ *
+ * Parser strategy by MIME type:
+ * - PDF: pdfjs native text extraction, falling back to Tesseract OCR per page; scanned pages
+ *   with few chars additionally fall back to the OpenAI vision model if a key is available.
+ * - DOCX: mammoth. XLSX/.XLS: SheetJS. PPTX: officeparser.
+ * - Legacy .doc/.ppt (CfB binary): unsupported, returns null.
+ * - Images (JPEG/PNG/WebP/GIF): Tesseract, with vision fallback.
+ * - HTML/URL: cheerio (semantic elements preferred, body fallback).
+ * - Plain text / CSV / Markdown: decoded directly; Markdown has syntax stripped.
+ *
+ * Output is capped at `MAX_TEXT_LENGTH` characters. Returns null if extraction fails or produces no text.
+ */
 export async function extractText(
     fileBuffer: Buffer | null,
     fileType: SupportedMimeType,

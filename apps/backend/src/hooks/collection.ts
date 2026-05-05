@@ -52,6 +52,7 @@ export const getCollectionById = async (req: req, res: res) => {
     }
 };
 
+/** GET /api/collections/mine — returns all collections owned by the authenticated employee. */
 export const getCollectionByOwnerId = async (req: req, res: res) => {
     try {
         const employee = await getEmployee(req);

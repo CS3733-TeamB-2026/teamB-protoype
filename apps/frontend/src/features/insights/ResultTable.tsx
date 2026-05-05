@@ -13,6 +13,11 @@ type Props = {
     columns: string[];
 };
 
+/**
+ * Renders SQL result rows as a scrollable shadcn/ui Table.
+ * Capped at `MAX_TABLE_ROWS` rows; shows a count notice when truncated.
+ * Column headers are humanized via `formatInsightLabel`; cell values via `formatInsightValue`.
+ */
 function ResultTable({ rows, columns }: Props) {
 
     const MAX_TABLE_ROWS = 20;
@@ -46,6 +51,7 @@ function ResultTable({ rows, columns }: Props) {
     );
 }
 
+/** Converts a raw cell value to a display string; serializes objects as JSON. */
 function formatCell(value: unknown): string {
     if (value === null || value === undefined) return "-";
     if (value instanceof Date) return value.toLocaleDateString();

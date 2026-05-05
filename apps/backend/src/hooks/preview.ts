@@ -2,6 +2,7 @@ import * as q from "@softeng-app/db";
 import {req, res} from "./types"
 import { getEmployee } from "../helpers/getEmployee";
 
+/** GET /api/previews — returns all preview records for the authenticated employee. */
 export const getPreviews = async (req: req, res: res) => {
     try {
         const employee = await getEmployee(req);
@@ -16,6 +17,7 @@ export const getPreviews = async (req: req, res: res) => {
     }
 };
 
+/** POST /api/content/:contentId/preview — records that the authenticated employee viewed a content item. */
 export const addPreview = async (req: req, res: res) => {
     try {
         const employee = await getEmployee(req);
@@ -31,6 +33,7 @@ export const addPreview = async (req: req, res: res) => {
     }
 };
 
+/** GET /api/content/:contentId/hits — returns the view count for a content item, optionally filtered to a set of employee IDs passed in the request body. */
 export const getHits = async (req: req, res: res) => {
     try {
         const contentId = parseInt(req.params.contentId)

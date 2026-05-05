@@ -1,7 +1,9 @@
 import * as p from "../generated/prisma/client";
 import {prisma} from "../lib/prisma";
 
+/** Handles database operations for content bookmarks (saved items per employee). */
 export class Bookmark {
+    /** Creates a bookmark linking an employee to a content item. */
     public static async createBookmark(
         _bookmarkerId: number,
         _bookmarkedContentId: number,
@@ -14,6 +16,10 @@ export class Bookmark {
         })
     }
 
+    /**
+     * Returns all bookmarks for an employee.
+     * @param getContent When true, includes the full content record on each result.
+     */
     public static async queryBookmarks(
         bookmarkerId: number,
         getContent: boolean = false
@@ -24,6 +30,7 @@ export class Bookmark {
         })
     }
 
+    /** Removes a bookmark by the composite key (bookmarkerId, bookmarkedContentId). */
     public static async deleteBookmark(
         _bookmarkerId: number,
         _bookmarkedContentId: number,

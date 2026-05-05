@@ -1,3 +1,4 @@
+/** Splits `text` on case-insensitive matches of `query` and wraps each match in a yellow highlight `<span>`. */
 export function highlight(text: string, query: string) {
     if (!query) return text;
 
@@ -16,6 +17,7 @@ export function highlight(text: string, query: string) {
 );
 }
 
+/** Returns `{start, end}` index pairs for every case-insensitive occurrence of `query` in `full`. */
 export function findMatches(full: string, query: string) {
     if (!query) return [];
     const regex = new RegExp(query, "gi");
@@ -27,6 +29,7 @@ export function findMatches(full: string, query: string) {
     return matches;
 }
 
+/** Highlights match ranges within a text segment that starts at `offset` characters from the full document start. Used for paginated/windowed text rendering. */
 export function highlightRange(text: string, offset: number, matches: {start:number,end:number}[]) {
     const parts = [];
     let i = 0;

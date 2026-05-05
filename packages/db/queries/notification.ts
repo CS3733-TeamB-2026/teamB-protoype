@@ -166,6 +166,13 @@ export class Notification {
             create: { contentId, employeeId, threshold },
         });
     }
+    /**
+     * Retrieves all notifications that the specified employee has previously dismissed,
+     * including the full notification and its associated content and triggering employee.
+     *
+     * @param employeeId The ID of the employee.
+     * @returns A list of dismissal records ordered by dismissal date descending.
+     */
     public static async queryDismissedNotifications(employeeId: number) {
         return prisma.notificationDismissal.findMany({
             where: { employeeId },
@@ -181,6 +188,13 @@ export class Notification {
         });
     }
 
+    /**
+     * Retrieves all expiration alerts that the specified employee has previously dismissed,
+     * including the associated content details.
+     *
+     * @param employeeId The ID of the employee.
+     * @returns A list of expiration dismissal records ordered by dismissal date descending.
+     */
     public static async queryDismissedExpirations(employeeId: number) {
         return prisma.expirationDismissal.findMany({
             where: { employeeId },

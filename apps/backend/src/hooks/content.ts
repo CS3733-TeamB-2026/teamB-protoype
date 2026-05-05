@@ -12,6 +12,10 @@ import {applyExpirationTagsToOne} from "../jobs/autoTag"
 
 const PREVIEW_MAX_BYTES = 2 * 1024 * 1024; // 2 MB
 
+/**
+ * GET /api/content/preview?url=... — fetches Open Graph metadata (title, description, image, favicon) for a URL.
+ * Proxied server-side to avoid browser CORS restrictions. Caps the response at 2 MB.
+ */
 export const previewContent = async (req: req, res: res) => {
     try {
         const url = req.query.url as string;
@@ -69,6 +73,7 @@ export const previewContent = async (req: req, res: res) => {
     }
 };
 
+/** GET /api/content — returns all non-deleted content. Pass `?persona=` to filter by persona or `?unlinkedSR=true` to exclude content already linked to a service request. */
 export const getAllContent = async (req: req, res: res) => {
     const persona = req.query.persona as string | null;
     const unlinkedSR = req.query.unlinkedSR === "true";
@@ -83,6 +88,7 @@ export const getAllContent = async (req: req, res: res) => {
     }
 };
 
+/** GET /api/content/tags — returns a deduplicated list of all tags currently in use across non-deleted content. */
 export const getAllTags = async (_req: req, res: res) => {
     try {
         const content = await q.Content.queryAllContent();
@@ -94,6 +100,7 @@ export const getAllTags = async (_req: req, res: res) => {
     }
 };
 
+/** GET /api/content/:id — returns a single non-deleted content item with its linked service request. */
 export const getContentById = async (req: req, res: res) => {
     try {
         const id = parseInt(req.params.id);
@@ -130,6 +137,7 @@ export const setContentServiceRequest = async (req: req, res: res) => {
     }
 };
 
+/** GET /api/content/:id/info — returns Supabase file metadata (size, MIME type, etc.) for the content item's attached file. */
 export const getContentInfo = async (req: req, res: res) => {
     try {
         const id = parseInt(req.params.id);
@@ -145,6 +153,7 @@ export const getContentInfo = async (req: req, res: res) => {
     }
 };
 
+/** GET /api/content/:id/download — streams the attached file with `Content-Disposition: inline`. */
 export const downloadContent = async (req: req, res: res) => {
     try {
         const id = parseInt(req.params.id);
@@ -166,6 +175,7 @@ export const downloadContent = async (req: req, res: res) => {
     }
 };
 
+/** GET /api/content/:id/url — returns a short-lived (2-minute) signed URL for the attached file. */
 export const getPublicFileUrl = async (req: req, res: res) => {
     try {
         const id = parseInt(req.params.id);
@@ -556,6 +566,7 @@ export const checkinContent = async (req: req, res: res) => {
     }
 };
 
+/** GET /api/content/search?q=... — generates an embedding for the query and returns semantically ranked content results. */
 export const searchContent = async (req: req, res: res) => {
     const { q: searchQuery } = req.query;
     if (!searchQuery || typeof searchQuery !== 'string') {

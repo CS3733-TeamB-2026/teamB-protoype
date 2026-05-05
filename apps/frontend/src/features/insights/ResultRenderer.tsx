@@ -8,6 +8,17 @@ import ResultScorecard from "./ResultScorecard"
 
 type Props = { result: NLQueryResult };
 
+/**
+ * Renders one assistant turn from the NL-query pipeline.
+ *
+ * Dispatches to the appropriate visualization based on `result.suggestedChart`:
+ * - `scorecard` → single aggregate value (`ResultScorecard`)
+ * - `bar | line | pie` → Recharts chart (`ResultChart`)
+ * - `table` → scrollable data table (`ResultTable`)
+ *
+ * Always shows the title, explanation, and an expandable SQL block.
+ * Renders an inline error message when `result.error` is set.
+ */
 export function ResultRenderer({result}: Props) {
     const [showSQL, setShowSQL] = useState(false);
 

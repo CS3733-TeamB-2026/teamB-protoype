@@ -29,10 +29,12 @@ export class ServiceReqs {
         });
     }
 
+    /** Returns all service requests with all relations. */
     public static async queryAllServiceReqs() {
         return prisma.serviceRequest.findMany({ include: ServiceReqs.include });
     }
 
+    /** Returns all service requests that have an assignee. */
     public static async queryAssignedServiceReqs() {
         return prisma.serviceRequest.findMany({
             where: { assigneeId: { not: null } },
@@ -40,6 +42,7 @@ export class ServiceReqs {
         });
     }
 
+    /** Returns all service requests assigned to a specific employee. */
     public static async queryServiceReqsByAssigned(id: number) {
         return prisma.serviceRequest.findMany({
             where: { assigneeId: id },
@@ -142,6 +145,7 @@ export class ServiceReqs {
         return result;
     }
 
+    /** Updates all editable fields of a service request. `created` is intentionally preserved. */
     public static async updateServiceReq(
         _id: number, _name: string, _deadline: Date, _type_string: string,
         _assigneeId: number, _ownerId: number,
@@ -165,6 +169,7 @@ export class ServiceReqs {
         return result;
     }
 
+    /** Hard-deletes a service request. Linked content/collection FK fields are cleared by the caller before deletion. */
     public static async deleteServiceReq(_id: number): Promise<void> {
         await prisma.serviceRequest.delete({
             where: {id: _id},

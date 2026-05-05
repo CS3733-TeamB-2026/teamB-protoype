@@ -30,6 +30,17 @@ const PALETTE = [
     "#C9E4F4", "#E8C547", "#D4881B", "#A03B3B", "#5E2C80",
 ];
 
+/**
+ * Renders a Recharts bar, line, or pie chart from raw SQL result rows.
+ *
+ * Column classification: numeric columns (excluding likely-ID columns) become
+ * the value series; the remaining columns are candidates for the X-axis label.
+ * `pickLabelColumn` prefers columns whose name contains "name", "title", or
+ * "label"; falls back to the last non-numeric column.
+ *
+ * Pie charts are capped at `MAX_PIE_SLICES` — overflow is rolled into an
+ * "Other" slice. Bar charts show a truncation notice when over `MAX_BAR_CATEGORIES`.
+ */
 function ResultChart({ type, rows, columns }: Props) {
     if (rows.length === 0 || columns.length === 0) return null;
 
@@ -149,6 +160,7 @@ function ResultChart({ type, rows, columns }: Props) {
     }
 }
 
+/** Returns true if the first non-null value in the column parses as a number. */
 function isNumericColumn(
     rows: Record<string, unknown>[],
     col: string,
@@ -163,6 +175,7 @@ function isNumericColumn(
     return false;
 }
 
+/** Picks the best label column, preferring name/title/label/displayname columns. */
 function pickLabelColumn(labelColumns: string[]): string | null {
     if (labelColumns.length === 0) return null;
     const namePreferred = labelColumns.find((c) =>
@@ -172,6 +185,7 @@ function pickLabelColumn(labelColumns: string[]): string | null {
     return labelColumns[labelColumns.length - 1];
 }
 
+/** Coerces a value to a number, returning null for non-numeric inputs. */
 function makeNumber(value: unknown): number | null {
     if (typeof value === "number") return value;
     if (typeof value === "string" && value !== "" && !isNaN(Number(value))) {
@@ -180,12 +194,17 @@ function makeNumber(value: unknown): number | null {
     return null;
 }
 
+/** Converts a raw cell value to a display string for axis labels. */
 function formatLabel(value:unknown): string {
     if (value === null || value === undefined) return "-";
     if (value instanceof Date) return value.toLocaleDateString();
     return String(value);
 }
 
+/**
+ * Keeps the top `maxSlices - 1` rows (by value, descending) and collapses the
+ * remainder into a single "Other" slice. No-ops when data already fits.
+ */
 function truncateAndRollupOthers(
     data: Record<string, unknown>[],
     valueKey: string,
@@ -205,6 +224,7 @@ function truncateAndRollupOthers(
     ];
 }
 
+/** Heuristic: columns named "id", ending in "_id", or short "...id" names are IDs, not metrics. */
 function isLikelyIdColumn(col: string): boolean {
     const lower = col.toLowerCase();
     return (

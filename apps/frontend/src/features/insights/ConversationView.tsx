@@ -8,6 +8,11 @@ type Props = {
     isLoading: boolean;
 }
 
+/**
+ * Scrollable thread of user/assistant turns for the Insights chat.
+ * Scrolls to the bottom whenever a new turn is added or loading state changes.
+ * Delegates rendering to `TurnDisplay` and shows `LoadingTurn` while a query is in-flight.
+ */
 function ConversationView({ turns, isLoading }: Props) {
     const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -27,6 +32,7 @@ function ConversationView({ turns, isLoading }: Props) {
     )
 }
 
+/** Renders a single chat turn: user bubble, assistant result card, or error card. */
 function TurnDisplay({ turn }: { turn : ChatTurn }) {
     if (turn.role === "user") {
         return (

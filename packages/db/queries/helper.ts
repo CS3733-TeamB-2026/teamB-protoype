@@ -33,14 +33,6 @@ export const contentSelect = {
 /**
  * Shared include for ServiceRequest relations — used by content/collection queryById
  * so that detail views receive the linked SR in one fetch. Defined here (not in
- * servicereqs.ts) to avoid circular imports across query classes.
- *
- * Does not nest linkedContent/linkedCollection inside the SR to avoid circular joins;
- * callers that already have the content/collection context don't need those fields.
- */
-/**
- * Shared include for ServiceRequest relations — used by content/collection queryById
- * so that detail views receive the linked SR in one fetch. Defined here (not in
  * servicereqs.ts) to avoid circular imports: servicereqs.ts imports helper.ts, and
  * content.ts / collection.ts both import this constant without importing servicereqs.ts.
  *
@@ -67,7 +59,9 @@ export const srInclude = {
     },
 } as const
 
+/** Enum-conversion helpers shared by all query classes. */
 export class Helper {
+    /** Maps a persona string to the Prisma enum value, or null if unrecognized. */
     public static personaHelper(_persona: string | null): p.Persona | null {
         if (_persona == "underwriter") {
             return p.Persona.underwriter
@@ -88,6 +82,7 @@ export class Helper {
         }
     }
 
+    /** Maps a status string to the Prisma enum value. Throws on unrecognized input. */
     public static statusHelper(_status: string | null): p.Status {
         if (_status == "new") {
             return p.Status.new
@@ -100,6 +95,7 @@ export class Helper {
         }
     }
 
+    /** Maps a request type string to the Prisma enum value. Throws on unrecognized input. */
     public static requestHelper(_type: string | null): p.RequestType {
         if (_type == "reviewClaim") {
             return p.RequestType.reviewClaim
