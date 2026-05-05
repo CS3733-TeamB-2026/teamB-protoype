@@ -30,6 +30,7 @@ export default function GlobalSearch() {
     const [loading, setLoading] = useState(false);
     const [searched, setSearched] = useState(false);
     const [visibleKinds, setVisibleKinds] = useState(new Set(["content", "collection", "employee", "servicereq"]));
+    const [limit, setLimit] = useState(20);
 
     const toggleKind = (kind: string) =>
         setVisibleKinds((prev) => {
@@ -46,7 +47,7 @@ export default function GlobalSearch() {
         window.localStorage.setItem("query", query.trim());
         try {
             const token = await getAccessTokenSilently();
-            const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`, {
+            const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&limit=${limit}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (res.ok) {
@@ -90,29 +91,48 @@ export default function GlobalSearch() {
                     </Button>
                 </div>
 
-                <div className="flex gap-2 flex-wrap mb-6">
-                    {([
-                        { kind: "content",    label: "Content",          icon: FileText     },
-                        { kind: "collection", label: "Collections",      icon: BookMarked   },
-                        { kind: "employee",   label: "Employees",        icon: User         },
-                        { kind: "servicereq", label: "Service Requests", icon: ClipboardList },
-                    ] as const).map(({ kind, label, icon: Icon }) => {
-                        const active = visibleKinds.has(kind);
-                        return (
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex gap-2 flex-wrap">
+                        {([
+                            { kind: "content",    label: "Content",          icon: FileText     },
+                            { kind: "collection", label: "Collections",      icon: BookMarked   },
+                            { kind: "employee",   label: "Employees",        icon: User         },
+                            { kind: "servicereq", label: "Service Requests", icon: ClipboardList },
+                        ] as const).map(({ kind, label, icon: Icon }) => {
+                            const active = visibleKinds.has(kind);
+                            return (
+                                <button
+                                    key={kind}
+                                    onClick={() => toggleKind(kind)}
+                                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border transition-colors cursor-pointer
+                                        ${active
+                                            ? "bg-primary text-primary-foreground border-primary"
+                                            : "bg-background text-muted-foreground border-border hover:border-foreground/40"
+                                        }`}
+                                >
+                                    <Icon className="w-3.5 h-3.5" />
+                                    {label}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground shrink-0">
+                        <span>Show</span>
+                        {[10, 20, 50].map((n) => (
                             <button
-                                key={kind}
-                                onClick={() => toggleKind(kind)}
-                                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border transition-colors cursor-pointer
-                                    ${active
+                                key={n}
+                                onClick={() => setLimit(n)}
+                                className={`px-2 py-0.5 rounded-full border text-sm font-medium transition-colors cursor-pointer
+                                    ${limit === n
                                         ? "bg-primary text-primary-foreground border-primary"
                                         : "bg-background text-muted-foreground border-border hover:border-foreground/40"
                                     }`}
                             >
-                                <Icon className="w-3.5 h-3.5" />
-                                {label}
+                                {n}
                             </button>
-                        );
-                    })}
+                        ))}
+                    </div>
                 </div>
 
                 {searched && !loading && results.filter(r => visibleKinds.has(r.kind)).length === 0 && (
@@ -120,7 +140,7 @@ export default function GlobalSearch() {
                 )}
 
                 <div className="flex flex-col gap-4">
-                    {results.filter(r => visibleKinds.has(r.kind)).map((result) => {
+                    {results.filter(r => visibleKinds.has(r.kind)).slice(0, limit).map((result) => {
                         switch (result.kind) {
                             case "content":
                                 return <ContentItemCard key={`content-${result.item.id}`} item={result.item} />;

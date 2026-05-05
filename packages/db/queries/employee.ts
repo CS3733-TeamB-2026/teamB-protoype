@@ -8,8 +8,8 @@ export class Employee {
         return prisma.employee.findMany({ select: employeeSelect })
     }
 
-    /** Semantic vector search over all employees. Returns up to 20 results with `similarity` score (0–1). */
-    public static async semanticSearch(queryVector: number[]) {
+    /** Semantic vector search over all employees. Returns up to `limit` results with `similarity` score (0–1). */
+    public static async semanticSearch(queryVector: number[], limit = 20) {
         const embeddingStr = embeddingToSql(queryVector);
 
         const rows = await prisma.$queryRaw<{ id: number; similarity: number }[]>`
@@ -17,7 +17,7 @@ export class Employee {
             FROM "Employee"
             WHERE embedding IS NOT NULL
             ORDER BY embedding <=> ${embeddingStr}::vector
-            LIMIT 20
+            LIMIT ${limit}
         `;
 
         const ids = rows.map(r => r.id);
