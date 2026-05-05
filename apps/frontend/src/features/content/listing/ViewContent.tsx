@@ -1097,7 +1097,7 @@ function ViewContent() {
                                                         </TableCell>
                                                         {/* expiration */}
                                                         <TableCell className="hidden sm:table-cell text-center">
-                                                            <ExpirationBadge expiration={item.expiration}/>
+                                                            <ExpirationBadge expiration={item.expiration} colorMode="blue"/>
                                                         </TableCell>
                                                         {/* status */}
                                                         <TableCell className="hidden sm:table-cell text-center">
