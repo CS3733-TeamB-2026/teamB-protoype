@@ -30,6 +30,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import {useLocale} from "@/languageSupport/localeContext.tsx";
 import {useTranslation} from "@/languageSupport/useTranslation.ts";
+import InfoButton from "@/components/layout/InformationAlert.tsx";
 
 const sizeClasses: Record<WidgetSize, string> = {
     small: "col-span-1",
@@ -162,7 +163,7 @@ function Dashboard() {
 
             {/* Customize Button */}
             <div className="mx-25 mt-6 flex flex-row items-center justify-end">
-                <p className="text-muted-foreground/70 text-md mr-2">Drag and drop widgets to re-order.</p>
+                <InfoButton size="w-6 h-6 mr-2" content="Drag and drop elements to re-order." />
                 <DashboardCustomizeSheet layout={layout} setLayout={setLayout} />
             </div>
 
